@@ -32,6 +32,9 @@ namespace platformer2d {
 		void Initialize();
 		void Destroy();
 
+		void BeginFrame();
+		void EndFrame();
+
 		const FWindowData& GetData() const { return Data; }
 
 	public:
