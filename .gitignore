@@ -42,3 +42,7 @@
 
 *.vs
 build
+
+# Generated files
+modules/glad/include
+modules/glad/src
