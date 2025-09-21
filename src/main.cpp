@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include <imgui/imgui.h>
+
 #include "core/window.h"
 
 int main(int argc, char* argv[])
@@ -11,8 +13,13 @@ int main(int argc, char* argv[])
 
 	while (true)
 	{
-		glfwSwapBuffers(Window.GlfwWindow);
-		glfwPollEvents();
+		Window.BeginFrame();
+
+		ImGui::Begin("Viewport");
+		ImGui::Text("platformer2d");
+		ImGui::End();
+
+		Window.EndFrame();
 	}
 
 	Window.Destroy();
