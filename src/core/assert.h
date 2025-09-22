@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cassert>
-#include <stdio.h>
+#include <cstdio>
 
 #if defined(LK_COMPILER_MSVC)
 #	define LK_DEBUG_BREAK __debugbreak()
