@@ -41,3 +41,11 @@ target_include_directories(imgui PRIVATE glfw/include)
 #----------------------------#
 add_subdirectory(spdlog)
 ##############################
+
+##############################
+# Library: stb_image
+#----------------------------#
+add_library(stb_image STATIC
+	stb/stb_image.cpp
+)
+##############################
