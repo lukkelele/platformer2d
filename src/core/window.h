@@ -29,6 +29,8 @@ namespace platformer2d {
 		CWindow() = delete;
 		~CWindow() = default;
 
+		static CWindow* Get();
+
 		void Initialize();
 		void Destroy();
 
