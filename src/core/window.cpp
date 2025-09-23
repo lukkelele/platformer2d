@@ -51,7 +51,7 @@ namespace platformer2d {
 		const int GlfwInit = glfwInit();
 		glfwSetErrorCallback([](const int Error, const char* Description)
 		{
-			std::printf("GLFW error (%d): %s\n", Error, Description);
+			spdlog::error("GLFW error ({}): {}", Error, Description);
 		});
 
 		GlfwWindow = glfwCreateWindow(Data.Width, Data.Height, Data.Title.c_str(), nullptr, nullptr);
@@ -79,7 +79,7 @@ namespace platformer2d {
 
 		ImGui_ImplGlfw_InitForOpenGL(GlfwWindow, true);
 		ImGui_ImplOpenGL3_Init("#version 450");
-		std::printf("ImGui Version: %s\n", ImGui::GetVersion());
+		spdlog::info("ImGui Version: {}", ImGui::GetVersion());
 	}
 
 	void CWindow::Destroy()
