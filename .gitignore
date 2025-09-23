@@ -41,6 +41,7 @@
 *.dwo
 
 *.vs
+*.ini
 build
 
 # Generated files
