@@ -1,5 +1,8 @@
-add_library(core STATIC 
+project_library(core)
+project_library_sources(
+	assert.h
+	core.h
+	log.h
+	window.h
 	window.cpp
 )
-
-target_link_libraries(core PUBLIC platformer2d_interface)

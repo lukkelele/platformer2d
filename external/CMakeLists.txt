@@ -4,7 +4,7 @@
 
 ##############################
 # Library: glad
-#----------------------------#
+##############################
 # Exists in 'modules/glad'.
 
 ##############################
@@ -28,7 +28,6 @@ add_library(imgui STATIC
 	imgui/imgui_widgets.cpp
 	imgui/backends/imgui_impl_glfw.cpp
 	imgui/backends/imgui_impl_opengl3.cpp
-	#imgui/imgui_impl_vulkan.cpp
 )
 target_include_directories(imgui PUBLIC imgui imgui/backends)
 target_include_directories(imgui PRIVATE glfw/include)
@@ -36,6 +35,7 @@ target_include_directories(imgui PRIVATE glfw/include)
 ##############################
 # Library: spdlog
 ##############################
+set(SPDLOG_USE_STD_FORMAT ON)
 add_subdirectory(spdlog)
 
 ##############################
