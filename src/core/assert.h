@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdio>
 
+#include "core.h"
+
 #if defined(LK_COMPILER_MSVC)
 #	define LK_DEBUG_BREAK __debugbreak()
 #elif defined(LK_COMPILER_CLANG)
@@ -22,7 +24,7 @@
 /**
  * Assert.
  */
-#if LK_ENABLE_ASSERT
+#ifdef LK_ENABLE_ASSERT
 #define LK_ASSERT_MESSAGE_INTERNAL(...) std::printf("Verify Failed: %s\nLine: %d\n", LK_FUNCSIG, __LINE__)
 #define LK_ASSERT(Condition, ...)                         \
 		{                                                    \
@@ -39,7 +41,7 @@
 /**
  * Verify.
  */
-#if LK_ENABLE_VERIFY
+#ifdef LK_ENABLE_VERIFY
 #define LK_VERIFY_MESSAGE_INTERNAL(...) std::printf("Verify Failed: %s\nLine: %d\n", LK_FUNCSIG, __LINE__)
 #define LK_VERIFY(Condition, ...)                              \
 	{                                                         \

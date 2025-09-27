@@ -12,12 +12,13 @@ namespace platformer2d {
 	{
 		uint16_t Width = 0;
 		uint16_t Height = 0;
-		std::string Title = "platformer2d";
+		std::string Title{};
 
 		FWindowData() = default;
-		FWindowData(const uint16_t InWidth, const uint16_t InHeight)
+		FWindowData(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
 			: Width(InWidth)
 			, Height(InHeight)
+			, Title(InTitle)
 		{
 		}
 	};
@@ -25,7 +26,7 @@ namespace platformer2d {
 	class CWindow
 	{
 	public:
-		CWindow(uint16_t InWidth, uint16_t InHeight);
+		CWindow(uint16_t InWidth, uint16_t InHeight, std::string_view InTitle = "");
 		CWindow() = delete;
 		~CWindow() = default;
 

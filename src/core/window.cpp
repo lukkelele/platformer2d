@@ -35,8 +35,8 @@ namespace platformer2d {
 	static constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoDockingInCentralNode;
 
-	CWindow::CWindow(const uint16_t InWidth, const uint16_t InHeight)
-		: Data(InWidth, InHeight)
+	CWindow::CWindow(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
+		: Data(InWidth, InHeight, InTitle)
 	{
 		Instance = this;
 	}
@@ -65,6 +65,14 @@ namespace platformer2d {
 			LK_ASSERT(Window);
 			Window->Data.Width = NewWidth;
 			Window->Data.Height = NewHeight;
+		});
+
+
+		glfwSetWindowCloseCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow)
+		{
+			spdlog::info("Closing window");
+			glfwSetWindowShouldClose(InGlfwWindow, GLFW_TRUE);
+			std::exit(0); /** @todo Should do proper shutdown */
 		});
 
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
