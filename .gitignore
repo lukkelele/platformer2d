@@ -43,6 +43,7 @@
 *.vs
 *.ini
 build
+CMakeSettings.json
 
 # Generated files
 modules/glad/include
