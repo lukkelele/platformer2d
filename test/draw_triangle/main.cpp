@@ -23,9 +23,9 @@ static const GLfloat Vertices_Triangle[] =
 int main(int argc, char* argv[])
 {
 	using namespace platformer2d;
-	spdlog::info("Running: {}", LK_TEST_SUITE);
+	spdlog::info("Running: {}", LK_TEST_STRINGIFY(LK_TEST_SUITE));
 
-	platformer2d::CWindow Window(800, 600);
+	platformer2d::CWindow Window(800, 600, LK_TEST_STRINGIFY(LK_TEST_SUITE));
 	Window.Initialize();
 	const FWindowData& WindowData = Window.GetData();
 
