@@ -13,7 +13,6 @@
 
 static_assert(std::is_same_v<GLuint, uint32_t>, "Type mismatch");
 
-//static uint32_t LoadShaders(const char* VertexShaderPath, const char* FragShaderPath)
 static uint32_t LoadShaders(const std::filesystem::path& VertexShaderPath, const std::filesystem::path& FragmentShaderPath)
 {
 	/* Create shaders. */
