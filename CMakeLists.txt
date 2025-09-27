@@ -37,6 +37,7 @@ target_include_directories(platformer2d_interface INTERFACE
 	${CMAKE_SOURCE_DIR}/src
 	${CMAKE_SOURCE_DIR}/external
 	${CMAKE_SOURCE_DIR}/external/glfw/include
+	${CMAKE_SOURCE_DIR}/external/glm
 	${CMAKE_SOURCE_DIR}/external/imgui
 	${CMAKE_SOURCE_DIR}/external/spdlog/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
@@ -50,6 +51,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	# External.
 	glad
 	glfw
+	glm
 	imgui
 	spdlog
 	stb_image
