@@ -24,8 +24,6 @@ message(STATUS "============================================")
 foreach(opt IN LISTS TEST_OPTIONS)
     option(${opt} "Test: ${opt}" OFF)
     if (${opt})
-        # TODO: Add support for multiple tests building at a time.
-
 	    message(STATUS "[*] ${opt}")
         set(TESTS_ENABLED ON PARENT_SCOPE)
         set(TEST_SUITE "${opt}")
@@ -33,28 +31,22 @@ foreach(opt IN LISTS TEST_OPTIONS)
         # Set the test directory as a variable and use it with add_subdirectory.
         set(TEST_DIR "")
         extract_test_name(${opt} TEST_DIR)
-        message(DEBUG "TEST_DIR: ${TEST_DIR}")
+
+		# TODO: Validate the existance of the directory
+		set(TEST_EXECUTABLE "${TEST_DIR}")
+
+		add_executable(${TEST_EXECUTABLE})
+		target_sources(${TEST_EXECUTABLE} PRIVATE test.cpp)
+		target_include_directories(${TEST_EXECUTABLE} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+		target_compile_definitions(${TEST_EXECUTABLE} PRIVATE LK_TEST_SUITE=${TEST_SUITE})
+
+		add_subdirectory(${TEST_DIR} ${opt})
+		target_link_libraries(${TEST_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
+
+        get_property(PROJECT_COMPILE_DEFINITIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
+	    target_compile_definitions(${TEST_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
     else()
 	    message(STATUS "[ ] ${opt}")
     endif()
 endforeach()
 message(STATUS "============================================")
-
-if (TESTS_ENABLED)
-    # TODO: Validate the existance of the directory
-    #set(TEST_EXECUTABLE "${TEST_DIR}" PARENT_SCOPE) # TODO: Remove PARENT_SCOPE
-    set(TEST_EXECUTABLE "${TEST_DIR}")
-    # Override the project executable to resolve linkage to the interface.
-    set(PROJECT_EXECUTABLE "${TEST_EXECUTABLE}" PARENT_SCOPE)
-
-    # Always enable LK_ASSERT and LK_VERIFY for tests.
-    set(LK_ENABLE_ASSERT ON CACHE BOOL "Enable assert" FORCE)
-    set(LK_ENABLE_VERIFY ON CACHE BOOL "Enable verify" FORCE)
-
-    add_executable(${TEST_EXECUTABLE})
-	target_sources(${TEST_EXECUTABLE} PRIVATE test.cpp)
-	target_include_directories(${TEST_EXECUTABLE} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-    target_compile_definitions(${TEST_EXECUTABLE} PRIVATE LK_TEST_SUITE=${TEST_SUITE})
-
-    add_subdirectory(${TEST_DIR})
-endif()

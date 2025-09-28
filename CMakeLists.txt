@@ -63,18 +63,24 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 
 message(STATUS "PROJECT_EXECUTABLE: ${PROJECT_EXECUTABLE}")
 message(STATUS "TESTS_ENABLED: ${TESTS_ENABLED}")
-if (NOT TESTS_ENABLED)
-	add_executable(${PROJECT_NAME})
-	target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
-endif()
 
 # Get all compile definitions and apply on the executable and all project libraries.
 get_property(PROJECT_COMPILE_DEFINITIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
 message(STATUS "PROJECT_COMPILE_DEFINITIONS: ${PROJECT_COMPILE_DEFINITIONS_PROPERTY}")
-target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
-target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
-
 get_property(PROJECT_LIBS_PROPERTY GLOBAL PROPERTY PROJECT_LIBS)
+
+if (NOT TESTS_ENABLED)
+	add_executable(${PROJECT_NAME})
+	target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
+
+	target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
+	target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
+else()
+	# Always enable LK_ASSERT and LK_VERIFY for tests.
+	set(LK_ENABLE_ASSERT ON CACHE BOOL "Enable assert" FORCE)
+	set(LK_ENABLE_VERIFY ON CACHE BOOL "Enable verify" FORCE)
+endif()
+
 foreach(library ${PROJECT_LIBS_PROPERTY})
 	target_compile_definitions(${library} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
 	if (NOT TESTS_ENABLED)
