@@ -26,7 +26,7 @@ namespace platformer2d {
 	class CWindow
 	{
 	public:
-		CWindow(uint16_t InWidth, uint16_t InHeight, std::string_view InTitle = "");
+		CWindow(uint16_t InWidth, uint16_t InHeight, std::string_view InTitle = "platformer2d");
 		CWindow() = delete;
 		~CWindow() = default;
 
