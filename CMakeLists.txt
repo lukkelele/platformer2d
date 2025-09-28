@@ -8,6 +8,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cmake/project.cmake)
 include(cmake/extensions.cmake)
 
+set(PROJECT_EXECUTABLE ${PROJECT_NAME})
+
+# Project interface.
+add_library(${PROJECT_INTERFACE} INTERFACE)
+
 option(LK_ENABLE_ASSERT "Enable assert" OFF)
 if (NOT DEFINED LK_ENABLE_ASSERT AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(LK_ENABLE_ASSERT ON CACHE BOOL "Enable assert" FORCE)
@@ -20,10 +25,6 @@ option(LK_ENABLE_VERIFY "Enable verify" OFF)
 if (LK_ENABLE_VERIFY)
 	project_add_compile_definitions(LK_ENABLE_VERIFY)
 endif()
-
-# Project interface.
-add_library(${PROJECT_INTERFACE} INTERFACE)
-add_executable(${PROJECT_NAME})
 
 # Compiler.
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -60,19 +61,25 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	stb_image
 )
 
-# Get all compile definitions and apply on project executable and all 
-# project libraries.
+message(STATUS "PROJECT_EXECUTABLE: ${PROJECT_EXECUTABLE}")
+message(STATUS "TESTS_ENABLED: ${TESTS_ENABLED}")
+if (NOT TESTS_ENABLED)
+	add_executable(${PROJECT_NAME})
+	target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
+endif()
+
+# Get all compile definitions and apply on the executable and all project libraries.
 get_property(PROJECT_COMPILE_DEFINITIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
 message(STATUS "PROJECT_COMPILE_DEFINITIONS: ${PROJECT_COMPILE_DEFINITIONS_PROPERTY}")
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_INTERFACE})
-target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
+target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
+target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
 
-# Iterate all project libraries and setup linkage and definitions.
 get_property(PROJECT_LIBS_PROPERTY GLOBAL PROPERTY PROJECT_LIBS)
 foreach(library ${PROJECT_LIBS_PROPERTY})
-	message(STATUS "${PROJECT_NAME} --> ${library}")
-	target_link_libraries(${PROJECT_NAME} PRIVATE ${library})
 	target_compile_definitions(${library} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
+	if (NOT TESTS_ENABLED)
+		# Tests link to the project libraries they use.
+		message(STATUS "Link: ${PROJECT_EXECUTABLE} -> ${library}")
+		target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${library})
+	endif()
 endforeach()
-
-target_sources_ifndef(TESTS_ENABLED ${PROJECT_NAME} PRIVATE src/main.cpp)

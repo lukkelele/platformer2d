@@ -9,6 +9,8 @@ set_property(GLOBAL PROPERTY PROJECT_LIBS "")
 define_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
 set_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS "")
 
+# Add definitions to define global property.
+# Used to set definitions on the project target and all libraries.
 function(project_add_compile_definitions)
 	message(DEBUG "definitions: ${ARGN}")
 	set_property(GLOBAL APPEND PROPERTY PROJECT_COMPILE_DEFINITIONS ${ARGN})

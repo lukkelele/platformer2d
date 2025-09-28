@@ -6,3 +6,5 @@ project_library_sources(
 	texture.h
 	texture.cpp
 )
+
+target_link_libraries(renderer PUBLIC core)
