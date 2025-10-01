@@ -31,14 +31,16 @@ foreach(opt IN LISTS TEST_OPTIONS)
         # Set the test directory as a variable and use it with add_subdirectory.
         set(TEST_DIR "")
         extract_test_name(${opt} TEST_DIR)
+        if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${TEST_DIR}" OR NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${TEST_DIR}")
+            message(FATAL_ERROR "Test directory \"${TEST_DIR}\" does not exist")
+        endif()
 
-		# TODO: Validate the existance of the directory
 		set(TEST_EXECUTABLE "${TEST_DIR}")
-
 		add_executable(${TEST_EXECUTABLE})
 		target_sources(${TEST_EXECUTABLE} PRIVATE test.cpp)
 		target_include_directories(${TEST_EXECUTABLE} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 		target_compile_definitions(${TEST_EXECUTABLE} PRIVATE LK_TEST_SUITE=${TEST_SUITE})
+        set_target_properties(${TEST_EXECUTABLE} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${TEST_DIR}")
 
 		add_subdirectory(${TEST_DIR} ${opt})
 		target_link_libraries(${TEST_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
