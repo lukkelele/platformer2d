@@ -2,6 +2,9 @@
 #include <filesystem>
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 #include <spdlog/spdlog.h>
 #include <stb/stb_image.h>
 
@@ -18,6 +21,9 @@
 #error "LK_TEST_SUITE missing"
 #endif
 
+using namespace platformer2d;
+using namespace platformer2d::test;
+
 static const GLfloat Vertices_Triangle[] = 
 {
    -1.0f, -1.0f, 0.0f,
@@ -29,15 +35,9 @@ static const GLfloat Vertices_Triangle[] =
 
 int main(int argc, char* argv[])
 {
-	using namespace platformer2d;
-	spdlog::set_level(spdlog::level::debug);
-	spdlog::info("Running: {}", LK_TEST_STRINGIFY(LK_TEST_SUITE));
-
-	const std::filesystem::path BinaryDir = test::GetBinaryDirectory();
-	spdlog::info("Binary dir: {}", BinaryDir.generic_string());
-
-	platformer2d::CWindow Window(800, 600, LK_TEST_STRINGIFY(LK_TEST_SUITE));
-	Window.Initialize();
+	CTest Test;
+	const std::filesystem::path& BinaryDir = Test.GetBinaryDirectory();
+	const CWindow& Window = Test.GetWindow();
 	const FWindowData& WindowData = Window.GetData();
 
 	GLuint VertexBuffer;
@@ -58,9 +58,12 @@ int main(int argc, char* argv[])
 
 	while (true)
 	{
-		Window.BeginFrame();
+		glfwPollEvents();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		CTest::ImGui_NewFrame();
 
-		ImGui::Text("platformer2d");
+		ImGui::Text("%s", LK_TEST_STRINGIFY(LK_TEST_SUITE));
 		ImGui::Text("Window size: (%d, %d)", WindowData.Width, WindowData.Height);
 
 		glEnableVertexAttribArray(0); /* Position attribute 0 in the vertex shader. */
@@ -80,15 +83,17 @@ int main(int argc, char* argv[])
 #else
 		Shader.Bind();
 #endif
-		
+
 		/* Draw triangle. */
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDisableVertexAttribArray(0);
 
-		Window.EndFrame();
+		CTest::ImGui_EndFrame();
+		glfwSwapBuffers(Window.GetGlfwWindow());
+		glfwPollEvents();
 	}
 
-	Window.Destroy();
+	glfwTerminate();
 
 	return 0;
 }
