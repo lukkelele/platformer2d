@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <filesystem>
 
+#include <catch2/catch_session.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
@@ -37,8 +39,25 @@ static float VertexData[] = {
 
 #define USE_RAW_SHADER_IMPL 0
 
+TEST_CASE("Suite name", "[defines]")
+{
+	REQUIRE(LK_TEST_STRINGIFY(LK_TEST_SUITE) != "LK_TEST_SUITE");
+}
+
+TEST_CASE("Test name", "[defines]")
+{
+#ifdef LK_TEST_NAME
+	REQUIRE(strcmp(LK_TEST_NAME, "LK_TEST_NAME") != 0);
+#else
+	FAIL("LK_TEST_NAME undefined");
+#endif
+}
+
 int main(int argc, char* argv[])
 {
+	spdlog::info("Test: {}", LK_TEST_NAME);
+	const int Result = Catch::Session().run(argc, argv);
+
 	CTest Test;
 	const std::filesystem::path& BinaryDir = Test.GetBinaryDirectory();
 	const CWindow& Window = Test.GetWindow();

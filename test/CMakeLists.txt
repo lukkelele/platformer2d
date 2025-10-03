@@ -42,12 +42,18 @@ function(add_tests_recursive dir)
 					${subdir}/main.cpp
 					test.cpp
 				)
-				target_include_directories(${TEST_NAME} PRIVATE 
+				target_include_directories(${TEST_NAME} PRIVATE
 					${CMAKE_CURRENT_SOURCE_DIR}
 					${subdir}
 				)
-				target_compile_definitions(${TEST_NAME} PRIVATE LK_TEST_SUITE=${TEST_NAME})
-				target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_INTERFACE})
+				target_compile_definitions(${TEST_NAME} PRIVATE
+					LK_TEST_SUITE=${TEST_NAME}
+					LK_TEST_NAME="${TEST_NAME}"
+				)
+				target_link_libraries(${TEST_NAME} PRIVATE
+					${PROJECT_INTERFACE}
+					Catch2::Catch2
+				)
 
 				get_property(PROJECT_COMPILE_DEFINITIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
 				target_compile_definitions(${TEST_NAME} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
