@@ -8,14 +8,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cmake/project.cmake)
 include(cmake/extensions.cmake)
 
-set(PROJECT_EXECUTABLE ${PROJECT_NAME})
-
-# Project interface.
-add_library(${PROJECT_INTERFACE} INTERFACE)
-
+option(LK_BUILD_TESTS "Build tests" ON)
 option(LK_ENABLE_ASSERT "Enable assert" OFF)
 if (NOT DEFINED LK_ENABLE_ASSERT AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(LK_ENABLE_ASSERT ON CACHE BOOL "Enable assert" FORCE)
+    set(LK_ENABLE_ASSERT ON)
 endif()
 if (LK_ENABLE_ASSERT)
 	project_add_compile_definitions(LK_ENABLE_ASSERT)
@@ -26,16 +22,28 @@ if (LK_ENABLE_VERIFY)
 	project_add_compile_definitions(LK_ENABLE_VERIFY)
 endif()
 
+set(PROJECT_EXECUTABLE ${PROJECT_NAME})
+# Project interface.
+add_library(${PROJECT_INTERFACE} INTERFACE)
+
 # Compiler.
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	project_add_compile_definitions(LK_COMPILER_MSVC)
 	add_compile_options(/utf-8)
+
+	# Disable warnings.
+	project_add_compile_options(
+		/wd4307
+		/wd26451
+	)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	project_add_compile_definitions(LK_COMPILER_CLANG)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	project_add_compile_definitions(LK_COMPILER_GNU)
 endif()
+
+project_add_compile_definitions(ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
 
 add_subdirectory(src)
 add_subdirectory(test)
@@ -61,31 +69,21 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	stb_image
 )
 
-message(STATUS "PROJECT_EXECUTABLE: ${PROJECT_EXECUTABLE}")
-message(STATUS "TESTS_ENABLED: ${TESTS_ENABLED}")
+add_executable(${PROJECT_NAME})
+target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
+set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
 
-# Get all compile definitions and apply on the executable and all project libraries.
 get_property(PROJECT_COMPILE_DEFINITIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
-message(STATUS "PROJECT_COMPILE_DEFINITIONS: ${PROJECT_COMPILE_DEFINITIONS_PROPERTY}")
+get_property(PROJECT_COMPILE_OPTIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS)
+
+target_compile_options(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_OPTIONS_PROPERTY})
+target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
+target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
+
 get_property(PROJECT_LIBS_PROPERTY GLOBAL PROPERTY PROJECT_LIBS)
-
-if (NOT TESTS_ENABLED)
-	add_executable(${PROJECT_NAME})
-	target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
-
-	target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_INTERFACE})
-	target_compile_definitions(${PROJECT_EXECUTABLE} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
-else()
-	# Always enable LK_ASSERT and LK_VERIFY for tests.
-	set(LK_ENABLE_ASSERT ON CACHE BOOL "Enable assert" FORCE)
-	set(LK_ENABLE_VERIFY ON CACHE BOOL "Enable verify" FORCE)
-endif()
-
 foreach(library ${PROJECT_LIBS_PROPERTY})
 	target_compile_definitions(${library} PRIVATE ${PROJECT_COMPILE_DEFINITIONS_PROPERTY})
-	if (NOT TESTS_ENABLED)
-		# Tests link to the project libraries they use.
-		message(STATUS "Link: ${PROJECT_EXECUTABLE} -> ${library}")
-		target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${library})
-	endif()
+	target_compile_options(${library} PRIVATE ${PROJECT_COMPILE_OPTIONS_PROPERTY})
+	message(STATUS "Link: ${PROJECT_EXECUTABLE} -> ${library}")
+	target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${library})
 endforeach()
