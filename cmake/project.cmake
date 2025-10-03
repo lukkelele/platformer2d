@@ -6,14 +6,24 @@ set(PROJECT_INTERFACE platformer2d_interface)
 define_property(GLOBAL PROPERTY PROJECT_LIBS)
 set_property(GLOBAL PROPERTY PROJECT_LIBS "")
 
+# Compile definitions.
 define_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
 set_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS "")
+
+# Compile options.
+define_property(GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS)
+set_property(GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS "")
 
 # Add definitions to define global property.
 # Used to set definitions on the project target and all libraries.
 function(project_add_compile_definitions)
 	message(DEBUG "definitions: ${ARGN}")
 	set_property(GLOBAL APPEND PROPERTY PROJECT_COMPILE_DEFINITIONS ${ARGN})
+endfunction()
+
+function(project_add_compile_options)
+	message(DEBUG "options: ${ARGN}")
+	set_property(GLOBAL APPEND PROPERTY PROJECT_COMPILE_OPTIONS ${ARGN})
 endfunction()
 
 function(project_link_interface interface)
