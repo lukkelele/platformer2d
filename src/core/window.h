@@ -6,6 +6,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "log.h"
+
 namespace platformer2d {
 
 	struct FWindowData
@@ -39,10 +41,10 @@ namespace platformer2d {
 		void EndFrame();
 
 		const FWindowData& GetData() const { return Data; }
+		GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }
 
-	public:
-		GLFWwindow* GlfwWindow = NULL; /** @todo: Make private */
 	private:
+		GLFWwindow* GlfwWindow = nullptr;
 		FWindowData Data{};
 	};
 
