@@ -5,6 +5,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "core/assert.h"
+
 namespace platformer2d {
 
 	/**
@@ -39,6 +41,9 @@ namespace platformer2d {
 	CShader::CShader(const std::filesystem::path& VertexShaderPath, const std::filesystem::path& FragShaderPath)
 	{
 		static_assert(std::is_same_v<uint32_t, GLuint>, "GLuint type mismatch");
+		LK_VERIFY(std::filesystem::exists(VertexShaderPath), "Vertex shader does not exist");
+		LK_VERIFY(std::filesystem::exists(FragShaderPath), "Fragment shader does not exist");
+
 		uint32_t Program;
 		LK_OpenGL_Verify(Program = glCreateProgram());
 		spdlog::debug("Program={}", Program);
@@ -93,8 +98,8 @@ namespace platformer2d {
 			char* ErrorMessage = (char*)alloca(Length * sizeof(char));
 		#endif
 			LK_OpenGL_Verify(glGetShaderInfoLog(ShaderID, Length, &Length, ErrorMessage));
-			spdlog::error("Failed to compile {} shader at {}, \"{}\"", 
-							  ((ShaderType == GL_VERTEX_SHADER) ? "vertex" : "fragment"), FilePath.string(), ErrorMessage);
+			spdlog::error("Failed to compile {} shader at {}\nError: \"{}\"",
+							  ((ShaderType == GL_VERTEX_SHADER) ? "vertex" : "fragment"), FilePath.generic_string(), ErrorMessage);
 			LK_OpenGL_Verify(glDeleteShader(ShaderID));
 			return 0;
 		}
