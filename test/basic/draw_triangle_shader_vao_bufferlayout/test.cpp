@@ -13,69 +13,7 @@
 
 namespace platformer2d::test {
 
-	static void AddVertexBufferToVertexArray(const GLuint VAO, const GLuint VBO, const FVertexBufferLayout& Layout)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		int VertexBufferIndex = 0;
-		for (const FVertexBufferElement& Element : Layout)
-		{
-			LK_INFO("VertexBufferIndex={} Size={} ComponentCount={}", VertexBufferIndex, Element.Size, Element.GetComponentCount());
-			switch (Element.Type)
-			{
-				case EShaderDataType::Float:
-				case EShaderDataType::Float2:
-				case EShaderDataType::Float3:
-				case EShaderDataType::Float4:
-				{
-					glEnableVertexAttribArray(VertexBufferIndex);
-					glVertexAttribPointer(VertexBufferIndex,
-										  Element.GetComponentCount(),
-										  OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
-										  (Element.Normalized ? GL_TRUE : GL_FALSE),
-										  Layout.GetStride(),
-										  (const void*)Element.Offset);
-					VertexBufferIndex++;
-					break;
-				}
-				case EShaderDataType::Int:
-				case EShaderDataType::Int2:
-				case EShaderDataType::Int3:
-				case EShaderDataType::Int4:
-				case EShaderDataType::Bool:
-				{
-					glEnableVertexAttribArray(VertexBufferIndex);
-					glVertexAttribIPointer(VertexBufferIndex,
-										   Element.GetComponentCount(),
-										   OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
-										   Layout.GetStride(),
-										   (const void*)Element.Offset);
-					VertexBufferIndex++;
-					break;
-				}
-				case EShaderDataType::Mat3:
-				case EShaderDataType::Mat4:
-				{
-					uint8_t Count = Element.GetComponentCount();
-					for (uint8_t Idx = 0; Idx < Count; Idx++)
-					{
-						glEnableVertexAttribArray(VertexBufferIndex);
-						glVertexAttribPointer(VertexBufferIndex,
-											  Count, 
-											  OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type), 
-											  (Element.Normalized ? GL_TRUE : GL_FALSE),
-											  Layout.GetStride(),
-											  (const void*)(Element.Offset + sizeof(float) * Count * Idx));
-						glVertexAttribDivisor(VertexBufferIndex, 1);
-						VertexBufferIndex++;
-					}
-					break;
-				}
-
-				default: 
-					LK_ERROR("Unhandled shader type: {}", Enum::ToString(Element.Type));
-			}
-		}
-	}
+	static void AddVertexBufferToVertexArray(const GLuint VAO, const GLuint VBO, const FVertexBufferLayout& Layout);
 
 	/* 24 entries */
 	static constexpr float VertexData[] = {
@@ -169,6 +107,70 @@ namespace platformer2d::test {
 	void CTest::Destroy()
 	{
 		glfwTerminate();
+	}
+
+	static void AddVertexBufferToVertexArray(const GLuint VAO, const GLuint VBO, const FVertexBufferLayout& Layout)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		int VertexBufferIndex = 0;
+		for (const FVertexBufferElement& Element : Layout)
+		{
+			LK_INFO("VertexBufferIndex={} Size={} ComponentCount={}", VertexBufferIndex, Element.Size, Element.GetComponentCount());
+			switch (Element.Type)
+			{
+				case EShaderDataType::Float:
+				case EShaderDataType::Float2:
+				case EShaderDataType::Float3:
+				case EShaderDataType::Float4:
+				{
+					glEnableVertexAttribArray(VertexBufferIndex);
+					glVertexAttribPointer(VertexBufferIndex,
+										  Element.GetComponentCount(),
+										  OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
+										  (Element.Normalized ? GL_TRUE : GL_FALSE),
+										  Layout.GetStride(),
+										  (const void*)Element.Offset);
+					VertexBufferIndex++;
+					break;
+				}
+				case EShaderDataType::Int:
+				case EShaderDataType::Int2:
+				case EShaderDataType::Int3:
+				case EShaderDataType::Int4:
+				case EShaderDataType::Bool:
+				{
+					glEnableVertexAttribArray(VertexBufferIndex);
+					glVertexAttribIPointer(VertexBufferIndex,
+										   Element.GetComponentCount(),
+										   OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
+										   Layout.GetStride(),
+										   (const void*)Element.Offset);
+					VertexBufferIndex++;
+					break;
+				}
+				case EShaderDataType::Mat3:
+				case EShaderDataType::Mat4:
+				{
+					uint8_t Count = Element.GetComponentCount();
+					for (uint8_t Idx = 0; Idx < Count; Idx++)
+					{
+						glEnableVertexAttribArray(VertexBufferIndex);
+						glVertexAttribPointer(VertexBufferIndex,
+											  Count, 
+											  OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type), 
+											  (Element.Normalized ? GL_TRUE : GL_FALSE),
+											  Layout.GetStride(),
+											  (const void*)(Element.Offset + sizeof(float) * Count * Idx));
+						glVertexAttribDivisor(VertexBufferIndex, 1);
+						VertexBufferIndex++;
+					}
+					break;
+				}
+
+				default: 
+					LK_ERROR("Unhandled shader type: {}", Enum::ToString(Element.Type));
+			}
+		}
 	}
 
 }

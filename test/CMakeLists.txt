@@ -7,6 +7,9 @@ set(TESTS_ENABLED ${LK_BUILD_TESTS})
 # Declare a test option and append it to TEST_OPTIONS.
 # Options are assigned OFF by default.
 #
+# A test option has the prefix LK_TEST and the rest of the name 
+# is the directory where the test source is in.
+#
 # Usage:
 #   test_option(option_name, default_value)
 #
@@ -31,12 +34,13 @@ macro(test_option name)
 	list(APPEND TEST_OPTIONS ${name})
 endmacro()
 
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO_BUFFERLAYOUT)
 test_option(LK_TEST_DRAW_TRIANGLE)
 test_option(LK_TEST_DRAW_TRIANGLE_SHADER)
 test_option(LK_TEST_DRAW_TRIANGLE_SHADER_CONFIGURABLE)
 test_option(LK_TEST_DRAW_TRIANGLE_SHADER_UNIFORM)
 test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO)
+test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO_BUFFERLAYOUT)
+test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO_INSTANCED)
 
 set(LK_TEST_SCREEN_WIDTH "1600" CACHE STRING "Screen width")
 set(LK_TEST_SCREEN_HEIGHT "1050" CACHE STRING "Screen height")
