@@ -33,9 +33,9 @@ static const GLfloat Vertices_Triangle[] =
 
 #define USE_RAW_SHADER_IMPL 0
 
-int main(int argc, char* argv[])
+int main(int Argc, char* Argv[])
 {
-	CTest Test;
+	CTest Test(Argc, Argv);
 	const std::filesystem::path& BinaryDir = Test.GetBinaryDirectory();
 	const CWindow& Window = Test.GetWindow();
 	const FWindowData& WindowData = Window.GetData();
@@ -61,10 +61,10 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		CTest::ImGui_NewFrame();
+		CTestBase::ImGui_NewFrame();
 
-		ImGui::Text("%s", LK_TEST_STRINGIFY(LK_TEST_SUITE));
-		ImGui::Text("Window size: (%d, %d)", WindowData.Width, WindowData.Height);
+		ImGui::Text("%s", LK_TEST_NAME);
+		ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
 
 		glEnableVertexAttribArray(0); /* Position attribute 0 in the vertex shader. */
 		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDisableVertexAttribArray(0);
 
-		CTest::ImGui_EndFrame();
+		CTestBase::ImGui_EndFrame();
 		glfwSwapBuffers(Window.GetGlfwWindow());
 		glfwPollEvents();
 	}

@@ -44,21 +44,12 @@ TEST_CASE("Suite name", "[defines]")
 	REQUIRE(LK_TEST_STRINGIFY(LK_TEST_SUITE) != "LK_TEST_SUITE");
 }
 
-TEST_CASE("Test name", "[defines]")
-{
-#ifdef LK_TEST_NAME
-	REQUIRE(strcmp(LK_TEST_NAME, "LK_TEST_NAME") != 0);
-#else
-	FAIL("LK_TEST_NAME undefined");
-#endif
-}
-
-int main(int argc, char* argv[])
+int main(int Argc, char* Argv[])
 {
 	spdlog::info("Test: {}", LK_TEST_NAME);
-	const int Result = Catch::Session().run(argc, argv);
+	const int Result = Catch::Session().run(Argc, Argv);
 
-	CTest Test;
+	CTest Test(Argc, Argv);
 	const std::filesystem::path& BinaryDir = Test.GetBinaryDirectory();
 	const CWindow& Window = Test.GetWindow();
 	const FWindowData& WindowData = Window.GetData();
@@ -96,10 +87,11 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-		CTest::ImGui_NewFrame();
+		CTestBase::ImGui_NewFrame();
 
-		ImGui::Text("%s", LK_TEST_STRINGIFY(LK_TEST_SUITE));
-		ImGui::Text("Window size: (%d, %d)", WindowData.Width, WindowData.Height);
+		ImGui::Text("%s", LK_TEST_NAME);
+		ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
+
 		ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f");
 		const bool UpdateFragShader = ImGui::SliderFloat3("Fragment Shader", &FragColor.x, 0.0f, 1.0f, "%.3f");
 
@@ -141,7 +133,7 @@ int main(int argc, char* argv[])
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
-		CTest::ImGui_EndFrame();
+		CTestBase::ImGui_EndFrame();
 		glfwSwapBuffers(Window.GetGlfwWindow());
 		glfwPollEvents();
 	}

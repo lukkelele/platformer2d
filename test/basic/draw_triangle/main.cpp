@@ -12,7 +12,7 @@
 #include "core/window.h"
 #include "renderer/opengl.h"
 
-#include "test.h"
+#include "test_base.h"
 
 #ifndef LK_TEST_SUITE
 #error "LK_TEST_SUITE missing"
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
 	platformer2d::CWindow Window(800, 600, LK_TEST_STRINGIFY(LK_TEST_SUITE));
 	Window.Initialize();
-	CTest::InitRenderContext(Window.GetGlfwWindow());
+	CTestBase::InitRenderContext(Window.GetGlfwWindow());
 	const FWindowData& WindowData = Window.GetData();
 
 	GLuint VertexBuffer;
@@ -67,8 +67,8 @@ int main(int argc, char* argv[])
         ImGui::SetNextWindowViewport(Viewport->ID);
 		ImGui::Begin(LK_TEST_STRINGIFY(LK_TEST_SUITE), NULL, CoreViewportFlags);
 
-		ImGui::Text("%s", LK_TEST_STRINGIFY(LK_TEST_SUITE));
-		ImGui::Text("Window size: (%d, %d)", WindowData.Width, WindowData.Height);
+		ImGui::Text("%s", LK_TEST_NAME);
+		ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
 
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
