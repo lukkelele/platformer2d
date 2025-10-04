@@ -34,6 +34,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 	# Disable warnings.
 	project_add_compile_options(
+		/wd4068   # Unknown #pragma mark
+		/wd4267   # Possible loss of data
+		/wd4244   # Possible loss of data
+		/wd4312   # Conversion of greater size
+		/wd28020  # Static analysis warning
+		/wd33011  # Static analysis warning
 		/wd4307
 		/wd26451
 	)
@@ -52,6 +58,7 @@ add_subdirectory(modules)
 target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/src
 	${CMAKE_SOURCE_DIR}/external
+	${CMAKE_SOURCE_DIR}/external/catch2/src
 	${CMAKE_SOURCE_DIR}/external/glfw/include
 	${CMAKE_SOURCE_DIR}/external/glm
 	${CMAKE_SOURCE_DIR}/external/imgui
