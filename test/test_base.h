@@ -3,6 +3,11 @@
 #include <filesystem>
 #include <memory>
 
+#include <catch2/catch_session.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <spdlog/spdlog.h>
+
+#include "core/assert.h"
 #include "core/window.h"
 
 #define __LK_TEST_STRINGIFY(x) #x
@@ -13,24 +18,36 @@
  */
 #define LK_TEST_STRINGIFY(x) __LK_TEST_STRINGIFY(x)
 
-struct GLFWwindow;
-
 namespace platformer2d::test {
 
-	class CTest
+	class CTestBase
 	{
+	protected:
+		explicit CTestBase(int Argc, char* Argv[]);
 	public:
-		CTest();
-		virtual ~CTest() = default;
+		CTestBase() = delete;
+		virtual ~CTestBase() = default;
 
+		virtual void Run() = 0;
+		virtual void Stop();
+		virtual void Destroy() = 0;
+
+		bool IsRunning() const { return Running; }
 		const CWindow& GetWindow() const { return *Window; }
 		const std::filesystem::path& GetBinaryDirectory() const { return BinaryDir; }
+		static const std::filesystem::path& GetAssetsDirectory() { return AssetsDir; }
 
 		static void InitRenderContext(GLFWwindow* GlfwWindow);
 		static void ImGui_NewFrame();
 		static void ImGui_EndFrame();
 
 	protected:
+		bool Running = false;
+		struct {
+			int Argc;
+			char** Argv;
+		} Args;
+
 		std::unique_ptr<CWindow> Window;
 		std::filesystem::path BinaryDir{};
 

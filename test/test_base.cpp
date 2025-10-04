@@ -1,4 +1,4 @@
-#include "test.h"
+#include "test_base.h"
 
 #include <string>
 #include <stdexcept>
@@ -15,7 +15,6 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
-#include <spdlog/spdlog.h>
 
 #include "renderer/opengl.h"
 
@@ -25,7 +24,16 @@
 
 #define FONTS_DIR  ASSETS_DIR "/fonts"
 
+TEST_CASE("Test name", "[defines]")
+{
+#ifndef LK_TEST_NAME
+	FAIL("LK_TEST_NAME undefined");
+#endif
+}
+
 namespace platformer2d::test {
+
+	std::filesystem::path CTestBase::AssetsDir(ASSETS_DIR);
 
 	namespace {
 		constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
@@ -45,7 +53,7 @@ namespace platformer2d::test {
 			| ImGuiDockNodeFlags_NoDockingInCentralNode;
 	}
 
-	static inline std::filesystem::path GetBinaryDirectory()
+	static inline std::filesystem::path GetBinaryDir()
 	{
 #if defined(_WIN32)
 		wchar_t Buffer[MAX_PATH];
@@ -71,23 +79,25 @@ namespace platformer2d::test {
 
 	void SetDarkTheme();
 
-	std::filesystem::path CTest::AssetsDir(ASSETS_DIR);
-
-	CTest::CTest()
-		: BinaryDir(GetBinaryDirectory())
-		//, AssetsDir(ASSETS_DIR)
+	CTestBase::CTestBase(int Argc, char* Argv[])
+		: Args(Argc, Argv)
+		, BinaryDir(GetBinaryDir())
 	{
-		spdlog::set_level(spdlog::level::debug);
-		spdlog::info("{}", LK_TEST_STRINGIFY(LK_TEST_SUITE));
-		spdlog::info("Binary dir: {}", BinaryDir.generic_string());
-		spdlog::debug("Assets dir: {}", AssetsDir.generic_string());
+		spdlog::info("{}", LK_TEST_NAME);
+		LK_DEBUG("Binary dir: {}", BinaryDir.generic_string());
+		LK_DEBUG("Assets dir: {}", AssetsDir.generic_string());
 
-		Window = std::make_unique<CWindow>(800, 600, LK_TEST_STRINGIFY(LK_TEST_SUITE));
+		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_STRINGIFY(LK_TEST_SUITE));
 		Window->Initialize();
 		InitRenderContext(Window->GetGlfwWindow());
 	}
 
-	void CTest::InitRenderContext(GLFWwindow* GlfwWindow)
+	void CTestBase::Stop()
+	{
+		Running = false;
+	}
+
+	void CTestBase::InitRenderContext(GLFWwindow* GlfwWindow)
 	{
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
@@ -120,7 +130,7 @@ namespace platformer2d::test {
 		LK_ASSERT(Font, "Failed to load font");
 	}
 
-	void CTest::ImGui_NewFrame()
+	void CTestBase::ImGui_NewFrame()
 	{
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -136,7 +146,7 @@ namespace platformer2d::test {
 		ImGui::Begin(LK_TEST_STRINGIFY(LK_TEST_SUITE), NULL, Flags); /* LK_TEST_SUITE */
 	}
 
-	void CTest::ImGui_EndFrame()
+	void CTestBase::ImGui_EndFrame()
 	{
 		ImGui::End(); /* LK_TEST_SUITE */
 		ImGui::Render();
