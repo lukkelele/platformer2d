@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <spdlog/spdlog.h>
 
 #define LK_TRACE(...) spdlog::trace(__VA_ARGS__)
