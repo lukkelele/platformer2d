@@ -3,11 +3,8 @@
 #include <stb/stb_image.h>
 
 #include "core/log.h"
-#include "renderer/opengl.h"
 
 namespace platformer2d {
-
-	static_assert(std::is_same_v<LRendererID, GLuint>, "RendererID type mismatch");
 
 	CTexture::CTexture()
 	{
@@ -31,7 +28,6 @@ namespace platformer2d {
 
 		if (InData)
 		{
-			LK_DEBUG("glTexImage2D");
 			LK_OpenGL_Verify(glTexImage2D(
 				GL_TEXTURE_2D, 
 				0, 
@@ -44,7 +40,6 @@ namespace platformer2d {
 				(const void*)InData)
 			);
 
-			spdlog::warn("Release texture data");
 			stbi_image_free(InData);
 		}
 
