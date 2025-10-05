@@ -83,13 +83,17 @@ namespace platformer2d::test {
 		: Args(Argc, Argv)
 		, BinaryDir(GetBinaryDir())
 	{
-		spdlog::info("{}", LK_TEST_NAME);
+		LK_INFO("{}", LK_TEST_NAME);
 		LK_DEBUG("Binary dir: {}", BinaryDir.generic_string());
 		LK_DEBUG("Assets dir: {}", AssetsDir.generic_string());
 
 		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_STRINGIFY(LK_TEST_SUITE));
 		Window->Initialize();
 		InitRenderContext(Window->GetGlfwWindow());
+
+		OpenGL::LoadInfo(BackendInfo);
+		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
+		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
 	}
 
 	void CTestBase::Stop()
@@ -111,7 +115,6 @@ namespace platformer2d::test {
 
 		ImGui_ImplGlfw_InitForOpenGL(GlfwWindow, true);
 		ImGui_ImplOpenGL3_Init("#version 450");
-		spdlog::info("ImGui Version: {}", ImGui::GetVersion());
 
 		SetDarkTheme();
 

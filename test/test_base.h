@@ -9,6 +9,7 @@
 
 #include "core/assert.h"
 #include "core/window.h"
+#include "renderer/backendinfo.h"
 
 #define __LK_TEST_STRINGIFY(x) #x
 
@@ -47,6 +48,8 @@ namespace platformer2d::test {
 			int Argc;
 			char** Argv;
 		} Args;
+
+		OpenGL::FBackendInfo BackendInfo;
 
 		std::unique_ptr<CWindow> Window;
 		std::filesystem::path BinaryDir{};
