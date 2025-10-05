@@ -13,7 +13,8 @@
 
 namespace platformer2d::test {
 
-	namespace {
+	namespace 
+	{
 		constexpr float TriangleVertices[] = {
 			 0.0f,   0.25f,  0.0f,
 			 0.25f, -0.25f,  0.0f,
@@ -50,7 +51,9 @@ namespace platformer2d::test {
 	void CTest::Run()
 	{
 		Running = true;
-		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
+		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
+		LK_DEBUG("Catch result: {}", CatchResult);
+
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
 		const CWindow& Window = GetWindow();
 		const FWindowData& WindowData = Window.GetData();
@@ -59,19 +62,18 @@ namespace platformer2d::test {
 		/*********************************
 		 * Triangle
 		 *********************************/
-		GLuint TriangleVAO;
-		glGenVertexArrays(1, &TriangleVAO);
-		glBindVertexArray(TriangleVAO);
+		GLuint TriangleVAO = OpenGL::VertexArray::Create();
 
-		/* Add vertex buffer. */
+		/**
+		 * Buffer layout.
+		 * Must match the data passed to the vertex buffer.
+		 */
+		const FVertexBufferLayout TriangleLayout = {
+			{ "pos", EShaderDataType::Float3, },
+		};
+
 		static_assert(sizeof(TriangleVertices) > 0);
-		GLuint TriangleVBO;
-		glGenBuffers(1, &TriangleVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, TriangleVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(TriangleVertices), TriangleVertices, GL_STATIC_DRAW);
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (3 * sizeof(float)), nullptr);
+		GLuint TriangleVBO = OpenGL::VertexBuffer::Create(TriangleVertices, TriangleLayout);
 		glBindVertexArray(0);
 
 		const std::filesystem::path VertexShaderPath = BinaryDir / "vertex.shader";
@@ -82,57 +84,36 @@ namespace platformer2d::test {
 		/*********************************
 		 * Rectangle
 		 *********************************/
-		GLuint RectangleVAO;
-		glGenVertexArrays(1, &RectangleVAO);
-		glBindVertexArray(RectangleVAO);
+		const FVertexBufferLayout RectangleLayout = {
+			{ "pos",      EShaderDataType::Float2, },
+			{ "texcoord", EShaderDataType::Float2, },
+		};
 
-		GLuint RectangleVBO;
-		glGenBuffers(1, &RectangleVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, RectangleVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(RectangleVertices), RectangleVertices, GL_STATIC_DRAW);
+		GLuint RectangleVAO = OpenGL::VertexArray::Create();
+		GLuint RectangleVBO = OpenGL::VertexBuffer::Create(RectangleVertices, RectangleLayout);
+		/* Create element array buffer for the rectangle indices. */
+		GLuint RectangleEBO = OpenGL::ElementBuffer::Create(RectangleIndices);
 
-		/* Create element array buffer for rectangle. */
-		GLuint RectangleEBO;
-		glGenBuffers(1, &RectangleEBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RectangleEBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(RectangleIndices), RectangleIndices, GL_STATIC_DRAW);
-
-		/* Position. */
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
-		glEnableVertexAttribArray(0);
-		/* Texture coordinates. */
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-		glEnableVertexAttribArray(1);
 		glBindVertexArray(0);
 
 		const std::filesystem::path RectVertexShaderPath = BinaryDir / "rect_vertex.shader";
 		const std::filesystem::path RectFragmentShaderPath = BinaryDir / "rect_frag.shader";
 		CShader RectangleShader(RectVertexShaderPath, RectFragmentShaderPath);
 
+		const char* TexturePath = ASSETS_DIR "/textures/bricks.jpg";
+		LK_VERIFY(std::filesystem::exists(TexturePath));
+
 
 		/*********************************
 		 * Texture
 		 *********************************/
-		const char* TexturePath = ASSETS_DIR "/textures/bricks.jpg";
-		LK_VERIFY(std::filesystem::exists(TexturePath));
-		uint8_t* TextureData = nullptr;
+		stbi_uc* TextureData = nullptr;
 		int ReadWidth, ReadHeight, ReadChannels;
 		TextureData = (uint8_t*)stbi_loadf(TexturePath, &ReadWidth, &ReadHeight, &ReadChannels, 4);
+		LK_INFO("Texture: {}x{}", ReadWidth, ReadHeight);
 		LK_ASSERT(TextureData && (ReadWidth > 0) && (ReadHeight > 0), "Corrupt texture");
-		constexpr GLenum ImageFormat = GL_RGBA;
-		constexpr GLenum InternalImageFormat = GL_RGBA32F;
-		GLuint TextureID;
-		glGenTextures(1, &TextureID);
-		glBindTexture(GL_TEXTURE_2D, TextureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, InternalImageFormat, ReadWidth, ReadHeight, 0, ImageFormat, GL_FLOAT, (const void*)TextureData);
-		stbi_image_free(TextureData);
-
-		/* Set texture wrap and filter. */
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+		CTexture Texture(ReadWidth, ReadHeight, TextureData);
+		const uint32_t TextureID = Texture.GetRendererID();
 
 		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
 		glm::vec4 FragColor{ 0.410f, 0.181f, 0.813f, 1.0f };
@@ -154,7 +135,7 @@ namespace platformer2d::test {
 			ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f");
 
 			/* -- Triangle -- */
-			ImGui::Dummy(ImVec2(0, 20));
+			ImGui::Dummy(ImVec2(0, 14));
 			ImGui::SeparatorText("Triangle");
 			ImGui::PushID(ImGui::GetID("Triangle"));
 			const bool UpdateFragShader = ImGui::SliderFloat4("Fragment Shader", &FragColor.x, 0.0f, 1.0f, "%.3f");
@@ -164,7 +145,7 @@ namespace platformer2d::test {
 			/* -- ~Triangle -- */
 
 			/* -- Rectangle -- */
-			ImGui::Dummy(ImVec2(0, 20));
+			ImGui::Dummy(ImVec2(0, 14));
 			ImGui::SeparatorText("Rectangle");
 			ImGui::PushID(ImGui::GetID("Rectangle"));
 			static glm::vec2 RectOffset = { -0.12f, -0.24f };
@@ -172,14 +153,13 @@ namespace platformer2d::test {
 			ImGui::PopID();
 			/* -- ~Rectangle -- */
 
-			/* Draw rectangle with the texture. */
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, TextureID);
+			/* Draw rectangle. */
+			Texture.Bind();
 			RectangleShader.Set("u_offset", RectOffset);
 			RectangleShader.Set("u_texture", 0);
 			glBindVertexArray(RectangleVAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			glBindTexture(GL_TEXTURE_2D, 0);
+			Texture.Unbind();
 
 			/* Draw triangle. */
 			TriangleShader.Set("u_offset", Offset);

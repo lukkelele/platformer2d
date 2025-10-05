@@ -26,3 +26,4 @@ if (shader_files)
 else()
 	message(FATAL_ERROR "Found no shaders")
 endif()
+
