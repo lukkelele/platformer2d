@@ -1,6 +1,10 @@
 #pragma once
 
+#include <initializer_list>
+#include <vector>
+
 #include "core/core.h"
+#include "core/log.h"
 
 namespace platformer2d {
 
