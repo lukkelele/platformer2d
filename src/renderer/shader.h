@@ -1,17 +1,28 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
 #include <unordered_map>
 
-#include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 
-#include "core/core.h"
 #include "core/assert.h"
+#include "core/core.h"
+#include "core/log.h"
 
 #include "opengl.h"
 
 namespace platformer2d {
+
+	struct FShaderProgramSource
+	{
+		std::string Vertex{};
+		std::string Fragment{};
+
+		bool IsValid() const
+		{
+			return (!Vertex.empty() && !Fragment.empty());
+		}
+	};
 
 	class CShader
 	{
@@ -24,6 +35,17 @@ namespace platformer2d {
 		FORCEINLINE void Unbind() const { LK_OpenGL_Verify(glUseProgram(0)); }
 		FORCEINLINE LRendererID GetProgramID() const { return RendererID; }
 
+		void Set(std::string_view Uniform, int Value);
+		void Set(std::string_view Uniform, uint32_t Value);
+		void Set(std::string_view Uniform, float Value);
+		void Set(std::string_view Uniform, bool Value);
+		void Set(std::string_view Uniform, const glm::vec2& Value);
+		void Set(std::string_view Uniform, const glm::vec3& Value);
+		void Set(std::string_view Uniform, const glm::vec4& Value);
+		void Get(std::string_view Uniform, glm::vec2& Value);
+		void Get(std::string_view Uniform, glm::vec3& Value);
+		void Get(std::string_view Uniform, glm::vec4& Value);
+
 		FORCEINLINE int GetUniformLocation(const std::string& Uniform)
 		{
 			if (UniformLocationCache.find(Uniform) != UniformLocationCache.end())
@@ -33,13 +55,14 @@ namespace platformer2d {
 
 			int UniformLocation;
 			LK_OpenGL_Verify(UniformLocation = glGetUniformLocation(RendererID, Uniform.c_str()));
-			if (UniformLocation == -1)
+			if (UniformLocation != -1)
 			{
-				spdlog::warn("Uniform '{}' is not in use ({})", Uniform, FilePath.filename().string());
+				UniformLocationCache[Uniform] = UniformLocation;
 			}
-
-			/** @todo Should caching be placed in 'else' statement here? */
-			UniformLocationCache[Uniform] = UniformLocation;
+			else
+			{
+				LK_WARN("Uniform '{}' is not in use", Uniform);
+			}
 
 			return UniformLocation;
 		}
@@ -50,6 +73,5 @@ namespace platformer2d {
 	private:
 		LRendererID RendererID;
 		std::unordered_map<std::string, int> UniformLocationCache{};
-		std::filesystem::path FilePath{};
 	};
 }

@@ -9,6 +9,9 @@
 
 namespace platformer2d {
 
+	static_assert(std::is_same_v<uint32_t, GLuint>);
+	static_assert(std::is_same_v<float, GLfloat>);
+
 	/**
 	 * @brief Read contents of a shader file.
 	 * @returns Number of lines read from file.
@@ -46,7 +49,6 @@ namespace platformer2d {
 
 		uint32_t Program;
 		LK_OpenGL_Verify(Program = glCreateProgram());
-		spdlog::debug("Program={}", Program);
 
 		std::string VertexSource;
 		const uint16_t VertexShaderLines = ReadShaderFile(VertexShaderPath, VertexSource);
@@ -74,12 +76,84 @@ namespace platformer2d {
 		RendererID = Program;
 	}
 
+	void CShader::Set(std::string_view Uniform, const int Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform1i(GetUniformLocation(Uniform.data()), Value));
+	}
+
+	void CShader::Set(std::string_view Uniform, const uint32_t Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform1ui(GetUniformLocation(Uniform.data()), Value));
+	}
+
+	void CShader::Set(std::string_view Uniform, const float Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform1f(GetUniformLocation(Uniform.data()), Value));
+	}
+
+	void CShader::Set(std::string_view Uniform, const bool Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform1i(GetUniformLocation(Uniform.data()), static_cast<int>(Value)));
+	}
+
+	void CShader::Set(std::string_view Uniform, const glm::vec2& Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform2f(GetUniformLocation(Uniform.data()), Value.x, Value.y));
+	}
+
+	void CShader::Set(std::string_view Uniform, const glm::vec3& Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform3f(GetUniformLocation(Uniform.data()), Value.x, Value.y, Value.z));
+	}
+
+	void CShader::Set(std::string_view Uniform, const glm::vec4& Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+		LK_OpenGL_Verify(glUniform4f(GetUniformLocation(Uniform.data()), Value.x, Value.y, Value.z, Value.w));
+	}
+
+	void CShader::Get(std::string_view Uniform, glm::vec2& Value)
+	{
+		float ValueArray[2] = { 0 };
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
+		Value.x = ValueArray[0];
+		Value.y = ValueArray[1];
+	}
+
+	void CShader::Get(std::string_view Uniform, glm::vec3& Value)
+	{
+		float ValueArray[3] = { 0 };
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
+		Value.x = ValueArray[0];
+		Value.y = ValueArray[1];
+		Value.z = ValueArray[2];
+	}
+
+	void CShader::Get(std::string_view Uniform, glm::vec4& Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+#if 0
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), &Value.x));
+#else
+		float ValueArray[4] = { 0 };
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
+		Value.x = ValueArray[0];
+		Value.y = ValueArray[1];
+		Value.z = ValueArray[2];
+		Value.w = ValueArray[3];
+#endif
+	}
+
 	uint32_t CShader::CompileShader(const uint32_t ShaderType, const std::string& ShaderSource)
 	{
-		static_assert(std::is_same_v<uint32_t, GLuint>, "GLuint type mismatch");
 		uint32_t ShaderID;
 		LK_OpenGL_Verify(ShaderID = glCreateShader(ShaderType));
-		spdlog::debug("Type={} ShaderID={}", ShaderType, ShaderID);
 
 		const char* Source = ShaderSource.c_str();
 		LK_OpenGL_Verify(glShaderSource(ShaderID, 1, &Source, nullptr));
@@ -98,8 +172,8 @@ namespace platformer2d {
 			char* ErrorMessage = (char*)alloca(Length * sizeof(char));
 		#endif
 			LK_OpenGL_Verify(glGetShaderInfoLog(ShaderID, Length, &Length, ErrorMessage));
-			spdlog::error("Failed to compile {} shader at {}\nError: \"{}\"",
-							  ((ShaderType == GL_VERTEX_SHADER) ? "vertex" : "fragment"), FilePath.generic_string(), ErrorMessage);
+			spdlog::error("Failed to compile {} shader\nError: \"{}\"",
+							  ((ShaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT"), ErrorMessage);
 			LK_OpenGL_Verify(glDeleteShader(ShaderID));
 			return 0;
 		}
