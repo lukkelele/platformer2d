@@ -49,7 +49,13 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	project_add_compile_definitions(LK_COMPILER_GNU)
 endif()
 
-project_add_compile_definitions(ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
+set(LK_ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
+make_directory(${CMAKE_BINARY_DIR}/intermediate)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/config.h.in
+    ${CMAKE_BINARY_DIR}/intermediate/lk_config.h
+)
+target_include_directories(${PROJECT_INTERFACE} INTERFACE ${CMAKE_BINARY_DIR}/intermediate)
 
 add_subdirectory(src)
 add_subdirectory(test)

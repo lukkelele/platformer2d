@@ -7,6 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <spdlog/spdlog.h>
 
+#include "lk_config.h"
 #include "core/assert.h"
 #include "core/window.h"
 #include "renderer/backendinfo.h"

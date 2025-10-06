@@ -22,8 +22,6 @@
 #error "LK_TEST_SUITE not defined"
 #endif
 
-#define FONTS_DIR  ASSETS_DIR "/fonts"
-
 TEST_CASE("Test name", "[defines]")
 {
 #ifndef LK_TEST_NAME
