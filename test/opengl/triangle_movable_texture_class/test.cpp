@@ -100,7 +100,7 @@ namespace platformer2d::test {
 		const std::filesystem::path RectFragmentShaderPath = BinaryDir / "rect_frag.shader";
 		CShader RectangleShader(RectVertexShaderPath, RectFragmentShaderPath);
 
-		const char* TexturePath = ASSETS_DIR "/textures/bricks.jpg";
+		const char* TexturePath = TEXTURES_DIR "/bricks.jpg";
 		LK_VERIFY(std::filesystem::exists(TexturePath));
 
 
