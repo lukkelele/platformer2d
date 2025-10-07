@@ -65,7 +65,7 @@ namespace platformer2d::test {
 		const std::filesystem::path RectFragmentShaderPath = BinaryDir / "frag.shader";
 		CShader RectangleShader(RectVertexShaderPath, RectFragmentShaderPath);
 
-		const char* TexturePath = TEXTURES_DIR "/bricks.jpg";
+		const char* TexturePath = TEXTURES_DIR "/white.png";
 		LK_VERIFY(std::filesystem::exists(TexturePath));
 
 
@@ -81,7 +81,7 @@ namespace platformer2d::test {
 		const uint32_t TextureID = Texture.GetRendererID();
 
 		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
-		glm::vec4 FragColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+		glm::vec4 FragColor{ 1.0f, 0.560f, 1.0f, 1.0f };
 
 		while (Running)
 		{
