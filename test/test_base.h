@@ -55,7 +55,7 @@ namespace platformer2d::test {
 		std::unique_ptr<CWindow> Window;
 		std::filesystem::path BinaryDir{};
 
-		static std::filesystem::path AssetsDir;
+		inline static std::filesystem::path AssetsDir = ASSETS_DIR;
 	};
 
 }

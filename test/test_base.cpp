@@ -31,8 +31,6 @@ TEST_CASE("Test name", "[defines]")
 
 namespace platformer2d::test {
 
-	std::filesystem::path CTestBase::AssetsDir(ASSETS_DIR);
-
 	namespace {
 		constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
 			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
