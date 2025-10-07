@@ -76,6 +76,38 @@ namespace platformer2d {
 		RendererID = Program;
 	}
 
+	void CShader::Get(std::string_view Uniform, glm::vec2& Value)
+	{
+		float ValueArray[2] = { 0 };
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
+		Value.x = ValueArray[0];
+		Value.y = ValueArray[1];
+	}
+
+	void CShader::Get(std::string_view Uniform, glm::vec3& Value)
+	{
+		float ValueArray[3] = { 0 };
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
+		Value.x = ValueArray[0];
+		Value.y = ValueArray[1];
+		Value.z = ValueArray[2];
+	}
+
+	void CShader::Get(std::string_view Uniform, glm::vec4& Value)
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+#if 0
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), &Value.x));
+#else
+		float ValueArray[4] = { 0 };
+		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
+		Value.x = ValueArray[0];
+		Value.y = ValueArray[1];
+		Value.z = ValueArray[2];
+		Value.w = ValueArray[3];
+#endif
+	}
+
 	void CShader::Set(std::string_view Uniform, const int Value)
 	{
 		LK_OpenGL_Verify(glUseProgram(RendererID));
@@ -118,37 +150,12 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glUniform4f(GetUniformLocation(Uniform.data()), Value.x, Value.y, Value.z, Value.w));
 	}
 
-	void CShader::Get(std::string_view Uniform, glm::vec2& Value)
-	{
-		float ValueArray[2] = { 0 };
-		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
-		Value.x = ValueArray[0];
-		Value.y = ValueArray[1];
-	}
-
-	void CShader::Get(std::string_view Uniform, glm::vec3& Value)
-	{
-		float ValueArray[3] = { 0 };
-		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
-		Value.x = ValueArray[0];
-		Value.y = ValueArray[1];
-		Value.z = ValueArray[2];
-	}
-
-	void CShader::Get(std::string_view Uniform, glm::vec4& Value)
+	void CShader::Set(std::string_view Uniform, const glm::mat4& Value)
 	{
 		LK_OpenGL_Verify(glUseProgram(RendererID));
-#if 0
-		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), &Value.x));
-#else
-		float ValueArray[4] = { 0 };
-		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
-		Value.x = ValueArray[0];
-		Value.y = ValueArray[1];
-		Value.z = ValueArray[2];
-		Value.w = ValueArray[3];
-#endif
+		LK_OpenGL_Verify(glUniformMatrix4fv(GetUniformLocation(Uniform.data()), 1, GL_FALSE, &Value[0][0]));
 	}
+
 
 	uint32_t CShader::CompileShader(const uint32_t ShaderType, const std::string& ShaderSource)
 	{

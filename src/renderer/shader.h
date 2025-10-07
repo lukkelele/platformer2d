@@ -35,6 +35,9 @@ namespace platformer2d {
 		FORCEINLINE void Unbind() const { LK_OpenGL_Verify(glUseProgram(0)); }
 		FORCEINLINE LRendererID GetProgramID() const { return RendererID; }
 
+		void Get(std::string_view Uniform, glm::vec2& Value);
+		void Get(std::string_view Uniform, glm::vec3& Value);
+		void Get(std::string_view Uniform, glm::vec4& Value);
 		void Set(std::string_view Uniform, int Value);
 		void Set(std::string_view Uniform, uint32_t Value);
 		void Set(std::string_view Uniform, float Value);
@@ -42,9 +45,7 @@ namespace platformer2d {
 		void Set(std::string_view Uniform, const glm::vec2& Value);
 		void Set(std::string_view Uniform, const glm::vec3& Value);
 		void Set(std::string_view Uniform, const glm::vec4& Value);
-		void Get(std::string_view Uniform, glm::vec2& Value);
-		void Get(std::string_view Uniform, glm::vec3& Value);
-		void Get(std::string_view Uniform, glm::vec4& Value);
+		void Set(std::string_view Uniform, const glm::mat4& Value);
 
 		FORCEINLINE int GetUniformLocation(const std::string& Uniform)
 		{
