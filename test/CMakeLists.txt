@@ -34,16 +34,45 @@ macro(test_option name)
 	list(APPEND TEST_OPTIONS ${name})
 endmacro()
 
-test_option(LK_TEST_DRAW_TRIANGLE)
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER)
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER_CONFIGURABLE)
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER_UNIFORM)
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO)
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO_BUFFERLAYOUT)
-test_option(LK_TEST_DRAW_TRIANGLE_SHADER_VAO_INSTANCED)
-test_option(LK_TEST_DRAW_TRIANGLE_MOVABLE)
-test_option(LK_TEST_DRAW_TRIANGLE_MOVABLE_TEXTURE)
-test_option(LK_TEST_DRAW_TRIANGLE_MOVABLE_TEXTURE_CLASS)
+# TODO: Not working yet
+function(create_test_options base_dir prefix)
+	file(GLOB_RECURSE candidates
+        RELATIVE ${base_dir}
+		${base_dir}/*/main.cpp
+	)
+
+	if (NOT candidates)
+		message(WARNING "No test directories found: ${base_dir}")
+		return()
+	endif()
+
+	set(_test_options "")
+	foreach(file_path IN LISTS candidates)
+		get_filename_component(dir_path "${file_path}" DIRECTORY)
+		string(REPLACE "/" "_" opt_name "${dir_path}")
+		string(TOUPPER "${opt_name}" opt_name)
+
+		set(option_name "${prefix}_${opt_name}")
+		option(${option_name} "Test: ${dir_path}" OFF)
+
+		list(APPEND _test_options "${option_name}")
+		message(DEBUG "_test_options: ${_test_options}")
+	endforeach()
+	set(TEST_OPTIONS "${_test_options}" PARENT_SCOPE)
+endfunction()
+
+test_option(LK_TEST_MOVEMENT_BASE_LEVEL)
+test_option(LK_TEST_OPENGL_TRIANGLE)
+test_option(LK_TEST_OPENGL_TRIANGLE_SHADER)
+test_option(LK_TEST_OPENGL_TRIANGLE_SHADER_CONFIGURABLE)
+test_option(LK_TEST_OPENGL_TRIANGLE_SHADER_UNIFORM)
+test_option(LK_TEST_OPENGL_TRIANGLE_SHADER_VAO)
+test_option(LK_TEST_OPENGL_TRIANGLE_SHADER_VAO_BUFFERLAYOUT)
+test_option(LK_TEST_OPENGL_TRIANGLE_SHADER_VAO_INSTANCED)
+test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE)
+test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE_TEXTURE)
+test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE_TEXTURE_CLASS)
+test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE_TEXTURE_CLASS_TRANSFORM)
 
 set(LK_TEST_SCREEN_WIDTH "1600" CACHE STRING "Screen width")
 set(LK_TEST_SCREEN_HEIGHT "1050" CACHE STRING "Screen height")
@@ -56,16 +85,17 @@ function(add_tests_recursive dir)
             continue()
         endif()
 
-		get_filename_component(TEST_NAME "${subdir}" NAME)
+		string(REGEX REPLACE ".*${CMAKE_CURRENT_SOURCE_DIR}/" "" dir_name "${subdir}")
+		string(REPLACE "/" "_" TEST_NAME "${dir_name}")
 		string(TOUPPER "${TEST_NAME}" TEST_NAME_UPPER)
-		set(OPT_NAME "LK_TEST_${TEST_NAME_UPPER}")
+		set(opt_name "LK_TEST_${TEST_NAME_UPPER}")
 
 		# Check if this subdir corresponds to an option in TEST_OPTIONS.
-		list(FIND TEST_OPTIONS ${OPT_NAME} IDX)
-		if (NOT IDX EQUAL -1)
-			if (LK_BUILD_TESTS OR ${OPT_NAME})
+		list(FIND TEST_OPTIONS ${opt_name} idx)
+		if (NOT idx EQUAL -1)
+			if (LK_BUILD_TESTS OR ${opt_name})
 				string(REGEX REPLACE ".*${PROJECT_NAME}/" "" subdir_short_path "${subdir}")
-				message(STATUS "[*] ${OPT_NAME} (${subdir_short_path})")
+				message(STATUS "[*] ${opt_name} (${subdir_short_path})")
 				set(TESTS_ENABLED ON)
 
 				if (NOT EXISTS "${subdir}/CMakeLists.txt")
@@ -103,9 +133,9 @@ function(add_tests_recursive dir)
 					RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${TEST_NAME}"
 				)
 
-				add_subdirectory(${subdir} ${OPT_NAME})
+				add_subdirectory(${subdir} ${opt_name})
 			else()
-				message(STATUS "[ ] ${OPT_NAME}")
+				message(STATUS "[ ] ${opt_name}")
 			endif()
 		endif()
 
