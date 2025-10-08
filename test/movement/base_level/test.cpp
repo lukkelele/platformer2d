@@ -65,23 +65,43 @@ namespace platformer2d::test {
 		const std::filesystem::path RectFragmentShaderPath = BinaryDir / "frag.shader";
 		CShader RectangleShader(RectVertexShaderPath, RectFragmentShaderPath);
 
-		const char* TexturePath = TEXTURES_DIR "/white.png";
-		LK_VERIFY(std::filesystem::exists(TexturePath));
-
+		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
+		const char* BricksTexturePath = TEXTURES_DIR "/bricks.jpg";
+		LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
+		LK_VERIFY(std::filesystem::exists(BricksTexturePath));
 
 		/*********************************
 		 * Texture
 		 *********************************/
-		stbi_uc* TextureData = nullptr;
-		int ReadWidth, ReadHeight, ReadChannels;
-		TextureData = (uint8_t*)stbi_loadf(TexturePath, &ReadWidth, &ReadHeight, &ReadChannels, 4);
-		LK_INFO("Texture: {}x{}", ReadWidth, ReadHeight);
-		LK_ASSERT(TextureData && (ReadWidth > 0) && (ReadHeight > 0), "Corrupt texture");
-		CTexture Texture(ReadWidth, ReadHeight, TextureData);
-		const uint32_t TextureID = Texture.GetRendererID();
+		FTextureSpecification Spec = {
+			.Path = WhiteTexturePath,
+			.Width = 200,
+			.Height = 200,
+			.Format = EImageFormat::RGBA32F,
+			.SamplerWrap = ETextureWrap::Clamp,
+			.SamplerFilter = ETextureFilter::Nearest,
+		};
+		CTexture PlayerTexture(Spec);
+
+		Spec.Path = BricksTexturePath;
+		Spec.Width = 512;
+		Spec.Height = 512;
+		CTexture PlatformTexture(Spec);
 
 		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
 		glm::vec4 FragColor{ 1.0f, 0.560f, 1.0f, 1.0f };
+
+		auto HandleInput = [](glm::vec2& Position, const float MovementDiff) -> void
+		{
+			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_A))
+			{
+				Position.x -= MovementDiff;
+			}
+			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_D))
+			{
+				Position.x += MovementDiff;
+			}
+		};
 
 		while (Running)
 		{
@@ -92,8 +112,7 @@ namespace platformer2d::test {
 
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
-			ImGui::Text("Texture: %dx%d", ReadWidth, ReadHeight);
-			ImGui::Text("Channels: %d", ReadChannels);
+			ImGui::Text("Texture: %dx%d", PlayerTexture.GetWidth(), PlayerTexture.GetHeight());
 
 			ImGui::SetNextItemWidth(320.0f);
 			ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f");
@@ -105,45 +124,64 @@ namespace platformer2d::test {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
 
-			static glm::vec2 RectPos{ -0.28f, -0.41f };
-			static constexpr float MovementDiff = 0.00010f;
-
-			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_A))
-			{
-				RectPos.x -= MovementDiff;
-			}
-			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_D))
-			{
-				RectPos.x += MovementDiff;
-			}
-
-			/* -- Rectangle -- */
-			ImGui::SeparatorText("Rectangle");
-			ImGui::PushID(ImGui::GetID("Rectangle"));
-			const bool UpdateFragShader = ImGui::SliderFloat4("Fragment Shader", &FragColor.x, 0.0f, 1.0f, "%.3f");
-
-			/* Calculate rectangle transform. */
-			ImGui::SliderFloat2("Position", &RectPos.x, -0.50f, 0.50f, "%.2f");
-			static glm::vec2 RectScale{ 0.10f, 0.10f };
-			ImGui::SliderFloat2("Scale", &RectScale.x, 0.01f, 0.30f, "%.2f");
-			glm::mat4 RectTransform = glm::mat4(1.0f);
-			static float RectRot = 0.0f;
-			ImGui::SliderFloat("Rotation", &RectRot, 0.0f, 360.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
-			RectTransform = glm::translate(RectTransform, glm::vec3(RectPos, 0.0f));
-			RectTransform = glm::scale(RectTransform, glm::vec3(RectScale, 1.0f));
-			RectTransform = glm::rotate(RectTransform, glm::radians(RectRot), glm::vec3(0.0f, 0.0f, 1.0f));
-			RectangleShader.Set("u_transform", RectTransform);
-
+			/* -- Player -- */
+			ImGui::SeparatorText("Player");
+			ImGui::PushID(ImGui::GetID("Player"));
+			ImGui::SliderFloat4("Color", &FragColor.x, 0.0f, 1.0f, "%.3f");
+			static glm::vec2 PlayerPos{ -0.28f, -0.41f };
+			ImGui::SliderFloat2("Position", &PlayerPos.x, -0.50f, 0.50f, "%.2f");
+			static glm::vec2 PlayerScale{ 0.10f, 0.10f };
+			ImGui::SliderFloat2("Scale", &PlayerScale.x, 0.01f, 0.30f, "%.2f");
+			static float PlayerRot = 0.0f;
+			ImGui::SliderFloat("Rotation", &PlayerRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
+			static float MovementSpeed = 0.00032f;
+			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 0.00015f, 0.00040f, "%.5f"); /* @todo: Convert to larger number */
 			ImGui::PopID();
-			/* -- ~Rectangle -- */
 
-			/* Draw rectangle. */
-			Texture.Bind();
+			HandleInput(PlayerPos, MovementSpeed);
+			/* -- ~Player-- */
+
+			ImGui::TableSetColumnIndex(1);
+
+			/* Draw platform. */
+			static glm::vec2 PlatformPos { -0.07f, -0.82f };
+			static glm::vec4 PlatformFragColor{ 0.284f, 0.349f, 0.630f, 1.0f };
+			ImGui::SeparatorText("Platform");
+			ImGui::PushID(ImGui::GetID("Platform"));
+			ImGui::SliderFloat4("Color", &PlatformFragColor.x, 0.0f, 1.0f, "%.3f");
+			ImGui::SliderFloat2("Position", &PlatformPos.x, -2.0, 2.0f, "%.2f");
+			static glm::vec2 PlatformScale{ 0.65f, 0.31f };
+			ImGui::SliderFloat2("Scale", &PlatformScale.x, 0.01f, 2.0f, "%.2f");
+			static float PlatformRot = 0.0f;
+			ImGui::SliderFloat("Rotation", &PlatformRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
+			ImGui::PopID();
+
+			glm::mat4 PlatformTransform = glm::mat4(1.0f);
+			PlatformTransform = glm::translate(PlatformTransform, glm::vec3(PlatformPos, 0.0f))
+				* glm::rotate(PlatformTransform, glm::radians(PlatformRot), glm::vec3(0.0f, 0.0f, 1.0f))
+				* glm::scale(PlatformTransform, glm::vec3(PlatformScale, 1.0f));
+			RectangleShader.Set("u_transform", PlatformTransform);
+			PlatformTexture.Bind();
+			RectangleShader.Set("u_texture", 0);
+			RectangleShader.Set("u_color", PlatformFragColor);
+			glBindVertexArray(RectangleVAO);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			PlatformTexture.Unbind();
+			glBindVertexArray(0);
+
+			/* Draw player. */
+			glm::mat4 PlayerTransform = glm::mat4(1.0f);
+			PlayerTransform = glm::translate(PlayerTransform, glm::vec3(PlayerPos, 0.0f))
+				* glm::rotate(PlayerTransform, glm::radians(PlayerRot), glm::vec3(0.0f, 0.0f, 1.0f))
+				* glm::scale(PlayerTransform, glm::vec3(PlayerScale, 1.0f));
+			RectangleShader.Set("u_transform", PlayerTransform);
+
+			PlayerTexture.Bind();
 			RectangleShader.Set("u_texture", 0);
 			RectangleShader.Set("u_color", FragColor);
 			glBindVertexArray(RectangleVAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			Texture.Unbind();
+			PlayerTexture.Unbind();
 
 			ImGui::EndTable();
 
