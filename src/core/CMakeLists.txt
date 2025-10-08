@@ -1,6 +1,7 @@
 project_library(core)
 project_library_sources(
 	assert.h
+	buffer.h
 	core.h
 	log.h
 	window.h
