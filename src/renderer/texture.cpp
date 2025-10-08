@@ -10,6 +10,60 @@ namespace platformer2d {
 	{
 	}
 
+	CTexture::CTexture(const FTextureSpecification& Specification)
+		: Path(Specification.Path)
+	{
+		LK_ASSERT((Specification.Width > 0) && (Specification.Height > 0) && !Specification.Path.empty());
+		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
+		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, RendererID));
+
+		int ReadWidth, ReadHeight, ReadChannels;
+		float* Data = stbi_loadf(Specification.Path.c_str(), &ReadWidth, &ReadHeight, &ReadChannels, 4);
+		LK_ASSERT(Data != NULL, "Failed to load texture from: {}", Specification.Path);
+		if ((ReadWidth != Specification.Width) || (ReadHeight != Specification.Height))
+		{
+			LK_WARN("Texture mismatch ({}) between specified and actual size ({}x{} != {}x{})",
+					Path.filename().generic_string(), Specification.Width, Specification.Height,
+					ReadWidth, ReadHeight);
+		}
+
+		Width = ReadWidth;
+		Height = ReadHeight;
+		const uint64_t ImageSize = OpenGL::CalculateImageSize(Specification.Format, Width, Height);
+		LK_DEBUG("Image size: {} bytes", ImageSize);
+		ImageData = FBuffer(Data, ImageSize);
+
+		Format = OpenGL::GetImageFormat(Specification.Format);
+		InternalFormat = OpenGL::GetImageInternalFormat(Specification.Format);
+		DataType = OpenGL::GetFormatDataType(Specification.Format);
+
+		if (Data)
+		{
+			LK_OpenGL_Verify(glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				InternalFormat,
+				ReadWidth,
+				ReadHeight,
+				0,
+				Format,
+				DataType,
+				Data
+			));
+
+			stbi_image_free(Data);
+		}
+
+		const bool bMipmap = (Specification.Mips > 1);
+		if (bMipmap)
+		{
+			glGenerateMipmap(RendererID);
+		}
+
+		OpenGL::SetTextureWrap(Specification.SamplerWrap);
+		OpenGL::SetTextureFilter(Specification.SamplerFilter, bMipmap);
+	}
+
 	CTexture::CTexture(const uint16_t InWidth, const uint16_t InHeight, void* InData)
 		: Width(InWidth)
 		, Height(InHeight)
@@ -29,16 +83,16 @@ namespace platformer2d {
 		if (InData)
 		{
 			LK_OpenGL_Verify(glTexImage2D(
-				GL_TEXTURE_2D, 
-				0, 
-				InternalImageFormat, 
-				Width, 
+				GL_TEXTURE_2D,
+				0,
+				InternalImageFormat,
+				Width,
 				Height,
 				0,
-				ImageFormat, 
-				GL_FLOAT, 
-				(const void*)InData)
-			);
+				ImageFormat,
+				GL_FLOAT,
+				(const void*)InData
+			));
 
 			stbi_image_free(InData);
 		}
@@ -56,6 +110,40 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 		//LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 		//LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	}
+
+	void CTexture::Invalidate()
+	{
+		if (RendererID)
+		{
+			LK_OpenGL_Verify(glDeleteTextures(1, &RendererID));
+			RendererID = 0;
+		}
+
+		const uint32_t MipCount = OpenGL::CalculateMipCount(Width, Height);
+		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
+		LK_OpenGL_Verify(glTextureStorage2D(
+			RendererID,
+			MipCount,
+			InternalFormat,
+			Width,
+			Height
+		));
+
+		if (ImageData)
+		{
+			LK_OpenGL_Verify(glTextureSubImage2D(
+				RendererID,
+				0,
+				0,
+				0,
+				Width,
+				Height,
+				Format,
+				DataType,
+				ImageData.Data
+			));
+		}
 	}
 
 }
