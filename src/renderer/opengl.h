@@ -6,56 +6,71 @@
 
 #include "core/assert.h"
 #include "backendinfo.h"
+#include "texture_enums.h"
 #include "vertexbufferlayout.h"
 
 #define LK_VERTEXARRAY_RETURN_STD_ARRAY 1
-
-namespace platformer2d::OpenGL_Internal 
-{
-	FORCEINLINE static void CheckForErrors()
-	{
-		while (glGetError() != GL_NO_ERROR)
-		{
-		}
-	}
-
-	FORCEINLINE static bool VerifyFunctionResult(const char* InFunction, const char* InFile, int InLine)
-	{
-		while (GLenum Error = glGetError())
-		{
-			std::printf("Error %d\n Function: %s\n File: %s\n Line: %d\n",
-							  static_cast<int>(Error), InFunction, InFile, InLine);
-			return false;
-		}
-		return true;
-	}
-}
 
 #define LK_OpenGL_Verify(OpenGLFunction) \
 	OpenGL_Internal::CheckForErrors();  \
 	OpenGLFunction;                      \
 	LK_VERIFY(OpenGL_Internal::VerifyFunctionResult(#OpenGLFunction, __FILE__, __LINE__))
 
-namespace platformer2d::OpenGL {
+namespace platformer2d {
 
-	static void LoadInfo(FBackendInfo& Info)
+	/**
+	 * @enum EPrimitiveTopology
+	 */
+	enum class EPrimitiveTopology
 	{
-		int Major, Minor;
-		LK_OpenGL_Verify(glGetIntegerv(GL_MAJOR_VERSION, &Major));
-		LK_OpenGL_Verify(glGetIntegerv(GL_MINOR_VERSION, &Minor));
-		Info.Version.Major = Major;
-		Info.Version.Minor = Minor;
+		None = 0,
+		Points,
+		Lines,
+		Triangles,
+		LineStrip,
+		TriangleStrip,
+		TriangleFan
+	};
 
-		int Extensions;
-		glGetIntegerv(GL_NUM_EXTENSIONS, &Extensions);
-		Info.Extensions.reserve(Extensions);
-		for (int Idx = 0; Idx < Extensions; Idx++)
+	namespace OpenGL_Internal 
+	{
+		FORCEINLINE static void CheckForErrors()
 		{
-			Info.Extensions.push_back(std::string(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, Idx))));
+			while (glGetError() != GL_NO_ERROR);
+		}
+
+		FORCEINLINE static bool VerifyFunctionResult(const char* InFunction, const char* InFile, int InLine)
+		{
+			while (GLenum Error = glGetError())
+			{
+				std::printf("Error %d\n Function: %s\n File: %s\n Line: %d\n",
+								  static_cast<int>(Error), InFunction, InFile, InLine);
+				return false;
+			}
+			return true;
 		}
 	}
+}
 
-	FORCEINLINE static constexpr GLenum ShaderDataTypeToOpenGLBaseType(const EShaderDataType Type)
+namespace platformer2d::OpenGL {
+
+	void LoadInfo(FBackendInfo& Info);
+	void SetTextureFilter(ETextureFilter TextureFilter, bool IsMipmap = false);
+	void SetTextureFilter(LRendererID ID, ETextureFilter Filter, bool IsMipmap = false);
+	void SetTextureWrap(ETextureWrap TextureWrap);
+	void SetTextureWrap(LRendererID ID, ETextureWrap TextureWrap);
+	GLenum GetImageFormat(EImageFormat Format);
+	GLenum GetFormatDataType(EImageFormat Format);
+	GLenum GetImageInternalFormat(EImageFormat Format);
+	GLenum GetSamplerWrap(ETextureWrap TextureWrap);
+	GLenum GetSamplerFilter(ETextureFilter TextureFilter, bool IsMipmap);
+	GLenum ImageFormatToDataFormat(EImageFormat Format);
+
+	uint32_t CalculateMipCount(uint32_t Width, uint32_t Height);
+	uint32_t GetFormatBPP(EImageFormat ImageFormat);
+	uint32_t CalculateImageSize(EImageFormat ImageFormat, uint32_t Width, uint32_t Height);
+
+	static constexpr GLenum ShaderDataTypeToOpenGLBaseType(const EShaderDataType Type)
 	{
 		switch (Type)
 		{

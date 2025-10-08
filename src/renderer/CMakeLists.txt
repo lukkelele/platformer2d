@@ -1,6 +1,7 @@
 project_library(renderer)
 project_library_sources(
 	opengl.h
+	opengl.cpp
 	shader.h 
 	shader.cpp
 	texture.h
