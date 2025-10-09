@@ -14,29 +14,22 @@ namespace platformer2d {
 
 	void CPlayer::Tick(const float DeltaTime)
 	{
-		//if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_A))
 		if (CKeyboard::IsKeyDown(EKey::A))
 		{
 			Pos.x -= MovementSpeed;
 		}
-		//if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_D))
 		if (CKeyboard::IsKeyDown(EKey::D))
 		{
 			Pos.x += MovementSpeed;
 		}
-	}
 
-	void CPlayer::SetPosition(const float X, const float Y)
-	{
-		Pos.x = X;
-		Pos.y = Y;
-		LK_DEBUG("Pos=({}, {})", Pos.x, Pos.y);
-	}
-
-	void CPlayer::SetPosition(const glm::vec2& NewPos)
-	{
-		Pos = NewPos;
-		LK_DEBUG("Pos=({}, {})", Pos.x, Pos.y);
+		/* Main menu. */
+		if (CKeyboard::IsKeyDown(EKey::Escape) && !CKeyboard::IsKeyHeld(EKey::Escape))
+		{
+			const FKeyData& KeyData = CKeyboard::GetKeyData(EKey::Escape);
+			LK_DEBUG("Key: Escape (Repeat={} State={} OldState={})", 
+					 KeyData.RepeatCount, KeyData.State, KeyData.OldState);
+		}
 	}
 
 	float CPlayer::GetMovementSpeed() const
