@@ -98,7 +98,7 @@ namespace platformer2d::test {
 		CPlayer Player("TestPlayer");
 		Player.SetPosition(-0.280f, -0.410f);
 
-		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
+		glm::vec4 ClearColor{ 0.10f, 0.26f, 0.36f, 1.0f };
 		glm::vec4 FragColor{ 1.0f, 0.560f, 1.0f, 1.0f };
 
 		while (Running)
@@ -107,6 +107,8 @@ namespace platformer2d::test {
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			CTest::ImGui_NewFrame();
+
+			CKeyboard::Update();
 
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
@@ -194,6 +196,8 @@ namespace platformer2d::test {
 			PlayerTexture.Unbind();
 
 			ImGui::EndTable();
+
+			CKeyboard::TransitionPressedKeys();
 
 			CTest::ImGui_EndFrame();
 			glfwSwapBuffers(Window.GetGlfwWindow());
