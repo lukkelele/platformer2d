@@ -62,6 +62,8 @@ function(create_test_options base_dir prefix)
 endfunction()
 
 test_option(LK_TEST_MOVEMENT_BASE_LEVEL)
+test_option(LK_TEST_MOVEMENT_BASE_LEVEL_PLAYER)
+test_option(LK_TEST_INPUT_KEYBOARD)
 test_option(LK_TEST_OPENGL_TRIANGLE)
 test_option(LK_TEST_OPENGL_TRIANGLE_SHADER)
 test_option(LK_TEST_OPENGL_TRIANGLE_SHADER_CONFIGURABLE)
@@ -120,6 +122,8 @@ function(add_tests_recursive dir)
 				target_link_libraries(${TEST_NAME} PRIVATE
 					${PROJECT_INTERFACE}
 					Catch2::Catch2
+					core      # Core library
+					renderer  # OpenGL
 				)
 
 				# Add compile definitions and options that is added to libraries.
