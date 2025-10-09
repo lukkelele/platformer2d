@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "renderer/opengl.h"
+#include "input/keyboard.h"
 
 namespace platformer2d {
 
@@ -51,6 +52,30 @@ namespace platformer2d {
 			spdlog::info("Closing window");
 			glfwSetWindowShouldClose(InGlfwWindow, GLFW_TRUE);
 			std::exit(0); /** @todo Should do proper shutdown */
+		});
+
+		glfwSetKeyCallback(GlfwWindow, [](GLFWwindow* Window, int Key, int ScanCode, int Action, int Modifiers)
+		{
+			LK_TRACE("Key={} Action={} Modifiers={}", Key, Action, Modifiers);
+			FWindowData& WindowDataRef = *((FWindowData*)glfwGetWindowUserPointer(Window));
+			switch (Action)
+			{
+				case GLFW_PRESS:
+				{
+					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Pressed);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Released);
+					break;
+				}
+				case GLFW_REPEAT:
+				{
+					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Held);
+					break;
+				}
+			}
 		});
 	}
 
