@@ -1,5 +1,6 @@
 #include "keyboard.h"
 
+#include "core/log.h"
 #include "core/window.h"
 
 namespace platformer2d {
@@ -14,11 +15,23 @@ namespace platformer2d {
 
 	void CKeyboard::Update()
 	{
-		/* Update held data. */
+		/* Held keys. */
 		for (auto& [Key, HeldData] : KeyHeldMap)
 		{
 			KeyDataMap[Key].RepeatCount++;
 			HeldData.second = std::chrono::steady_clock::now();
+		}
+	}
+
+	void CKeyboard::TransitionPressedKeys()
+	{
+		for (const auto& [Key, KeyData] : KeyDataMap)
+		{
+			if (KeyData.State == EKeyState::Pressed)
+			{
+				LK_TRACE("Transition: {} -> Held", Key);
+				UpdateKeyState(Key, EKeyState::Held);
+			}
 		}
 	}
 
@@ -36,6 +49,11 @@ namespace platformer2d {
 
 		const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
 		return ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT));
+	}
+
+	bool CKeyboard::IsKeyHeld(const EKey Key)
+	{
+		return ((KeyDataMap.find(Key) != KeyDataMap.end()) && (KeyDataMap[Key].State == EKeyState::Held));
 	}
 
 	FKeyData& CKeyboard::GetKeyData(const EKey Key)
@@ -66,6 +84,7 @@ namespace platformer2d {
 		KeyData.Key = Key;
 		KeyData.OldState = KeyData.State;
 		KeyData.State = NewState;
+		LK_TRACE("{}: {} -> {}", Key, KeyData.OldState, KeyData.State);
 
 		if (NewState == EKeyState::Pressed)
 		{
@@ -73,13 +92,13 @@ namespace platformer2d {
 		}
 		else if (NewState == EKeyState::Released)
 		{
-			/* Remove any held key data whenever key is released. */
+			/* Remove held key data whenever key is released. */
 			std::erase_if(KeyHeldMap, [Key](const auto& CurrentKey) { return (Key == CurrentKey.first); });
 		}
-		/* Insert timestamp once on the initial held event. */
 		else if ((NewState == EKeyState::Held) && (KeyData.RepeatCount <= 1))
 		{
 			using namespace std::chrono;
+			/* Insert timestamp once on the initial held event. */
 			KeyHeldMap.insert({ Key, { steady_clock::now(), steady_clock::now() } });
 		}
 

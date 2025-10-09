@@ -223,9 +223,26 @@ namespace platformer2d {
 				default:                  return "Unknown";
 			}
 		}
-
 	}
-
 }
 
+template<>
+struct std::formatter<platformer2d::EKey> : std::formatter<std::string>
+{
+	template<typename FormatContext>
+    auto format(const platformer2d::EKey Key, FormatContext& Context) const
+    {
+		return std::formatter<std::string>::format(platformer2d::Enum::ToString(Key), Context);
+    }
+};
+
+template<>
+struct std::formatter<platformer2d::EKeyState> : std::formatter<std::string>
+{
+	template<typename FormatContext>
+    auto format(const platformer2d::EKeyState State, FormatContext& Context) const
+    {
+		return std::formatter<std::string>::format(platformer2d::Enum::ToString(State), Context);
+    }
+};
 

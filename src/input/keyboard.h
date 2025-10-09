@@ -28,9 +28,11 @@ namespace platformer2d {
 
 		static void Initialize();
 		static void Update();
+		static void TransitionPressedKeys();
 		static void SetActiveContext(GLFWwindow* Context);
 
 		static bool IsKeyDown(EKey Key);
+		static bool IsKeyHeld(EKey Key);
 
 		static FKeyData& GetKeyData(EKey Key);
 		static std::size_t GetPressedKeys(std::vector<EKey>& InKeys);
