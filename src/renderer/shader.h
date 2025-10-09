@@ -13,6 +13,13 @@
 
 namespace platformer2d {
 
+	enum class EShaderType
+	{
+		None = -1,
+		Vertex,
+		Fragment
+	};
+
 	struct FShaderProgramSource
 	{
 		std::string Vertex{};
@@ -27,6 +34,7 @@ namespace platformer2d {
 	class CShader
 	{
 	public:
+		CShader(const std::filesystem::path& ShaderPath);
 		CShader(const std::filesystem::path& VertexShaderPath, const std::filesystem::path& FragShaderPath);
 		CShader() = delete;
 		~CShader() = default;
@@ -70,6 +78,7 @@ namespace platformer2d {
 
 	private:
 		uint32_t CompileShader(uint32_t ShaderType, const std::string& ShaderSource);
+		bool ParseShader(const std::filesystem::path& Filepath, FShaderProgramSource& Source);
 
 	private:
 		LRendererID RendererID;

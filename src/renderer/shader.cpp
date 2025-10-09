@@ -41,6 +41,38 @@ namespace platformer2d {
 		return Count;
 	}
 
+	CShader::CShader(const std::filesystem::path& ShaderPath)
+	{
+		FShaderProgramSource Source{};
+		const bool bParsed = ParseShader(ShaderPath, Source);
+		LK_VERIFY(bParsed == true, "Failed to parse shader: {}", ShaderPath.generic_string());
+
+#ifdef LK_SHADER_LOG_PROGRAM_SOURCE
+		LK_INFO("\nVertex:\n{}\n", Source.Vertex);
+		LK_INFO("Fragment:\n{}\n", Source.Fragment);
+#endif
+
+		uint32_t Program;
+		LK_OpenGL_Verify(Program = glCreateProgram());
+
+		const uint32_t VertexShader = CompileShader(GL_VERTEX_SHADER, Source.Vertex);
+		const uint32_t FragShader = CompileShader(GL_FRAGMENT_SHADER, Source.Fragment);
+
+		LK_ASSERT((VertexShader != 0) && (FragShader != 0));
+		LK_OpenGL_Verify(glAttachShader(Program, VertexShader));
+		LK_OpenGL_Verify(glAttachShader(Program, FragShader));
+
+		/* Link and validate. */
+		LK_OpenGL_Verify(glLinkProgram(Program));
+		LK_OpenGL_Verify(glValidateProgram(Program));
+
+		/* Delete shader resources after shader programs are created and validated. */
+		LK_OpenGL_Verify(glDeleteShader(VertexShader));
+		LK_OpenGL_Verify(glDeleteShader(FragShader));
+
+		RendererID = Program;
+	}
+
 	CShader::CShader(const std::filesystem::path& VertexShaderPath, const std::filesystem::path& FragShaderPath)
 	{
 		static_assert(std::is_same_v<uint32_t, GLuint>, "GLuint type mismatch");
@@ -156,7 +188,6 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glUniformMatrix4fv(GetUniformLocation(Uniform.data()), 1, GL_FALSE, &Value[0][0]));
 	}
 
-
 	uint32_t CShader::CompileShader(const uint32_t ShaderType, const std::string& ShaderSource)
 	{
 		uint32_t ShaderID;
@@ -186,6 +217,41 @@ namespace platformer2d {
 		}
 
 		return ShaderID;
+	}
+
+	bool CShader::ParseShader(const std::filesystem::path& Filepath, FShaderProgramSource& Source)
+	{
+		std::stringstream StringStreams[2];
+		EShaderType ShaderType = EShaderType::None;
+
+		std::ifstream InputStream(Filepath);
+		std::string Line;
+		while (std::getline(InputStream, Line))
+		{
+			if (Line.find("#lk_shader") != std::string::npos)
+			{
+				if (Line.find("vertex") != std::string::npos)
+				{
+					ShaderType = EShaderType::Vertex;
+				}
+				else if (Line.find("fragment") != std::string::npos)
+				{
+					ShaderType = EShaderType::Fragment;
+				}
+			}
+			else
+			{
+				if (ShaderType != EShaderType::None)
+				{
+					StringStreams[static_cast<int>(ShaderType)] << Line << '\n';
+				}
+			}
+		}
+
+		Source.Vertex = StringStreams[0].str();
+		Source.Fragment = StringStreams[1].str();
+
+		return Source.IsValid();
 	}
 
 }
