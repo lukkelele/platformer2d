@@ -4,6 +4,7 @@ project_library_sources(
 	buffer.h
 	core.h
 	log.h
+	log_formatters.h
 	window.h
 	window.cpp
 )
