@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include <glm/glm.hpp>
-
 #include "core/core.h"
 #include "core/assert.h"
+
+#include "transformcomponent.h"
 
 namespace platformer2d {
 
@@ -14,12 +14,12 @@ namespace platformer2d {
 	public:
 		virtual ~CActor() = default;
 
-		const glm::vec2& GetPosition() const { return Pos; }
+		glm::vec2 GetPosition() const;
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
 
 	protected:
-		glm::vec2 Pos{ 0.0f, 0.0f };
+		FTransformComponent TransformComp{};
 	};
 
 }
