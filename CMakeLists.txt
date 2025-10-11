@@ -49,6 +49,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	project_add_compile_definitions(LK_COMPILER_GNU)
 endif()
 
+message("Build type: ${CMAKE_BUILD_TYPE}")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	project_add_compile_definitions(LK_BUILD_DEBUG)
+endif()
+
 set(LK_ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 make_directory(${CMAKE_BINARY_DIR}/intermediate)
 configure_file(
