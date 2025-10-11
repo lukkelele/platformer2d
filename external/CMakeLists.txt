@@ -54,3 +54,6 @@ add_library(stb_image STATIC
 # Library: glm
 ##############################
 add_subdirectory(glm)
+target_compile_definitions(glm PUBLIC
+	GLM_ENABLE_EXPERIMENTAL
+)
