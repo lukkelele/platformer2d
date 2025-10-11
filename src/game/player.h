@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 
-#include "actor.h"
+#include "scene/actor.h"
 
 namespace platformer2d {
 

@@ -16,11 +16,11 @@ namespace platformer2d {
 	{
 		if (CKeyboard::IsKeyDown(EKey::A))
 		{
-			Pos.x -= MovementSpeed;
+			TransformComp.Translation.x -= MovementSpeed;
 		}
 		if (CKeyboard::IsKeyDown(EKey::D))
 		{
-			Pos.x += MovementSpeed;
+			TransformComp.Translation.x += MovementSpeed;
 		}
 
 		/* Main menu. */
