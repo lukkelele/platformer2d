@@ -42,6 +42,7 @@ namespace platformer2d {
 		FORCEINLINE void Bind() const { LK_OpenGL_Verify(glUseProgram(RendererID)); }
 		FORCEINLINE void Unbind() const { LK_OpenGL_Verify(glUseProgram(0)); }
 		FORCEINLINE LRendererID GetProgramID() const { return RendererID; }
+		const std::filesystem::path& GetFilepath() const { return Filepath; }
 
 		void Get(std::string_view Uniform, glm::vec2& Value);
 		void Get(std::string_view Uniform, glm::vec3& Value);
@@ -83,5 +84,6 @@ namespace platformer2d {
 	private:
 		LRendererID RendererID;
 		std::unordered_map<std::string, int> UniformLocationCache{};
+		std::filesystem::path Filepath;
 	};
 }

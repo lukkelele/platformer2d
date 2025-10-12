@@ -16,7 +16,7 @@ namespace platformer2d {
 	 * @brief Read contents of a shader file.
 	 * @returns Number of lines read from file.
 	 */
-	static inline uint16_t ReadShaderFile(const std::filesystem::path& ShaderPath, std::string& Source)
+	static uint16_t ReadShaderFile(const std::filesystem::path& ShaderPath, std::string& Source)
 	{
 		std::ifstream File(ShaderPath, std::ios::in);
 		if (!File.is_open())
@@ -42,6 +42,7 @@ namespace platformer2d {
 	}
 
 	CShader::CShader(const std::filesystem::path& ShaderPath)
+		: Filepath(ShaderPath)
 	{
 		FShaderProgramSource Source{};
 		const bool bParsed = ParseShader(ShaderPath, Source);
@@ -78,6 +79,9 @@ namespace platformer2d {
 		static_assert(std::is_same_v<uint32_t, GLuint>, "GLuint type mismatch");
 		LK_VERIFY(std::filesystem::exists(VertexShaderPath), "Vertex shader does not exist");
 		LK_VERIFY(std::filesystem::exists(FragShaderPath), "Fragment shader does not exist");
+
+		/* Assign parent path to signal that this constructor was used. */
+		Filepath = VertexShaderPath.parent_path();
 
 		uint32_t Program;
 		LK_OpenGL_Verify(Program = glCreateProgram());
