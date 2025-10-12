@@ -34,33 +34,6 @@ macro(test_option name)
 	list(APPEND TEST_OPTIONS ${name})
 endmacro()
 
-# TODO: Not working yet
-function(create_test_options base_dir prefix)
-	file(GLOB_RECURSE candidates
-        RELATIVE ${base_dir}
-		${base_dir}/*/main.cpp
-	)
-
-	if (NOT candidates)
-		message(WARNING "No test directories found: ${base_dir}")
-		return()
-	endif()
-
-	set(_test_options "")
-	foreach(file_path IN LISTS candidates)
-		get_filename_component(dir_path "${file_path}" DIRECTORY)
-		string(REPLACE "/" "_" opt_name "${dir_path}")
-		string(TOUPPER "${opt_name}" opt_name)
-
-		set(option_name "${prefix}_${opt_name}")
-		option(${option_name} "Test: ${dir_path}" OFF)
-
-		list(APPEND _test_options "${option_name}")
-		message(DEBUG "_test_options: ${_test_options}")
-	endforeach()
-	set(TEST_OPTIONS "${_test_options}" PARENT_SCOPE)
-endfunction()
-
 test_option(LK_TEST_MOVEMENT_BASE_LEVEL)
 test_option(LK_TEST_MOVEMENT_BASE_LEVEL_PLAYER)
 test_option(LK_TEST_INPUT_KEYBOARD)
@@ -98,11 +71,12 @@ function(add_tests_recursive dir)
 			if (LK_BUILD_TESTS OR ${opt_name})
 				string(REGEX REPLACE ".*${PROJECT_NAME}/" "" subdir_short_path "${subdir}")
 				message(STATUS "[*] ${opt_name} (${subdir_short_path})")
-				set(TESTS_ENABLED ON)
 
 				if (NOT EXISTS "${subdir}/CMakeLists.txt")
 					message(FATAL_ERROR "${subdir_short_path}: Missing CMakeLists.txt")
 				endif()
+
+				set(TESTS_ENABLED ON)
 
 				add_executable(${TEST_NAME})
 				target_sources(${TEST_NAME} PRIVATE 
