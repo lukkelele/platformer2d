@@ -35,7 +35,7 @@ namespace platformer2d::test {
 		virtual void Destroy() = 0;
 
 		bool IsRunning() const { return Running; }
-		const CWindow& GetWindow() const { return *Window; }
+		CWindow& GetWindow() const { return *Window; }
 		const std::filesystem::path& GetBinaryDirectory() const { return BinaryDir; }
 		static const std::filesystem::path& GetAssetsDirectory() { return AssetsDir; }
 

@@ -31,7 +31,8 @@ TEST_CASE("Test name", "[defines]")
 
 namespace platformer2d::test {
 
-	namespace {
+	namespace
+	{
 		constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
 			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
@@ -85,11 +86,6 @@ namespace platformer2d::test {
 
 		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_STRINGIFY(LK_TEST_SUITE));
 		Window->Initialize();
-		InitRenderContext(Window->GetGlfwWindow());
-
-		OpenGL::LoadInfo(BackendInfo);
-		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
-		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
 	}
 
 	void CTestBase::Stop()
@@ -115,7 +111,6 @@ namespace platformer2d::test {
 		SetDarkTheme();
 
 		/** @todo Use generated header */
-		//const char* SourceSansPro_Semibold = ASSETS_DIR "/fonts/SourceCodePro/SourceSansPro-Semibold.ttf";
 		const char* SourceSansPro_Semibold = FONTS_DIR "/SourceCodePro/SourceSansPro-Semibold.ttf";
 
 		/* Add fonts. */
