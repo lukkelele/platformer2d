@@ -1,7 +1,11 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <type_traits>
+
+#include "lk_config.h"
 
 #define LK_UNUSED(Arg)       ((void)(Arg))
 #define LK_ARRAYSIZE(Array)  (static_cast<int>((sizeof(Array) / sizeof(*(Array)))))
