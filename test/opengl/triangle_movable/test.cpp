@@ -36,6 +36,11 @@ namespace platformer2d::test {
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
+		LK_ASSERT(Window && Window->GetGlfwWindow());
+		InitRenderContext(Window->GetGlfwWindow());
+		OpenGL::LoadInfo(BackendInfo);
+		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
+		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
 	}
 
 	void CTest::Run()
@@ -123,7 +128,6 @@ namespace platformer2d::test {
 
 			CTest::ImGui_EndFrame();
 			glfwSwapBuffers(Window.GetGlfwWindow());
-			glfwPollEvents();
 		}
 	}
 

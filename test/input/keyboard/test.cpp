@@ -100,7 +100,6 @@ namespace platformer2d::test {
 
 			CTest::ImGui_EndFrame();
 			glfwSwapBuffers(Window.GetGlfwWindow());
-			glfwPollEvents();
 		}
 	}
 

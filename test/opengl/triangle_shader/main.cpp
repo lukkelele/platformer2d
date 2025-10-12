@@ -40,6 +40,12 @@ int main(int Argc, char* Argv[])
 	const CWindow& Window = Test.GetWindow();
 	const FWindowData& WindowData = Window.GetData();
 
+	CTest::InitRenderContext(Window.GetGlfwWindow());
+	OpenGL::FBackendInfo BackendInfo;
+	OpenGL::LoadInfo(BackendInfo);
+	LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
+	LK_INFO("ImGui Version: {}", ImGui::GetVersion());
+
 	GLuint VertexBuffer;
 	glGenBuffers(1, &VertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
@@ -90,7 +96,6 @@ int main(int Argc, char* Argv[])
 
 		CTestBase::ImGui_EndFrame();
 		glfwSwapBuffers(Window.GetGlfwWindow());
-		glfwPollEvents();
 	}
 
 	glfwTerminate();

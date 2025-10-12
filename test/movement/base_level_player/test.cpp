@@ -3,13 +3,17 @@
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext/matrix_common.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/norm.hpp>
 #include <spdlog/spdlog.h>
 #include <stb/stb_image.h>
 
 #include "core/assert.h"
 #include "core/window.h"
-#include "renderer/texture.h"
+#include "renderer/renderer.h"
 #include "renderer/shader.h"
+#include "renderer/texture.h"
 #include "renderer/vertexbufferlayout.h"
 
 #include "game/player.h"
@@ -36,6 +40,8 @@ namespace platformer2d::test {
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
+		CRenderer::Initialize();
+		CKeyboard::Initialize();
 	}
 
 	void CTest::Run()
@@ -45,10 +51,8 @@ namespace platformer2d::test {
 		LK_DEBUG("Catch result: {}", CatchResult);
 
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
+		CWindow& Window = GetWindow();
 		const FWindowData& WindowData = Window.GetData();
-
-		CKeyboard::Initialize();
 
 		/*********************************
 		 * Rectangle
@@ -97,17 +101,25 @@ namespace platformer2d::test {
 		 *********************************/
 		CPlayer Player("TestPlayer");
 		Player.SetPosition(-0.280f, -0.410f);
+		FTransformComponent& TransformComp = Player.GetTransformComponent();
+		TransformComp.SetTranslation({ -0.28f, -0.41f });
+		TransformComp.SetScale({ 0.10f, 0.10f });
+		glm::vec3& PlayerPos = TransformComp.Translation;
+		glm::vec3& PlayerScale = TransformComp.Scale;
 
-		glm::vec4 ClearColor{ 0.10f, 0.26f, 0.36f, 1.0f };
+		Player.OnJumped.Add([](const FPlayerData& PlayerData)
+		{
+			LK_INFO("Player {} jumped", PlayerData.ID);
+		});
+
+		glm::vec4 ClearColor{ 0.28f, 0.34f, 0.36f, 1.0f };
+		CRenderer::SetClearColor(ClearColor);
 		glm::vec4 FragColor{ 1.0f, 0.560f, 1.0f, 1.0f };
 
 		while (Running)
 		{
-			glfwPollEvents();
-			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			CTest::ImGui_NewFrame();
-
+			Window.BeginFrame();
+			CRenderer::BeginFrame();
 			CKeyboard::Update();
 
 			ImGui::Text("%s", LK_TEST_NAME);
@@ -116,6 +128,16 @@ namespace platformer2d::test {
 
 			ImGui::SetNextItemWidth(320.0f);
 			ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f");
+			if (ImGui::IsItemActive())
+			{
+				CRenderer::SetClearColor(ClearColor);
+			}
+
+			if (ImGui::Button("Player Jump"))
+			{
+				LK_TRACE("Button: Player Jump");
+				Player.Jump();
+			}
 
 			const bool bTable = ImGui::BeginTable("##Table", 2);
 			ImGui::TableSetupColumn("##Column1");
@@ -128,28 +150,35 @@ namespace platformer2d::test {
 			ImGui::SeparatorText("Player");
 			ImGui::PushID(ImGui::GetID("Player"));
 			ImGui::SliderFloat4("Color", &FragColor.x, 0.0f, 1.0f, "%.3f");
-			static glm::vec2 PlayerPos{ -0.28f, -0.41f };
 			ImGui::SliderFloat2("Position", &PlayerPos.x, -0.50f, 0.50f, "%.2f");
-			static glm::vec2 PlayerScale{ 0.10f, 0.10f };
 			ImGui::SliderFloat2("Scale", &PlayerScale.x, 0.01f, 0.30f, "%.2f");
-			static float PlayerRot = 0.0f;
+			float PlayerRot = glm::degrees(TransformComp.GetRotation2D());
 			ImGui::SliderFloat("Rotation", &PlayerRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
+			if (ImGui::IsItemActive())
+			{
+				TransformComp.SetRotation2D(glm::radians(PlayerRot));
+			}
 
 			static float MovementSpeed = 3.20f;
 			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 1.50f, 4.0f, "%.2f"); /* @todo: Convert to larger number */
-			const bool SpeedSliderActive = ImGui::IsItemActive();
-			if (SpeedSliderActive)
+			if (ImGui::IsItemActive())
 			{
 				Player.SetMovementSpeed(MovementSpeed);
 			}
 			ImGui::PopID();
+
+			static bool bUseCameraProj = false;
+			ImGui::Checkbox("Use Camera Projection", &bUseCameraProj);
+
+			static bool bRendererDrawQuad = false;
+			ImGui::Checkbox("Renderer: Draw Quad", &bRendererDrawQuad);
 
 			Player.Tick();
 			/* -- ~Player-- */
 
 			ImGui::TableSetColumnIndex(1);
 
-			/* Draw platform. */
+			/* -- Platform -- */
 			static glm::vec2 PlatformPos { -0.07f, -0.82f };
 			static glm::vec4 PlatformFragColor{ 0.284f, 0.349f, 0.630f, 1.0f };
 			ImGui::SeparatorText("Platform");
@@ -169,6 +198,7 @@ namespace platformer2d::test {
 			PlatformTransform = glm::translate(PlatformTransform, glm::vec3(PlatformPos, 0.0f))
 				* glm::rotate(PlatformTransform, glm::radians(PlatformRot), glm::vec3(0.0f, 0.0f, 1.0f))
 				* glm::scale(PlatformTransform, glm::vec3(PlatformScale, 1.0f));
+
 			Shader.Set("u_transform", PlatformTransform);
 			PlatformTexture.Bind();
 			Shader.Set("u_texture", 0);
@@ -178,30 +208,36 @@ namespace platformer2d::test {
 			PlatformTexture.Unbind();
 			glBindVertexArray(0);
 
-
 			/****************************
 			 * Draw player
 			 ****************************/
-			glm::mat4 PlayerTransform = glm::mat4(1.0f);
-			PlayerTransform = glm::translate(PlayerTransform, glm::vec3(Player.GetPosition(), 0.0f))
-				* glm::rotate(PlayerTransform, glm::radians(PlayerRot), glm::vec3(0.0f, 0.0f, 1.0f))
-				* glm::scale(PlayerTransform, glm::vec3(PlayerScale, 1.0f));
-			Shader.Set("u_transform", PlayerTransform);
+			glm::mat4 PlayerTransform = TransformComp.GetTransform();
+			if (bUseCameraProj)
+			{
+				const glm::mat4 CameraProj = glm::ortho(0.0f, static_cast<float>(WindowData.Width), 0.0f, static_cast<float>(WindowData.Height), -1.0f, 1.0f);
+				PlayerTransform = CameraProj * PlayerTransform;
+			}
 
 			PlayerTexture.Bind();
-			Shader.Set("u_texture", 0);
-			Shader.Set("u_color", FragColor);
-			glBindVertexArray(RectangleVAO);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			if (bRendererDrawQuad)
+			{
+				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f});
+			}
+			else
+			{
+				Shader.Set("u_transform", PlayerTransform);
+				Shader.Set("u_texture", 0);
+				Shader.Set("u_color", FragColor);
+				glBindVertexArray(RectangleVAO);
+				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			}
 			PlayerTexture.Unbind();
 
 			ImGui::EndTable();
 
 			CKeyboard::TransitionPressedKeys();
-
-			CTest::ImGui_EndFrame();
-			glfwSwapBuffers(Window.GetGlfwWindow());
-			glfwPollEvents();
+			CRenderer::EndFrame();
+			Window.EndFrame();
 		}
 	}
 
