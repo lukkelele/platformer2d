@@ -32,6 +32,11 @@ namespace platformer2d {
 		}
 	}
 
+	void CPlayer::Jump()
+	{
+		OnJumped.Broadcast(Data);
+	}
+
 	float CPlayer::GetMovementSpeed() const
 	{
 		return (MovementSpeed * MovementSpeedFactor);
