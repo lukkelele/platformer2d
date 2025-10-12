@@ -25,7 +25,6 @@ namespace platformer2d {
 	public:
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
-		float Rotation2D = 0.0f;
 		bool bIsStatic = false;
 
 	private:
@@ -37,19 +36,17 @@ namespace platformer2d {
 		FTransformComponent(const glm::vec3& Translation) : Translation(Translation) {}
 		FTransformComponent(const FTransformComponent& Other) = default;
 
-		glm::vec3 GetTranslation() const { return Translation; }
-		glm::vec3 GetScale() const { return Scale; }
+		inline glm::vec3 GetTranslation() const { return Translation; }
+		inline glm::vec3 GetScale() const { return Scale; }
 
-		float GetRotation2D() const { return Rotation2D; }
-
-		glm::mat4 GetTransform() const
+		inline glm::mat4 GetTransform() const
 		{
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* glm::toMat4(Rotation)
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 
-		glm::mat4 GetInvTransform() const
+		inline glm::mat4 GetInvTransform() const
 		{
 			const glm::mat4 InvTranslation = glm::translate(glm::mat4(1.0f), -Translation);
 			const glm::quat InvRot = glm::conjugate(Rotation);
@@ -57,12 +54,23 @@ namespace platformer2d {
 			return InvScale * glm::toMat4(InvRot) * InvTranslation;
 		}
 
-		glm::quat GetRotation() const { return Rotation; }
-		glm::vec3 GetRotationEuler() const { return RotationEuler; }
+		inline glm::quat GetRotation() const { return Rotation; }
+		inline glm::vec3 GetRotationEuler() const { return RotationEuler; }
 
-		void SetRotationEuler(const glm::vec3& euler)
+		/**
+		 * @brief Get 2D rotation in radians.
+		 */
+		inline float GetRotation2D() const { return glm::eulerAngles(Rotation).z; }
+
+		void SetTranslation(const glm::vec3& InTranslation) { Translation = InTranslation; }
+		void SetTranslation(const glm::vec2& InTranslation) { Translation = glm::vec3(InTranslation, 0.0f); }
+
+		void SetScale(const glm::vec3& InScale) { Scale = InScale; }
+		void SetScale(const glm::vec2& InScale) { Scale = glm::vec3(InScale, 1.0f); }
+
+		void SetRotationEuler(const glm::vec3& Euler)
 		{
-			RotationEuler = euler;
+			RotationEuler = Euler;
 			Rotation = glm::quat(RotationEuler);
 		}
 
@@ -83,11 +91,17 @@ namespace platformer2d {
 			}
 		}
 
-		bool IsStatic() const { return bIsStatic; }
+		void SetRotation2D(const float Radians)
+		{
+			RotationEuler = glm::vec3(0.0f, 0.0f, Radians);
+			Rotation = glm::quat(RotationEuler);
+		}
+
+		inline bool IsStatic() const { return bIsStatic; }
 
 		std::string ToString() const
 		{
-			return LK_FMT("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
+			return std::format("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
 		}
 	};
 
