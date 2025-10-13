@@ -16,18 +16,16 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 
+#include "core/log.h"
 #include "renderer/opengl.h"
 
 #ifndef LK_TEST_SUITE
 #error "LK_TEST_SUITE not defined"
 #endif
 
-TEST_CASE("Test name", "[defines]")
-{
 #ifndef LK_TEST_NAME
-	FAIL("LK_TEST_NAME undefined");
+#error "LK_TEST_NAME not defined"
 #endif
-}
 
 namespace platformer2d::test {
 
@@ -80,11 +78,12 @@ namespace platformer2d::test {
 		: Args(Argc, Argv)
 		, BinaryDir(GetBinaryDir())
 	{
+		CLog::Initialize();
 		LK_INFO("{}", LK_TEST_NAME);
 		LK_DEBUG("Binary dir: {}", BinaryDir.generic_string());
 		LK_DEBUG("Assets dir: {}", AssetsDir.generic_string());
 
-		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_STRINGIFY(LK_TEST_SUITE));
+		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_NAME);
 		Window->Initialize();
 	}
 
@@ -137,7 +136,7 @@ namespace platformer2d::test {
 		static constexpr int Flags = ImGuiWindowFlags_NoDecoration 
 			| ImGuiWindowFlags_NoScrollbar 
 			| ImGuiWindowFlags_NoBackground;
-		ImGui::Begin(LK_TEST_STRINGIFY(LK_TEST_SUITE), NULL, Flags); /* LK_TEST_SUITE */
+		ImGui::Begin(LK_TEST_NAME, NULL, Flags); /* LK_TEST_SUITE */
 	}
 
 	void CTestBase::ImGui_EndFrame()
