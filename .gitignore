@@ -43,6 +43,7 @@
 *.vs
 *.ini
 build
+logs
 *CMakeSettings.json
 
 # Generated files
