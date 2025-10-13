@@ -4,3 +4,5 @@
 #define FONTS_DIR      ASSETS_DIR "/fonts"
 #define TEXTURES_DIR   ASSETS_DIR "/textures"
 #define SHADERS_DIR    ASSETS_DIR "/shaders"
+
+#define LOGS_DIR       "@LK_LOGS_DIR@/"
