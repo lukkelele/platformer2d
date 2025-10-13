@@ -31,6 +31,8 @@ namespace platformer2d {
 			GLuint VBO = 0;
 			GLuint EBO = 0;
 		} Quad;
+
+		std::shared_ptr<CTexture> WhiteTexture = nullptr;
 	};
 
 	namespace 
@@ -68,7 +70,7 @@ namespace platformer2d {
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 
-		LK_DEBUG("Creating {} render command queues", CommandQueue.size());
+		LK_DEBUG_TAG("Renderer", "Creating {} render command queues", CommandQueue.size());
 		for (int Idx = 0; Idx < CommandQueue.size(); Idx++)
 		{
 			CommandQueue[Idx] = new CRenderCommandQueue();
@@ -79,16 +81,27 @@ namespace platformer2d {
 			{ "texcoord", EShaderDataType::Float2, },
 		};
 
-		LK_DEBUG("Creating quad VAO, VBO and EBO");
+		LK_TRACE_TAG("Renderer", "Creating quad VAO, VBO and EBO");
 		Data.Quad.VAO = OpenGL::VertexArray::Create();
 		Data.Quad.VBO = OpenGL::VertexBuffer::Create(QuadVertices, QuadLayout);
 		Data.Quad.EBO = OpenGL::ElementBuffer::Create(QuadIndices);
-		Data.Quad.EBO = OpenGL::ElementBuffer::Create(QuadIndices);
+		LK_DEBUG_TAG("Renderer", "Quad VAO={} VBO={} EBO={}", Data.Quad.VAO, Data.Quad.VBO, Data.Quad.EBO);
 		LK_VERIFY((Data.Quad.VAO != 0) && (Data.Quad.VBO != 0) && (Data.Quad.EBO != 0));
 
-		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
+		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
+		LK_TRACE_TAG("Renderer", "Load white texture");
+		FTextureSpecification WhiteTextureSpec = {
+			.Path = WhiteTexturePath,
+			.Width = 200,
+			.Height = 200,
+			.Format = EImageFormat::RGBA32F,
+			.SamplerWrap = ETextureWrap::Clamp,
+			.SamplerFilter = ETextureFilter::Nearest,
+		};
+		Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
 
-		LK_INFO("Loading shaders from: {}", SHADERS_DIR);
+		LK_INFO_TAG("Renderer", "Loading shaders from: {}", SHADERS_DIR);
+
 		/* Shader: Quad */
 		{
 			auto [Iter, Inserted] = ShaderLibrary.try_emplace(SHADER_QUAD, std::make_shared<CShader>(SHADERS_DIR "/player.shader"));
@@ -98,11 +111,14 @@ namespace platformer2d {
 		}
 
 #ifdef LK_BUILD_DEBUG
+		int Idx = 0;
 		for (const auto& [ShaderName, Shader] : ShaderLibrary)
 		{
-			LK_INFO("Shader: {} ({})", Shader->GetFilepath().filename(), ShaderName);
+			LK_INFO_TAG("Renderer", "Shader {}: {} ({})", ++Idx, Shader->GetFilepath().filename(), ShaderName);
 		}
 #endif
+
+		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
 	}
 
 	void CRenderer::BeginFrame()
