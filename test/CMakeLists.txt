@@ -129,6 +129,5 @@ message(STATUS "========================================================")
 if (TESTS_ENABLED)
 	# Always enable LK_ASSERT and LK_VERIFY for tests.
     message(STATUS "Enabling assert and verify")
-	set(LK_ENABLE_ASSERT ON)
-	set(LK_ENABLE_VERIFY ON)
+	project_add_compile_definitions(LK_ENABLE_ASSERT LK_ENABLE_VERIFY)
 endif()
