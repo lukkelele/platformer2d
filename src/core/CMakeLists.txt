@@ -5,6 +5,7 @@ project_library_sources(
 	core.h
 	delegate.h
 	log.h
+	log.cpp
 	log_formatters.h
 	template.h
 	window.h
