@@ -6,13 +6,6 @@ target_sources(${TEST_NAME} PRIVATE
 target_link_libraries(${TEST_NAME} PRIVATE 
 	core
 	game 
-	input
-)
-
-#set(LK_TEST_INIT_IMGUI OFF CACHE BOOL "" FORCE)
-#set(LK_TEST_INIT_IMGUI OFF PARENT_SCOPE)
-target_compile_definitions(${TEST_NAME} PRIVATE 
-	LK_TEST_INIT_IMGUI
 )
 
 list(APPEND CMAKE_CONFIGURE_DEPENDS 

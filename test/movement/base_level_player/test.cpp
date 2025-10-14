@@ -17,7 +17,7 @@
 #include "renderer/vertexbufferlayout.h"
 
 #include "game/player.h"
-#include "input/keyboard.h"
+#include "core/input/keyboard.h"
 
 namespace platformer2d::test {
 
@@ -36,6 +36,8 @@ namespace platformer2d::test {
 			2, 3, 0 
 		};
 	}
+
+	void UI_BlendFunction();
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
@@ -77,14 +79,17 @@ namespace platformer2d::test {
 		 * Texture
 		 *********************************/
 		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
+		const char* TestPlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
 		const char* BricksTexturePath = TEXTURES_DIR "/bricks.jpg";
 		LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
+		LK_VERIFY(std::filesystem::exists(TestPlayerTexturePath));
 		LK_VERIFY(std::filesystem::exists(BricksTexturePath));
 
 		FTextureSpecification Spec = {
-			.Path = WhiteTexturePath,
+			.Path = TestPlayerTexturePath,
 			.Width = 200,
 			.Height = 200,
+			.bFlipVertical = true,
 			.Format = EImageFormat::RGBA32F,
 			.SamplerWrap = ETextureWrap::Clamp,
 			.SamplerFilter = ETextureFilter::Nearest,
@@ -106,6 +111,9 @@ namespace platformer2d::test {
 		TransformComp.SetScale({ 0.10f, 0.10f });
 		glm::vec3& PlayerPos = TransformComp.Translation;
 		glm::vec3& PlayerScale = TransformComp.Scale;
+
+		float MovementSpeed = 6.0f; 
+		Player.SetMovementSpeed(MovementSpeed);
 
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
 		{
@@ -139,6 +147,8 @@ namespace platformer2d::test {
 				Player.Jump();
 			}
 
+			UI_BlendFunction();
+
 			const bool bTable = ImGui::BeginTable("##Table", 2);
 			ImGui::TableSetupColumn("##Column1");
 			ImGui::TableSetupColumn("##Column2");
@@ -159,8 +169,7 @@ namespace platformer2d::test {
 				TransformComp.SetRotation2D(glm::radians(PlayerRot));
 			}
 
-			static float MovementSpeed = 3.20f;
-			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 1.50f, 4.0f, "%.2f"); /* @todo: Convert to larger number */
+			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 1.50f, 10.0f, "%.2f");
 			if (ImGui::IsItemActive())
 			{
 				Player.SetMovementSpeed(MovementSpeed);
@@ -245,5 +254,67 @@ namespace platformer2d::test {
 	{
 		glfwTerminate();
 	}
+
+	void UI_BlendFunction()
+	{
+		static constexpr float ItemWidth = 380.0f;
+		bool bSetBlendFunc = false;
+
+		static int SelectedSourceBlendFunc = 0;
+		static std::pair<const char*, GLenum> SourceBlendFuncs[] = { 
+			{ "GL_SRC_ALPHA", GL_SRC_ALPHA },
+			{ "GL_DST_ALPHA", GL_DST_ALPHA },
+			{ "GL_ONE_MINUS_SRC_ALPHA", GL_ONE_MINUS_SRC_ALPHA },
+			{ "GL_ONE_MINUS_CONSTANT_ALPHA", GL_ONE_MINUS_CONSTANT_ALPHA },
+		};
+		ImGui::SetNextItemWidth(ItemWidth);
+		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].first))
+		{
+			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
+			{
+				const bool bSelected = (SelectedSourceBlendFunc == N);
+				if (ImGui::Selectable(SourceBlendFuncs[N].first, bSelected))
+				{
+					SelectedSourceBlendFunc = N;
+					LK_INFO("Source: {}", SourceBlendFuncs[N].first);
+					bSetBlendFunc = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		static int SelectedDestBlendFunc = 0;
+		static std::pair<const char*, GLenum> DestBlendFuncs[] = { 
+			{ "GL_ONE_MINUS_SRC_ALPHA", GL_ONE_MINUS_SRC_ALPHA },
+			{ "GL_SRC_ALPHA", GL_SRC_ALPHA },
+			{ "GL_DST_ALPHA", GL_DST_ALPHA },
+			{ "GL_ONE_MINUS_DST_ALPHA", GL_ONE_MINUS_DST_ALPHA },
+			{ "GL_ONE_MINUS_CONSTANT_ALPHA", GL_ONE_MINUS_CONSTANT_ALPHA },
+		};
+		ImGui::SetNextItemWidth(ItemWidth);
+		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].first))
+		{
+			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
+			{
+				const bool bSelected = (SelectedDestBlendFunc == N);
+				if (ImGui::Selectable(DestBlendFuncs[N].first, bSelected))
+				{
+					SelectedDestBlendFunc = N;
+					LK_INFO("Destination: {}", DestBlendFuncs[N].first);
+					bSetBlendFunc = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		if (bSetBlendFunc)
+		{
+			glBlendFunc(
+				SourceBlendFuncs[SelectedSourceBlendFunc].second, 
+				DestBlendFuncs[SelectedDestBlendFunc].second
+			);
+		}
+	}
+
 
 }
