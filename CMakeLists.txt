@@ -71,6 +71,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/src
 	${CMAKE_SOURCE_DIR}/external
 	${CMAKE_SOURCE_DIR}/external/catch2/src
+	${CMAKE_SOURCE_DIR}/external/box2d
 	${CMAKE_SOURCE_DIR}/external/glfw/include
 	${CMAKE_SOURCE_DIR}/external/glm
 	${CMAKE_SOURCE_DIR}/external/imgui
@@ -80,6 +81,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 
 # Link external dependencies to the project interface.
 target_link_libraries(${PROJECT_INTERFACE} INTERFACE
+	box2d
 	glad
 	glfw
 	glm
