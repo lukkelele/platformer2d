@@ -139,16 +139,6 @@ namespace platformer2d::OpenGL {
 	{
 		switch (Format)
 		{
-#if 0
-			case EImageFormat::RGB:				return GL_RGB8;
-			case EImageFormat::RGBA:			return GL_RGBA8;
-			case EImageFormat::RGBA8:			return GL_RGBA8;
-			case EImageFormat::RGBA16F:			return GL_RGBA16F;
-			case EImageFormat::RGBA32F:			return GL_RGBA32F;
-			case EImageFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
-			case EImageFormat::DEPTH32F:		return GL_DEPTH_COMPONENT32F;
-
-#else
 			case EImageFormat::RGB:		return GL_RGB32F;
 			case EImageFormat::RGB8:	return GL_RGB8;
 
@@ -164,7 +154,6 @@ namespace platformer2d::OpenGL {
 			case EImageFormat::RED16UI: return GL_R16UI;
 			case EImageFormat::RED32UI: return GL_R32UI;
 			case EImageFormat::RED32F:	return GL_R32F;
-#endif
 		}
 
 		LK_ASSERT(false, "Unknown image format: {}", static_cast<int>(Format));

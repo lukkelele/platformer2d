@@ -17,6 +17,7 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
 		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, RendererID));
 
+		stbi_set_flip_vertically_on_load(Specification.bFlipVertical);
 		int ReadWidth, ReadHeight, ReadChannels;
 		float* Data = stbi_loadf(Specification.Path.c_str(), &ReadWidth, &ReadHeight, &ReadChannels, 4);
 		LK_ASSERT(Data != NULL, "Failed to load texture from: {}", Specification.Path);
@@ -30,12 +31,14 @@ namespace platformer2d {
 		Width = ReadWidth;
 		Height = ReadHeight;
 		const uint64_t ImageSize = OpenGL::CalculateImageSize(Specification.Format, Width, Height);
-		LK_DEBUG("Image size: {} bytes", ImageSize);
+		LK_DEBUG("Image size: {} bytes (Channels: {})", ImageSize, Channels);
 		ImageData = FBuffer(Data, ImageSize);
 
 		Format = OpenGL::GetImageFormat(Specification.Format);
 		InternalFormat = OpenGL::GetImageInternalFormat(Specification.Format);
 		DataType = OpenGL::GetFormatDataType(Specification.Format);
+		LK_TRACE_TAG("Texture", "Format: {} ({})", Enum::ToString(Specification.Format), Format);
+		LK_TRACE_TAG("Texture", "Internal Format: {}", InternalFormat);
 
 		if (Data)
 		{

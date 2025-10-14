@@ -64,9 +64,11 @@ namespace platformer2d {
 	void CRenderer::Initialize()
 	{
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
+		LK_OpenGL_Verify(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
+		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
+
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 

@@ -57,3 +57,11 @@ add_subdirectory(glm)
 target_compile_definitions(glm PUBLIC
 	GLM_ENABLE_EXPERIMENTAL
 )
+
+##############################
+# Library: box2d
+##############################
+set(BOX2D_SAMPLES OFF)
+set(BOX2D_VALIDATE ON)
+set(BOX2D_UNIT_TESTS OFF)
+add_subdirectory(box2d)

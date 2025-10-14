@@ -16,4 +16,6 @@ project_library_sources(
 	rendercommandqueue.cpp
 )
 
-target_link_libraries(renderer PUBLIC core)
+target_link_libraries(renderer PUBLIC 
+	core
+)

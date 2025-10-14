@@ -69,4 +69,26 @@ namespace platformer2d {
 		DiffuseRoughness,
 	};
 
+	namespace Enum
+	{
+		static std::string ToString(EImageFormat Format)
+		{
+			switch (Format)
+			{
+				case EImageFormat::RG8:     return "RG8";
+				case EImageFormat::RG16F:   return "RG16F";
+				case EImageFormat::RG32F:   return "RG32F";
+				case EImageFormat::RGB:     return "RGB";
+				case EImageFormat::RGBA:    return "RGBA";
+				case EImageFormat::RGBA8:   return "RGBA8";
+				case EImageFormat::RGBA16F: return "RGBA16F";
+				case EImageFormat::RGBA32F: return "RGBA32F";
+				case EImageFormat::SRGB:    return "SRGB";
+			}
+
+			LK_ASSERT(false, "Unknown image format: {}", static_cast<int>(Format));
+			return "Unknown";
+		}
+	}
+
 }

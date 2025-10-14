@@ -17,7 +17,7 @@ namespace platformer2d {
 		uint32_t Width = 1;
 		uint32_t Height = 1;
 		uint8_t Mips = 1;
-		bool bFlipVertical = false;
+		bool bFlipVertical = true;
 
 		EImageFormat Format = EImageFormat::RGBA;
 		ETextureWrap SamplerWrap = ETextureWrap::Clamp;
