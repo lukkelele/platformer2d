@@ -8,6 +8,7 @@ project_library_sources(
 	log.cpp
 	log_formatters.h
 	template.h
+	timer.h
 	window.h
 	window.cpp
 )
