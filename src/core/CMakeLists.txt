@@ -12,6 +12,4 @@ project_library_sources(
 	window.cpp
 )
 
-# TODO: window should be moved from core and placed in renderer (?)
-# Because of the dependency to EKeyState.
-target_link_libraries(core PRIVATE input)
+add_subdirectory(input)

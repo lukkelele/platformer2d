@@ -6,7 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "log.h"
+#include "core/log.h"
 
 namespace platformer2d {
 
@@ -15,6 +15,7 @@ namespace platformer2d {
 		uint16_t Width = 0;
 		uint16_t Height = 0;
 		std::string Title{};
+		bool bVSync = false;
 
 		FWindowData() = default;
 		FWindowData(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
@@ -39,6 +40,9 @@ namespace platformer2d {
 
 		void BeginFrame();
 		void EndFrame();
+
+		void SetVSync(bool Enabled);
+		bool GetVSync() const { return Data.bVSync; }
 
 		const FWindowData& GetData() const { return Data; }
 		GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }

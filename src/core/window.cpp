@@ -54,6 +54,8 @@ namespace platformer2d {
 			std::exit(0); /** @todo Should do proper shutdown */
 		});
 
+		SetVSync(true);
+
 		glfwSetKeyCallback(GlfwWindow, [](GLFWwindow* Window, int Key, int ScanCode, int Action, int Modifiers)
 		{
 			LK_TRACE("Key={} Action={} Modifiers={}", Key, Action, Modifiers);
@@ -93,6 +95,13 @@ namespace platformer2d {
 	{
 		glfwSwapBuffers(GlfwWindow);
 		glfwPollEvents();
+	}
+
+	void CWindow::SetVSync(const bool Enabled)
+	{
+		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "Enabled" : "Disabled");
+		glfwSwapInterval(Enabled);
+		Instance->Data.bVSync = Enabled;
 	}
 
 }
