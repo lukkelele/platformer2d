@@ -34,6 +34,7 @@ namespace platformer2d {
 		 * The speed should be greater than 1.0f.
 		 */
 		void SetMovementSpeed(float NewSpeed);
+		void SetMovementSpeedFactor(float SpeedFactor);
 
 	public:
 		FOnJumped OnJumped;
@@ -42,7 +43,7 @@ namespace platformer2d {
 		FPlayerData Data{};
 
 		float MovementSpeed = 0.00032f;
-		static constexpr float MovementSpeedFactor = 10000.0f;
+		inline static float MovementSpeedFactor = 10000.0f;
 	};
 
 }

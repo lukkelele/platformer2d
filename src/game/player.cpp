@@ -3,7 +3,7 @@
 #include <imgui/imgui.h>
 
 #include "core/log.h"
-#include "input/keyboard.h"
+#include "core/input/keyboard.h"
 
 namespace platformer2d {
 
@@ -46,6 +46,11 @@ namespace platformer2d {
 	{
 		MovementSpeed = (NewSpeed / 10000.0f);
 		LK_TRACE("MovementSpeed={} (NewSpeed={})", MovementSpeed, NewSpeed);
+	}
+
+	void CPlayer::SetMovementSpeedFactor(const float SpeedFactor)
+	{
+		MovementSpeedFactor = SpeedFactor;
 	}
 
 }

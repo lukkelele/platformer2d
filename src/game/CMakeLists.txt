@@ -6,6 +6,5 @@ project_library_sources(
 
 target_link_libraries(game PUBLIC 
 	core
-	input
 	scene
 )
