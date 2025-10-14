@@ -63,7 +63,7 @@ namespace platformer2d {
         {
             switch (LoggerType)
             {
-				case ELoggerType::Core:			 return Logger_Core;
+				case ELoggerType::Core: return Logger_Core;
             }
 
 			LK_ASSERT(false, "Unsupported logger type: {}", static_cast<int>(LoggerType));
