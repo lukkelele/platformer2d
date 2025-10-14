@@ -4,5 +4,5 @@ target_sources(${TEST_NAME} PRIVATE
 )
 
 target_link_libraries(${TEST_NAME} PRIVATE 
-	input
+	core
 )
