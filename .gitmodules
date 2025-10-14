@@ -16,3 +16,6 @@
 [submodule "external/Catch2"]
 	path = external/Catch2
 	url = git@github.com:catchorg/Catch2.git
+[submodule "external/box2d"]
+	path = external/box2d
+	url = git@github.com:erincatto/box2d.git
