@@ -126,10 +126,12 @@ namespace platformer2d::OpenGL {
 			LK_OpenGL_Verify(glGenBuffers(1, &VBO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, sizeof(Data), Data, GL_STATIC_DRAW));
+			LK_DEBUG_TAG("VertexBuffer", "VBO={} Size={}", VBO, sizeof(Data));
 
 			int VertexBufferIndex = 0;
 			for (const FVertexBufferElement& Element : Layout)
 			{
+				LK_TRACE("ComponentCount={} Stride={}", Element.GetComponentCount(), Layout.GetStride());
 				switch (Element.Type)
 				{
 					case EShaderDataType::Float:
