@@ -71,7 +71,7 @@ namespace platformer2d {
 			}
 			else
 			{
-				LK_WARN("Uniform '{}' is not in use", Uniform);
+				LK_WARN_TAG("Shader", "Uniform '{}' is not in use ({})", Uniform, Filepath.filename());
 			}
 
 			return UniformLocation;
