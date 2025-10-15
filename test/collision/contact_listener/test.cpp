@@ -138,7 +138,7 @@ namespace platformer2d::test {
 		glBindVertexArray(LineVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, LineVBO);
 		glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
 		glEnableVertexAttribArray(0);
 		
 		/*********************************
@@ -180,6 +180,8 @@ namespace platformer2d::test {
 			CKeyboard::Update();
 			const float DeltaTime = Timer.GetDeltaTime();
 
+			CRenderer::StartBatch();
+
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
 			ImGui::Text("Delta Time: ~%1.fms", DeltaTime);
@@ -215,10 +217,12 @@ namespace platformer2d::test {
 				b2World_Step(WorldID, DeltaTime, SubStepCount);
 			}
 			ImGui::SameLine(0, 20.0f);
+			ImGui::Text("Substep Count");
+			ImGui::SameLine();
 			ImGui::SetNextItemWidth(110.0f);
-			ImGui::SliderInt("Substep Count", &SubStepCount, 1, 20);
+			ImGui::SliderInt("##SubstepCount", &SubStepCount, 1, 20);
 
-			ImGui::TextColored(ImColor(IM_COL32(200, 200, 0, 255)), "Dynamic Body");
+			ImGui::TextColored(ImColor(IM_COL32(200, 200, 200, 255)), "Dynamic Body");
 			ImGui::Text("ID: %d", DynamicBodyID);
 			const b2Vec2 DynamicBodyPos = b2Body_GetPosition(DynamicBodyID);
 			const b2Rot DynamicBodyRot = b2Body_GetRotation(DynamicBodyID);
@@ -314,7 +318,7 @@ namespace platformer2d::test {
 			PlayerTexture.Bind();
 			if (bRendererDrawQuad)
 			{
-				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f});
+				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f}, FragColor);
 			}
 			else
 			{
@@ -350,6 +354,8 @@ namespace platformer2d::test {
 			ImGui::SliderInt("Line Width", &LineWidth, 1, 24);
 			glDrawArrays(GL_LINES, 0, 2);
 			LineShader.Unbind();
+
+			CRenderer::Flush();
 
 			CKeyboard::TransitionPressedKeys();
 			CRenderer::EndFrame();
