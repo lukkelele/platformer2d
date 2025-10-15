@@ -160,7 +160,7 @@ namespace platformer2d {
 		}
 
 	private:
-		FORCEINLINE void CalculateOffsetsAndStride()
+		void CalculateOffsetsAndStride()
 		{
 			Stride = 0;
 			uint32_t Offset = 0;
@@ -169,9 +169,11 @@ namespace platformer2d {
 				Element.Offset = Offset;
 				Offset += Element.Size;
 				Stride += Element.Size;
+				LK_TRACE("{}: Offset={} Stride={}", Element.Name, Offset, Stride);
 			}
 		}
 
+	private:
 		std::vector<FVertexBufferElement> Elements{};
 		uint32_t Stride = 0;
 	};
