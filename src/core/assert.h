@@ -6,11 +6,11 @@
 #include "core.h"
 
 #if defined(LK_COMPILER_MSVC)
-#	define LK_DEBUG_BREAK __debugbreak()
+#	define LK_DEBUG_BREAK() __debugbreak()
 #elif defined(LK_COMPILER_CLANG)
-#	define LK_DEBUG_BREAK __builtin_debugtrap()
+#	define LK_DEBUG_BREAK() __builtin_debugtrap()
 #elif defined(LK_COMPILER_GCC)
-#	define LK_DEBUG_BREAK __builtin_trap()
+#	define LK_DEBUG_BREAK() __builtin_trap()
 #endif
 
 #if defined(LK_COMPILER_MSVC)
@@ -31,7 +31,7 @@
 			if (!(Condition))                                \
 			{                                                \
 				std::printf("Assert Failed: %s\nLine: %d\n", LK_FUNCSIG, __LINE__); \
-				LK_DEBUG_BREAK;                              \
+				LK_DEBUG_BREAK();                            \
 			}                                                \
 		}
 #else
@@ -48,7 +48,7 @@
 		if (!(Condition))                                     \
 		{                                                     \
 			std::printf("Verify Failed: %s\nLine: %d\n", LK_FUNCSIG, __LINE__); \
-			LK_DEBUG_BREAK;                                   \
+			LK_DEBUG_BREAK();                                 \
 		}                                                     \
 	}
 #else
