@@ -67,6 +67,21 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glLinkProgram(Program));
 		LK_OpenGL_Verify(glValidateProgram(Program));
 
+		auto VerifyShaderProgram = [](const GLuint Shader) -> bool
+		{
+			int InfoLogLength;
+			LK_OpenGL_Verify(glGetShaderiv(Shader, GL_INFO_LOG_LENGTH, &InfoLogLength));
+			if (InfoLogLength > 0)
+			{
+				std::vector<char> ErrorMsg(InfoLogLength + 1);
+				glGetShaderInfoLog(Shader, InfoLogLength, NULL, &ErrorMsg[0]);
+			}
+			return (InfoLogLength == 0);
+		};
+
+		LK_VERIFY(VerifyShaderProgram(VertexShader));
+		LK_VERIFY(VerifyShaderProgram(FragShader));
+
 		/* Delete shader resources after shader programs are created and validated. */
 		LK_OpenGL_Verify(glDeleteShader(VertexShader));
 		LK_OpenGL_Verify(glDeleteShader(FragShader));
@@ -110,6 +125,16 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glDeleteShader(FragShader));
 
 		RendererID = Program;
+	}
+
+	void CShader::Bind() const
+	{
+		LK_OpenGL_Verify(glUseProgram(RendererID));
+	}
+
+	void CShader::Unbind() const
+	{
+		LK_OpenGL_Verify(glUseProgram(0));
 	}
 
 	void CShader::Get(std::string_view Uniform, glm::vec2& Value)
@@ -190,6 +215,27 @@ namespace platformer2d {
 	{
 		LK_OpenGL_Verify(glUseProgram(RendererID));
 		LK_OpenGL_Verify(glUniformMatrix4fv(GetUniformLocation(Uniform.data()), 1, GL_FALSE, &Value[0][0]));
+	}
+
+	int CShader::GetUniformLocation(const std::string& Uniform)
+	{
+		if (UniformLocationCache.find(Uniform) != UniformLocationCache.end())
+		{
+			return UniformLocationCache[Uniform];
+		}
+
+		int UniformLocation;
+		LK_OpenGL_Verify(UniformLocation = glGetUniformLocation(RendererID, Uniform.c_str()));
+		if (UniformLocation != -1)
+		{
+			UniformLocationCache[Uniform] = UniformLocation;
+		}
+		else
+		{
+			LK_WARN_TAG("Shader", "Uniform '{}' is not in use ({})", Uniform, Filepath.filename());
+		}
+
+		return UniformLocation;
 	}
 
 	uint32_t CShader::CompileShader(const uint32_t ShaderType, const std::string& ShaderSource)
