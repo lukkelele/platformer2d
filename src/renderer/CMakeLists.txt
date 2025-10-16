@@ -16,6 +16,13 @@ project_library_sources(
 	rendercommandqueue.cpp
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	project_library_sources(
+		opengl_debug.h
+		opengl_debug.cpp
+	)
+endif()
+
 target_link_libraries(renderer PUBLIC 
 	core
 )
