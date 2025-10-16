@@ -31,8 +31,16 @@ namespace platformer2d {
 		const int GlfwInit = glfwInit();
 		glfwSetErrorCallback([](const int Error, const char* Description)
 		{
-			spdlog::error("GLFW error ({}): {}", Error, Description);
+			LK_ERROR("GLFW error ({}): {}", Error, Description);
 		});
+
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, LK_OPENGL_MAJOR);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, LK_OPENGL_MINOR);
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef LK_BUILD_DEBUG
+		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
 
 		GlfwWindow = glfwCreateWindow(Data.Width, Data.Height, Data.Title.c_str(), nullptr, nullptr);
 		LK_VERIFY(GlfwWindow);
