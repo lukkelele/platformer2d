@@ -49,6 +49,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	project_add_compile_definitions(LK_COMPILER_GNU)
 endif()
 
+project_add_compile_definitions(
+	LK_OPENGL_MAJOR=4
+	LK_OPENGL_MINOR=6
+)
+
 message("Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	project_add_compile_definitions(LK_BUILD_DEBUG)
