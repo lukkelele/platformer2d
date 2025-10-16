@@ -17,7 +17,8 @@ set -- \
   GL_ARB_sample_shading \
   GL_ARB_debug_output \
   GL_ARB_timer_query \
-  GL_ARB_direct_state_access
+  GL_ARB_direct_state_access \
+  GL_KHR_debug
 
 extensions=$(printf '%s,' "$@")
 extensions=${extensions%,} # Drop trailing comma.
