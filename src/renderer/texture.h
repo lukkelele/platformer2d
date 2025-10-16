@@ -37,19 +37,13 @@ namespace platformer2d {
 		CTexture(uint16_t InWidth, uint16_t InHeight, void* InData = nullptr);
 		~CTexture() = default;
 
-		FORCEINLINE void Bind(const uint32_t Slot = 0) const
-		{
-			LK_OpenGL_Verify(glBindTextureUnit(Slot, RendererID));
-		}
-
-		FORCEINLINE void Unbind(const uint32_t Slot = 0) const
-		{
-			LK_OpenGL_Verify(glBindTextureUnit(Slot, 0));
-		}
+		void Bind(uint32_t Slot = 0) const;
+		void Unbind(uint32_t Slot = 0) const;
 
 		void Invalidate();
 
 		LRendererID GetRendererID() const { return RendererID; }
+		std::size_t GetIndex() const { return Index; }
 		uint32_t GetWidth() const { return Width; }
 		uint32_t GetHeight() const { return Height; }
 		uint32_t GetChannels() const { return Channels; }
@@ -57,6 +51,7 @@ namespace platformer2d {
 	private:
 		LRendererID RendererID{};
 		FBuffer ImageData;
+		std::size_t Index;
 
 		uint32_t Width{};
 		uint32_t Height{};

@@ -6,8 +6,15 @@
 
 namespace platformer2d {
 
+	namespace
+	{
+		std::size_t CreatedTextures = 0;
+	}
+
 	CTexture::CTexture()
 	{
+		Index = CreatedTextures++;
+		LK_DEBUG_TAG("Texture", "Index: {}", Index);
 	}
 
 	CTexture::CTexture(const FTextureSpecification& Specification)
@@ -23,9 +30,9 @@ namespace platformer2d {
 		LK_ASSERT(Data != NULL, "Failed to load texture from: {}", Specification.Path);
 		if ((ReadWidth != Specification.Width) || (ReadHeight != Specification.Height))
 		{
-			LK_WARN("Texture mismatch ({}) between specified and actual size ({}x{} != {}x{})",
-					Path.filename().generic_string(), Specification.Width, Specification.Height,
-					ReadWidth, ReadHeight);
+			LK_DEBUG("Texture mismatch ({}) between specified and actual size ({}x{} != {}x{})",
+					 Path.filename().generic_string(), Specification.Width, Specification.Height,
+					 ReadWidth, ReadHeight);
 		}
 
 		Width = ReadWidth;
@@ -65,6 +72,9 @@ namespace platformer2d {
 
 		OpenGL::SetTextureWrap(Specification.SamplerWrap);
 		OpenGL::SetTextureFilter(Specification.SamplerFilter, bMipmap);
+
+		Index = CreatedTextures++;
+		LK_DEBUG_TAG("Texture", "Index: {} ({})", Index, Path.filename());
 	}
 
 	CTexture::CTexture(const uint16_t InWidth, const uint16_t InHeight, void* InData)
@@ -100,19 +110,23 @@ namespace platformer2d {
 			stbi_image_free(InData);
 		}
 
-		/* Wrap. */
-		/* @fixme */
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-		//LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-		//LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-
-		/* Filter. */
-		/* @fixme */
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-		//LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-		//LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+		Index = CreatedTextures++;
+		LK_DEBUG_TAG("Texture", "Index: {}", Index);
+	}
+
+	void CTexture::Bind(const uint32_t Slot) const
+	{
+		LK_OpenGL_Verify(glBindTextureUnit(Slot, RendererID));
+	}
+
+	void CTexture::Unbind(const uint32_t Slot) const
+	{
+		LK_OpenGL_Verify(glBindTextureUnit(Slot, 0));
 	}
 
 	void CTexture::Invalidate()
