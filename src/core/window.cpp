@@ -99,7 +99,7 @@ namespace platformer2d {
 
 	void CWindow::SetVSync(const bool Enabled)
 	{
-		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "Enabled" : "Disabled");
+		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "enabled" : "disabled");
 		glfwSwapInterval(Enabled);
 		Instance->Data.bVSync = Enabled;
 	}
