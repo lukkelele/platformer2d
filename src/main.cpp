@@ -7,6 +7,7 @@
 
 #include "core/assert.h"
 #include "core/window.h"
+#include "renderer/renderer.h"
 #include "renderer/texture.h"
 
 int main(int argc, char* argv[])
@@ -16,10 +17,10 @@ int main(int argc, char* argv[])
 
 	platformer2d::CWindow Window(800, 600);
 	Window.Initialize();
+	CRenderer::Initialize();
+
 	const FWindowData& WindowData = Window.GetData();
 
-	/* platformer2d/build/x64-Debug */
-	spdlog::info("pwd: {}", std::filesystem::current_path().generic_string());
 	const char* TexturePath = "../../assets/textures/bricks.jpg";
 	if (std::filesystem::exists(TexturePath)) 
 	{
