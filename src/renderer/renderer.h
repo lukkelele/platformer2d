@@ -16,7 +16,7 @@ namespace platformer2d {
 		glm::vec3 Position{};
 		glm::vec4 Color{};
 		glm::vec2 TexCoord{};
-		float TexIndex{};
+		int TexIndex{};
 		float TileFactor{};
 	};
 
@@ -45,6 +45,8 @@ namespace platformer2d {
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, 
 							 const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 1.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
+							 const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 1.0f}, float RotationDeg = 0.0f);
 		static void DrawLine(const glm::vec2& P1, const glm::vec2& P2, uint16_t LineWidth = 8,
 							 const glm::vec4& Color = { 1.0f, 1.0f, 1.0f, 1.0f });
 
@@ -53,6 +55,8 @@ namespace platformer2d {
 		static const FBackendInfo& GetBackendInfo() { return BackendInfo; }
 
 	private:
+		static void SwapQueues();
+
 		CRenderer& operator=(const CRenderer&) = delete;
 		CRenderer& operator=(CRenderer&&) = delete;
 

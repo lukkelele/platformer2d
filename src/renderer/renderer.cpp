@@ -74,6 +74,10 @@ namespace platformer2d {
 		}
 #endif
 
+#ifdef LK_BUILD_DEBUG
+		OpenGL::Internal::SetupDebugContext(nullptr);
+#endif
+
 		LK_DEBUG_TAG("Renderer", "Creating {} render command queues", CommandQueue.size());
 		for (int Idx = 0; Idx < CommandQueue.size(); Idx++)
 		{
@@ -88,83 +92,19 @@ namespace platformer2d {
 			QuadVertexPositions[3] = {  0.50f, -0.50f, 0.0f, 1.0f };
 
 			const FVertexBufferLayout QuadLayout = {
-				{ "pos",        EShaderDataType::Float4, },
+				{ "pos",        EShaderDataType::Float3, },
 				{ "color",      EShaderDataType::Float4, },
 				{ "texcoord",   EShaderDataType::Float2, },
-				{ "texindex",   EShaderDataType::Float,  },
+				{ "texindex",   EShaderDataType::Int,  },
 				{ "tilefactor", EShaderDataType::Float,  },
 			};
 
-			/* Quad VAO. */
-			LK_OpenGL_Verify(glGenVertexArrays(1, &QuadVAO));
-			LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
-
-			/* Quad VBO. */
-			LK_OpenGL_Verify(glGenBuffers(1, &QuadVBO));
-			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
-			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, MaxVertices * sizeof(FQuadVertex), nullptr, GL_STATIC_DRAW));
-
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(
-				0,
-				3,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(FQuadVertex),
-				(const void*)(offsetof(FQuadVertex, Position)) // (const void*)0
-			);
-			static_assert(0 * sizeof(float) == offsetof(FQuadVertex, Position));
-
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(
-				1,
-				4,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(FQuadVertex),
-				(const void*)(offsetof(FQuadVertex, Color)) // (const void*)(3 * sizeof(float))
-			);
-			static_assert(3 * sizeof(float) == offsetof(FQuadVertex, Color));
-
-			glEnableVertexAttribArray(2);
-			glVertexAttribPointer(
-				2,
-				2,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(FQuadVertex),
-				(const void*)(offsetof(FQuadVertex, TexCoord))
-			);
-			static_assert(7 * sizeof(float) == offsetof(FQuadVertex, TexCoord));
-
-			glEnableVertexAttribArray(3);
-			glVertexAttribPointer(
-				3,
-				1,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(FQuadVertex),
-				(const void*)(offsetof(FQuadVertex, TexIndex)) // (const void*)(9 * sizeof(float))
-			);
-			static_assert(9 * sizeof(float) == offsetof(FQuadVertex, TexIndex));
-
-			glEnableVertexAttribArray(4);
-			glVertexAttribPointer(
-				4,
-				1,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(FQuadVertex),
-				(const void*)(offsetof(FQuadVertex, TileFactor)) // (const void*)(10 * sizeof(float))
-			);
-			static_assert(10 * sizeof(float) == offsetof(FQuadVertex, TileFactor));
-
-			QuadShader = std::make_unique<CShader>(SHADERS_DIR "/quad.shader");
-			QuadShader->Set("u_proj", glm::mat4(1.0f));
-			QuadShader->Set("u_texarray", 0); /* @fixme */
+			QuadVAO = OpenGL::VertexArray::Create();
+			QuadVBO = OpenGL::VertexBuffer::Create(MaxVertices * sizeof(FQuadVertex), QuadLayout);
 
 			QuadVertexBufferBase = new FQuadVertex[MaxVertices];
 			uint32_t* QuadIndices = new uint32_t[MaxIndices];
+			LK_VERIFY(QuadIndices, "Failed to alloc QuadIndices on the heap");
 			uint32_t Offset = 0;
 			for (uint32_t Idx = 0; Idx < MaxIndices; Idx += 6)
 			{
@@ -181,14 +121,30 @@ namespace platformer2d {
 				Offset += 4;
 			}
 
-			/* Quad EBO. */
-			LK_OpenGL_Verify(glCreateBuffers(1, &QuadEBO));
-			LK_OpenGL_Verify(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, QuadEBO));
-			LK_OpenGL_Verify(glNamedBufferData(QuadEBO, MaxIndices * sizeof(uint32_t), QuadIndices, GL_STATIC_DRAW));
+			QuadEBO = OpenGL::ElementBuffer::Create(QuadIndices, MaxIndices * sizeof(uint32_t));
+			delete[] QuadIndices;
 
 			QuadVertexBufferPtr = QuadVertexBufferBase;
 
-			delete[] QuadIndices;
+			QuadShader = std::make_unique<CShader>(SHADERS_DIR "/quad.shader");
+			QuadShader->Set("u_proj", glm::mat4(1.0f));
+
+			constexpr int MAX_TEXTURES = 16;
+#if 0
+			int Slots[MAX_TEXTURES] = { 0 };
+			for (int Idx = 0; Idx < MAX_TEXTURES; Idx++)
+			{
+				Slots[Idx] = Idx;
+			}
+			QuadShader->Set("u_textures", Slots, LK_ARRAYSIZE(Slots));
+#else
+			std::array<int, MAX_TEXTURES> Slots = { 0 };
+			for (int Idx = 0; Idx < Slots.size(); Idx++)
+			{
+				Slots[Idx] = Idx;
+			}
+#endif
+			QuadShader->Set("u_textures", Slots);
 		}
 
 		/* Line */
@@ -223,15 +179,19 @@ namespace platformer2d {
 
 	void CRenderer::BeginFrame()
 	{
+		SwapQueues();
+
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-	
+
 		ImGuiLayer->BeginFrame();
 	}
 
 	void CRenderer::EndFrame()
 	{
 		ImGuiLayer->EndFrame();
+
+		CommandQueue[CommandQueueSubmissionIndex]->Execute();
 	}
 
 	void CRenderer::StartBatch()
@@ -271,7 +231,7 @@ namespace platformer2d {
 			NextBatch();
 		}
 
-		static constexpr float TextureIndex = 0.0f;
+		static constexpr int TextureIndex = 0;
 		static constexpr float TileFactor = 1.0f;
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
@@ -283,6 +243,32 @@ namespace platformer2d {
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[i];
 			QuadVertexBufferPtr->TexIndex = TextureIndex;
+			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr++;
+		}
+
+		QuadIndexCount += 6;
+	}
+
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
+							 const glm::vec4& Color, float RotationDeg)
+	{
+		if (QuadIndexCount >= MaxIndices)
+		{
+			NextBatch();
+		}
+
+		static constexpr float TileFactor = 1.0f;
+
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
+            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+
+		for (std::size_t i = 0; i < 4; i++)
+		{
+			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[i];
+			QuadVertexBufferPtr->Color = Color;
+			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[i];
+			QuadVertexBufferPtr->TexIndex = Texture.GetIndex();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
 			QuadVertexBufferPtr++;
 		}
@@ -303,6 +289,12 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glBindVertexArray(Data.Line.VAO));
 		LK_OpenGL_Verify(glLineWidth(LineWidth));
 		LK_OpenGL_Verify(glDrawArrays(GL_LINES, 0, 2));
+	}
+
+	void CRenderer::SwapQueues()
+	{
+		static constexpr std::size_t QueueCount = CommandQueue.size();
+		CommandQueueSubmissionIndex = (CommandQueueSubmissionIndex + 1) % QueueCount;
 	}
 
 }
