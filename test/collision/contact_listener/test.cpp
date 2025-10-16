@@ -98,11 +98,13 @@ namespace platformer2d::test {
 			.SamplerFilter = ETextureFilter::Nearest,
 		};
 		CTexture PlayerTexture(Spec);
+		LK_INFO("PlayerTexture Index: {}", PlayerTexture.GetIndex());
 
 		Spec.Path = BricksTexturePath;
 		Spec.Width = 512;
 		Spec.Height = 512;
 		CTexture PlatformTexture(Spec);
+		LK_INFO("PlatformTexture Index: {}", PlatformTexture.GetIndex());
 
 		/*********************************
 		 * Player
@@ -302,7 +304,7 @@ namespace platformer2d::test {
 			Shader.Set("u_color", PlatformFragColor);
 			glBindVertexArray(RectangleVAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			PlatformTexture.Unbind();
+			PlatformTexture.Unbind(0);
 			glBindVertexArray(0);
 
 			/****************************
@@ -315,7 +317,7 @@ namespace platformer2d::test {
 				PlayerTransform = CameraProj * PlayerTransform;
 			}
 
-			PlayerTexture.Bind();
+			PlayerTexture.Bind(1);
 			if (bRendererDrawQuad)
 			{
 				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f}, FragColor);
@@ -323,12 +325,12 @@ namespace platformer2d::test {
 			else
 			{
 				Shader.Set("u_transform", PlayerTransform);
-				Shader.Set("u_texture", 0);
+				Shader.Set("u_texture", 1);
 				Shader.Set("u_color", FragColor);
 				glBindVertexArray(RectangleVAO);
 				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			}
-			PlayerTexture.Unbind();
+			PlayerTexture.Unbind(1);
 
 			ImGui::EndTable();
 
