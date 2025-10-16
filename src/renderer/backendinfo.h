@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace platformer2d::OpenGL {
+namespace platformer2d {
 
 	struct FBackendInfo
 	{

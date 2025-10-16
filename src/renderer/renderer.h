@@ -4,9 +4,10 @@
 
 #include "core/core.h"
 #include "core/log.h"
+#include "backendinfo.h"
+#include "imguilayer.h"
 #include "shader.h"
 #include "texture.h"
-#include "imguilayer.h"
 
 namespace platformer2d {
 
@@ -49,11 +50,14 @@ namespace platformer2d {
 
 		static void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
 
+		static const FBackendInfo& GetBackendInfo() { return BackendInfo; }
+
 	private:
 		CRenderer& operator=(const CRenderer&) = delete;
 		CRenderer& operator=(CRenderer&&) = delete;
 
 	private:
+		inline static FBackendInfo BackendInfo;
 		inline static glm::vec4 ClearColor{ 0.20f, 0.20f, 0.20f, 1.0f };
 		inline static std::unique_ptr<CImGuiLayer> ImGuiLayer = nullptr;
 

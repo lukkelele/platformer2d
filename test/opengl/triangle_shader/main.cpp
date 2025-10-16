@@ -41,7 +41,7 @@ int main(int Argc, char* Argv[])
 	const FWindowData& WindowData = Window.GetData();
 
 	CTest::InitRenderContext(Window.GetGlfwWindow());
-	OpenGL::FBackendInfo BackendInfo;
+	FBackendInfo BackendInfo;
 	OpenGL::LoadInfo(BackendInfo);
 	LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 	LK_INFO("ImGui Version: {}", ImGui::GetVersion());

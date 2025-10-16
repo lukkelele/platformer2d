@@ -50,7 +50,7 @@ namespace platformer2d::test {
 			char** Argv;
 		} Args;
 
-		OpenGL::FBackendInfo BackendInfo;
+		FBackendInfo BackendInfo;
 
 		std::unique_ptr<CWindow> Window;
 		std::filesystem::path BinaryDir{};

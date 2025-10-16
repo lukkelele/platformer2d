@@ -49,9 +49,7 @@ namespace platformer2d {
 		std::array<CRenderCommandQueue*, 2> CommandQueue;
 		std::atomic<uint32_t> CommandQueueSubmissionIndex = 0;
 
-		OpenGL::FBackendInfo BackendInfo{};
-
-		constexpr glm::vec2 TextureCoords[] = {
+		constexpr glm::vec2 QuadTextureCoords[] = {
 			{ 0.0f, 0.0f }, /*  Bottom Left.  */
 			{ 0.0f, 1.0f }, /*  Top Left.     */
 			{ 1.0f, 1.0f }, /*  Top Right.    */
@@ -283,7 +281,7 @@ namespace platformer2d {
 		{
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[i];
 			QuadVertexBufferPtr->Color = Color;
-			QuadVertexBufferPtr->TexCoord = TextureCoords[i];
+			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[i];
 			QuadVertexBufferPtr->TexIndex = TextureIndex;
 			QuadVertexBufferPtr->TileFactor = TileFactor;
 			QuadVertexBufferPtr++;
