@@ -25,13 +25,6 @@ namespace platformer2d {
 
 	struct FRendererData
 	{
-		struct FLine
-		{
-			GLuint VAO = 0;
-			GLuint VBO = 0;
-		} Line;
-		std::unique_ptr<CShader> LineShader = nullptr;
-
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
 	};
 
@@ -149,17 +142,17 @@ namespace platformer2d {
 
 		/* Line */
 		{
-			glGenVertexArrays(1, &Data.Line.VAO);
-			glGenBuffers(1, &Data.Line.VBO);
+			glGenVertexArrays(1, &LineVAO);
+			glGenBuffers(1, &LineVBO);
 
-			glBindVertexArray(Data.Line.VAO);
-			glBindBuffer(GL_ARRAY_BUFFER, Data.Line.VBO);
+			glBindVertexArray(LineVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, LineVBO);
 			/* Two vectors: 2 * 2 * sizeof(float) */
 			glBufferData(GL_ARRAY_BUFFER, (2 * 2 * sizeof(float)), nullptr, GL_DYNAMIC_DRAW);
 			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (2 * sizeof(float)), nullptr);
 			glEnableVertexAttribArray(0);
 
-			Data.LineShader = std::make_unique<CShader>(SHADERS_DIR "/line.shader");
+			LineShader = std::make_unique<CShader>(SHADERS_DIR "/line.shader");
 		}
 
 		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
@@ -279,14 +272,14 @@ namespace platformer2d {
 	void CRenderer::DrawLine(const glm::vec2& P1, const glm::vec2& P2,
 							 const uint16_t LineWidth, const glm::vec4& Color)
 	{
-		Data.LineShader->Set("u_transform", glm::mat4(1.0f));
-		Data.LineShader->Set("u_color", { 1.0f, 0.50f, 1.0f, 1.0f });
+		LineShader->Set("u_transform", glm::mat4(1.0f));
+		LineShader->Set("u_color", { 1.0f, 0.50f, 1.0f, 1.0f });
 
 		const float Vertices[2][2] = { { P1.x, P1.y }, { P2.x, P2.y } };
-		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, Data.Line.VBO));
+		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
 		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices));
 
-		LK_OpenGL_Verify(glBindVertexArray(Data.Line.VAO));
+		LK_OpenGL_Verify(glBindVertexArray(LineVAO));
 		LK_OpenGL_Verify(glLineWidth(LineWidth));
 		LK_OpenGL_Verify(glDrawArrays(GL_LINES, 0, 2));
 	}

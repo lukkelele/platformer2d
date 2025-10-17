@@ -73,6 +73,10 @@ namespace platformer2d {
 		inline static FQuadVertex* QuadVertexBufferBase = nullptr;
 		inline static FQuadVertex* QuadVertexBufferPtr = nullptr;
 		inline static std::unique_ptr<CShader> QuadShader = nullptr;
+
+		inline static GLuint LineVAO = 0;
+		inline static GLuint LineVBO = 0;
+		inline static std::unique_ptr<CShader> LineShader = nullptr;
 	};
 
 }
