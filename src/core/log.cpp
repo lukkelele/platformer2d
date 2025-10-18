@@ -3,6 +3,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include "assert.h"
+
 #ifdef LK_LOG_DEBUG
 #define LK_LOG_PRINTLN(...) LK_PRINTLN(__VA_ARGS__)
 #else

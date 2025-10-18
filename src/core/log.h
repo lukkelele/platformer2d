@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -8,9 +9,18 @@
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/fmt/fmt.h>
 
-#include "assert.h"
 #include "ansi_colors.h"
 #include "log_formatters.h"
+#include "macros.h"
+
+/* Internal assert macro because of cyclic inclusion in assert.h */
+#define LK_LOG_ASSERT(Condition, ...) assert(Condition)
+
+#if LK_LOG_FORCE_INLINE
+#define LK_INLINE FORCEINLINE
+#else
+#define LK_INLINE inline
+#endif
 
 namespace platformer2d {
 
@@ -34,10 +44,7 @@ namespace platformer2d {
      */
     enum class ELoggerType
     {
-        Core = 0,
-        Client,
-        EditorConsole,
-		TestRunner,
+        Core,
     };
 
     class CLog
@@ -66,7 +73,7 @@ namespace platformer2d {
 				case ELoggerType::Core: return Logger_Core;
             }
 
-			LK_ASSERT(false, "Unsupported logger type: {}", static_cast<int>(LoggerType));
+			LK_LOG_ASSERT(false, "Unsupported logger type: {}", static_cast<int>(LoggerType));
 			return Logger_Core;
         }
 
@@ -151,7 +158,7 @@ namespace platformer2d {
 				case ELoggerType::Core: return Logger_Core->name();
 			}
 
-			LK_ASSERT(false, "Unknown logger type: {}", static_cast<int>(LoggerType));
+			LK_LOG_ASSERT(false, "Unknown logger type: {}", static_cast<int>(LoggerType));
             return "";
         }
 
@@ -203,11 +210,11 @@ namespace platformer2d {
 
 	template<typename... TArgs>
 	#if defined(LK_COMPILER_MSVC)
-	FORCEINLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag, 
-											   std::format_string<TArgs...> Format, TArgs&&... Args)
+	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag,
+											 std::format_string<TArgs...> Format, TArgs&&... Args)
 	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-	FORCEINLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag, 
-											   fmt::format_string<TArgs...> Format, TArgs&&... Args)
+	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag,
+											 fmt::format_string<TArgs...> Format, TArgs&&... Args)
 	#endif
 	{
 		const FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
@@ -245,8 +252,8 @@ namespace platformer2d {
 		}
 	}
 
-	FORCEINLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, 
-											   std::string_view Tag, std::string_view Message)
+	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level,
+											 std::string_view Tag, std::string_view Message)
 	{
 		const FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
 		if (TagDetails.Enabled && TagDetails.Filter <= Level)
@@ -278,19 +285,17 @@ namespace platformer2d {
 
 	template<typename... TArgs>
 	#if defined(LK_COMPILER_MSVC)
-	FORCEINLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix, 
-											  std::format_string<TArgs...> Format, TArgs&&... Args)
+	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix,
+											std::format_string<TArgs...> Format, TArgs&&... Args)
 	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-	FORCEINLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix, 
-											  fmt::format_string<TArgs...> Format, TArgs&&... Args)
+	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix,
+											fmt::format_string<TArgs...> Format, TArgs&&... Args)
 	#endif
 	{
 		#if defined(LK_COMPILER_MSVC)
 			const std::string FormattedString = std::format(Format, std::forward<TArgs>(Args)...);
 		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
 			const std::string FormattedString = fmt::format(Format, std::forward<TArgs>(Args)...);
-		#else
-			#error "Unsupported"
 		#endif
 		if (auto Logger = GetLogger(LoggerType); Logger != nullptr)
 		{
@@ -306,7 +311,7 @@ namespace platformer2d {
 	#endif
 	}
 
-	FORCEINLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Message)
+	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Message)
 	{
 		if (auto Logger = GetLogger(LoggerType); Logger != nullptr)
 		{
@@ -324,6 +329,8 @@ namespace platformer2d {
 
 }
 
+#undef LK_LOG_ASSERT
+#undef LK_INLINE
 
 /** 
  * Standard print functions.
