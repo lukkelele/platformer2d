@@ -48,6 +48,8 @@ namespace platformer2d {
 			{ 1.0f, 1.0f }, /*  Top Right.    */
 			{ 1.0f, 0.0f }  /*  Bottom Right. */
 		};
+
+		FDrawStatistics DrawStats;
 	}
 
 	void CRenderer::Initialize()
@@ -71,7 +73,6 @@ namespace platformer2d {
 		OpenGL::Internal::SetupDebugContext(nullptr);
 #endif
 
-		LK_DEBUG_TAG("Renderer", "Creating {} render command queues", CommandQueue.size());
 		for (int Idx = 0; Idx < CommandQueue.size(); Idx++)
 		{
 			CommandQueue[Idx] = new CRenderCommandQueue();
@@ -118,44 +119,53 @@ namespace platformer2d {
 			delete[] QuadIndices;
 
 			QuadVertexBufferPtr = QuadVertexBufferBase;
+			LK_VERIFY(QuadVertexBufferPtr);
 
-			QuadShader = std::make_unique<CShader>(SHADERS_DIR "/quad.shader");
-			QuadShader->Set("u_proj", glm::mat4(1.0f));
+			QuadShader = std::make_shared<CShader>(SHADERS_DIR "/quad.shader");
 
 			constexpr int MAX_TEXTURES = 16;
-#if 0
-			int Slots[MAX_TEXTURES] = { 0 };
-			for (int Idx = 0; Idx < MAX_TEXTURES; Idx++)
-			{
-				Slots[Idx] = Idx;
-			}
-			QuadShader->Set("u_textures", Slots, LK_ARRAYSIZE(Slots));
-#else
 			std::array<int, MAX_TEXTURES> Slots = { 0 };
 			for (int Idx = 0; Idx < Slots.size(); Idx++)
 			{
 				Slots[Idx] = Idx;
 			}
-#endif
 			QuadShader->Set("u_textures", Slots);
+
+			CameraData.ViewProjection = glm::mat4(1.0f);
+			CameraUniformBuffer = std::make_unique<CUniformBuffer>(sizeof(FCameraData));
+			CameraUniformBuffer->SetBinding(QuadShader, "ub_camera", 0);
+			CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 		}
 
 		/* Line */
 		{
-			glGenVertexArrays(1, &LineVAO);
-			glGenBuffers(1, &LineVBO);
+			const FVertexBufferLayout LineLayout = {
+				{ "pos",   EShaderDataType::Float3, },
+				{ "color", EShaderDataType::Float4, },
+			};
 
-			glBindVertexArray(LineVAO);
-			glBindBuffer(GL_ARRAY_BUFFER, LineVBO);
-			/* Two vectors: 2 * 2 * sizeof(float) */
-			glBufferData(GL_ARRAY_BUFFER, (2 * 2 * sizeof(float)), nullptr, GL_DYNAMIC_DRAW);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (2 * sizeof(float)), nullptr);
-			glEnableVertexAttribArray(0);
+			LineVAO = OpenGL::VertexArray::Create();
+			LineVBO = OpenGL::VertexBuffer::Create(MaxVertices * sizeof(FQuadVertex), LineLayout);
+			LineVertexBufferBase = new FLineVertex[MaxVertices];
 
-			LineShader = std::make_unique<CShader>(SHADERS_DIR "/line.shader");
+			uint32_t* LineIndices = new uint32_t[MaxLineIndices];
+			for (uint32_t Idx = 0; Idx < MaxLineIndices; Idx++)
+			{
+				LineIndices[Idx] = Idx;
+			}
+			LineEBO = OpenGL::ElementBuffer::Create(LineIndices, MaxLineIndices * sizeof(uint32_t));
+			delete[] LineIndices;
+
+			LineVertexBufferPtr = LineVertexBufferBase;
+			LK_VERIFY(LineVertexBufferPtr);
+
+			LineShader = std::make_shared<CShader>(SHADERS_DIR "/line.shader");
+
+			LK_OpenGL_Verify(glLineWidth(LineConfig.Width));
 		}
 
 		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
+		LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
 		LK_TRACE_TAG("Renderer", "Load white texture");
 		FTextureSpecification WhiteTextureSpec = {
 			.Path = WhiteTexturePath,
@@ -172,25 +182,46 @@ namespace platformer2d {
 
 	void CRenderer::BeginFrame()
 	{
-		SwapQueues();
-
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		ImGuiLayer->BeginFrame();
+		StartBatch();
 	}
 
 	void CRenderer::EndFrame()
 	{
 		ImGuiLayer->EndFrame();
+	}
 
-		CommandQueue[CommandQueueSubmissionIndex]->Execute();
+	void CRenderer::BeginScene(const CCamera& Camera)
+	{
+		CameraData.ViewProjection = Camera.GetViewProjection();
+		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
+
+		StartBatch();
+	}
+
+	void CRenderer::BeginScene(const CCamera& Camera, const glm::mat4& Transform)
+	{
+		CameraData.ViewProjection = Camera.GetViewProjection() * glm::inverse(Transform);
+		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
+
+		StartBatch();
+	}
+
+	void CRenderer::EndScene()
+	{
+		Flush();
 	}
 
 	void CRenderer::StartBatch()
 	{
 		QuadIndexCount = 0;
 		QuadVertexBufferPtr = QuadVertexBufferBase;
+
+		LineIndexCount = 0;
+		LineVertexBufferPtr = LineVertexBufferBase;
 	}
 
 	void CRenderer::NextBatch()
@@ -201,8 +232,9 @@ namespace platformer2d {
 
 	void CRenderer::Flush()
 	{
-		if (QuadIndexCount)
+		if (QuadIndexCount > 0)
 		{
+			/* Compute byte count. */
 			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)QuadVertexBufferPtr - (uint8_t*)QuadVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
@@ -214,10 +246,26 @@ namespace platformer2d {
 			Data.WhiteTexture->Unbind();
 			QuadShader->Unbind();
 		}
+
+		if (LineIndexCount > 0)
+		{
+			/* Compute byte count. */
+			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)LineVertexBufferPtr - (uint8_t*)LineVertexBufferBase);
+			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
+			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, LineVertexBufferBase));
+
+			LineShader->Bind();
+			LineShader->Set("u_proj", glm::mat4(1.0f));
+			Data.WhiteTexture->Bind();
+			LK_OpenGL_Verify(glBindVertexArray(LineVAO));
+			LK_OpenGL_Verify(glDrawElements(GL_LINES, LineIndexCount, GL_UNSIGNED_INT, nullptr));
+			Data.WhiteTexture->Unbind();
+			LineShader->Unbind();
+		}
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, 
-							 const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::SubmitQuad(const glm::vec2& Pos, const glm::vec2& Size,
+							   const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -243,8 +291,8 @@ namespace platformer2d {
 		QuadIndexCount += 6;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
-							 const glm::vec4& Color, float RotationDeg)
+	void CRenderer::SubmitQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
+							   const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -267,15 +315,41 @@ namespace platformer2d {
 		}
 
 		QuadIndexCount += 6;
+		DrawStats.QuadCount++;
 	}
 
-	void CRenderer::DrawLine(const glm::vec2& P1, const glm::vec2& P2,
-							 const uint16_t LineWidth, const glm::vec4& Color)
+	void CRenderer::SubmitLine(const glm::vec2& P0, const glm::vec2& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	{
+		SubmitLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, LineWidth, Color);
+	}
+
+	void CRenderer::SubmitLine(const glm::vec3& P0, const glm::vec3& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	{
+		static constexpr glm::mat4 Proj = glm::mat4(1.0f);
+
+		LineVertexBufferPtr->Position = P0;
+		LineVertexBufferPtr->Color = Color;
+		LineVertexBufferPtr++;
+
+		LineVertexBufferPtr->Position = P1;
+		LineVertexBufferPtr->Color = Color;
+		LineVertexBufferPtr++;
+
+		LineIndexCount += 2;
+		DrawStats.LineCount++;
+	}
+
+	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	{
+		DrawLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, LineWidth, Color);
+	}
+
+	void CRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const uint16_t LineWidth, const glm::vec4& Color)
 	{
 		LineShader->Set("u_transform", glm::mat4(1.0f));
-		LineShader->Set("u_color", { 1.0f, 0.50f, 1.0f, 1.0f });
+		LineShader->Set("u_color", Color);
 
-		const float Vertices[2][2] = { { P1.x, P1.y }, { P2.x, P2.y } };
+		const float Vertices[2][2] = { { P0.x, P0.y }, { P1.x, P1.y } };
 		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
 		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices));
 
@@ -284,10 +358,20 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glDrawArrays(GL_LINES, 0, 2));
 	}
 
-	void CRenderer::SwapQueues()
+	void CRenderer::SetLineWidth(const uint16_t LineWidth)
 	{
-		static constexpr std::size_t QueueCount = CommandQueue.size();
-		CommandQueueSubmissionIndex = (CommandQueueSubmissionIndex + 1) % QueueCount;
+		LineConfig.Width = LineWidth;
+		LK_OpenGL_Verify(glLineWidth(LineConfig.Width));
+	}
+
+	const FDrawStatistics& CRenderer::GetDrawStatistics()
+	{
+		return DrawStats;
+	}
+
+	void CRenderer::ResetDrawStatistics()
+	{
+		std::memset(&DrawStats, 0, sizeof(DrawStats));
 	}
 
 }
