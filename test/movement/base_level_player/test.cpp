@@ -230,7 +230,7 @@ namespace platformer2d::test {
 			PlayerTexture.Bind();
 			if (bRendererDrawQuad)
 			{
-				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f});
+				CRenderer::SubmitQuad(Player.GetPosition(), {0.20f, 0.15f});
 			}
 			else
 			{
