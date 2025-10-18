@@ -14,6 +14,8 @@ project_library_sources(
 	renderer.cpp
 	rendercommandqueue.h
 	rendercommandqueue.cpp
+	uniformbuffer.h
+	uniformbuffer.cpp
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
