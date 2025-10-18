@@ -72,7 +72,7 @@ namespace platformer2d::test {
 		glm::vec4 ClearColor{ 0.0f };
 		glm::vec4 FragColor{ 1.0f, 0.481f, 0.508f, 1.0f };
 
-		const GLuint ProgramID = Shader.GetProgramID();
+		const GLuint ProgramID = Shader.GetRendererID();
 		LK_INFO("Shader program: {}", ProgramID);
 
 		while (true)

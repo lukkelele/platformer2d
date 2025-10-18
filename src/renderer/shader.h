@@ -42,7 +42,7 @@ namespace platformer2d {
 		void Bind() const;
 		void Unbind() const;
 
-		FORCEINLINE LRendererID GetProgramID() const { return RendererID; }
+		FORCEINLINE LRendererID GetRendererID() const { return RendererID; }
 		const std::filesystem::path& GetFilepath() const { return Filepath; }
 
 		int GetUniformLocation(const std::string& Uniform);

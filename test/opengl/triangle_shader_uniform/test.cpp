@@ -60,7 +60,7 @@ namespace platformer2d::test {
 
 		const int FragShaderBytes = (3 * 4 * sizeof(float));
 
-		const GLuint ProgramID = Shader.GetProgramID();
+		const GLuint ProgramID = Shader.GetRendererID();
 		LK_INFO("Shader program: {}", ProgramID);
 
 		while (true)
