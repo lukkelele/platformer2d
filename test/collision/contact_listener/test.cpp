@@ -14,8 +14,6 @@
 #include "core/window.h"
 #include "core/timer.h"
 #include "renderer/renderer.h"
-#include "renderer/shader.h"
-#include "renderer/texture.h"
 #include "renderer/vertexbufferlayout.h"
 
 #include "game/player.h"
@@ -177,12 +175,10 @@ namespace platformer2d::test {
 		Timer.Reset();
 		while (Running)
 		{
-			Window.BeginFrame();
-			CRenderer::BeginFrame();
-			CKeyboard::Update();
 			const float DeltaTime = Timer.GetDeltaTime();
-
-			CRenderer::StartBatch();
+			Window.BeginFrame();
+			CKeyboard::Update();
+			CRenderer::BeginFrame();
 
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
@@ -200,8 +196,12 @@ namespace platformer2d::test {
 			ImGui::Checkbox("Use Camera Projection", &bUseCameraProj);
 
 			ImGui::SameLine(0, 20.0f);
-			static bool bRendererDrawQuad = false;
-			ImGui::Checkbox("Renderer: Draw Quad", &bRendererDrawQuad);
+			static bool bRendererSubmitQuad = false;
+			ImGui::Checkbox("Renderer: Submit Quad", &bRendererSubmitQuad);
+
+			ImGui::SameLine(0, 20.0f);
+			static bool bRendererSubmitLine = false;
+			ImGui::Checkbox("Renderer: Submit Line", &bRendererSubmitLine);
 
 			ImGui::Dummy(ImVec2(0, 12));
 			ImGui::SeparatorText("Physics");
@@ -318,9 +318,9 @@ namespace platformer2d::test {
 			}
 
 			PlayerTexture.Bind(1);
-			if (bRendererDrawQuad)
+			if (bRendererSubmitQuad)
 			{
-				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f}, FragColor);
+				CRenderer::SubmitQuad(Player.GetPosition(), {0.20f, 0.15f}, FragColor);
 			}
 			else
 			{
@@ -336,31 +336,46 @@ namespace platformer2d::test {
 
 			/* Draw line. */
 			ImGui::SeparatorText("Line");
-			LineShader.Bind();
-			LineShader.Set("u_transform", glm::mat4(1.0f));
-			LineShader.Set("u_color", { 1.0f, 0.50f, 1.0f, 1.0f });
 			static glm::vec2 Start = { -0.50f, 0.39f };
 			static glm::vec2 End = { 0.50f,  0.50f };
 			ImGui::SetNextItemWidth(250.0f);
 			const bool bLineStart = ImGui::SliderFloat2("Start", &Start.x, -10.0f, 10.0f, "%.2f");
 			ImGui::SetNextItemWidth(250.0f);
 			const bool bLineEnd = ImGui::SliderFloat2("End", &End.x, -10.0f, 10.0f, "%.2f");
-			glm::vec2 Vertices[2] = { Start, End };
-			glBindBuffer(GL_ARRAY_BUFFER, LineVBO);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices);
 
-			glBindVertexArray(LineVAO);
+			const glm::vec4 LineColor = { 1.0f, 0.50f, 1.0f, 1.0f };
 			static int LineWidth = 8;
-			glLineWidth(LineWidth);
-			ImGui::SetNextItemWidth(100.0f);
-			ImGui::SliderInt("Line Width", &LineWidth, 1, 24);
-			glDrawArrays(GL_LINES, 0, 2);
-			LineShader.Unbind();
+
+			if (bRendererSubmitLine)
+			{
+				CRenderer::SubmitLine(Start, End, LineWidth, LineColor);
+				CRenderer::SubmitLine({ 5.0f, 5.0f}, {-3, -3}, LineWidth * 2, LineColor);
+			}
+			else
+			{
+				LineShader.Bind();
+				LineShader.Set("u_transform", glm::mat4(1.0f));
+				LineShader.Set("u_color", { 1.0f, 0.50f, 1.0f, 1.0f });
+				glBindBuffer(GL_ARRAY_BUFFER, LineVBO);
+				glm::vec2 Vertices[2] = { Start, End };
+				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices);
+
+				glBindVertexArray(LineVAO);
+				glLineWidth(LineWidth);
+				ImGui::SetNextItemWidth(100.0f);
+				ImGui::SliderInt("Line Width", &LineWidth, 1, 24);
+				glDrawArrays(GL_LINES, 0, 2);
+				LineShader.Unbind();
+			}
+
+			const auto& DrawStats = CRenderer::GetDrawStatistics();
+			ImGui::Text("Draw Statistics");
+			ImGui::Text("Quads: %d", DrawStats.QuadCount);
+			ImGui::Text("Lines: %d", DrawStats.LineCount);
 
 			CRenderer::Flush();
-
-			CKeyboard::TransitionPressedKeys();
 			CRenderer::EndFrame();
+			CKeyboard::TransitionPressedKeys();
 			Window.EndFrame();
 		}
 	}
