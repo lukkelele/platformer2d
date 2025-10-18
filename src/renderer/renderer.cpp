@@ -23,9 +23,12 @@
 
 namespace platformer2d {
 
+	constexpr int MAX_TEXTURES = 16;
+
 	struct FRendererData
 	{
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
+		std::array<std::shared_ptr<CTexture>, MAX_TEXTURES> Textures = { nullptr };
 	};
 
 	namespace 
@@ -58,6 +61,7 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
 		LK_OpenGL_Verify(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
+		LK_OpenGL_Verify(glDepthFunc(GL_ALWAYS)); /* @todo Change to GL_LESS */
 		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
 
 		OpenGL::LoadInfo(BackendInfo);
@@ -123,7 +127,6 @@ namespace platformer2d {
 
 			QuadShader = std::make_shared<CShader>(SHADERS_DIR "/quad.shader");
 
-			constexpr int MAX_TEXTURES = 16;
 			std::array<int, MAX_TEXTURES> Slots = { 0 };
 			for (int Idx = 0; Idx < Slots.size(); Idx++)
 			{
@@ -164,20 +167,59 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glLineWidth(LineConfig.Width));
 		}
 
-		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
-		LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
-		LK_TRACE_TAG("Renderer", "Load white texture");
-		FTextureSpecification WhiteTextureSpec = {
-			.Path = WhiteTexturePath,
-			.Width = 200,
-			.Height = 200,
-			.Format = EImageFormat::RGBA32F,
-			.SamplerWrap = ETextureWrap::Clamp,
-			.SamplerFilter = ETextureFilter::Nearest,
-		};
-		Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
+		/* Textures */
+		{
+			const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
+			LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
+			LK_TRACE_TAG("Renderer", "Load white texture");
+			FTextureSpecification WhiteTextureSpec = {
+				.Path = WhiteTexturePath,
+				.Width = 2048,
+				.Height = 2048,
+				.Format = EImageFormat::RGBA32F,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
+			Data.Textures[0] = Data.WhiteTexture;
+
+			const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
+			LK_VERIFY(std::filesystem::exists(PlayerTexturePath));
+			FTextureSpecification PlayerTextureSpec = {
+				.Path = PlayerTexturePath,
+				.Width = 200,
+				.Height = 200,
+				.bFlipVertical = true,
+				.Format = EImageFormat::RGBA32F,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			Data.Textures[1] = std::make_shared<CTexture>(PlayerTextureSpec);
+		}
+
+		for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+		{
+			if (Data.Textures[Idx])
+			{
+				Data.Textures[Idx]->Bind(Idx);
+			}
+		}
 
 		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
+	}
+
+	void CRenderer::Destroy()
+	{
+		Data.WhiteTexture = nullptr;
+		std::shared_ptr<CTexture> Texture = nullptr;
+		for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+		{
+			if (Texture = Data.Textures[Idx]; Texture != nullptr)
+			{
+				Texture->Unbind(Idx);
+				Texture.reset();
+			}
+		}
 	}
 
 	void CRenderer::BeginFrame()
@@ -240,10 +282,10 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
 
 			QuadShader->Bind();
-			Data.WhiteTexture->Bind();
+			Data.WhiteTexture->Bind(0);
 			LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, QuadIndexCount, GL_UNSIGNED_INT, nullptr));
-			Data.WhiteTexture->Unbind();
+			Data.WhiteTexture->Unbind(0);
 			QuadShader->Unbind();
 		}
 
@@ -256,10 +298,10 @@ namespace platformer2d {
 
 			LineShader->Bind();
 			LineShader->Set("u_proj", glm::mat4(1.0f));
-			Data.WhiteTexture->Bind();
+			Data.WhiteTexture->Bind(0);
 			LK_OpenGL_Verify(glBindVertexArray(LineVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_LINES, LineIndexCount, GL_UNSIGNED_INT, nullptr));
-			Data.WhiteTexture->Unbind();
+			Data.WhiteTexture->Unbind(0);
 			LineShader->Unbind();
 		}
 	}
