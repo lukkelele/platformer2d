@@ -316,5 +316,4 @@ namespace platformer2d::test {
 		}
 	}
 
-
 }
