@@ -43,6 +43,8 @@ namespace platformer2d::test {
 		static void ImGui_NewFrame();
 		static void ImGui_EndFrame();
 
+		static bool UI_BlendFunction();
+
 	protected:
 		bool Running = false;
 		struct {

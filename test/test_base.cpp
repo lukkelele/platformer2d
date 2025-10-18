@@ -46,6 +46,22 @@ namespace platformer2d::test {
 
 		constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 			| ImGuiDockNodeFlags_NoDockingInCentralNode;
+
+		#define UI_COMBO_OPTION(Value) { Value, #Value }
+		std::pair<GLenum, const char*> SourceBlendFuncs[] = {
+			UI_COMBO_OPTION(GL_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
+		};
+
+		std::pair<GLenum, const char*> DestBlendFuncs[] = {
+			UI_COMBO_OPTION(GL_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
+		};
 	}
 
 	static inline std::filesystem::path GetBinaryDir()
@@ -146,6 +162,56 @@ namespace platformer2d::test {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
+	bool CTestBase::UI_BlendFunction()
+	{
+		static constexpr float ItemWidth = 380.0f;
+		bool bSetBlendFunc = false;
+
+		static int SelectedSourceBlendFunc = 0;
+		ImGui::SetNextItemWidth(ItemWidth);
+		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].second))
+		{
+			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
+			{
+				const bool bSelected = (SelectedSourceBlendFunc == N);
+				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected))
+				{
+					SelectedSourceBlendFunc = N;
+					LK_INFO("Source: {}", SourceBlendFuncs[N].second);
+					bSetBlendFunc = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		static int SelectedDestBlendFunc = 0;
+		ImGui::SetNextItemWidth(ItemWidth);
+		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].second))
+		{
+			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
+			{
+				const bool bSelected = (SelectedDestBlendFunc == N);
+				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected))
+				{
+					SelectedDestBlendFunc = N;
+					LK_INFO("Destination: {}", DestBlendFuncs[N].second);
+					bSetBlendFunc = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		if (bSetBlendFunc)
+		{
+			glBlendFunc(
+				SourceBlendFuncs[SelectedSourceBlendFunc].first,
+				DestBlendFuncs[SelectedDestBlendFunc].first
+			);
+		}
+
+		return bSetBlendFunc;
+	}
+
 	void SetDarkTheme()
     {
 		ImGui::StyleColorsDark();
@@ -194,4 +260,5 @@ namespace platformer2d::test {
 		Colors[ImGuiCol_SliderGrab]		  = ImVec4(0.51f, 0.51f, 0.51f, 0.7f);
 		Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
 	}
+
 }
