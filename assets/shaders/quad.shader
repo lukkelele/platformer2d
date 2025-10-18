@@ -11,11 +11,14 @@ out vec2 v_texcoord;
 flat out int v_texindex;
 out float v_tilefactor;
 
-uniform mat4 u_proj;
+layout(std140, binding = 0) uniform ub_camera
+{
+    mat4 u_viewproj;
+};
 
 void main()
 {
-    gl_Position = u_proj * vec4(pos.xyz, 1.0);
+    gl_Position = u_viewproj * vec4(pos.xyz, 1.0);
 
     v_color = color;
     v_texcoord = texcoord;
