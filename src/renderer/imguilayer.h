@@ -16,7 +16,7 @@ namespace platformer2d {
 		void BeginFrame();
 		void EndFrame();
 
-		void SetDarkTheme();
+		static void SetDarkTheme();
 	};
 
 }

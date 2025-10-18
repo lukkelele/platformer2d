@@ -13,24 +13,31 @@ namespace platformer2d {
 
 	namespace PanelID 
 	{
-		static const char* const Viewport  = "##Viewport";
 		static const char* const Dockspace = "##Dockspace";
+		static const char* const HostWindow = "##HostWindow";
+		static const char* const Viewport  = "##Viewport";
 	}
 
 	namespace
 	{
-		constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
-			| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
-			| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDocking
-			| ImGuiWindowFlags_NoBackground;
+		ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
+			| ImGuiWindowFlags_NoCollapse
+			| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_NoNavFocus
+			| ImGuiWindowFlags_NoInputs
+			| ImGuiWindowFlags_NoBringToFrontOnFocus
+			| ImGuiWindowFlags_NoBackground
+			| ImGuiWindowFlags_NoSavedSettings;
 
-		constexpr ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
-			| ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoInputs
-			| ImGuiWindowFlags_NoBackground;
+		constexpr ImGuiWindowFlags ViewportFlags = ImGuiWindowFlags_NoTitleBar
+			| ImGuiWindowFlags_MenuBar
+			| ImGuiWindowFlags_NoCollapse
+			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
+			| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize
+			| ImGuiWindowFlags_NoBackground
+			| ImGuiWindowFlags_NoBringToFrontOnFocus
+			| ImGuiWindowFlags_NoDocking
+			| ImGuiWindowFlags_NoSavedSettings;
 
 		constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 			| ImGuiDockNodeFlags_NoDockingInCentralNode;
@@ -80,12 +87,11 @@ namespace platformer2d {
         ImGui::SetNextWindowSize(Viewport->Size);
         ImGui::SetNextWindowViewport(Viewport->ID);
 
-#ifdef DOCKSPACE_ENABLED
-		ImGui::Begin(PanelID::Viewport, NULL, HostWindowFlags);
+		ImGui::Begin(PanelID::HostWindow, NULL, HostWindowFlags);
 		ImGuiID DockspaceID = ImGui::GetID(PanelID::Dockspace);
 		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr)
 		{
-			spdlog::warn("Removing existing layout");
+			LK_WARN("Removing existing layout");
 			/* Remove existing layout. */
 			ImGui::DockBuilderRemoveNode(DockspaceID);
 			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace 
@@ -101,13 +107,18 @@ namespace platformer2d {
 		ImGui::DockSpace(DockspaceID, ImVec2(0, 0), DockspaceFlags);
 		/* Submit the dockspace. */
 		ImGui::End(); /* Viewport */
-#endif
 
-		/* @todo Use dockspace approach instead. */
-		static constexpr int Flags = ImGuiWindowFlags_NoDecoration 
-			| ImGuiWindowFlags_NoScrollbar 
-			| ImGuiWindowFlags_NoBackground;
-		ImGui::Begin(PanelID::Viewport, NULL, Flags);
+#ifdef NO_WINDOW_PADDING
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+#endif
+		ImGui::SetNextWindowPos(Viewport->Pos);
+		ImGui::SetNextWindowSize(Viewport->Size);
+		ImGui::SetNextWindowViewport(Viewport->ID);
+		ImGui::Begin(PanelID::Viewport, NULL, ViewportFlags);
+#ifdef NO_WINDOW_PADDING
+		ImGui::PopStyleVar(2);
+#endif
 	}
 
 	void CImGuiLayer::EndFrame()
