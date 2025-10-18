@@ -22,15 +22,25 @@ if (LK_ENABLE_VERIFY)
 	project_add_compile_definitions(LK_ENABLE_VERIFY)
 endif()
 
+set(LK_SCREEN_WIDTH "1600" CACHE STRING "Screen width")
+set(LK_SCREEN_HEIGHT "1050" CACHE STRING "Screen height")
+option(LK_LOG_FORCE_INLINE "Force inline log templates" OFF)
+
 set(PROJECT_EXECUTABLE ${PROJECT_NAME})
 # Project interface.
 add_library(${PROJECT_INTERFACE} INTERFACE)
 
 # Compiler.
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-	project_add_compile_definitions(LK_COMPILER_MSVC)
-	add_compile_options(/utf-8)
+if (MSVC)
+	project_add_compile_definitions(
+		LK_COMPILER_MSVC
+		__LK_VA_OPT # /Zc:preprocessor
+	)
+	add_compile_options(
+		/Zc:preprocessor
+		/utf-8
+	)
 
 	# Disable warnings.
 	project_add_compile_options(
@@ -43,15 +53,18 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		/wd4307
 		/wd26451
 	)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	project_add_compile_definitions(LK_COMPILER_GCC)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	project_add_compile_definitions(LK_COMPILER_CLANG)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	project_add_compile_definitions(LK_COMPILER_GNU)
+else()
+	message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 project_add_compile_definitions(
 	LK_OPENGL_MAJOR=4
 	LK_OPENGL_MINOR=6
+	LK_LOG_FORCE_INLINE=${LK_LOG_FORCE_INLINE}
 )
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
@@ -97,7 +110,13 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
-set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
+set_target_properties(${PROJECT_NAME} PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
+)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+	SCREEN_WIDTH=${LK_SCREEN_WIDTH}
+	SCREEN_HEIGHT=${LK_SCREEN_HEIGHT}
+)
 
 get_property(PROJECT_COMPILE_DEFINITIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
 get_property(PROJECT_COMPILE_OPTIONS_PROPERTY GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS)
