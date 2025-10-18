@@ -6,7 +6,7 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <spdlog/spdlog.h>
 
-#include "core/assert.h"
+#include "core/core.h"
 #include "core/log.h"
 
 namespace platformer2d {
