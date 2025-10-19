@@ -23,12 +23,18 @@
 
 namespace platformer2d {
 
-	constexpr int MAX_TEXTURES = 16;
+	namespace
+	{
+		constexpr int MAX_TEXTURES = 16;
+		constexpr int CIRCLE_SEGMENTS = 32;
+	}
+
+	std::vector<glm::vec3> GenerateCircleVertices(float Radius, std::size_t Count);
 
 	struct FRendererData
 	{
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
-		std::array<std::shared_ptr<CTexture>, MAX_TEXTURES> Textures = { nullptr };
+		std::vector<std::shared_ptr<CTexture>> Textures;
 	};
 
 	namespace 
@@ -41,6 +47,7 @@ namespace platformer2d {
 		constexpr uint32_t MaxLineIndices = MaxLines * 6;
 
 		FRendererData Data{};
+		FDrawStatistics DrawStats;
 
 		std::array<CRenderCommandQueue*, 2> CommandQueue;
 		std::atomic<uint32_t> CommandQueueSubmissionIndex = 0;
@@ -51,8 +58,6 @@ namespace platformer2d {
 			{ 1.0f, 1.0f }, /*  Top Right.    */
 			{ 1.0f, 0.0f }  /*  Bottom Right. */
 		};
-
-		FDrawStatistics DrawStats;
 	}
 
 	void CRenderer::Initialize()
@@ -93,7 +98,7 @@ namespace platformer2d {
 				{ "pos",        EShaderDataType::Float3, },
 				{ "color",      EShaderDataType::Float4, },
 				{ "texcoord",   EShaderDataType::Float2, },
-				{ "texindex",   EShaderDataType::Int,  },
+				{ "texindex",   EShaderDataType::Int,    },
 				{ "tilefactor", EShaderDataType::Float,  },
 			};
 
@@ -148,7 +153,7 @@ namespace platformer2d {
 			};
 
 			LineVAO = OpenGL::VertexArray::Create();
-			LineVBO = OpenGL::VertexBuffer::Create(MaxVertices * sizeof(FQuadVertex), LineLayout);
+			LineVBO = OpenGL::VertexBuffer::Create(MaxVertices * sizeof(FLineVertex), LineLayout);
 			LineVertexBufferBase = new FLineVertex[MaxVertices];
 
 			uint32_t* LineIndices = new uint32_t[MaxLineIndices];
@@ -167,8 +172,36 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glLineWidth(LineConfig.Width));
 		}
 
+		/* Circle */
+		{
+			const FVertexBufferLayout CircleLayout = {
+				{ "worldpos",  EShaderDataType::Float3, },
+				{ "thickness", EShaderDataType::Float,  },
+				{ "localpos",  EShaderDataType::Float2, },
+				{ "color",     EShaderDataType::Float4, },
+			};
+
+			CircleVAO = OpenGL::VertexArray::Create();
+			CircleVBO = OpenGL::VertexBuffer::Create(MaxVertices * sizeof(FQuadVertex), CircleLayout);
+
+			CircleVertexBufferBase = new FCircleVertex[MaxVertices];
+			/**
+			 * Re-use the quad EBO as the rendering of filled circles use
+			 * triangles in segments.
+			 */
+			LK_OpenGL_Verify(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, QuadEBO));
+
+			CircleShader = std::make_shared<CShader>(SHADERS_DIR "/circle.shader");
+			CircleShader->Set("u_transform", glm::mat4(1.0f));
+
+			CircleVertexBufferPtr = CircleVertexBufferBase;
+			LK_VERIFY(CircleVertexBufferPtr);
+		}
+
 		/* Textures */
 		{
+			Data.Textures.reserve(MAX_TEXTURES);
+
 			const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
 			LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
 			LK_TRACE_TAG("Renderer", "Load white texture");
@@ -181,7 +214,7 @@ namespace platformer2d {
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
 			Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
-			Data.Textures[0] = Data.WhiteTexture;
+			Data.Textures.emplace_back(Data.WhiteTexture);
 
 			const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
 			LK_VERIFY(std::filesystem::exists(PlayerTexturePath));
@@ -194,9 +227,11 @@ namespace platformer2d {
 				.SamplerWrap = ETextureWrap::Clamp,
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
-			Data.Textures[1] = std::make_shared<CTexture>(PlayerTextureSpec);
+			Data.Textures.emplace_back(std::make_shared<CTexture>(PlayerTextureSpec));
 		}
 
+		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
+		QuadShader->Bind();
 		for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
 		{
 			if (Data.Textures[Idx])
@@ -264,6 +299,9 @@ namespace platformer2d {
 
 		LineIndexCount = 0;
 		LineVertexBufferPtr = LineVertexBufferBase;
+
+		CircleIndexCount = 0;
+		CircleVertexBufferPtr = CircleVertexBufferBase;
 	}
 
 	void CRenderer::NextBatch()
@@ -274,6 +312,8 @@ namespace platformer2d {
 
 	void CRenderer::Flush()
 	{
+		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
+
 		if (QuadIndexCount > 0)
 		{
 			/* Compute byte count. */
@@ -282,10 +322,14 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
 
 			QuadShader->Bind();
-			Data.WhiteTexture->Bind(0);
+			CameraUniformBuffer->Bind();
+			for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+			{
+				Data.Textures[Idx]->Bind(Idx);
+			}
 			LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, QuadIndexCount, GL_UNSIGNED_INT, nullptr));
-			Data.WhiteTexture->Unbind(0);
+			CameraUniformBuffer->Unbind();
 			QuadShader->Unbind();
 		}
 
@@ -304,9 +348,25 @@ namespace platformer2d {
 			Data.WhiteTexture->Unbind(0);
 			LineShader->Unbind();
 		}
+
+		if (CircleIndexCount > 0)
+		{
+			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)CircleVertexBufferPtr - (uint8_t*)CircleVertexBufferBase);
+			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, CircleVBO));
+			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, CircleVertexBufferBase));
+
+			CircleShader->Bind();
+			CameraUniformBuffer->Bind();
+			Data.WhiteTexture->Bind(0);
+			LK_OpenGL_Verify(glBindVertexArray(CircleVAO));
+			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, CircleIndexCount, GL_UNSIGNED_INT, nullptr));
+			Data.WhiteTexture->Unbind(0);
+			CameraUniformBuffer->Unbind();
+			CircleShader->Unbind();
+		}
 	}
 
-	void CRenderer::SubmitQuad(const glm::vec2& Pos, const glm::vec2& Size,
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size,
 							   const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
@@ -320,11 +380,11 @@ namespace platformer2d {
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
-		for (std::size_t i = 0; i < 4; i++)
+		for (std::size_t Idx = 0; Idx < 4; Idx++)
 		{
-			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[i];
+			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
-			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[i];
+			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = TextureIndex;
 			QuadVertexBufferPtr->TileFactor = TileFactor;
 			QuadVertexBufferPtr++;
@@ -333,7 +393,7 @@ namespace platformer2d {
 		QuadIndexCount += 6;
 	}
 
-	void CRenderer::SubmitQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
 							   const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
@@ -346,11 +406,11 @@ namespace platformer2d {
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
-		for (std::size_t i = 0; i < 4; i++)
+		for (std::size_t Idx = 0; Idx < 4; Idx++)
 		{
-			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[i];
+			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
-			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[i];
+			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = Texture.GetIndex();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
 			QuadVertexBufferPtr++;
@@ -360,12 +420,12 @@ namespace platformer2d {
 		DrawStats.QuadCount++;
 	}
 
-	void CRenderer::SubmitLine(const glm::vec2& P0, const glm::vec2& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)
 	{
-		SubmitLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, LineWidth, Color);
+		DrawLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, Color, LineWidth);
 	}
 
-	void CRenderer::SubmitLine(const glm::vec3& P0, const glm::vec3& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	void CRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, const uint16_t LineWidth)
 	{
 		static constexpr glm::mat4 Proj = glm::mat4(1.0f);
 
@@ -381,23 +441,58 @@ namespace platformer2d {
 		DrawStats.LineCount++;
 	}
 
-	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	void CRenderer::DrawCircle(const glm::vec2& P0, const glm::vec3& Rotation, const float Radius, const glm::vec4& Color)
 	{
-		DrawLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, LineWidth, Color);
+		DrawCircle({ P0.x, P0.y, 0.0f }, Rotation, Radius, Color);
 	}
 
-	void CRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const uint16_t LineWidth, const glm::vec4& Color)
+	void CRenderer::DrawCircle(const glm::vec3& P0, const glm::vec3& Rotation, const float Radius, const glm::vec4& Color)
 	{
-		LineShader->Set("u_transform", glm::mat4(1.0f));
-		LineShader->Set("u_color", Color);
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
+			* glm::rotate(glm::mat4(1.0f), Rotation.x, { 1.0f, 0.0f, 0.0f })
+			* glm::rotate(glm::mat4(1.0f), Rotation.y, { 0.0f, 1.0f, 0.0f })
+			* glm::rotate(glm::mat4(1.0f), Rotation.z, { 0.0f, 0.0f, 1.0f })
+			* glm::scale(glm::mat4(1.0f), glm::vec3(Radius));
 
-		const float Vertices[2][2] = { { P0.x, P0.y }, { P1.x, P1.y } };
-		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
-		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices));
+		DrawCircle(Transform, Color);
+	}
 
-		LK_OpenGL_Verify(glBindVertexArray(LineVAO));
-		LK_OpenGL_Verify(glLineWidth(LineWidth));
-		LK_OpenGL_Verify(glDrawArrays(GL_LINES, 0, 2));
+	void CRenderer::DrawCircle(const glm::mat4& Transform, const glm::vec4& Color)
+	{
+		for (int Idx = 0; Idx < CIRCLE_SEGMENTS; Idx++)
+		{
+			float AngleRad = 2.0f * glm::pi<float>() * static_cast<float>(Idx) / CIRCLE_SEGMENTS;
+			const glm::vec4 StartPos = { glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f };
+			AngleRad = 2.0f * glm::pi<float>() * static_cast<float>((Idx + 1) % CIRCLE_SEGMENTS) / CIRCLE_SEGMENTS;
+			const glm::vec4 EndPos = { glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f };
+
+			const glm::vec3 P0 = Transform * StartPos;
+			const glm::vec3 P1 = Transform * EndPos;
+			DrawLine(P0, P1, Color);
+		}
+	}
+
+	void CRenderer::DrawCircleFilled(const glm::vec2& P0, const float Radius, const glm::vec4& Color, const float Thickness)
+	{
+		DrawCircleFilled({ P0.x, P0.y, 0.0f }, Radius, Color, Thickness);
+	}
+
+	void CRenderer::DrawCircleFilled(const glm::vec3& P0, const float Radius, const glm::vec4& Color, const float Thickness)
+	{
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
+			* glm::scale(glm::mat4(1.0f), { Radius * 2.0f, Radius * 2.0f, 1.0f });
+
+		for (int Idx = 0; Idx < 4; Idx++)
+		{
+			CircleVertexBufferPtr->WorldPosition = Transform * QuadVertexPositions[Idx];
+			CircleVertexBufferPtr->Thickness = Thickness;
+			CircleVertexBufferPtr->LocalPosition = QuadVertexPositions[Idx] * 2.0f;
+			CircleVertexBufferPtr->Color = Color;
+			CircleVertexBufferPtr++;
+
+			CircleIndexCount += 6;
+			DrawStats.QuadCount++;
+		}
 	}
 
 	void CRenderer::SetLineWidth(const uint16_t LineWidth)

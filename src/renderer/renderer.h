@@ -14,17 +14,25 @@ namespace platformer2d {
 
 	struct FQuadVertex
 	{
-		glm::vec3 Position{};
-		glm::vec4 Color{};
-		glm::vec2 TexCoord{};
-		int TexIndex{};
-		float TileFactor{};
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glm::vec2 TexCoord = { 0.0f, 0.0f };
+		int TexIndex = 0;
+		float TileFactor = 1.0f;
 	};
 
 	struct FLineVertex
 	{
-		glm::vec3 Position{};
-		glm::vec4 Color{};
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	};
+
+	struct FCircleVertex
+	{
+		glm::vec3 WorldPosition = { 0.0f, 0.0f, 0.0f };
+		float Thickness = 1.0f;
+		glm::vec2 LocalPosition = { 0.0f, 0.0f };
+		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	};
 
 	struct FDrawStatistics
@@ -55,17 +63,17 @@ namespace platformer2d {
 		static void NextBatch();
 		static void Flush();
 
-		static void SubmitQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 1.0f}, float RotationDeg = 0.0f);
-		static void SubmitQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 1.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
 
-		static void SubmitLine(const glm::vec2& P0, const glm::vec2& P1, uint16_t LineWidth = 8,
-							   const glm::vec4& Color = { 1.0f, 1.0f, 1.0f, 1.0f });
-		static void SubmitLine(const glm::vec3& P0, const glm::vec3& P1, uint16_t LineWidth = 8,
-							   const glm::vec4& Color = { 1.0f, 1.0f, 1.0f, 1.0f });
-		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, uint16_t LineWidth = 8,
-							 const glm::vec4& Color = { 1.0f, 1.0f, 1.0f, 1.0f });
-		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, uint16_t LineWidth = 8,
-							 const glm::vec4& Color = { 1.0f, 1.0f, 1.0f, 1.0f });
+		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
+		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
+
+		static void DrawCircle(const glm::vec2& P0, const glm::vec3& Rotation, float Radius, const glm::vec4& Color);
+		static void DrawCircle(const glm::vec3& P0, const glm::vec3& Rotation, float Radius, const glm::vec4& Color);
+		static void DrawCircle(const glm::mat4& Transform, const glm::vec4& Color);
+		static void DrawCircleFilled(const glm::vec2& P0, float Radius, const glm::vec4& Color, float Thickness = 1.0f);
+		static void DrawCircleFilled(const glm::vec3& P0, float Radius, const glm::vec4& Color, float Thickness = 1.0f);
 
 		static void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
 		static void SetLineWidth(uint16_t LineWidth);
@@ -103,6 +111,14 @@ namespace platformer2d {
 		struct FLineConfig {
 			uint16_t Width = 2;
 		} static inline LineConfig;
+
+		static inline GLuint CircleVAO = 0;
+		static inline GLuint CircleVBO = 0;
+		static inline GLuint CircleEBO = 0;
+		static inline uint32_t CircleIndexCount = 0;
+		static inline FCircleVertex* CircleVertexBufferBase = nullptr;
+		static inline FCircleVertex* CircleVertexBufferPtr = nullptr;
+		static inline std::shared_ptr<CShader> CircleShader = nullptr;
 
 		struct FCameraData
 		{
