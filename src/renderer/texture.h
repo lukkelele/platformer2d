@@ -34,7 +34,7 @@ namespace platformer2d {
 	public:
 		CTexture();
 		CTexture(const FTextureSpecification& Specification);
-		CTexture(uint16_t InWidth, uint16_t InHeight, void* InData = nullptr);
+		CTexture(uint32_t InWidth, uint32_t InHeight, void* InData = nullptr);
 		~CTexture() = default;
 
 		void Bind(uint32_t Slot = 0) const;
@@ -43,19 +43,21 @@ namespace platformer2d {
 		void Invalidate();
 
 		LRendererID GetRendererID() const { return RendererID; }
-		std::size_t GetIndex() const { return Index; }
 		uint32_t GetWidth() const { return Width; }
 		uint32_t GetHeight() const { return Height; }
 		uint32_t GetChannels() const { return Channels; }
+
+		std::size_t GetIndex() const { return Index; }
+		void SetIndex(std::size_t InIndex);
 
 	private:
 		LRendererID RendererID{};
 		FBuffer ImageData;
 		std::size_t Index;
 
-		uint32_t Width{};
-		uint32_t Height{};
-		uint8_t Channels{};
+		uint32_t Width = 1;
+		uint32_t Height =1;
+		uint8_t Channels;
 		std::filesystem::path Path{};
 
 		GLenum Format{};

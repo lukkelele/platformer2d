@@ -77,7 +77,7 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Texture", "Index: {} ({})", Index, Path.filename());
 	}
 
-	CTexture::CTexture(const uint16_t InWidth, const uint16_t InHeight, void* InData)
+	CTexture::CTexture(const uint32_t InWidth, const uint32_t InHeight, void* InData)
 		: Width(InWidth)
 		, Height(InHeight)
 	{
@@ -161,6 +161,11 @@ namespace platformer2d {
 				ImageData.Data
 			));
 		}
+	}
+
+	void CTexture::SetIndex(const std::size_t InIndex)
+	{
+		Index = InIndex;
 	}
 
 }
