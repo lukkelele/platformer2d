@@ -202,20 +202,16 @@ namespace platformer2d::test {
 			}
 
 			ImGui::SameLine(0, 20.0f);
-			static bool bUseCameraProj = false;
-			ImGui::Checkbox("Use Camera Projection", &bUseCameraProj);
-
-			ImGui::SameLine(0, 20.0f);
 			static bool bRendererDrawQuad = false;
-			ImGui::Checkbox("Renderer: Submit Quad", &bRendererDrawQuad);
+			ImGui::Checkbox("Draw Quad", &bRendererDrawQuad);
 
 			ImGui::SameLine(0, 20.0f);
 			static bool bRendererDrawLine = false;
-			ImGui::Checkbox("Renderer: Submit Line", &bRendererDrawLine);
+			ImGui::Checkbox("Submit Line", &bRendererDrawLine);
 
 			ImGui::SameLine(0, 20.0f);
 			static bool bRendererDrawCircle = false;
-			ImGui::Checkbox("Renderer: Draw Circle", &bRendererDrawCircle);
+			ImGui::Checkbox("Draw Circle", &bRendererDrawCircle);
 
 			const FDrawStatistics& DrawStats = CRenderer::GetDrawStatistics();
 			if (ImGui::TreeNodeEx("Draw Statistics", ImGuiTreeNodeFlags_SpanLabelWidth))
@@ -333,12 +329,6 @@ namespace platformer2d::test {
 			 * Draw player
 			 ****************************/
 			glm::mat4 PlayerTransform = TransformComp.GetTransform();
-			if (bUseCameraProj)
-			{
-				const glm::mat4 CameraProj = glm::ortho(0.0f, static_cast<float>(WindowData.Width), 0.0f, static_cast<float>(WindowData.Height), -1.0f, 1.0f);
-				PlayerTransform = CameraProj * PlayerTransform;
-			}
-
 			static glm::vec2 PlayerSize = { 0.20f, 0.20f };
 			if (bRendererDrawQuad)
 			{
@@ -389,7 +379,6 @@ namespace platformer2d::test {
 				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices);
 				glBindVertexArray(LineVAO);
 				glLineWidth(LineWidth);
-				ImGui::SetNextItemWidth(100.0f);
 				glDrawArrays(GL_LINES, 0, 2);
 				LineShader.Unbind();
 			}
