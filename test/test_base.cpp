@@ -52,7 +52,8 @@ namespace platformer2d::test {
 		std::pair<GLenum, const char*> SourceBlendFuncs[] = {
 			UI_COMBO_OPTION(GL_SRC_ALPHA),
 			UI_COMBO_OPTION(GL_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_ONE),
 			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
 		};
 
