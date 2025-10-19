@@ -37,7 +37,15 @@ namespace platformer2d::test {
 		};
 
 		b2WorldId WorldID;
+
+		bool bMetrics = false;
+		bool bIdStackTool = false;
+		bool bStyleEditor = false;
+		bool bBlendFunc = false;
+		bool bShowDrawStats = false;
 	}
+
+	void UI_MenuBar();
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
@@ -96,6 +104,7 @@ namespace platformer2d::test {
 			.SamplerFilter = ETextureFilter::Nearest,
 		};
 		CTexture PlayerTexture(Spec);
+		PlayerTexture.SetIndex(1);
 		LK_INFO("PlayerTexture Index: {}", PlayerTexture.GetIndex());
 
 		Spec.Path = BricksTexturePath;
@@ -180,6 +189,7 @@ namespace platformer2d::test {
 			CKeyboard::Update();
 			CRenderer::BeginFrame();
 
+			UI_MenuBar();
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
 			ImGui::Text("Delta Time: ~%1.fms", DeltaTime);
@@ -196,12 +206,25 @@ namespace platformer2d::test {
 			ImGui::Checkbox("Use Camera Projection", &bUseCameraProj);
 
 			ImGui::SameLine(0, 20.0f);
-			static bool bRendererSubmitQuad = false;
-			ImGui::Checkbox("Renderer: Submit Quad", &bRendererSubmitQuad);
+			static bool bRendererDrawQuad = false;
+			ImGui::Checkbox("Renderer: Submit Quad", &bRendererDrawQuad);
 
 			ImGui::SameLine(0, 20.0f);
-			static bool bRendererSubmitLine = false;
-			ImGui::Checkbox("Renderer: Submit Line", &bRendererSubmitLine);
+			static bool bRendererDrawLine = false;
+			ImGui::Checkbox("Renderer: Submit Line", &bRendererDrawLine);
+
+			ImGui::SameLine(0, 20.0f);
+			static bool bRendererDrawCircle = false;
+			ImGui::Checkbox("Renderer: Draw Circle", &bRendererDrawCircle);
+
+			const FDrawStatistics& DrawStats = CRenderer::GetDrawStatistics();
+			if (ImGui::TreeNodeEx("Draw Statistics", ImGuiTreeNodeFlags_SpanLabelWidth))
+			{
+				ImGui::Text("Quads: %d", DrawStats.QuadCount);
+				ImGui::Text("Lines: %d", DrawStats.LineCount);
+
+				ImGui::TreePop();
+			}
 
 			ImGui::Dummy(ImVec2(0, 12));
 			ImGui::SeparatorText("Physics");
@@ -224,8 +247,7 @@ namespace platformer2d::test {
 			ImGui::SetNextItemWidth(110.0f);
 			ImGui::SliderInt("##SubstepCount", &SubStepCount, 1, 20);
 
-			ImGui::TextColored(ImColor(IM_COL32(200, 200, 200, 255)), "Dynamic Body");
-			ImGui::Text("ID: %d", DynamicBodyID);
+			ImGui::Text("Dynamic Body ID: %d", DynamicBodyID);
 			const b2Vec2 DynamicBodyPos = b2Body_GetPosition(DynamicBodyID);
 			const b2Rot DynamicBodyRot = b2Body_GetRotation(DynamicBodyID);
 			ImGui::Text("Position: (%4.2f, %4.2f)", DynamicBodyPos.x, DynamicBodyPos.y);
@@ -264,12 +286,12 @@ namespace platformer2d::test {
 			{
 				TransformComp.SetRotation2D(glm::radians(PlayerRot));
 			}
-
 			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 1.50f, 60.0f, "%.2f");
 			if (ImGui::IsItemActive())
 			{
 				Player.SetMovementSpeed(MovementSpeed);
 			}
+			ImGui::Text("Player Texture: %d", PlayerTexture.GetIndex());
 			ImGui::PopID();
 
 			Player.Tick();
@@ -317,20 +339,22 @@ namespace platformer2d::test {
 				PlayerTransform = CameraProj * PlayerTransform;
 			}
 
-			PlayerTexture.Bind(1);
-			if (bRendererSubmitQuad)
+			static glm::vec2 PlayerSize = { 0.20f, 0.20f };
+			if (bRendererDrawQuad)
 			{
-				CRenderer::SubmitQuad(Player.GetPosition(), {0.20f, 0.15f}, FragColor);
+				CRenderer::DrawQuad(Player.GetPosition(), PlayerSize, PlayerTexture, FragColor);
 			}
 			else
 			{
+				const std::size_t PlayerTexIndex = PlayerTexture.GetIndex();
+				PlayerTexture.Bind(PlayerTexIndex);
 				Shader.Set("u_transform", PlayerTransform);
 				Shader.Set("u_texture", 1);
 				Shader.Set("u_color", FragColor);
 				glBindVertexArray(RectangleVAO);
 				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+				PlayerTexture.Unbind(PlayerTexIndex);
 			}
-			PlayerTexture.Unbind(1);
 
 			ImGui::EndTable();
 
@@ -345,11 +369,15 @@ namespace platformer2d::test {
 
 			const glm::vec4 LineColor = { 1.0f, 0.50f, 1.0f, 1.0f };
 			static int LineWidth = 8;
-
-			if (bRendererSubmitLine)
+			ImGui::SetNextItemWidth(190.0f);
+			ImGui::SliderInt("Line Width", &LineWidth, 1, 24);
+			if (bRendererDrawLine)
 			{
-				CRenderer::SubmitLine(Start, End, LineWidth, LineColor);
-				CRenderer::SubmitLine({ 5.0f, 5.0f}, {-3, -3}, LineWidth * 2, LineColor);
+				CRenderer::DrawLine(Start, End, LineColor, LineWidth);
+
+				const glm::vec2 LeftPos = { PlayerPos.x - (PlayerSize.x * 0.50f), PlayerPos.y };
+				const glm::vec2 RightPos = { PlayerPos.x + (PlayerSize.x * 0.50f), PlayerPos.y};
+				CRenderer::DrawLine(LeftPos, RightPos, LineColor, LineWidth);
 			}
 			else
 			{
@@ -359,19 +387,51 @@ namespace platformer2d::test {
 				glBindBuffer(GL_ARRAY_BUFFER, LineVBO);
 				glm::vec2 Vertices[2] = { Start, End };
 				glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices);
-
 				glBindVertexArray(LineVAO);
 				glLineWidth(LineWidth);
 				ImGui::SetNextItemWidth(100.0f);
-				ImGui::SliderInt("Line Width", &LineWidth, 1, 24);
 				glDrawArrays(GL_LINES, 0, 2);
 				LineShader.Unbind();
 			}
 
-			const auto& DrawStats = CRenderer::GetDrawStatistics();
-			ImGui::Text("Draw Statistics");
-			ImGui::Text("Quads: %d", DrawStats.QuadCount);
-			ImGui::Text("Lines: %d", DrawStats.LineCount);
+			if (bIdStackTool)
+			{
+				ImGui::ShowIDStackToolWindow(&bIdStackTool);
+			}
+			if (bMetrics)
+			{
+				ImGui::ShowMetricsWindow(&bMetrics);
+			}
+			if (bStyleEditor && ImGui::Begin("Style Editor", &bStyleEditor))
+			{
+				ImGuiStyle& Style = ImGui::GetStyle();
+				ImGui::ShowStyleEditor(&Style);
+				ImGui::End();
+			}
+			if (bBlendFunc && ImGui::Begin("Blend Function", &bBlendFunc))
+			{
+				CTest::UI_BlendFunction();
+				ImGui::End();
+			}
+
+			static float Radius = 0.15f;
+			static float FillRadius = 0.15f;
+			static float FillThickness = 1.0f;
+			static glm::vec4 CircleColor = { 0.25f, 0.90f, 0.10f, 0.60f };
+			ImGui::SetNextItemWidth(100.0f);
+			ImGui::SliderFloat("Circle Radius", &Radius, 0.001f, 1.0f);
+			ImGui::SetNextItemWidth(100.0f);
+			ImGui::SliderFloat("Circle Fill Radius", &FillRadius, 0.01f, 1.50f);
+			ImGui::SetNextItemWidth(100.0f);
+			ImGui::SliderFloat("Circle Fill Thickness", &FillThickness, 0.001f, 1.0f);
+			ImGui::SetNextItemWidth(290.0f);
+			ImGui::SliderFloat4("Circle Color", &CircleColor.x, 0.0f, 1.0f, "%.3f");
+			if (bRendererDrawCircle)
+			{
+				glm::vec3 Rot = glm::vec3(0.0f);
+				CRenderer::DrawCircle(Player.GetPosition(), Rot, Radius, { 0.30f, 1.0f, 0.50f, 1.0f });
+				CRenderer::DrawCircleFilled(Player.GetPosition(), FillRadius, CircleColor, FillThickness);
+			}
 
 			CRenderer::Flush();
 			CRenderer::EndFrame();
@@ -384,6 +444,40 @@ namespace platformer2d::test {
 	{
 		b2DestroyWorld(WorldID);
 		glfwTerminate();
+	}
+
+	void UI_MenuBar()
+	{
+		if (!ImGui::BeginMenuBar())
+		{
+			return;
+		}
+
+		if (ImGui::BeginMenu("Settings"))
+		{
+			ImGui::Checkbox("Style Editor", &bStyleEditor);
+			if (ImGui::MenuItem("ID Stack Tool", nullptr))
+			{
+				bIdStackTool = !bIdStackTool;
+			}
+			if (ImGui::MenuItem("Metrics", nullptr))
+			{
+				bMetrics = !bMetrics;
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Renderer"))
+		{
+			ImGui::Checkbox("Draw Statistics", &bShowDrawStats);
+			if (ImGui::MenuItem("Blend Function", nullptr))
+			{
+				bBlendFunc = !bBlendFunc;
+			}
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMenuBar();
 	}
 
 }
