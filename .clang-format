@@ -1,0 +1,89 @@
+Language: Cpp
+BasedOnStyle: LLVM
+
+AccessModifierOffset: -4
+IndentAccessModifiers: false
+AlignAfterOpenBracket: Align
+AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignOperands: DontAlign
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: true 
+  BeforeWhile: true
+  IndentBraces: false
+  SplitEmptyRecord: true
+  SplitEmptyFunction: false 
+BreakBeforeBinaryOperators: NonAssignment
+BreakInheritanceList: AfterColon
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+BreakStringLiterals: false
+BitFieldColonSpacing: Both
+ColumnLimit: 0
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+Cpp11BracedListStyle: false
+EmptyLineBeforeAccessModifier: LogicalBlock
+IndentCaseBlocks: false
+IndentCaseLabels: true
+AllowShortCaseLabelsOnASingleLine: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+  AlignCaseColons: false
+IndentWidth: 4
+IndentExternBlock: AfterExternBlock
+NamespaceIndentation: All
+AlignArrayOfStructures: Right
+IndentPPDirectives: AfterHash 
+PPIndentWidth: 4
+PointerAlignment: Left
+SortIncludes: false
+SpaceBeforeCaseColon: false
+SpaceBeforeCtorInitializerColon: true 
+SpaceBeforeInheritanceColon: true
+SpaceBeforeJsonColon: false
+SpacesInAngles: Never
+SpacesBeforeTrailingComments: 1
+SpaceAfterCStyleCast: false
+TabWidth: 4
+UseTab: Always
+InsertNewlineAtEOF: true
+PackConstructorInitializers: Never
+LambdaBodyIndentation: OuterScope
+FixNamespaceComments: false
+CompactNamespaces: false
+MaxEmptyLinesToKeep: 2
+KeepEmptyLinesAtTheStartOfBlocks: true
+KeepEmptyLinesAtEOF: true
+SeparateDefinitionBlocks: Leave
+SpaceAfterTemplateKeyword: false
+ExperimentalAutoDetectBinPacking: false
+BinPackArguments: true 
+BinPackParameters: true 
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+PenaltyBreakAssignment: 100
+PenaltyBreakBeforeFirstCallParameter: 200
+PenaltyBreakOpenParenthesis: 180
+PenaltyBreakTemplateDeclaration: 100
