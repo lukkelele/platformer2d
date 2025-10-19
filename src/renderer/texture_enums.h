@@ -70,6 +70,25 @@ namespace platformer2d {
 		DiffuseRoughness,
 	};
 
+	struct FTextureSpecification
+	{
+		std::string Path{};
+		std::string Name{};
+		uint32_t Width = 1;
+		uint32_t Height = 1;
+		uint8_t Mips = 1;
+		bool bFlipVertical = true;
+
+		EImageFormat Format = EImageFormat::RGBA;
+		ETextureWrap SamplerWrap = ETextureWrap::Clamp;
+		ETextureFilter SamplerFilter = ETextureFilter::Linear;
+
+		ETextureUniformType UniformType = ETextureUniformType::Diffuse;
+
+		bool bStorage = false;
+		bool bStoreLocally = false;
+	};
+
 	namespace Enum
 	{
 		static std::string ToString(EImageFormat Format)
