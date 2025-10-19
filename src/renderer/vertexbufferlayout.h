@@ -131,24 +131,16 @@ namespace platformer2d {
 		}
 		FVertexBufferLayout() = default;
 
-		FORCEINLINE uint32_t GetStride() const { return Stride; }
-
-		FORCEINLINE const std::vector<FVertexBufferElement>& GetElements() const 
-		{ 
-			return Elements; 
-		}
-
-		FORCEINLINE uint32_t GetElementCount() const 
-		{ 
-			return static_cast<uint32_t>(Elements.size()); 
-		}
+		uint32_t GetStride() const { return Stride; }
+		const std::vector<FVertexBufferElement>& GetElements() const { return Elements; }
+		uint32_t GetElementCount() const { return static_cast<uint32_t>(Elements.size()); }
 
 		[[nodiscard]] std::vector<FVertexBufferElement>::iterator begin() { return Elements.begin(); }
 		[[nodiscard]] std::vector<FVertexBufferElement>::iterator end() { return Elements.end(); }
 		[[nodiscard]] std::vector<FVertexBufferElement>::const_iterator begin() const { return Elements.begin(); }
 		[[nodiscard]] std::vector<FVertexBufferElement>::const_iterator end() const { return Elements.end(); }
 
-		FORCEINLINE std::string ToString() const
+		std::string ToString() const
 		{
 			std::string String{};
 			for (const FVertexBufferElement& Element : Elements)
