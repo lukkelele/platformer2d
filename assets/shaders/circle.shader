@@ -23,7 +23,6 @@ layout(location = 0) out vertex_output v_output;
 
 void main()
 {
-    //gl_Position = vec4(worldpos.xyz, 1.0);
     gl_Position = u_transform * vec4(worldpos.xyz, 1.0);
 
 	v_output.localpos = localpos;
