@@ -1,5 +1,7 @@
 project_library(renderer)
 project_library_sources(
+	debugrenderer.h
+	debugrenderer.cpp
 	camera.h
 	camera.cpp
 	imguilayer.h
