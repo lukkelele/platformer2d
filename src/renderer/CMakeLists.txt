@@ -12,6 +12,8 @@ project_library_sources(
 	shader.cpp
 	texture.h
 	texture.cpp
+	texturearray.h
+	texturearray.cpp
 	renderer.h
 	renderer.cpp
 	rendercommandqueue.h
