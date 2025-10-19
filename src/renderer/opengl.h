@@ -192,24 +192,24 @@ namespace platformer2d::OpenGL {
 
 	namespace VertexBuffer
 	{
-		static GLuint Create(const std::size_t DataSize, const FVertexBufferLayout& Layout)
+		static GLuint Create(const std::size_t DataSize, const FVertexBufferLayout& Layout, const int BufferType = GL_DYNAMIC_DRAW)
 		{
 			GLuint VBO;
 			LK_OpenGL_Verify(glGenBuffers(1, &VBO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, DataSize, nullptr, GL_STATIC_DRAW));
+			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, DataSize, nullptr, BufferType));
 			LK_DEBUG_TAG("VertexBuffer", "VBO={} Size={}", VBO, DataSize);
 			ApplyVertexBufferLayout(Layout);
 			return VBO;
 		}
 
 		template<typename T, std::size_t N>
-		static GLuint Create(const T (&Data)[N], const FVertexBufferLayout& Layout)
+		static GLuint Create(const T (&Data)[N], const FVertexBufferLayout& Layout, const int BufferType = GL_DYNAMIC_DRAW)
 		{
 			GLuint VBO;
 			LK_OpenGL_Verify(glGenBuffers(1, &VBO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, sizeof(Data), Data, GL_STATIC_DRAW));
+			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, sizeof(Data), Data, BufferType));
 			LK_DEBUG_TAG("VertexBuffer", "VBO={} Size={}", VBO, sizeof(Data));
 			ApplyVertexBufferLayout(Layout);
 			return VBO;
