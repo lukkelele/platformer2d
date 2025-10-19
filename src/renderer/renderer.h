@@ -96,7 +96,12 @@ namespace platformer2d {
 		static inline GLuint QuadVBO = 0;
 		static inline GLuint QuadEBO = 0;
 		static inline uint32_t QuadIndexCount = 0;
-		static inline glm::vec4 QuadVertexPositions[4] = {};
+		constexpr static inline glm::vec4 QuadVertexPositions[4] = {
+			{ -0.50f, -0.50f, 0.0f, 1.0f },
+			{ -0.50f,  0.50f, 0.0f, 1.0f },
+			{  0.50f,  0.50f, 0.0f, 1.0f },
+			{  0.50f, -0.50f, 0.0f, 1.0f }
+		};
 		static inline FQuadVertex* QuadVertexBufferBase = nullptr;
 		static inline FQuadVertex* QuadVertexBufferPtr = nullptr;
 		static inline std::shared_ptr<CShader> QuadShader = nullptr;

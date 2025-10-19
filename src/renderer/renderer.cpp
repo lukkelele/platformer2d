@@ -89,11 +89,6 @@ namespace platformer2d {
 
 		/* Quad */
 		{
-			QuadVertexPositions[0] = { -0.50f, -0.50f, 0.0f, 1.0f };
-			QuadVertexPositions[1] = { -0.50f,  0.50f, 0.0f, 1.0f };
-			QuadVertexPositions[2] = {  0.50f,  0.50f, 0.0f, 1.0f };
-			QuadVertexPositions[3] = {  0.50f, -0.50f, 0.0f, 1.0f };
-
 			const FVertexBufferLayout QuadLayout = {
 				{ "pos",        EShaderDataType::Float3, },
 				{ "color",      EShaderDataType::Float4, },
@@ -207,8 +202,8 @@ namespace platformer2d {
 			LK_TRACE_TAG("Renderer", "Load white texture");
 			FTextureSpecification WhiteTextureSpec = {
 				.Path = WhiteTexturePath,
-				.Width = 2048,
-				.Height = 2048,
+				.Width = 1,
+				.Height = 1,
 				.Format = EImageFormat::RGBA32F,
 				.SamplerWrap = ETextureWrap::Clamp,
 				.SamplerFilter = ETextureFilter::Nearest,
