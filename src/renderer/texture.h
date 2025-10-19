@@ -10,25 +10,6 @@
 
 namespace platformer2d {
 
-	struct FTextureSpecification
-	{
-		std::string Path{};
-		std::string Name{};
-		uint32_t Width = 1;
-		uint32_t Height = 1;
-		uint8_t Mips = 1;
-		bool bFlipVertical = true;
-
-		EImageFormat Format = EImageFormat::RGBA;
-		ETextureWrap SamplerWrap = ETextureWrap::Clamp;
-		ETextureFilter SamplerFilter = ETextureFilter::Linear;
-
-		ETextureUniformType UniformType = ETextureUniformType::Diffuse;
-
-		bool bStorage = false;
-		bool bStoreLocally = false;
-	};
-
 	class CTexture
 	{
 	public:
@@ -46,6 +27,7 @@ namespace platformer2d {
 		uint32_t GetWidth() const { return Width; }
 		uint32_t GetHeight() const { return Height; }
 		uint32_t GetChannels() const { return Channels; }
+		const std::filesystem::path& GetFilePath() const { return Path; }
 
 		std::size_t GetIndex() const { return Index; }
 		void SetIndex(std::size_t InIndex);
@@ -56,8 +38,8 @@ namespace platformer2d {
 		std::size_t Index;
 
 		uint32_t Width = 1;
-		uint32_t Height =1;
-		uint8_t Channels;
+		uint32_t Height = 1;
+		uint8_t Channels = 0;
 		std::filesystem::path Path{};
 
 		GLenum Format{};
