@@ -29,8 +29,6 @@ namespace platformer2d {
 		constexpr int CIRCLE_SEGMENTS = 32;
 	}
 
-	std::vector<glm::vec3> GenerateCircleVertices(float Radius, std::size_t Count);
-
 	struct FRendererData
 	{
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
@@ -66,7 +64,9 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
 		LK_OpenGL_Verify(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
+		//LK_OpenGL_Verify(glDepthFunc(GL_LESS));
 		LK_OpenGL_Verify(glDepthFunc(GL_ALWAYS)); /* @todo Change to GL_LESS */
+
 		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
 
 		OpenGL::LoadInfo(BackendInfo);
@@ -126,13 +126,6 @@ namespace platformer2d {
 			LK_VERIFY(QuadVertexBufferPtr);
 
 			QuadShader = std::make_shared<CShader>(SHADERS_DIR "/quad.shader");
-
-			std::array<int, MAX_TEXTURES> Slots = { 0 };
-			for (int Idx = 0; Idx < Slots.size(); Idx++)
-			{
-				Slots[Idx] = Idx;
-			}
-			QuadShader->Set("u_textures", Slots);
 
 			CameraData.ViewProjection = glm::mat4(1.0f);
 			CameraUniformBuffer = std::make_unique<CUniformBuffer>(sizeof(FCameraData));
@@ -204,7 +197,7 @@ namespace platformer2d {
 				.Path = WhiteTexturePath,
 				.Width = 1,
 				.Height = 1,
-				.Format = EImageFormat::RGBA32F,
+				.Format = EImageFormat::RGBA8,
 				.SamplerWrap = ETextureWrap::Clamp,
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
@@ -212,17 +205,26 @@ namespace platformer2d {
 			Data.Textures.emplace_back(Data.WhiteTexture);
 
 			const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
-			LK_VERIFY(std::filesystem::exists(PlayerTexturePath));
+			LK_VERIFY(std::filesystem::exists(PlayerTexturePath), "Player texture does not exist");
 			FTextureSpecification PlayerTextureSpec = {
 				.Path = PlayerTexturePath,
 				.Width = 200,
 				.Height = 200,
-				.bFlipVertical = true,
-				.Format = EImageFormat::RGBA32F,
+				.Format = EImageFormat::RGBA8,
 				.SamplerWrap = ETextureWrap::Clamp,
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
 			Data.Textures.emplace_back(std::make_shared<CTexture>(PlayerTextureSpec));
+
+			const char* PlatformTexturePath = TEXTURES_DIR "/metal.png";
+			LK_VERIFY(std::filesystem::exists(PlatformTexturePath), "Platform texture does not exist");
+			FTextureSpecification PlatformTextureSpec = {
+				.Path = PlatformTexturePath,
+				.Format = EImageFormat::RGBA8,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			Data.Textures.emplace_back(std::make_shared<CTexture>(PlatformTextureSpec));
 		}
 
 		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
@@ -317,11 +319,12 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
 
 			QuadShader->Bind();
-			CameraUniformBuffer->Bind();
 			for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
 			{
+				QuadShader->Set(std::format("u_texture{}", Idx), Idx);
 				Data.Textures[Idx]->Bind(Idx);
 			}
+			CameraUniformBuffer->Bind();
 			LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, QuadIndexCount, GL_UNSIGNED_INT, nullptr));
 			CameraUniformBuffer->Unbind();
@@ -346,6 +349,7 @@ namespace platformer2d {
 
 		if (CircleIndexCount > 0)
 		{
+			/* Compute byte count. */
 			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)CircleVertexBufferPtr - (uint8_t*)CircleVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, CircleVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, CircleVertexBufferBase));
@@ -504,6 +508,11 @@ namespace platformer2d {
 	void CRenderer::ResetDrawStatistics()
 	{
 		std::memset(&DrawStats, 0, sizeof(DrawStats));
+	}
+
+	const std::vector<std::shared_ptr<CTexture>> CRenderer::GetTextures()
+	{
+		return Data.Textures;
 	}
 
 }

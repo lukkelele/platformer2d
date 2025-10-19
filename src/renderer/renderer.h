@@ -83,6 +83,8 @@ namespace platformer2d {
 		static const FDrawStatistics& GetDrawStatistics();
 		static void ResetDrawStatistics();
 
+		static const std::vector<std::shared_ptr<CTexture>> GetTextures();
+
 	private:
 		CRenderer& operator=(const CRenderer&) = delete;
 		CRenderer& operator=(CRenderer&&) = delete;
