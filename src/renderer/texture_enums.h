@@ -87,6 +87,8 @@ namespace platformer2d {
 
 		bool bStorage = false;
 		bool bStoreLocally = false;
+
+		std::string DebugName{};
 	};
 
 	namespace Enum
