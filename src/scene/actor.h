@@ -5,7 +5,7 @@
 #include "core/core.h"
 #include "core/assert.h"
 
-#include "transformcomponent.h"
+#include "components.h"
 
 namespace platformer2d {
 
@@ -20,11 +20,10 @@ namespace platformer2d {
 
 		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
-		operator FTransformComponent&() { return TransformComp; }
-		operator const FTransformComponent&() const { return TransformComp; }
 
 	protected:
 		FTransformComponent TransformComp{};
+
 	};
 
 }
