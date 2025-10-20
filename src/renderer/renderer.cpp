@@ -225,6 +225,13 @@ namespace platformer2d {
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
 			Data.Textures.emplace_back(std::make_shared<CTexture>(PlatformTextureSpec));
+
+			/* Bind every texture. */
+			for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+			{
+				QuadShader->Set(std::format("u_texture{}", Idx), Idx);
+				Data.Textures[Idx]->Bind(Idx);
+			}
 		}
 
 		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
@@ -319,11 +326,6 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
 
 			QuadShader->Bind();
-			for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
-			{
-				QuadShader->Set(std::format("u_texture{}", Idx), Idx);
-				Data.Textures[Idx]->Bind(Idx);
-			}
 			CameraUniformBuffer->Bind();
 			LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, QuadIndexCount, GL_UNSIGNED_INT, nullptr));
