@@ -18,6 +18,8 @@
 
 #include "game/player.h"
 #include "core/input/keyboard.h"
+#include "physics/physicsworld.h"
+#include "physics/body.h"
 
 namespace platformer2d::test {
 
@@ -99,15 +101,13 @@ namespace platformer2d::test {
 		/*********************************
 		 * Physics
 		 *********************************/
-		b2WorldDef WorldDef = b2DefaultWorldDef();
-		WorldDef.gravity = b2Vec2(0.0f, -10.0f);
-		WorldID = b2CreateWorld(&WorldDef);
-		LK_INFO("WorldID.index1: {}", static_cast<int>(WorldID.index1));
-		LK_INFO("WorldID.generation: {}", static_cast<int>(WorldID.generation));
+		CPhysicsWorld::Initialize();
+		WorldID = CPhysicsWorld::GetWorldID();
 
 		/* Create ground body. */
 		b2BodyDef GroundBodyDef = b2DefaultBodyDef();
-		b2BodyId GroundID = b2CreateBody(WorldID, &GroundBodyDef);
+		//b2BodyId GroundID = b2CreateBody(WorldID, &GroundBodyDef);
+		b2BodyId GroundID = CPhysicsWorld::CreateBody(GroundBodyDef);
 		b2Polygon GroundBox = b2MakeBox(50.0f, 10.0f);
 		b2ShapeDef GroundShapeDef = b2DefaultShapeDef();
 		b2CreatePolygonShape(GroundID, &GroundShapeDef, &GroundBox);
@@ -124,8 +124,6 @@ namespace platformer2d::test {
 		DynamicShapeDef.density = 1.0f;
 		DynamicShapeDef.material.friction = 0.30f;
 		const b2ShapeId DynamicShapeID = b2CreatePolygonShape(DynamicBodyID, &DynamicShapeDef, &DynamicBox);
-
-		int SubStepCount = 4;
 
 		Timer.Reset();
 		while (Running)
@@ -164,18 +162,14 @@ namespace platformer2d::test {
 			ImGui::Checkbox("##Physics", &bPhysicsEnabled);
 			if (bPhysicsEnabled)
 			{
-				b2World_Step(WorldID, DeltaTime, SubStepCount);
+				CPhysicsWorld::Update(DeltaTime);
 			}
 			ImGui::SameLine(0, 20.0f);
 			if (ImGui::Button("World Step"))
 			{
-				b2World_Step(WorldID, DeltaTime, SubStepCount);
+				CPhysicsWorld::Update(DeltaTime);
 			}
 			ImGui::SameLine(0, 20.0f);
-			ImGui::Text("Substep Count");
-			ImGui::SameLine();
-			ImGui::SetNextItemWidth(110.0f);
-			ImGui::SliderInt("##SubstepCount", &SubStepCount, 1, 20);
 
 			ImGui::Text("Dynamic Body ID: %d", DynamicBodyID);
 			const b2Vec2 DynamicBodyPos = b2Body_GetPosition(DynamicBodyID);
