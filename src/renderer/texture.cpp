@@ -12,14 +12,9 @@ namespace platformer2d {
 		std::size_t CreatedTextures = 0;
 	}
 
-	CTexture::CTexture()
-	{
-		Index = CreatedTextures++;
-		LK_DEBUG_TAG("Texture", "Index: {}", Index);
-	}
-
 	CTexture::CTexture(const FTextureSpecification& Specification)
 		: Path(Specification.Path)
+		, DebugName(Specification.DebugName)
 	{
 		LK_ASSERT((Specification.Width > 0) && (Specification.Height > 0) && !Specification.Path.empty());
 		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
@@ -47,7 +42,7 @@ namespace platformer2d {
 		LK_ASSERT(Data != NULL, "Failed to load texture from: {}", Specification.Path);
 		if ((ReadWidth != Specification.Width) || (ReadHeight != Specification.Height))
 		{
-			LK_DEBUG("Texture mismatch ({}) between specified and actual size ({}x{} != {}x{})",
+			LK_TRACE("Texture mismatch ({}) between specified and actual size ({}x{} != {}x{})",
 					 Path.filename().generic_string(), Specification.Width, Specification.Height,
 					 ReadWidth, ReadHeight);
 		}
@@ -58,11 +53,10 @@ namespace platformer2d {
 		const uint64_t ImageSize = OpenGL::CalculateImageSize(Specification.Format, Width, Height);
 		LK_ASSERT(ImageSize <= UINT64_MAX, "ImageSize overflow");
 		LK_DEBUG("Image size: {} bytes (Channels: {})", ImageSize, Channels);
-		ImageData = FBuffer(Data, ImageSize);
+		ImageBuffer = FBuffer(Data, ImageSize);
 
 		if (Data)
 		{
-			LK_WARN("DataType: {}", DataType);
 			LK_OpenGL_Verify(glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
@@ -74,6 +68,9 @@ namespace platformer2d {
 				DataType,
 				Data
 			));
+
+			stbi_image_free(Data);
+			LK_ASSERT(ImageBuffer.Data);
 		}
 
 		const bool bMipmap = (Specification.Mips > 1);
@@ -90,6 +87,10 @@ namespace platformer2d {
 		OpenGL::SetTextureWrap(Specification.SamplerWrap);
 		OpenGL::SetTextureFilter(Specification.SamplerFilter, bMipmap);
 
+		if (DebugName.empty())
+		{
+			DebugName = std::format("{}", Path.filename());
+		}
 		Index = CreatedTextures++;
 		LK_DEBUG_TAG("Texture", "Index: {} ({})", Index, Path.filename());
 	}
@@ -133,6 +134,7 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
+		DebugName = std::format("{}", Path.filename());
 		Index = CreatedTextures++;
 		LK_DEBUG_TAG("Texture", "Index: {}", Index);
 	}
@@ -165,7 +167,7 @@ namespace platformer2d {
 			Height
 		));
 
-		if (ImageData)
+		if (ImageBuffer)
 		{
 			LK_OpenGL_Verify(glTextureSubImage2D(
 				RendererID,
@@ -176,7 +178,7 @@ namespace platformer2d {
 				Height,
 				Format,
 				DataType,
-				ImageData.Data
+				ImageBuffer.Data
 			));
 		}
 	}

@@ -13,9 +13,9 @@ namespace platformer2d {
 	class CTexture
 	{
 	public:
-		CTexture();
 		CTexture(const FTextureSpecification& Specification);
 		CTexture(uint32_t InWidth, uint32_t InHeight, void* InData = nullptr);
+		CTexture() = delete;
 		~CTexture() = default;
 
 		void Bind(uint32_t Slot = 0) const;
@@ -32,20 +32,24 @@ namespace platformer2d {
 		std::size_t GetIndex() const { return Index; }
 		void SetIndex(std::size_t InIndex);
 
+		const FBuffer& GetImageBuffer() const { return ImageBuffer; }
+		const std::string& GetDebugName() const { return DebugName; }
+
 	private:
 		LRendererID RendererID{};
-		FBuffer ImageData;
+		FBuffer ImageBuffer;
 		std::size_t Index;
 
 		uint32_t Width = 1;
 		uint32_t Height = 1;
 		uint8_t Channels = 0;
 		std::filesystem::path Path{};
+		std::string DebugName{};
 
 		GLenum Format{};
 		GLenum InternalFormat{};
 		GLenum DataType{};
-		
+
 		static_assert(std::is_same_v<LRendererID, GLuint>, "LRendererID type mismatch");
 	};
 
