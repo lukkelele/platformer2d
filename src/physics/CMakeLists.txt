@@ -2,6 +2,7 @@ project_library(physics)
 project_library_sources(
 	body.h
 	body.cpp
+	bodytype.h
 	contactlistener.h
 	contactlistener.cpp
 	physicsworld.h
