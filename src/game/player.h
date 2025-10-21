@@ -19,12 +19,12 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnJumped, CPlayer, const FPlayerData&);
 	public:
-		CPlayer(std::string_view InName = "Player");
+		CPlayer(const FActorSpecification& Specification);
 		CPlayer(CPlayer&&) = default;
 		CPlayer(const CPlayer&) = default;
 		~CPlayer() = default;
 
-		void Tick(float DeltaTime = 0.0f);
+		virtual void Tick(float DeltaTime) override;
 		void Jump();
 
 		float GetMovementSpeed() const;
@@ -39,7 +39,6 @@ namespace platformer2d {
 	public:
 		FOnJumped OnJumped;
 	private:
-		std::string Name{};
 		FPlayerData Data{};
 
 		float MovementSpeed = 0.00032f;
