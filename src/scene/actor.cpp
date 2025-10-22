@@ -38,7 +38,6 @@ namespace platformer2d {
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
 		Body->SetPosition(NewPos);
-		LK_DEBUG("[{}] Pos=({}, {})", Name, TransformComp.Translation.x, TransformComp.Translation.y);
 	}
 
 }
