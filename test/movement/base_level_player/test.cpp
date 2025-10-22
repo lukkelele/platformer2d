@@ -104,7 +104,13 @@ namespace platformer2d::test {
 		/*********************************
 		 * Player
 		 *********************************/
-		CPlayer Player("TestPlayer");
+		const FActorSpecification PlayerSpec = {
+			.Name = "Player",
+			.BodyType = EBodyType::Dynamic,
+			.Position = { -0.280f, -0.410f },
+			.Size = { 5.0f, 5.0f },
+		};
+		CPlayer Player(PlayerSpec);
 		Player.SetPosition(-0.280f, -0.410f);
 		FTransformComponent& TransformComp = Player.GetTransformComponent();
 		TransformComp.SetTranslation({ -0.28f, -0.41f });
@@ -126,6 +132,7 @@ namespace platformer2d::test {
 
 		while (Running)
 		{
+			constexpr float DeltaTime = 0.0f;
 			Window.BeginFrame();
 			CRenderer::BeginFrame();
 			CKeyboard::Update();
@@ -182,7 +189,7 @@ namespace platformer2d::test {
 			static bool bRendererDrawQuad = false;
 			ImGui::Checkbox("Renderer: Draw Quad", &bRendererDrawQuad);
 
-			Player.Tick();
+			Player.Tick(DeltaTime);
 			/* -- ~Player-- */
 
 			ImGui::TableSetColumnIndex(1);

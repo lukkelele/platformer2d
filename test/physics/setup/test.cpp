@@ -116,7 +116,7 @@ namespace platformer2d::test {
 		/*********************************
 		 * Player
 		 *********************************/
-		CPlayer Player("TestPlayer");
+		CPlayer Player;
 		Player.SetPosition(-0.280f, -0.410f);
 		FTransformComponent& TransformComp = Player.GetTransformComponent();
 		TransformComp.SetTranslation({ -0.28f, -0.41f });
@@ -290,7 +290,7 @@ namespace platformer2d::test {
 			ImGui::Text("Player Texture: %d", PlayerTexture.GetIndex());
 			ImGui::PopID();
 
-			Player.Tick();
+			Player.Tick(DeltaTime);
 			/* -- ~Player-- */
 
 			ImGui::TableSetColumnIndex(1);
