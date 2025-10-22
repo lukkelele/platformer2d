@@ -15,27 +15,36 @@ namespace platformer2d {
 	void CPlayer::Tick(const float DeltaTime)
 	{
 		CActor::Tick(DeltaTime);
+
+		const b2BodyId BodyID = Body->GetID();
+		int Capacity = b2Body_GetContactCapacity(BodyID);
+		Capacity = b2MinInt(Capacity, 4);
+
+		bool bCanJump = false;
+		b2ContactData ContactData[4];
+		const int Count = b2Body_GetContactData(BodyID, ContactData, Capacity);
+		for (int Idx = 0; Idx < Count; Idx++)
+		{
+			b2BodyId BodyA = b2Shape_GetBody(ContactData[Idx].shapeIdA);
+			const float Sign = (B2_ID_EQUALS(BodyA, BodyID)) ? -1.0f : 1.0f;
+			if (Sign * ContactData[Idx].manifold.normal.y > 0.90f)
+			{
+				bCanJump = true;
+				break;
+			}
+		}
+
 		if (CKeyboard::IsKeyDown(EKey::A))
 		{
-			//TransformComp.Translation.x -= MovementSpeed;
-			Body->SetPositionX(TransformComp.Translation.x - MovementSpeed);
+			Body->ApplyForce({ -DirForce, 0.0f });
 		}
 		if (CKeyboard::IsKeyDown(EKey::D))
 		{
-			//TransformComp.Translation.x += MovementSpeed;
-			Body->SetPositionX(TransformComp.Translation.x + MovementSpeed);
+			Body->ApplyForce({ DirForce, 0.0f });
 		}
-		if (CKeyboard::IsKeyDown(EKey::W))
+		if (CKeyboard::IsKeyDown(EKey::Space))
 		{
-			Body->ApplyForce({ 0.0f, 1.0f });
-		}
-		if (CKeyboard::IsKeyDown(EKey::E))
-		{
-			Body->ApplyImpulse({ 0.0f, 5.0f });
-		}
-		if (CKeyboard::IsKeyDown(EKey::R))
-		{
-			Body->ApplyImpulse({ 0.0f, -5.0f });
+			Jump();
 		}
 
 		/* Main menu. */
@@ -49,6 +58,7 @@ namespace platformer2d {
 
 	void CPlayer::Jump()
 	{
+		Body->ApplyImpulse({ 0.0f, JumpImpulse });
 		OnJumped.Broadcast(Data);
 	}
 
@@ -66,6 +76,11 @@ namespace platformer2d {
 	void CPlayer::SetMovementSpeedFactor(const float SpeedFactor)
 	{
 		MovementSpeedFactor = SpeedFactor;
+	}
+
+	void CPlayer::SetJumpImpulse(const float Impulse)
+	{
+		JumpImpulse = Impulse;
 	}
 
 }

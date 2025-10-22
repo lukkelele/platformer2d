@@ -19,7 +19,7 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnJumped, CPlayer, const FPlayerData&);
 	public:
-		CPlayer(const FActorSpecification& Specification);
+		CPlayer(const FActorSpecification& Specification = FActorSpecification());
 		CPlayer(CPlayer&&) = default;
 		CPlayer(const CPlayer&) = default;
 		~CPlayer() = default;
@@ -36,6 +36,8 @@ namespace platformer2d {
 		void SetMovementSpeed(float NewSpeed);
 		void SetMovementSpeedFactor(float SpeedFactor);
 
+		void SetJumpImpulse(float Impulse);
+
 	public:
 		FOnJumped OnJumped;
 	private:
@@ -43,6 +45,9 @@ namespace platformer2d {
 
 		float MovementSpeed = 0.00032f;
 		inline static float MovementSpeedFactor = 10000.0f;
+
+		float JumpImpulse = 1.20f;
+		float DirForce = 1.0f * 0.00010f;
 	};
 
 }
