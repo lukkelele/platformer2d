@@ -20,12 +20,18 @@ namespace platformer2d {
 		static void Update(float DeltaTime);
 
 		static b2BodyId CreateBody(const b2BodyDef& BodyDef);
-
 		static inline const b2WorldId& GetWorldID() { return WorldID; }
+
+		static void InitDebugDraw(b2DebugDraw& DebugDrawRef);
+
+	private:
+		bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 
 	private:
 		static inline b2WorldId WorldID;
 		static inline int Substep = 4;
+
+		static inline std::unique_ptr<b2DebugDraw> DebugDraw = nullptr;
 	};
 
 }

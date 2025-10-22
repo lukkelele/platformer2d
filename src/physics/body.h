@@ -8,18 +8,6 @@
 
 namespace platformer2d {
 
-#if 0
-	struct FBodySpecification
-	{
-		EBodyType Type = EBodyType::Static;
-		glm::vec2 Position = { 0.0f, 0.0f };
-		glm::vec2 Size = { 1.0f, 1.0f };
-		float Density = 1.0f;
-		float Friction = 0.30f;
-		float Restitution = 0.0f;
-	};
-#endif
-
 	class CBody
 	{
 	public:
@@ -28,6 +16,7 @@ namespace platformer2d {
 
 		void Tick(float InDeltaTime);
 
+		const b2BodyId& GetID() const { return ID; }
 		glm::vec2 GetPosition() const;
 		void SetPosition(const glm::vec2& Pos) const;
 		void SetPositionX(float X) const;
@@ -43,10 +32,11 @@ namespace platformer2d {
 		void ApplyImpulse(const glm::vec2& Impulse, bool bWakeUp = true) const;
 
 	private:
-		EBodyType Type;
 		b2BodyId ID;
-
+		b2ShapeId ShapeID;
 		float DeltaTime = 0.0f;
+
+		friend class CPhysicsWorld;
 	};
 
 }

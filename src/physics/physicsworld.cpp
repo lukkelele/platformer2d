@@ -1,5 +1,7 @@
 #include "physicsworld.h"
 
+#include "game/player.h"
+
 namespace platformer2d {
 
 	namespace
@@ -26,6 +28,11 @@ namespace platformer2d {
 	void CPhysicsWorld::Update(const float DeltaTime)
 	{
 		b2World_Step(WorldID, DeltaTime, Substep);
+
+		if (DebugDraw)
+		{
+			b2World_Draw(WorldID, DebugDraw.get());
+		}
 	}
 
 	b2BodyId CPhysicsWorld::CreateBody(const b2BodyDef& BodyDef)
@@ -33,5 +40,43 @@ namespace platformer2d {
 		LK_ASSERT(bInitialized);
 		return b2CreateBody(WorldID, &BodyDef);
 	}
+
+	void CPhysicsWorld::InitDebugDraw(b2DebugDraw& DebugDrawRef)
+	{
+		LK_ASSERT(bInitialized);
+		DebugDraw = std::make_unique<b2DebugDraw>(DebugDrawRef);
+	}
+
+	bool CPhysicsWorld::PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
+	{
+		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
+		const b2ShapeId PlayerShapeID = Player.GetBody().ShapeID;
+
+		LK_ASSERT(b2Shape_IsValid(ShapeA));
+		LK_ASSERT(b2Shape_IsValid(ShapeB));
+		float Sign = 0.0f;
+		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))
+		{
+			Sign = -1.0f;
+		}
+		else if (B2_ID_EQUALS(ShapeB, PlayerShapeID))
+		{
+			Sign = 1.0f;
+		}
+		else
+		{
+			/* Not colliding with the player, enable contact. */
+			return true;
+		}
+
+		if ((Sign * Normal.y) > 0.95f)
+		{
+			return true;
+		}
+
+		/* Normal points down, disable contact. */
+		return false;
+	}
+
 
 }
