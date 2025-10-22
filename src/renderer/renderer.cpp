@@ -17,6 +17,7 @@
 
 #include "core/window.h"
 #include "backendinfo.h"
+#include "debugrenderer.h"
 #include "imguilayer.h"
 #include "opengl.h"
 #include "rendercommandqueue.h"
@@ -245,6 +246,8 @@ namespace platformer2d {
 		}
 
 		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
+
+		CDebugRenderer::Initialize();
 	}
 
 	void CRenderer::Destroy()
@@ -368,7 +371,7 @@ namespace platformer2d {
 	}
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size,
-							   const glm::vec4& Color, const float RotationDeg)
+							 const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -395,7 +398,7 @@ namespace platformer2d {
 	}
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
-							   const glm::vec4& Color, const float RotationDeg)
+							 const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{

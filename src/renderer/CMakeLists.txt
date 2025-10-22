@@ -31,4 +31,5 @@ endif()
 
 target_link_libraries(renderer PUBLIC 
 	core
+	physics
 )
