@@ -26,10 +26,13 @@ namespace platformer2d {
 		void SetRotation(float AngleRad) const;
 
 		glm::vec2 GetLinearVelocity() const;
-		void SetLinearVelocity(const glm::vec2& Velocity) const;
+		void SetLinearVelocity(const glm::vec2& InVelocity) const;
 
-		void ApplyForce(const glm::vec2& Force, bool bWakeUp = true) const;
-		void ApplyImpulse(const glm::vec2& Impulse, bool bWakeUp = true) const;
+		void ApplyForce(const glm::vec2& InForce, bool bWakeUp = true) const;
+		void ApplyImpulse(const glm::vec2& InImpulse, bool bWakeUp = true) const;
+
+		float GetMass() const;
+		void SetMass(float InMass) const;
 
 	private:
 		b2BodyId ID;

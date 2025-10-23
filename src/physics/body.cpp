@@ -11,17 +11,20 @@ namespace platformer2d {
 		const b2BodyDef& BodyDef = Spec.BodyDef;
 		const b2ShapeDef& ShapeDef = Spec.ShapeDef;
 
-		if (Spec.ShapeType & EShape::EShape_Polygon)
+		if (std::holds_alternative<FPolygon>(Spec.Shape))
 		{
-			b2Polygon Box = b2MakeBox(Spec.Size.x * 0.50f, Spec.Size.y * 0.50f);
-			//b2Polygon Box = b2MakeBox(Spec.Size.x, Spec.Size.y);
-			ShapeID = b2CreatePolygonShape(ID, &Spec.ShapeDef, &Box);
+			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
+			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
+			ShapeID = b2CreatePolygonShape(ID, &Spec.ShapeDef, &Polygon);
 		}
-		else if (Spec.ShapeType & EShape::EShape_Capsule)
+		else if (std::holds_alternative<FCapsule>(Spec.Shape))
 		{
-			/** @fixme */
-			//b2Capsule Capsule = { { 0.0f, 0.0f }, { 0.0f, 1.0f }, Spec.Shape.Capsule.Radius };
-			b2Capsule Capsule = { { 0.0f, 0.0f }, { 0.0f, 0.30f }, Spec.Shape.Capsule.Radius };
+			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
+			const b2Capsule Capsule = { 
+				{ ShapeRef.P0.x, ShapeRef.P0.y }, 
+				{ ShapeRef.P1.x, ShapeRef.P1.y }, 
+				ShapeRef.Radius 
+			};
 			ShapeID = b2CreateCapsuleShape(ID, &Spec.ShapeDef, &Capsule);
 		}
 		else if (Spec.ShapeType & EShape::EShape_Segment)
@@ -79,19 +82,33 @@ namespace platformer2d {
 		return glm::vec2(Velocity.x, Velocity.y);
 	}
 
-	void CBody::SetLinearVelocity(const glm::vec2& Velocity) const
+	void CBody::SetLinearVelocity(const glm::vec2& InVelocity) const
 	{
-		b2Body_SetLinearVelocity(ID, b2Vec2(Velocity.x, Velocity.y));
+		b2Body_SetLinearVelocity(ID, b2Vec2(InVelocity.x, InVelocity.y));
 	}
 
-	void CBody::ApplyForce(const glm::vec2& Force, const bool bWakeUp) const
+	void CBody::ApplyForce(const glm::vec2& InForce, const bool bWakeUp) const
 	{
-		b2Body_ApplyForceToCenter(ID, { Force.x, Force.y }, bWakeUp);
+		b2Body_ApplyForceToCenter(ID, { InForce.x, InForce.y }, bWakeUp);
 	}
 
-	void CBody::ApplyImpulse(const glm::vec2& Impulse, const bool bWakeUp) const
+	void CBody::ApplyImpulse(const glm::vec2& InImpulse, const bool bWakeUp) const
 	{
-		b2Body_ApplyLinearImpulseToCenter(ID, { Impulse.x, Impulse.y }, bWakeUp);
+		b2Body_ApplyLinearImpulseToCenter(ID, { InImpulse.x, InImpulse.y }, bWakeUp);
+	}
+
+	float CBody::GetMass() const
+	{
+		return b2Body_GetMass(ID);
+	}
+	
+	void CBody::SetMass(const float InMass) const
+	{
+		b2MassData Data{};
+		Data.mass = InMass;
+		Data.center = { 0.0f, 0.0f };
+		Data.rotationalInertia = 0.0f;
+		b2Body_SetMassData(ID, Data);
 	}
 
 }
