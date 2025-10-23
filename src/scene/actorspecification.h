@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "core/core.h"
 #include "physics/bodytype.h"
 
@@ -23,27 +25,42 @@ namespace platformer2d {
 		EShape_Segment = LK_BIT(3),
 	};
 
+	struct FPolygon
+	{
+		glm::vec2 Size = { 1.0f, 1.0f };
+		float Radius = 0.50f;
+		float Rotation = 0.50f;
+	};
+
+	struct FCapsule
+	{
+		glm::vec2 P0 = { 0.0f, 0.0f };
+		glm::vec2 P1 = { 0.0f, 0.0f };
+		float Radius = 0.50f;
+	};
+
 	struct FActorSpecification
 	{
 		std::string Name = "Unnamed";
-		glm::vec2 Position = { 0.0f, 0.0f }; /* @todo: remove this */
-		glm::vec2 Size = { 0.50f, 0.50f }; /* @todo remove this */
 
-		/** @todo: Use std::variant */
 		b2BodyDef BodyDef;
 		b2ShapeDef ShapeDef;
+
+		using TShape = std::variant<std::monostate, FPolygon, FCapsule, b2Segment>;
+		TShape Shape{};
+#if 0
+
 		union {
 			std::nullptr_t None;
-
 			b2Polygon Polygon;
-
-			struct FCapsule {
+			struct FCapsule 
+			{
 				b2Capsule Object;
 				float Radius;
 			} Capsule;
-
 			b2Segment Segment;
 		} Shape;
+#endif
 		EShape ShapeType = EShape_None;
 
 		FActorSpecification()

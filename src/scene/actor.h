@@ -25,10 +25,9 @@ namespace platformer2d {
 		inline const CBody& GetBody() const { return *Body; }
 
 	protected:
+		std::string Name;
 		FTransformComponent TransformComp{};
 		std::unique_ptr<CBody> Body;
-
-		std::string Name;
 	};
 
 }
