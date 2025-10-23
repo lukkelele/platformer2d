@@ -106,10 +106,8 @@ namespace platformer2d::test {
 		 *********************************/
 		const FActorSpecification PlayerSpec = {
 			.Name = "Player",
-			.BodyType = EBodyType::Dynamic,
-			.Position = { -0.280f, -0.410f },
-			.Size = { 5.0f, 5.0f },
 		};
+		/* @fixme */
 		CPlayer Player(PlayerSpec);
 		Player.SetPosition(-0.280f, -0.410f);
 		FTransformComponent& TransformComp = Player.GetTransformComponent();
