@@ -16,3 +16,4 @@ project_library_sources(
 )
 
 add_subdirectory(input)
+add_subdirectory(math)
