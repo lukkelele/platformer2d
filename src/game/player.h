@@ -12,12 +12,14 @@ namespace platformer2d {
 	struct FPlayerData
 	{
 		uint64_t ID = 0;
+		bool bJumping = false;
 	};
 
 	class CPlayer : public CActor
 	{
 	public:
 		LK_DECLARE_EVENT(FOnJumped, CPlayer, const FPlayerData&);
+		LK_DECLARE_EVENT(FOnLanded, CPlayer, const FPlayerData&);
 	public:
 		CPlayer(const FActorSpecification& Specification = FActorSpecification());
 		CPlayer(CPlayer&&) = default;
@@ -27,27 +29,32 @@ namespace platformer2d {
 		virtual void Tick(float DeltaTime) override;
 		void Jump();
 
+		const FPlayerData& GetData() const { return Data; }
 		float GetMovementSpeed() const;
 
-		/**
-		 * @brief Set the movement speed.
-		 * The speed should be greater than 1.0f.
-		 */
 		void SetMovementSpeed(float NewSpeed);
 		void SetMovementSpeedFactor(float SpeedFactor);
 
+		inline float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);
+
+		inline float GetDirectionForce() const { return DirForce; }
+		void SetDirectionForce(float Force);
+
+	private:
+		void CheckJumpState();
 
 	public:
 		FOnJumped OnJumped;
+		FOnLanded OnLanded;
 	private:
 		FPlayerData Data{};
 
-		float MovementSpeed = 0.00032f;
-		inline static float MovementSpeedFactor = 10000.0f;
+		float MovementSpeed = 3.20f * MovementSpeedFactor;
+		static inline float MovementSpeedFactor = 0.000010f;
 
-		float JumpImpulse = 1.20f;
-		float DirForce = 1.0f * 0.00010f;
+		float JumpImpulse = 0.32f;
+		float DirForce = 0.50f;
 	};
 
 }

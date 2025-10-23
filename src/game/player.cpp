@@ -16,23 +16,7 @@ namespace platformer2d {
 	{
 		CActor::Tick(DeltaTime);
 
-		const b2BodyId BodyID = Body->GetID();
-		int Capacity = b2Body_GetContactCapacity(BodyID);
-		Capacity = b2MinInt(Capacity, 4);
-
-		bool bCanJump = false;
-		b2ContactData ContactData[4];
-		const int Count = b2Body_GetContactData(BodyID, ContactData, Capacity);
-		for (int Idx = 0; Idx < Count; Idx++)
-		{
-			b2BodyId BodyA = b2Shape_GetBody(ContactData[Idx].shapeIdA);
-			const float Sign = (B2_ID_EQUALS(BodyA, BodyID)) ? -1.0f : 1.0f;
-			if (Sign * ContactData[Idx].manifold.normal.y > 0.90f)
-			{
-				bCanJump = true;
-				break;
-			}
-		}
+		CheckJumpState();
 
 		if (CKeyboard::IsKeyDown(EKey::A))
 		{
@@ -58,8 +42,12 @@ namespace platformer2d {
 
 	void CPlayer::Jump()
 	{
-		Body->ApplyImpulse({ 0.0f, JumpImpulse });
-		OnJumped.Broadcast(Data);
+		if (!Data.bJumping)
+		{
+			Data.bJumping = true;
+			Body->ApplyImpulse({ 0.0f, JumpImpulse });
+			OnJumped.Broadcast(Data);
+		}
 	}
 
 	float CPlayer::GetMovementSpeed() const
@@ -69,8 +57,7 @@ namespace platformer2d {
 
 	void CPlayer::SetMovementSpeed(const float NewSpeed)
 	{
-		MovementSpeed = (NewSpeed / 10000.0f);
-		LK_TRACE("MovementSpeed={} (NewSpeed={})", MovementSpeed, NewSpeed);
+		MovementSpeed = (NewSpeed * MovementSpeedFactor);
 	}
 
 	void CPlayer::SetMovementSpeedFactor(const float SpeedFactor)
@@ -81,6 +68,40 @@ namespace platformer2d {
 	void CPlayer::SetJumpImpulse(const float Impulse)
 	{
 		JumpImpulse = Impulse;
+	}
+
+	void CPlayer::SetDirectionForce(const float Force)
+	{
+		DirForce = Force;
+	}
+
+	void CPlayer::CheckJumpState()
+	{
+		static constexpr int MAX_CONTACTS = 4;
+		const b2BodyId BodyID = Body->GetID();
+		//int Capacity = b2Body_GetContactCapacity(BodyID);
+		//Capacity = b2MinInt(Capacity, 4);
+		const int Capacity = std::min(b2Body_GetContactCapacity(BodyID), MAX_CONTACTS);
+
+		bool bCanJump = false;
+		b2ContactData ContactData[MAX_CONTACTS];
+		const int Count = b2Body_GetContactData(BodyID, ContactData, Capacity);
+		for (int Idx = 0; Idx < Count; Idx++)
+		{
+			b2BodyId BodyA = b2Shape_GetBody(ContactData[Idx].shapeIdA);
+			const float Sign = (B2_ID_EQUALS(BodyA, BodyID)) ? -1.0f : 1.0f;
+			if (Sign * ContactData[Idx].manifold.normal.y > 0.90f)
+			{
+				bCanJump = true;
+				break;
+			}
+		}
+
+		if (bCanJump && Data.bJumping)
+		{
+			Data.bJumping = false;
+			OnLanded.Broadcast(Data);
+		}
 	}
 
 }
