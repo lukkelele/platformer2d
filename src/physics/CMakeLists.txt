@@ -5,6 +5,8 @@ project_library_sources(
 	bodytype.h
 	contactlistener.h
 	contactlistener.cpp
+	ray.h
+	ray.cpp
 	physicsworld.h
 	physicsworld.cpp
 )
