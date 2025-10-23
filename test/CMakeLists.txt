@@ -51,8 +51,8 @@ test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE_TEXTURE)
 test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE_TEXTURE_CLASS)
 test_option(LK_TEST_OPENGL_TRIANGLE_MOVABLE_TEXTURE_CLASS_TRANSFORM)
 
-set(LK_TEST_SCREEN_WIDTH "1600" CACHE STRING "Screen width")
-set(LK_TEST_SCREEN_HEIGHT "1050" CACHE STRING "Screen height")
+set(LK_TEST_SCREEN_WIDTH "1920" CACHE STRING "Screen width")
+set(LK_TEST_SCREEN_HEIGHT "1080" CACHE STRING "Screen height")
 
 # Scan subdirectories recursively and match them with the test options.
 function(add_tests_recursive dir)

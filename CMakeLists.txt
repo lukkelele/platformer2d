@@ -22,8 +22,8 @@ if (LK_ENABLE_VERIFY)
 	project_add_compile_definitions(LK_ENABLE_VERIFY)
 endif()
 
-set(LK_SCREEN_WIDTH "1600" CACHE STRING "Screen width")
-set(LK_SCREEN_HEIGHT "1050" CACHE STRING "Screen height")
+set(LK_SCREEN_WIDTH "1920" CACHE STRING "Screen width")
+set(LK_SCREEN_HEIGHT "1080" CACHE STRING "Screen height")
 option(LK_LOG_FORCE_INLINE "Force inline log templates" OFF)
 
 set(PROJECT_EXECUTABLE ${PROJECT_NAME})
