@@ -24,6 +24,7 @@
 
 #define PLATFORM_ENABLED 1
 #define GROUND_PLANE_ENABLED 1
+#define GROUND_PLANE_SEGMENT 0
 
 namespace platformer2d::test {
 
@@ -51,7 +52,7 @@ namespace platformer2d::test {
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		const glm::vec2 Gravity = { 0.0f, -0.10f };
+		const glm::vec2 Gravity = { 0.0f, -3.20f };
 		CPhysicsWorld::Initialize(Gravity);
 		WorldID = CPhysicsWorld::GetWorldID();
 
@@ -75,26 +76,26 @@ namespace platformer2d::test {
 		 *********************************/
 		FActorSpecification PlayerSpec;
 		PlayerSpec.Name = "Player";
-		PlayerSpec.Position = { 0.0f, 0.60f };
-		PlayerSpec.Size = { 0.40f, 0.20f };
 
 		b2BodyDef PlayerDef = b2DefaultBodyDef();
-		PlayerDef.position = { 0.0f, 0.60f };
+		PlayerDef.position = { 0.0f, 1.0f };
 		PlayerDef.type = b2_dynamicBody;
 		PlayerDef.motionLocks.angularZ = true;
-		PlayerDef.linearDamping = 1.0f;
-		PlayerDef.angularDamping = 1.0f;
-		PlayerDef.gravityScale = 1.10f;
+		PlayerDef.linearDamping = 0.50f;
 		PlayerSpec.BodyDef = PlayerDef;
 
 		PlayerSpec.ShapeDef.enablePreSolveEvents = true;
-		PlayerSpec.ShapeDef.material.friction = 0.80f;
-		PlayerSpec.ShapeDef.density = 0.30f;
-		//PlayerSpec.Shape.Capsule.Radius = 0.14f;
-		PlayerSpec.Shape.Capsule.Radius = 0.06f;
+		PlayerSpec.ShapeDef.material.friction = 0.10f;
+		//PlayerSpec.Shape.emplace<FCapsule>(FCapsule{ .Radius = 0.20f });
+		FCapsule PlayerCapsule;
+		PlayerCapsule.P0 = { 0.0f, 0.0f };
+		PlayerCapsule.P1 = { 0.0f, 1.0f };
+		PlayerCapsule.Radius = 0.20f;
+		PlayerSpec.Shape.emplace<FCapsule>(PlayerCapsule);
 		PlayerSpec.ShapeType = EShape_Capsule;
 
 		CPlayer Player(PlayerSpec);
+		const FPlayerData& PlayerData = Player.GetData();
 		FTransformComponent& PlayerTC = Player.GetTransformComponent();
 		glm::vec3& PlayerPos = PlayerTC.Translation;
 		glm::vec3& PlayerScale = PlayerTC.Scale;
@@ -104,25 +105,30 @@ namespace platformer2d::test {
 		Player.SetMovementSpeed(MovementSpeed);
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
 		{
-			LK_INFO("Player {} jumped", PlayerData.ID);
+			LK_WARN("Player {} jumped", PlayerData.ID);
 		});
 
-		/*********************************
-		 * Platform
-		 *********************************/
+		Player.OnLanded.Add([](const FPlayerData& PlayerData)
+		{
+			LK_INFO("Player {} landed", PlayerData.ID);
+		});
+
 #if PLATFORM_ENABLED
 		FActorSpecification PlatformSpec;
 		PlatformSpec.Name = "Platform";
-		PlatformSpec.Size = { 0.60f, 0.08f };
-		PlatformSpec.BodyDef.position = { 0.0f, -0.50 };
+		PlatformSpec.BodyDef.position = { 0.0f, -0.80 };
 		PlatformSpec.BodyDef.type = b2_staticBody;
 		PlatformSpec.ShapeDef.enablePreSolveEvents = true;
 		PlatformSpec.ShapeType = EShape_Polygon;
-		PlatformSpec.Position = { PlatformSpec.BodyDef.position.x, PlatformSpec.BodyDef.position.y };
+
+		FPolygon PlatformPolygon = {
+			.Size = { 2.0f, 0.12f }
+		};
+		PlatformSpec.Shape.emplace<FPolygon>(PlatformPolygon);
 
 		CActor Platform(PlatformSpec);
 		FTransformComponent& PlatformTC = Platform.GetTransformComponent();
-		PlatformTC.SetScale(PlatformSpec.Size);
+		PlatformTC.SetScale(PlatformPolygon.Size);
 #endif
 
 		/******************************
@@ -141,17 +147,28 @@ namespace platformer2d::test {
 
 #if GROUND_PLANE_ENABLED
 		b2BodyDef PlaneDef = b2DefaultBodyDef();
+		PlaneDef.type = b2_staticBody;
 		PlaneDef.position = { 0.0f, -0.60f };
 		b2BodyId PlaneID = b2CreateBody(CPhysicsWorld::GetWorldID(), &PlaneDef);
 		b2ShapeDef PlaneShapeDef = b2DefaultShapeDef();
+#if GROUND_PLANE_SEGMENT
 		b2Segment PlaneSegment = { { -50.0f, 0.0f }, { 50.0f, 0.0f } };
 		b2CreateSegmentShape(PlaneID, &PlaneShapeDef, &PlaneSegment);
+#else
+		PlaneShapeDef.enablePreSolveEvents = true;
+		const float HalfW = 3.0f;
+		const float HalfH = 0.10f;
+		b2Polygon PlaneBox = b2MakeBox(HalfW, HalfH);
+		b2CreatePolygonShape(PlaneID, &PlaneShapeDef, &PlaneBox);
+#endif /* GROUND_PLANE_SEGMENT */
 #endif
 
 		Timer.Reset();
 		while (Running)
 		{
-			const float DeltaTime = Timer.GetDeltaTime();
+			//const float DeltaTime = (1.0f / Timer.GetDeltaTime());
+			constexpr float DeltaTime = (1.0f / 60.0f);
+
 			Window.BeginFrame();
 			CKeyboard::Update();
 			CRenderer::BeginFrame();
@@ -159,7 +176,7 @@ namespace platformer2d::test {
 			UI_MenuBar();
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
-			ImGui::Text("Delta Time: ~%1.fms", DeltaTime);
+			ImGui::Text("Delta Time: %.3f", DeltaTime);
 
 			static bool bRendererDrawLine = false;
 			ImGui::Checkbox("Draw Line", &bRendererDrawLine);
@@ -169,19 +186,19 @@ namespace platformer2d::test {
 			ImGui::Checkbox("Draw Circle", &bRendererDrawCircle);
 
 #if GROUND_PLANE_ENABLED
+#if GROUND_PLANE_SEGMENT
 			const glm::vec4 PlaneColor = { 1.0f, 0.10f, 0.0f, 1.0f };
 			b2Vec2 PlanePos = b2Body_GetPosition(PlaneID);
-			const glm::vec3 PlaneP0 = {
-				PlanePos.x - (0.50f * PlaneSegment.point2.x),
-				PlanePos.y,
-				0.0f
-			};
-			const glm::vec3 PlaneP1 = {
-				PlanePos.x + (0.50f * PlaneSegment.point2.x),
-				PlanePos.y,
-				0.0f
-			};
+			const glm::vec3 PlaneP0 = { PlanePos.x - (0.50f * PlaneSegment.point2.x), PlanePos.y, 0.0f };
+			const glm::vec3 PlaneP1 = { PlanePos.x + (0.50f * PlaneSegment.point2.x), PlanePos.y, 0.0f };
 			CRenderer::DrawLine(PlaneP0, PlaneP1, PlaneColor, 3);
+#else
+			const glm::vec4 PlaneColor = { 1.0f, 0.10f, 0.0f, 1.0f };
+			const b2Vec2 PlanePos = b2Body_GetPosition(PlaneID);
+			const glm::vec2 Pos  = { PlanePos.x, PlanePos.y };
+			const glm::vec2 Size = { 2.0f * HalfW, 2.0f * HalfH };
+			CRenderer::DrawQuad(Pos, Size, PlaneColor, 0.0f);
+#endif
 #endif
 
 			ImGui::Dummy(ImVec2(0, 12));
@@ -199,20 +216,9 @@ namespace platformer2d::test {
 			const b2Vec2 G = b2World_GetGravity(WorldID);
 			ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 
-			CDebugRenderer::DrawQuad({ 0.05f, 0.04f }, { 0.10f, 0.20f }, { 0.60f, 0.45f, 0.32f, 0.80f });
-
 			ImGui::SetNextItemWidth(310.0f);
 			ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f");
-			if (ImGui::IsItemActive())
-			{
-				CRenderer::SetClearColor(ClearColor);
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("Player Jump"))
-			{
-				Player.Jump();
-			}
+			if (ImGui::IsItemActive()) CRenderer::SetClearColor(ClearColor);
 
 			const bool bTable = ImGui::BeginTable("##Table", 2);
 			ImGui::TableSetupColumn("##Column1");
@@ -223,6 +229,7 @@ namespace platformer2d::test {
 
 			/* -- Player -- */
 			Player.Tick(DeltaTime);
+			ImGui::PushItemWidth(140.0f);
 			ImGui::SeparatorText("Player");
 			ImGui::PushID(ImGui::GetID("Player"));
 			ImGui::SliderFloat4("Color", &FragColor.x, 0.0f, 1.0f, "%.3f");
@@ -244,37 +251,45 @@ namespace platformer2d::test {
 			{
 				Player.SetMovementSpeed(MovementSpeed);
 			}
+			ImGui::PopItemWidth();
 			const CBody& PlayerBody = Player.GetBody();
 			const glm::vec2 PlayerBodyPos = PlayerBody.GetPosition();
 			ImGui::Text("Body Pos: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 			const glm::vec2 PlayerLinearVelocity = PlayerBody.GetLinearVelocity();
 			ImGui::Text("Body Linear Velocity: (%.2f, %.2f)", PlayerLinearVelocity.x, PlayerLinearVelocity.y);
+
+			ImGui::PushItemWidth(140.0f);
+			static float PlayerJumpImpulse = Player.GetJumpImpulse();
+			ImGui::SliderFloat("Jump Impulse", &PlayerJumpImpulse, 0.0f, 10.0f, "%.5f");
+			if (ImGui::IsItemActive()) Player.SetJumpImpulse(PlayerJumpImpulse);
+			static float PlayerDirForce = Player.GetDirectionForce();
+			ImGui::SliderFloat("Direction Force", &PlayerDirForce, 0.0f, 10.0f, "%.5f");
+			if (ImGui::IsItemActive()) Player.SetDirectionForce(PlayerDirForce);
+			ImGui::Text("Body Pos: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
+			ImGui::Text("Player jumping: %s", PlayerData.bJumping ? "True" : "False");
+			ImGui::PopItemWidth();
+
 			ImGui::PopID();
 			/* -- ~Player -- */
 
 			ImGui::TableSetColumnIndex(1);
 
 #if PLATFORM_ENABLED
-			Platform.Tick(DeltaTime);
-
 			/* -- Platform -- */
+			Platform.Tick(DeltaTime);
 			static glm::vec4 PlatformFragColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+#if 0
 			ImGui::SeparatorText("Platform");
 			ImGui::PushID(ImGui::GetID("Platform"));
 			ImGui::SliderFloat4("Color", &PlatformFragColor.x, 0.0f, 1.0f, "%.3f");
 			ImGui::SliderFloat2("Position", &PlatformTC.Translation.x, -2.0, 2.0f, "%.2f");
-			if (ImGui::IsItemActive())
-			{
-				Platform.SetPosition({ PlatformTC.Translation.x, PlatformTC.Translation.y });
-			}
+			if (ImGui::IsItemActive()) Platform.SetPosition({ PlatformTC.Translation.x, PlatformTC.Translation.y });
 			ImGui::SliderFloat2("Scale", &PlatformTC.Scale.x, 0.01f, 2.0f, "%.2f");
 			float PlatformRot = glm::degrees(PlatformTC.GetRotation2D());
 			ImGui::SliderFloat("Rotation", &PlayerRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
-			if (ImGui::IsItemActive())
-			{
-				PlatformTC.SetRotation2D(glm::radians(PlatformRot));
-			}
+			if (ImGui::IsItemActive()) PlatformTC.SetRotation2D(glm::radians(PlatformRot));
 			ImGui::PopID();
+#endif
 
 			glm::mat4 PlatformTransform = PlatformTC.GetTransform();
 			CRenderer::DrawQuad(Platform.GetPosition(), PlatformTC.Scale, *PlatformTexture, PlatformFragColor);
@@ -289,29 +304,7 @@ namespace platformer2d::test {
 
 			ImGui::EndTable();
 
-			/* Draw line. */
-			ImGui::SeparatorText("Line");
-			static glm::vec2 Start = { -0.50f, 0.39f };
-			static glm::vec2 End = { 0.50f,  0.50f };
-			ImGui::SetNextItemWidth(250.0f);
-			const bool bLineStart = ImGui::SliderFloat2("Start", &Start.x, -10.0f, 10.0f, "%.2f");
-			ImGui::SetNextItemWidth(250.0f);
-			const bool bLineEnd = ImGui::SliderFloat2("End", &End.x, -10.0f, 10.0f, "%.2f");
-
-			const glm::vec4 LineColor = { 1.0f, 0.50f, 1.0f, 1.0f };
-			static int LineWidth = 8;
-			ImGui::SetNextItemWidth(190.0f);
-			ImGui::SliderInt("Line Width", &LineWidth, 1, 24);
-			if (bRendererDrawLine)
-			{
-				CRenderer::DrawLine(Start, End, LineColor, LineWidth);
-				const glm::vec2 LeftPos = { PlayerPos.x - (PlayerSize.x * 0.50f), PlayerPos.y };
-				const glm::vec2 RightPos = { PlayerPos.x + (PlayerSize.x * 0.50f), PlayerPos.y};
-				CRenderer::DrawLine(LeftPos, RightPos, LineColor, LineWidth);
-			}
-
-			UI_ExternalWindows();
-
+#if 0
 			static float Radius = 0.15f;
 			static float FillRadius = 0.15f;
 			static float FillThickness = 1.0f;
@@ -330,6 +323,9 @@ namespace platformer2d::test {
 				CRenderer::DrawCircle(Player.GetPosition(), Rot, Radius, { 0.30f, 1.0f, 0.50f, 1.0f });
 				CRenderer::DrawCircleFilled(Player.GetPosition(), FillRadius, CircleColor, FillThickness);
 			}
+#endif
+
+			UI_ExternalWindows();
 
 			CRenderer::Flush();
 			CRenderer::EndFrame();
