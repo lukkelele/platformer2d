@@ -13,12 +13,19 @@ namespace platformer2d {
 
 		if (std::holds_alternative<FPolygon>(Spec.Shape))
 		{
+			ShapeType = EShape::Polygon;
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
 			ShapeID = b2CreatePolygonShape(ID, &Spec.ShapeDef, &Polygon);
 		}
+		else if (std::holds_alternative<FLine>(Spec.Shape))
+		{
+			ShapeType = EShape::Line;
+			LK_ASSERT(false);
+		}
 		else if (std::holds_alternative<FCapsule>(Spec.Shape))
 		{
+			ShapeType = EShape::Capsule;
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
 			const b2Capsule Capsule = { 
 				{ ShapeRef.P0.x, ShapeRef.P0.y }, 
@@ -27,10 +34,8 @@ namespace platformer2d {
 			};
 			ShapeID = b2CreateCapsuleShape(ID, &Spec.ShapeDef, &Capsule);
 		}
-		else if (Spec.ShapeType & EShape::EShape_Segment)
-		{
-			LK_ASSERT(false);
-		}
+
+		SetMass(1.0f);
 	}
 
 	void CBody::Tick(const float InDeltaTime)
@@ -109,6 +114,95 @@ namespace platformer2d {
 		Data.center = { 0.0f, 0.0f };
 		Data.rotationalInertia = 0.0f;
 		b2Body_SetMassData(ID, Data);
+	}
+
+	void CBody::SetShape(const b2Polygon& Polygon)
+	{
+		ShapeType = EShape::Polygon;
+		b2Shape_SetPolygon(ShapeID, &Polygon);
+	}
+
+	void CBody::SetShape(const b2Capsule& Capsule)
+	{
+		ShapeType = EShape::Capsule;
+		b2Shape_SetCapsule(ShapeID, &Capsule);
+	}
+
+	void CBody::SetShape(const b2Segment& Line)
+	{
+		ShapeType = EShape::Line;
+		b2Shape_SetSegment(ShapeID, &Line);
+	}
+
+	void CBody::SetScale(const float Factor) const
+	{
+		switch (ShapeType)
+		{
+			case EShape::Polygon:
+				ScalePolygon(Factor);
+				break;
+
+			case EShape::Line:
+				ScaleLine(Factor);
+				break;
+
+			case EShape::Capsule:
+				ScaleCapsule(Factor);
+				break;
+
+			case EShape::None:
+				LK_ASSERT(false);
+				break;
+		}
+	}
+
+	void CBody::ScalePolygon(const float Factor) const
+	{
+		LK_ASSERT(ShapeType == EShape::Polygon);
+		b2Polygon Shape = b2Shape_GetPolygon(ShapeID);
+		for (int Idx = 0; Idx < Shape.count; Idx++)
+		{
+			Shape.vertices[Idx].x *= Factor;
+			Shape.vertices[Idx].y *= Factor;
+		}
+		Shape.radius *= Factor;
+		LK_DEBUG_TAG("Body", "New polygon radius: {}", Shape.radius);
+
+		b2Shape_SetPolygon(ShapeID, &Shape);
+	}
+
+	void CBody::ScaleLine(const float Factor) const
+	{
+		LK_ASSERT(ShapeType == EShape::Line);
+		b2Segment Shape = b2Shape_GetSegment(ShapeID);
+		Shape.point1.x *= Factor;
+		Shape.point1.y *= Factor;
+		Shape.point2.x *= Factor;
+		Shape.point2.y *= Factor;
+	}
+
+	void CBody::ScaleCapsule(const float Factor) const
+	{
+		LK_ASSERT(ShapeType == EShape::Capsule);
+		b2Capsule Shape = b2Shape_GetCapsule(ShapeID);
+		Shape.center1.x *= Factor;
+		Shape.center1.y *= Factor;
+		Shape.center2.x *= Factor;
+		Shape.center2.y *= Factor;
+		Shape.radius *= Factor;
+		LK_DEBUG_TAG("Body", "New capsule radius: {}", Shape.radius);
+
+		b2Shape_SetCapsule(ShapeID, &Shape);
+	}
+
+	void CBody::SetRestitution(const float Restitution) const
+	{
+		b2Shape_SetRestitution(ShapeID, Restitution);
+	}
+
+	void CBody::SetFriction(const float Friction) const
+	{
+		b2Shape_SetFriction(ShapeID, Friction);
 	}
 
 }

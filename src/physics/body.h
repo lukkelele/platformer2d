@@ -24,7 +24,6 @@ namespace platformer2d {
 
 		float GetRotation() const;
 		void SetRotation(float AngleRad) const;
-
 		glm::vec2 GetLinearVelocity() const;
 		void SetLinearVelocity(const glm::vec2& InVelocity) const;
 
@@ -34,9 +33,24 @@ namespace platformer2d {
 		float GetMass() const;
 		void SetMass(float InMass) const;
 
+		void SetShape(const b2Polygon& Polygon);
+		void SetShape(const b2Capsule& Capsule);
+		void SetShape(const b2Segment& Line);
+
+		void SetScale(float Factor) const;
+		void SetRestitution(float Restitution) const;
+		void SetFriction(float Friction) const;
+
+	private:
+		void ScalePolygon(float Factor) const;
+		void ScaleLine(float Factor) const;
+		void ScaleCapsule(float Factor) const;
+
 	private:
 		b2BodyId ID;
-		b2ShapeId ShapeID;
+		b2ShapeId ShapeID; /* @todo: Should support multiple shapes */
+		EShape ShapeType;
+
 		float DeltaTime = 0.0f;
 
 		friend class CPhysicsWorld;
