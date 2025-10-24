@@ -9,20 +9,12 @@
 
 namespace platformer2d {
 
-	enum EMotionLock
+	enum class EShape
 	{
-		EMotionLock_None = 0,
-		EMotionLock_X = LK_BIT(1),
-		EMotionLock_Y = LK_BIT(2),
-		EMotionLock_Z = LK_BIT(3),
-	};
-
-	enum EShape
-	{
-		EShape_None = 0,
-		EShape_Polygon = LK_BIT(1),
-		EShape_Capsule = LK_BIT(2),
-		EShape_Segment = LK_BIT(3),
+		None    = 0,
+		Polygon = LK_BIT(1),
+		Line    = LK_BIT(2),
+		Capsule = LK_BIT(3),
 	};
 
 	struct FPolygon
@@ -39,29 +31,21 @@ namespace platformer2d {
 		float Radius = 0.50f;
 	};
 
+	struct FLine
+	{
+		glm::vec2 P0 = { 0.0f, 0.0f };
+		glm::vec2 P1 = { 0.0f, 0.0f };
+	};
+
+	using TShape = std::variant<std::monostate, FPolygon, FCapsule, FLine>;
+
 	struct FActorSpecification
 	{
 		std::string Name = "Unnamed";
-
 		b2BodyDef BodyDef;
 		b2ShapeDef ShapeDef;
 
-		using TShape = std::variant<std::monostate, FPolygon, FCapsule, b2Segment>;
 		TShape Shape{};
-#if 0
-
-		union {
-			std::nullptr_t None;
-			b2Polygon Polygon;
-			struct FCapsule 
-			{
-				b2Capsule Object;
-				float Radius;
-			} Capsule;
-			b2Segment Segment;
-		} Shape;
-#endif
-		EShape ShapeType = EShape_None;
 
 		FActorSpecification()
 		{

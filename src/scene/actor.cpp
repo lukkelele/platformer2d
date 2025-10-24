@@ -8,8 +8,6 @@ namespace platformer2d {
 		: Name(Spec.Name)
 	{
 		LK_DEBUG_TAG("Actor", "Create: {}", Name);
-		//TransformComp.Translation.x = Spec.Position.x;
-		//TransformComp.Translation.y = Spec.Position.y;
 
 		Body = std::make_unique<CBody>(Spec);
 		const glm::vec2 BodyPos = Body->GetPosition();
