@@ -103,7 +103,7 @@ namespace platformer2d {
 		DebugDraw.DrawPointFcn = [](b2Vec2 Center, float Size, b2HexColor HexColor, void* Ctx)
 		{
 			const glm::vec3 P0 = { Center.x, Center.y, 0.0f };
-			const glm::vec4 Color = { 0.0f, 1.0f, 1.0f, 1.0f };
+			const glm::vec4 Color = Decodeb2HexColor(HexColor);
 			//LK_WARN("DrawPointFcn: ({}, {})", P0.x, P0.y);
 			CRenderer::DrawCircle(P0, { 0.0f, 0.0f, 0.0f }, Size , Color);
 		};
@@ -128,7 +128,7 @@ namespace platformer2d {
 				const float MaxY = std::max(std::max(V0.y, V1.y), std::max(V2.y, V3.y));
 				const glm::vec2 Pos  = { (MinX + MaxX) * 0.50f, (MinY + MaxY) * 0.50f };
 				const glm::vec2 Size = { (MaxX - MinX), (MaxY - MinY) };
-				//CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
+				CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
 			}
 		};
 
