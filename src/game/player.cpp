@@ -79,8 +79,6 @@ namespace platformer2d {
 	{
 		static constexpr int MAX_CONTACTS = 4;
 		const b2BodyId BodyID = Body->GetID();
-		//int Capacity = b2Body_GetContactCapacity(BodyID);
-		//Capacity = b2MinInt(Capacity, 4);
 		const int Capacity = std::min(b2Body_GetContactCapacity(BodyID), MAX_CONTACTS);
 
 		bool bCanJump = false;

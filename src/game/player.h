@@ -53,8 +53,8 @@ namespace platformer2d {
 		float MovementSpeed = 3.20f * MovementSpeedFactor;
 		static inline float MovementSpeedFactor = 0.000010f;
 
-		float JumpImpulse = 0.32f;
-		float DirForce = 0.50f;
+		float JumpImpulse = 0.92f;
+		float DirForce = 1.460f;
 	};
 
 }
