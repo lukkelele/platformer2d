@@ -8,10 +8,49 @@
 
 namespace platformer2d {
 
+	enum EMotionLock
+	{
+		EMotionLock_None = 0,
+		EMotionLock_X    = LK_BIT(1),
+		EMotionLock_Y    = LK_BIT(2),
+		EMotionLock_Z    = LK_BIT(3),
+		EMotionLock_All  = (EMotionLock_X | EMotionLock_Y | EMotionLock_Z)
+	};
+
+	enum EBodyFlag
+	{
+		EBodyFlag_None = 0,
+		EBodyFlag_PreSolveEvents = LK_BIT(1),
+		EBodyFlag_ContactEvents  = LK_BIT(2),
+		EBodyFlag_SensorEvents   = LK_BIT(3),
+		EBodyFlag_IsBullet       = LK_BIT(4),
+	};
+
+	struct FBodySpecification
+	{
+		EBodyType Type = EBodyType::Static;
+		TShape Shape{};
+
+		glm::vec2 Position = { 0.0f, 0.0f };
+		float Friction = 0.60f;
+		float Density = 1.0f;
+		glm::vec2 LinearVelocity = { 0.0f, 0.0f };
+		float AngularVelocity = 0.0f;
+		float GravityScale = 1.0f;
+		float LinearDamping = 0.0f;
+		float AngularDamping = 0.0f;
+		bool bSensor = false;
+		EBodyFlag Flags = EBodyFlag_None;
+		EMotionLock MotionLock = EMotionLock_None;
+
+		void* UserData = nullptr;
+	};
+
 	class CBody
 	{
 	public:
-		CBody(const FActorSpecification& Spec);
+		CBody(const FBodySpecification& Spec);
+		[[deprecated("Replaced by FBodySpecification")]] CBody(const FActorSpecification& ActorSpec);
 		~CBody() = default;
 
 		void Tick(float InDeltaTime);

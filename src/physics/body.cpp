@@ -1,22 +1,81 @@
 #include "body.h"
 
+#include "core/math/math.h"
 #include "physicsworld.h"
 
 namespace platformer2d {
 
-	CBody::CBody(const FActorSpecification& Spec)
+	CBody::CBody(const FBodySpecification& Spec)
 	{
-		ID = CPhysicsWorld::CreateBody(Spec.BodyDef);
-		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(Spec.BodyDef.type));
-		const b2BodyDef& BodyDef = Spec.BodyDef;
-		const b2ShapeDef& ShapeDef = Spec.ShapeDef;
+		b2BodyDef BodyDef = b2DefaultBodyDef();
+		switch (Spec.Type)
+		{
+			case EBodyType::Static:
+				BodyDef.type = b2_staticBody;
+				break;
+			case EBodyType::Dynamic:
+				BodyDef.type = b2_dynamicBody;
+				break;
+			case EBodyType::Kinematic:
+				BodyDef.type = b2_kinematicBody;
+				break;
+			default:
+				LK_VERIFY(false);
+		}
+
+		//BodyDef.position = { Spec.Position.x, Spec.Position.y };
+		LK_WARN("BEFORE POS: {}", Spec.Position);
+		BodyDef.position = Math::Convert(Spec.Position);
+		LK_ERROR("POS: {}", BodyDef.position);
+		BodyDef.gravityScale = Spec.GravityScale;
+		BodyDef.angularDamping = Spec.AngularDamping;
+		BodyDef.linearDamping = Spec.LinearDamping;
+
+		if (Spec.MotionLock != EMotionLock_None)
+		{
+			if (Spec.MotionLock & EMotionLock_X)
+			{
+				BodyDef.motionLocks.linearX = true;
+				LK_DEBUG_TAG("Body", "Motion lock: X");
+			}
+			if (Spec.MotionLock & EMotionLock_Y)
+			{
+				BodyDef.motionLocks.linearY = true;
+				LK_DEBUG_TAG("Body", "Motion lock: Y");
+			}
+			if (Spec.MotionLock & EMotionLock_Z)
+			{
+				BodyDef.motionLocks.angularZ = true;
+				LK_DEBUG_TAG("Body", "Motion lock: Z");
+			}
+		}
+
+		b2ShapeDef ShapeDef = b2DefaultShapeDef();
+		if (Spec.Flags & EBodyFlag_PreSolveEvents)
+		{
+			ShapeDef.enablePreSolveEvents = true;
+		}
+		if (Spec.Flags & EBodyFlag_ContactEvents)
+		{
+			ShapeDef.enableContactEvents = true;
+		}
+		if (Spec.Flags & EBodyFlag_SensorEvents)
+		{
+			ShapeDef.enableSensorEvents = true;
+		}
+
+		ShapeDef.material.friction = Spec.Friction;
+		ShapeDef.isSensor = Spec.bSensor;
+
+		ID = CPhysicsWorld::CreateBody(BodyDef);
+		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(BodyDef.type));
 
 		if (std::holds_alternative<FPolygon>(Spec.Shape))
 		{
 			ShapeType = EShape::Polygon;
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
-			ShapeID = b2CreatePolygonShape(ID, &Spec.ShapeDef, &Polygon);
+			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
 		}
 		else if (std::holds_alternative<FLine>(Spec.Shape))
 		{
@@ -27,12 +86,45 @@ namespace platformer2d {
 		{
 			ShapeType = EShape::Capsule;
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
+			const b2Capsule Capsule = {
+				{ ShapeRef.P0.x, ShapeRef.P0.y },
+				{ ShapeRef.P1.x, ShapeRef.P1.y },
+				ShapeRef.Radius
+			};
+			ShapeID = b2CreateCapsuleShape(ID, &ShapeDef, &Capsule);
+		}
+
+		SetMass(1.0f);
+	}
+
+	CBody::CBody(const FActorSpecification& ActorSpec)
+	{
+		ID = CPhysicsWorld::CreateBody(ActorSpec.BodyDef);
+		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(ActorSpec.BodyDef.type));
+		const b2ShapeDef& ShapeDef = ActorSpec.ShapeDef;
+
+		if (std::holds_alternative<FPolygon>(ActorSpec.Shape))
+		{
+			ShapeType = EShape::Polygon;
+			const FPolygon& ShapeRef = std::get<FPolygon>(ActorSpec.Shape);
+			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
+			ShapeID = b2CreatePolygonShape(ID, &ActorSpec.ShapeDef, &Polygon);
+		}
+		else if (std::holds_alternative<FLine>(ActorSpec.Shape))
+		{
+			ShapeType = EShape::Line;
+			LK_ASSERT(false);
+		}
+		else if (std::holds_alternative<FCapsule>(ActorSpec.Shape))
+		{
+			ShapeType = EShape::Capsule;
+			const FCapsule& ShapeRef = std::get<FCapsule>(ActorSpec.Shape);
 			const b2Capsule Capsule = { 
 				{ ShapeRef.P0.x, ShapeRef.P0.y }, 
 				{ ShapeRef.P1.x, ShapeRef.P1.y }, 
 				ShapeRef.Radius 
 			};
-			ShapeID = b2CreateCapsuleShape(ID, &Spec.ShapeDef, &Capsule);
+			ShapeID = b2CreateCapsuleShape(ID, &ActorSpec.ShapeDef, &Capsule);
 		}
 
 		SetMass(1.0f);
