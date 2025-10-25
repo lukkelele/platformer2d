@@ -23,10 +23,7 @@ namespace platformer2d {
 				LK_VERIFY(false);
 		}
 
-		//BodyDef.position = { Spec.Position.x, Spec.Position.y };
-		LK_WARN("BEFORE POS: {}", Spec.Position);
 		BodyDef.position = Math::Convert(Spec.Position);
-		LK_ERROR("POS: {}", BodyDef.position);
 		BodyDef.gravityScale = Spec.GravityScale;
 		BodyDef.angularDamping = Spec.AngularDamping;
 		BodyDef.linearDamping = Spec.LinearDamping;
@@ -36,17 +33,17 @@ namespace platformer2d {
 			if (Spec.MotionLock & EMotionLock_X)
 			{
 				BodyDef.motionLocks.linearX = true;
-				LK_DEBUG_TAG("Body", "Motion lock: X");
+				LK_TRACE_TAG("Body", "Motion lock: X");
 			}
 			if (Spec.MotionLock & EMotionLock_Y)
 			{
 				BodyDef.motionLocks.linearY = true;
-				LK_DEBUG_TAG("Body", "Motion lock: Y");
+				LK_TRACE_TAG("Body", "Motion lock: Y");
 			}
 			if (Spec.MotionLock & EMotionLock_Z)
 			{
 				BodyDef.motionLocks.angularZ = true;
-				LK_DEBUG_TAG("Body", "Motion lock: Z");
+				LK_TRACE_TAG("Body", "Motion lock: Z");
 			}
 		}
 
@@ -100,7 +97,6 @@ namespace platformer2d {
 	CBody::CBody(const FActorSpecification& ActorSpec)
 	{
 		ID = CPhysicsWorld::CreateBody(ActorSpec.BodyDef);
-		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(ActorSpec.BodyDef.type));
 		const b2ShapeDef& ShapeDef = ActorSpec.ShapeDef;
 
 		if (std::holds_alternative<FPolygon>(ActorSpec.Shape))
