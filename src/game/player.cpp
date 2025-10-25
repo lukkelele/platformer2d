@@ -7,8 +7,13 @@
 
 namespace platformer2d {
 
-	CPlayer::CPlayer(const FActorSpecification& Specification)
-		: CActor(Specification)
+	CPlayer::CPlayer(const FActorSpecification& Spec)
+		: CActor(Spec)
+	{
+	}
+
+	CPlayer::CPlayer(const FBodySpecification& BodySpec)
+		: CActor(BodySpec)
 	{
 	}
 
