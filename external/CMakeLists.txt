@@ -65,3 +65,10 @@ set(BOX2D_SAMPLES OFF)
 set(BOX2D_VALIDATE ON)
 set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory(box2d)
+
+##############################
+# Library: msdf-atlas-gen
+##############################
+#set(MSDFGEN_DISABLE_PNG ON) # TODO: libpng be added as dependency (?)
+# TODO: Need to fix freetype dependency. Do not want to use vcpkg toolchain :)
+#add_subdirectory(msdf-atlas-gen)
