@@ -53,6 +53,7 @@ if (MSVC)
 		/wd4307
 		/wd26451
 		/wd26813  # 'Use bitwise and'
+		/e0253    # Incorrect warning 'Expected a ;' for [[deprecated]]
 	)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	project_add_compile_definitions(LK_COMPILER_GCC)
