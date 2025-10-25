@@ -25,6 +25,7 @@
 #define PLATFORM_ENABLED 1
 #define GROUND_PLANE_ENABLED 1
 #define GROUND_PLANE_SEGMENT 0
+#define PLAYER_ACTORSPECIFICATION 0
 
 namespace platformer2d::test {
 
@@ -85,8 +86,13 @@ namespace platformer2d::test {
 		/*********************************
 		 * Player
 		 *********************************/
+		FCapsule PlayerCapsule;
+		PlayerCapsule.P0 = { 0.0f, 0.0f };
+		PlayerCapsule.P1 = { 0.0f, 0.20f };
+		PlayerCapsule.Radius = 0.10f;
+
+#if PLAYER_ACTORSPECIFICATION
 		FActorSpecification PlayerSpec;
-		PlayerSpec.Name = "Player";
 
 		b2BodyDef PlayerDef = b2DefaultBodyDef();
 		PlayerDef.position = { 0.0f, 1.0f };
@@ -95,16 +101,22 @@ namespace platformer2d::test {
 		PlayerDef.linearDamping = 0.50f;
 		PlayerSpec.BodyDef = PlayerDef;
 
-		//PlayerSpec.ShapeDef.enablePreSolveEvents = true;
 		PlayerSpec.ShapeDef.material.friction = 0.10f;
 		PlayerSpec.ShapeDef.density = 0.60f;
-		FCapsule PlayerCapsule;
-		PlayerCapsule.P0 = { 0.0f, 0.0f };
-		PlayerCapsule.P1 = { 0.0f, 0.20f };
-		PlayerCapsule.Radius = 0.10f;
 		PlayerSpec.Shape.emplace<FCapsule>(PlayerCapsule);
-
 		CPlayer Player(PlayerSpec);
+#else
+		FBodySpecification BodySpec;
+		BodySpec.Type = EBodyType::Dynamic;
+		BodySpec.Position = { 0.0f, 1.0f };
+		BodySpec.Friction = 0.10f;
+		BodySpec.Density = 0.60f;
+		BodySpec.LinearDamping = 0.50f;
+		BodySpec.MotionLock = EMotionLock_Z;
+		BodySpec.Shape.emplace<FCapsule>(PlayerCapsule);
+		CPlayer Player(BodySpec);
+#endif
+
 		const FPlayerData& PlayerData = Player.GetData();
 		FTransformComponent& PlayerTC = Player.GetTransformComponent();
 		glm::vec3& PlayerPos = PlayerTC.Translation;
@@ -126,7 +138,6 @@ namespace platformer2d::test {
 
 #if PLATFORM_ENABLED
 		FActorSpecification PlatformSpec;
-		PlatformSpec.Name = "Platform";
 		PlatformSpec.BodyDef.position = { 0.0f, -0.80 };
 		PlatformSpec.BodyDef.type = b2_staticBody;
 		PlatformSpec.ShapeDef.enablePreSolveEvents = true;
@@ -223,7 +234,9 @@ namespace platformer2d::test {
 				CDebugRenderer::DrawCapsule(PlayerCapsule.P0, PlayerCapsule.P1, PlayerCapsule.Radius, FColor::Green);
 			}
 
+			ImGui::SameLine(0, 40.0f);
 			float CameraZoom = Camera->GetZoom();
+			ImGui::SetNextItemWidth(300.0f);
 			ImGui::SliderFloat("Camera Zoom", &CameraZoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
 			if (ImGui::IsItemActive())
 			{
