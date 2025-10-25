@@ -2,11 +2,11 @@
 #version 450 core
 layout(location = 0) in vec2 pos;
 
-uniform mat4 u_proj;
+uniform mat4 u_viewproj;
 
 void main()
 {
-    gl_Position = u_proj * vec4(pos.xy, 0.0, 1.0);
+    gl_Position = u_viewproj * vec4(pos.xy, 0.0, 1.0);
 }
 
 

@@ -10,8 +10,6 @@ layout(std140, binding = 0) uniform ub_camera
 	mat4 u_viewproj;
 };
 
-uniform mat4 u_transform;
-
 struct vertex_output
 {
 	vec2 localpos;
@@ -23,7 +21,7 @@ layout(location = 0) out vertex_output v_output;
 
 void main()
 {
-    gl_Position = u_transform * vec4(worldpos.xyz, 1.0);
+    gl_Position = u_viewproj * vec4(worldpos.xyz, 1.0);
 
 	v_output.localpos = localpos;
 	v_output.thickness = thickness;
