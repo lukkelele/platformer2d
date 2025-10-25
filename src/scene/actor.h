@@ -12,6 +12,7 @@ namespace platformer2d {
 	{
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
+		CActor(const FBodySpecification& BodySpec);
 		virtual ~CActor() = default;
 
 		virtual void Tick(float DeltaTime);
@@ -25,7 +26,6 @@ namespace platformer2d {
 		inline const CBody& GetBody() const { return *Body; }
 
 	protected:
-		std::string Name;
 		FTransformComponent TransformComp{};
 		std::unique_ptr<CBody> Body;
 	};

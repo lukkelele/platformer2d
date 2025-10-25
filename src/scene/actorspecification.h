@@ -41,13 +41,12 @@ namespace platformer2d {
 
 	struct FActorSpecification
 	{
-		std::string Name = "Unnamed";
 		b2BodyDef BodyDef;
 		b2ShapeDef ShapeDef;
 
 		TShape Shape{};
 
-		FActorSpecification()
+		[[deprecated]] FActorSpecification()
 		{
 			BodyDef = b2DefaultBodyDef();
 			ShapeDef = b2DefaultShapeDef();

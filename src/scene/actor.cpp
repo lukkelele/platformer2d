@@ -5,11 +5,16 @@
 namespace platformer2d {
 
 	CActor::CActor(const FActorSpecification& Spec)
-		: Name(Spec.Name)
 	{
-		LK_DEBUG_TAG("Actor", "Create: {}", Name);
-
 		Body = std::make_unique<CBody>(Spec);
+		const glm::vec2 BodyPos = Body->GetPosition();
+		TransformComp.Translation.x = BodyPos.x;
+		TransformComp.Translation.y = BodyPos.y;
+	}
+
+	CActor::CActor(const FBodySpecification& BodySpec)
+	{
+		Body = std::make_unique<CBody>(BodySpec);
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
 		TransformComp.Translation.y = BodyPos.y;
