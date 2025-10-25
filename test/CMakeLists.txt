@@ -2,7 +2,12 @@
 # Tests.
 ######################################################################
 message(STATUS "LK_BUILD_TESTS: ${LK_BUILD_TESTS}")
+if (NOT LK_BUILD_TESTS)
+	return()
+endif()
+
 set(TESTS_ENABLED ${LK_BUILD_TESTS})
+project_add_compile_definitions(LK_ENABLE_ASSERT LK_ENABLE_VERIFY)
 
 # Declare a test option and append it to TEST_OPTIONS.
 # Options are assigned OFF by default.
@@ -127,9 +132,3 @@ endfunction()
 message(STATUS "========================================================")
 add_tests_recursive("${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "========================================================")
-
-if (TESTS_ENABLED)
-	# Always enable LK_ASSERT and LK_VERIFY for tests.
-    message(STATUS "Enabling assert and verify")
-	project_add_compile_definitions(LK_ENABLE_ASSERT LK_ENABLE_VERIFY)
-endif()
