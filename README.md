@@ -3,6 +3,11 @@
 A 2D game written in C++.
 
 ## Setup
+Clone the repo and setup all submodules.  
+```
+git clone --recursive https://github.com/lukkelele/platformer2d
+```
+Make sure to run `git submodule update --init --recursive` if the repo is cloned **without** the `--recursive` flag.
 
 ### Dependencies
 The game is dependent on several external libraries.  
@@ -48,4 +53,14 @@ Depends on vcpkg.
 ```
 cd external/msdf-atlas-gen
 cmake -S . -B build -DCMAKE_BUILD_TYPE=release
+```
+
+#### freetype
+Install with vcpkg or download from https://freetype.org/download.html  
+```
+# Linux
+vcpkg install freetype
+
+# Windows
+vcpkg.exe install freetype:x64-windows
 ```
