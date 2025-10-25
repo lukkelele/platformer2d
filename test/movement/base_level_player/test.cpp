@@ -104,9 +104,8 @@ namespace platformer2d::test {
 		/*********************************
 		 * Player
 		 *********************************/
-		const FActorSpecification PlayerSpec = {
-			.Name = "Player",
-		};
+		FActorSpecification PlayerSpec;
+		PlayerSpec.Name = "Player";
 		/* @fixme */
 		CPlayer Player(PlayerSpec);
 		Player.SetPosition(-0.280f, -0.410f);

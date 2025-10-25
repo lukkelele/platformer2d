@@ -38,10 +38,19 @@ namespace platformer2d::test {
 		bool bBlendFunc = false;
 		bool bShowDrawStats = false;
 		b2ShapeId PlayerShapeID;
+
+		bool bRendererDrawLine = false;
+		bool bRendererDrawCircle = false;
+		bool bRendererDrawCapsule = false;
+
+		std::shared_ptr<CCamera> Camera = nullptr;
+		constexpr float FAR_PLANE  =  1.0f;
+		constexpr float NEAR_PLANE = -1.0f;
 	}
 
 	void UI_MenuBar();
 	void UI_ExternalWindows();
+	void UI_CircleDrawMenu(const CPlayer& Player);
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal);
 	static bool PreSolveStatic(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
@@ -71,6 +80,8 @@ namespace platformer2d::test {
 		const FWindowData& WindowData = Window.GetData();
 		CTimer Timer;
 
+		Camera = std::make_shared<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT, NEAR_PLANE, FAR_PLANE);
+
 		/*********************************
 		 * Player
 		 *********************************/
@@ -84,7 +95,7 @@ namespace platformer2d::test {
 		PlayerDef.linearDamping = 0.50f;
 		PlayerSpec.BodyDef = PlayerDef;
 
-		PlayerSpec.ShapeDef.enablePreSolveEvents = true;
+		//PlayerSpec.ShapeDef.enablePreSolveEvents = true;
 		PlayerSpec.ShapeDef.material.friction = 0.10f;
 		PlayerSpec.ShapeDef.density = 0.60f;
 		FCapsule PlayerCapsule;
@@ -105,12 +116,12 @@ namespace platformer2d::test {
 		Player.SetMovementSpeed(MovementSpeed);
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
 		{
-			LK_WARN("Player {} jumped", PlayerData.ID);
+			LK_TRACE("Player {} jumped", PlayerData.ID);
 		});
 
 		Player.OnLanded.Add([](const FPlayerData& PlayerData)
 		{
-			LK_INFO("Player {} landed", PlayerData.ID);
+			LK_TRACE("Player {} landed", PlayerData.ID);
 		});
 
 #if PLATFORM_ENABLED
@@ -192,17 +203,32 @@ namespace platformer2d::test {
 			CKeyboard::Update();
 			CRenderer::BeginFrame();
 
+			Camera->SetViewportSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+			CRenderer::BeginScene(*Camera);
+
 			UI_MenuBar();
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
 			ImGui::Text("Delta Time: %.3f", DeltaTime);
 
-			static bool bRendererDrawLine = false;
 			ImGui::Checkbox("Draw Line", &bRendererDrawLine);
 
 			ImGui::SameLine(0, 20.0f);
-			static bool bRendererDrawCircle = false;
 			ImGui::Checkbox("Draw Circle", &bRendererDrawCircle);
+
+			ImGui::SameLine(0, 20.0f);
+			ImGui::Checkbox("Draw Capsule", &bRendererDrawCapsule);
+			if (bRendererDrawCapsule)
+			{
+				CDebugRenderer::DrawCapsule(PlayerCapsule.P0, PlayerCapsule.P1, PlayerCapsule.Radius, FColor::Green);
+			}
+
+			float CameraZoom = Camera->GetZoom();
+			ImGui::SliderFloat("Camera Zoom", &CameraZoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
+			if (ImGui::IsItemActive())
+			{
+				Camera->SetZoom(CameraZoom);
+			}
 
 #if GROUND_PLANE_ENABLED
 #if GROUND_PLANE_SEGMENT
@@ -282,8 +308,8 @@ namespace platformer2d::test {
 			}
 			ImGui::PopItemWidth();
 			const glm::vec2 PlayerBodyPos = PlayerBody.GetPosition();
-			ImGui::Text("Body Pos: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 			const glm::vec2 PlayerLinearVelocity = PlayerBody.GetLinearVelocity();
+			ImGui::Text("Body Pos: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 			ImGui::Text("Body Linear Velocity: (%.2f, %.2f)", PlayerLinearVelocity.x, PlayerLinearVelocity.y);
 
 			ImGui::PushItemWidth(200.0f);
@@ -304,7 +330,6 @@ namespace platformer2d::test {
 			ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
 			ImGui::SameLine();
 			if (ImGui::Button("Apply##Scale")) PlayerBody.SetScale(BodyScale);
-
 			ImGui::PopItemWidth();
 			ImGui::PopID();
 			/* -- ~Player -- */
@@ -312,40 +337,31 @@ namespace platformer2d::test {
 			ImGui::TableSetColumnIndex(1);
 
 #if PLATFORM_ENABLED
-			/* -- Platform -- */
 			Platform.Tick(DeltaTime);
 			static glm::vec4 PlatformFragColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 			glm::mat4 PlatformTransform = PlatformTC.GetTransform();
 			CRenderer::DrawQuad(Platform.GetPosition(), PlatformTC.Scale, *PlatformTexture, PlatformFragColor);
 #endif
 
-			/****************************
-			 * Draw player
-			 ****************************/
+			/* Draw player */
 			glm::mat4 PlayerTransform = PlayerTC.GetTransform();
 			static glm::vec2 PlayerSize = { 0.20f, 0.20f };
 			CRenderer::DrawQuad(Player.GetPosition(), PlayerSize, *PlayerTexture, FragColor);
 
 			ImGui::EndTable();
 
-			static float Radius = 0.15f;
-			static float FillRadius = 0.15f;
-			static float FillThickness = 1.0f;
-			static glm::vec4 CircleColor = { 0.25f, 0.90f, 0.10f, 0.60f };
 			ImGui::PushItemWidth(240.0f);
-			ImGui::SliderFloat("Circle Radius", &Radius, 0.001f, 1.0f);
-			ImGui::SliderFloat("Circle Fill Radius", &FillRadius, 0.01f, 1.50f);
-			ImGui::SliderFloat("Circle Fill Thickness", &FillThickness, 0.001f, 1.0f);
-			ImGui::SliderFloat4("Circle Color", &CircleColor.x, 0.0f, 1.0f, "%.3f");
-			ImGui::PopItemWidth();
-			if (bRendererDrawCircle)
+			static float CameraProj = 1.0f;
+			ImGui::SliderFloat("Camera Projection", &CameraProj, 0.10f, 1.0f);
+			if (ImGui::IsItemActive())
 			{
-				glm::vec3 Rot = glm::vec3(0.0f);
-				CRenderer::DrawCircle(Player.GetPosition(), Rot, Radius, { 0.30f, 1.0f, 0.50f, 1.0f });
-				CRenderer::DrawCircleFilled(Player.GetPosition(), FillRadius, CircleColor, FillThickness);
+				const glm::mat4 ViewProj(CameraProj);
+				CRenderer::SetCameraViewProjection(ViewProj);
 			}
+			ImGui::PopItemWidth();
 
 			UI_ExternalWindows();
+			UI_CircleDrawMenu(Player);
 
 			CRenderer::Flush();
 			CRenderer::EndFrame();
@@ -420,6 +436,26 @@ namespace platformer2d::test {
 		{
 			CTest::UI_BlendFunction();
 			ImGui::End();
+		}
+	}
+
+	void UI_CircleDrawMenu(const CPlayer& Player)
+	{
+		ImGui::PushItemWidth(260.0f);
+		static float Radius = 0.15f;
+		static float FillRadius = 0.15f;
+		static float FillThickness = 1.0f;
+		static glm::vec4 CircleColor = { 0.25f, 0.90f, 0.10f, 0.60f };
+		ImGui::SliderFloat("Circle Radius", &Radius, 0.001f, 1.0f);
+		ImGui::SliderFloat("Circle Fill Radius", &FillRadius, 0.01f, 1.50f);
+		ImGui::SliderFloat("Circle Fill Thickness", &FillThickness, 0.001f, 1.0f);
+		ImGui::SliderFloat4("Circle Color", &CircleColor.x, 0.0f, 1.0f, "%.3f");
+		ImGui::PopItemWidth();
+		if (bRendererDrawCircle)
+		{
+			glm::vec3 Rot = glm::vec3(0.0f);
+			CRenderer::DrawCircle(Player.GetPosition(), Rot, Radius, { 0.30f, 1.0f, 0.50f, 1.0f });
+			CRenderer::DrawCircleFilled(Player.GetPosition(), FillRadius, CircleColor, FillThickness);
 		}
 	}
 
