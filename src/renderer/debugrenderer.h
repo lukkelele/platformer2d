@@ -24,6 +24,11 @@ namespace platformer2d {
 		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
 		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
 
+		static void DrawCapsule(const glm::vec2& P0, const glm::vec2& P1, float Radius, const glm::vec4& Color);
+		static void DrawCapsule(const glm::vec3& P0, const glm::vec3& P1, float Radius, const glm::vec4& Color);
+
+	public:
+		static inline glm::mat4 ViewProjection = glm::mat4(1.0f);
 	private:
 		CDebugRenderer& operator=(const CDebugRenderer&) = delete;
 		CDebugRenderer& operator=(CDebugRenderer&&) = delete;
@@ -40,6 +45,10 @@ namespace platformer2d {
 		struct FLineConfig {
 			uint16_t Width = 2;
 		} static inline LineConfig;
+
+		static inline GLuint CircleVAO = 0;
+		static inline GLuint CircleVBO = 0;
+		static inline std::shared_ptr<CShader> CircleShader = nullptr;
 	};
 
 }

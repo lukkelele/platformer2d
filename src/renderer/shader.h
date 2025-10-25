@@ -34,6 +34,8 @@ namespace platformer2d {
 	class CShader
 	{
 	public:
+		enum EType { Quad, Line, Circle };
+	public:
 		CShader(const std::filesystem::path& ShaderPath);
 		CShader(const std::filesystem::path& VertexShaderPath, const std::filesystem::path& FragShaderPath);
 		CShader() = delete;

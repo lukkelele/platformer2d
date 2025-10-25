@@ -8,6 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "core/math/math.h"
 #include "renderer.h"
 #include "physics/physicsworld.h"
 
@@ -49,7 +50,7 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(QuadIndices), QuadIndices, GL_STATIC_DRAW));
 
 			QuadShader = std::make_shared<CShader>(SHADERS_DIR "/debug_quad.shader");
-			QuadShader->Set("u_proj", glm::mat4(1.0f));
+			QuadShader->Set("u_viewproj", ViewProjection);
 			QuadShader->Set("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		}
 
@@ -65,22 +66,31 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glEnableVertexAttribArray(0));
 
 			LineShader = std::make_shared<CShader>(SHADERS_DIR "/debug_line.shader");
-			LineShader->Set("u_transform", glm::mat4(1.0f));
-			QuadShader->Set("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+			LineShader->Set("u_viewproj", ViewProjection);
+			LineShader->Set("u_color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		}
 
 		/* Circle */
 		{
-#if 0
 			LK_OpenGL_Verify(glGenVertexArrays(1, &CircleVAO));
 			LK_OpenGL_Verify(glGenBuffers(1, &CircleVBO));
 			LK_OpenGL_Verify(glBindVertexArray(CircleVAO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, CircleVBO));
 
-			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * CircleVertices.size(), &CircleVertices[0], GL_STATIC_DRAW));
-			LK_OpenGL_Verify(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr));
+			//LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW));
+			//LK_OpenGL_Verify(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr));
+			//LK_OpenGL_Verify(glEnableVertexAttribArray(0));
+
+			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW));
+			LK_OpenGL_Verify(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr));
 			LK_OpenGL_Verify(glEnableVertexAttribArray(0));
-#endif
+			LK_OpenGL_Verify(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr));
+			LK_OpenGL_Verify(glEnableVertexAttribArray(1));
+
+			CircleShader = std::make_shared<CShader>(SHADERS_DIR "/debug_circle.shader");
+			CircleShader->Set("u_viewproj", ViewProjection);
+			CircleShader->Set("u_color", FColor::White);
+			CircleShader->Set("u_thickness", 2.0f);
 		}
 
 		b2DebugDraw DebugDraw{};
@@ -189,6 +199,7 @@ namespace platformer2d {
 		}
 
 		QuadShader->Bind();
+		QuadShader->Set("u_viewproj", ViewProjection);
 		QuadShader->Set("u_color", Color);
 		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
 		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices));
@@ -207,7 +218,7 @@ namespace platformer2d {
 
 	void CDebugRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, const uint16_t LineWidth)
 	{
-		LineShader->Set("u_transform", glm::mat4(1.0f));
+		LineShader->Set("u_viewproj", ViewProjection);
 		LineShader->Set("u_color", Color);
 
 		const float Vertices[2][2] = { { P0.x, P0.y }, { P1.x, P1.y } };
@@ -217,6 +228,52 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glBindVertexArray(LineVAO));
 		LK_OpenGL_Verify(glLineWidth(LineWidth));
 		LK_OpenGL_Verify(glDrawArrays(GL_LINES, 0, 2));
+	}
+
+	void CDebugRenderer::DrawCapsule(const glm::vec2& P0, const glm::vec2& P1, const float Radius, const glm::vec4& Color)
+	{
+		DrawCapsule({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, Radius, Color);
+	}
+
+	void CDebugRenderer::DrawCapsule(const glm::vec3& P0, const glm::vec3& P1, const float Radius, const glm::vec4& Color)
+	{
+		const glm::vec2 Axis = P1 - P0;
+		const float Length = glm::length(Axis);
+		if (Length < 1e-6f)
+		{
+			LK_WARN("Length < 1e-6");
+			return;
+		}
+
+		const glm::vec2 A = Axis / Length;
+		const glm::vec2 N = glm::normalize(Math::Perp(A));
+		const glm::vec2 OffsetVec2 = N * Radius;
+		const glm::vec4 Offset = { OffsetVec2.x, OffsetVec2.y, 0.0f, 0.0f };
+
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
+			* glm::scale(glm::mat4(1.0f), { Radius * 2.0f, Radius * 2.0f, 1.0f });
+
+		//const glm::vec2 V0 = P0 + Offset;
+		//const glm::vec2 V1 = P1 + Offset;
+		//const glm::vec2 V2 = P1 - Offset;
+		//const glm::vec2 V3 = P0 - Offset;
+		const glm::vec2 V0 = Transform * (glm::vec4(P0.x, P0.y, P0.z, 0.0f) + Offset);
+		const glm::vec2 V1 = Transform * (glm::vec4(P1.x, P1.y, P1.z, 0.0f) + Offset);
+		const glm::vec2 V2 = Transform * (glm::vec4(P1.x, P1.y, P1.z, 0.0f) - Offset);
+		const glm::vec2 V3 = Transform * (glm::vec4(P0.x, P0.y, P0.z, 0.0f) - Offset);
+
+		const glm::vec2 Quad[4] = { V0, V1, V2, V3 };
+
+		LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
+		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
+		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Quad), Quad));
+
+		QuadShader->Bind();
+		QuadShader->Set("u_color", Color);
+		QuadShader->Set("u_viewproj", glm::mat4(1.0f));
+		LK_OpenGL_Verify(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, QuadEBO));
+		LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+		QuadShader->Unbind();
 	}
 
 	std::vector<glm::vec3> GenerateCircleVertices(const float Radius, const std::size_t Count)

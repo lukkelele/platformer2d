@@ -1,7 +1,7 @@
 #include "camera.h"
 
-#include <glm/ext/matrix_common.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
+
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -12,44 +12,46 @@ namespace platformer2d {
 
 	CCamera::CCamera(const float InWidth, const float InHeight, 
 					 const float InNearP, const float InFarP)
+		: OrthographicNear(InNearP)
+		, OrthographicFar(InFarP)
+		, AspectRatio(InWidth/InHeight)
 	{
-		ProjectionMatrix = glm::ortho(
-			-(InWidth * 0.50f), (InWidth * 0.50f),
-			-(InHeight * 0.50f), (InHeight * 0.50f),
-			InNearP, 
-			InFarP
-		);
+		//ProjectionMatrix = glm::ortho(
+		//	-(InWidth * 0.50f), (InWidth * 0.50f),
+		//	-(InHeight * 0.50f), (InHeight * 0.50f),
+		//	InNearP, 
+		//	InFarP
+		//);
+
+		UpdateView();
+		UpdateProjection();
 	}
 
-	glm::quat CCamera::GetOrientation() const
+	void CCamera::Update()
 	{
-		return glm::quat(glm::vec3(-Pitch - PitchDelta, -Yaw - YawDelta, 0.0f));
+		UpdateView();
 	}
 
-	glm::vec3 CCamera::GetUpDirection() const
+	void CCamera::SetViewportSize(const uint16_t InWidth, const uint16_t InHeight)
 	{
-		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 1.0f, 0.0f));
+		ViewportWidth = static_cast<float>(InWidth);
+		ViewportHeight = static_cast<float>(InHeight);
+
+		UpdateProjection();
 	}
 
-	glm::vec3 CCamera::GetRightDirection() const
+	void CCamera::SetOrthographic(const float InWidth, const float InHeight, const float InNearClip, const float InFarClip)
 	{
-		return glm::rotate(GetOrientation(), glm::vec3(1.0f, 0.0f, 0.0f));
+		ViewportWidth = InWidth;
+		ViewportHeight = InHeight;
+		OrthographicNear = InNearClip;
+		OrthographicFar = InFarClip;
 	}
 
-	glm::vec3 CCamera::GetForwardDirection() const
+	void CCamera::SetZoom(const float InZoom)
 	{
-		return glm::vec3(glm::rotate(GetOrientation(), glm::vec3(0.0f, 0.0f, -1.0f)));
-	}
-
-	void CCamera::SetOrthoProjection(const float InWidth, const float InHeight, 
-									 const float InNearP, const float InFarP)
-	{
-		ProjectionMatrix = glm::ortho(
-			-(InWidth * 0.50f), (InWidth * 0.50f),
-			-(InHeight * 0.50f), (InHeight * 0.50f),
-			InNearP, 
-			InFarP
-		);
+		Zoom = std::max(ZOOM_MIN, std::min(ZOOM_MAX, InZoom));
+		UpdateProjection();
 	}
 
 }

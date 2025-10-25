@@ -5,6 +5,7 @@
 #include "core/core.h"
 #include "backendinfo.h"
 #include "camera.h"
+#include "color.h"
 #include "imguilayer.h"
 #include "shader.h"
 #include "texture.h"
@@ -83,9 +84,19 @@ namespace platformer2d {
 		static const FDrawStatistics& GetDrawStatistics();
 		static void ResetDrawStatistics();
 
+		static void SetCameraViewProjection(const glm::mat4& ViewProj);
+
 		static const std::vector<std::shared_ptr<CTexture>> GetTextures();
+		static std::shared_ptr<CShader> GetShader(CShader::EType ShaderType);
+
+		static void SetDebugRender(bool Enabled);
 
 	private:
+		static void SetupQuadRenderer();
+		static void SetupLineRenderer();
+		static void SetupCircleRenderer();
+		static void LoadTextures();
+
 		CRenderer& operator=(const CRenderer&) = delete;
 		CRenderer& operator=(CRenderer&&) = delete;
 
@@ -132,6 +143,8 @@ namespace platformer2d {
 			glm::mat4 ViewProjection = glm::mat4(1.0f);
 		} static inline CameraData;
 		static inline std::unique_ptr<CUniformBuffer> CameraUniformBuffer = nullptr;
+
+		static inline bool bDebugRender = false;
 	};
 
 }

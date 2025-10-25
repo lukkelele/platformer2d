@@ -4,6 +4,7 @@ project_library_sources(
 	debugrenderer.cpp
 	camera.h
 	camera.cpp
+	color.h
 	imguilayer.h
 	imguilayer.cpp
 	opengl.h

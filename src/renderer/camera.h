@@ -1,6 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/ext/matrix_common.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "core/assert.h"
 #include "core/core.h"
@@ -14,36 +16,53 @@ namespace platformer2d {
 		CCamera() = delete;
 		virtual ~CCamera() = default;
 
+		void Update();
+		void SetViewportSize(uint16_t InWidth, uint16_t InHeight);
+
 		inline const glm::mat4& GetViewMatrix() const { return ViewMatrix; }
 		inline const glm::mat4& GetProjectionMatrix() const { return ProjectionMatrix; }
 		inline glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * ViewMatrix; }
 		inline float GetRotation() const { return glm::radians(Rotation); }
 		inline float GetRotationSpeed() const { return RotationSpeed; }
-		const glm::vec3& GetOrigin() const { return Origin; }
-		const glm::vec3& GetFocalPoint() const { return FocalPoint; }
-		const glm::vec3& GetDirection() const { return Direction; }
 
-		glm::quat GetOrientation() const;
-		glm::vec3 GetUpDirection() const;
-		glm::vec3 GetRightDirection() const;
-		glm::vec3 GetForwardDirection() const;
+		void SetOrthographic(float InWidth, float InHeight, float InNearClip = -1.0f, float InFarClip = 1.0f);
 
-		void SetOrthoProjection(float InWidth, float InHeight, float InNearP, float InFarP);
+		void SetZoom(float InZoom);
+		float GetZoom() const { return Zoom; }	
 
 	private:
-		glm::vec3 Origin = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Direction{};
-		glm::vec3 FocalPoint{};
-		glm::vec3 PositionDelta = { 0.0f, 0.0f, 0.0f };
+		FORCEINLINE void UpdateProjection()
+		{
+			const float HalfHeight = (OrthographicSize * Zoom) * 0.50f;
+			const float HalfWidth = HalfHeight * AspectRatio;
 
-		float Pitch = 0.0f;
-		float PitchDelta = 0.0f;
-		float Yaw = 0.0f;
-		float YawDelta = 0.0f;
+			ProjectionMatrix = glm::ortho(
+				-HalfWidth,  HalfWidth,
+				-HalfHeight, HalfHeight,
+				OrthographicNear, OrthographicFar
+			);
+		}
+
+		FORCEINLINE void UpdateView()
+		{
+			ViewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-Center.x, -Center.y, 0.0f));
+		}
+
+	public:
+		static inline constexpr float ZOOM_MIN = 0.010f;
+		static inline constexpr float ZOOM_MAX = 1.0f;
+	private:
+		glm::vec3 Center = { 0.0f, 0.0f, 0.0f };
+
+		float ViewportWidth;
+		float ViewportHeight;
 
 		float OrthographicSize = 10.0f;
 		float OrthographicNear = -1.0f;
 		float OrthographicFar = 1.0f;
+		float AspectRatio;
+
+		float Zoom = 0.25f;
 
 		float Rotation = 0.0f;
 		float RotationSpeed = 0.280f;
