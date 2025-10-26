@@ -38,6 +38,7 @@ namespace platformer2d {
 		inline float GetDirectionForce() const { return DirForce; }
 		void SetDirectionForce(float Force);
 
+		inline CCamera& GetCamera() { return *Camera; }
 		inline const CCamera& GetCamera() const { return *Camera; }
 
 	private:
