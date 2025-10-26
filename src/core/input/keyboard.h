@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 
+#include "core/delegate.h"
 #include "keycodes.h"
 
 struct GLFWwindow;
@@ -20,6 +21,8 @@ namespace platformer2d {
 
 	class CKeyboard
 	{
+	public:
+		LK_DECLARE_EVENT(FOnKeyPressed, CKeyboard, const FKeyData&);
 	public:
 		CKeyboard() = delete;
 		~CKeyboard() = default;
@@ -54,6 +57,8 @@ namespace platformer2d {
 		CKeyboard& operator=(const CKeyboard&) = delete;
 		CKeyboard& operator=(CKeyboard&&) = delete;
 
+	public:
+		static inline FOnKeyPressed OnKeyPressed;
 	private:
 		static inline std::map<EKey, FKeyData> KeyDataMap{};
 

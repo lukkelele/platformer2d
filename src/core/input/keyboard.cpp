@@ -5,12 +5,15 @@
 
 namespace platformer2d {
 	
-	static GLFWwindow* ActiveWindow = nullptr;
+	namespace
+	{
+		GLFWwindow* ActiveWindow = nullptr;
+	}
 
 	void CKeyboard::Initialize()
 	{
 		ActiveWindow = CWindow::Get()->GetGlfwWindow();
-		LK_ASSERT(ActiveWindow, "No active window");
+		LK_VERIFY(ActiveWindow);
 	}
 
 	void CKeyboard::Update()
@@ -101,6 +104,8 @@ namespace platformer2d {
 			/* Insert timestamp once on the initial held event. */
 			KeyHeldMap.insert({ Key, { steady_clock::now(), steady_clock::now() } });
 		}
+
+		OnKeyPressed.Broadcast(KeyData);
 
 		return KeyData;
 	}
