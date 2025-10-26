@@ -32,7 +32,7 @@ namespace platformer2d {
 		void* Data = nullptr;
 		if (stbi_is_hdr(Specification.Path.c_str()))
 		{
-			LK_DEBUG_TAG("Texture", "[{}] HDR texture", Path.filename());
+			LK_TRACE_TAG("Texture", "[{}] HDR texture", Path.filename());
 			Data = stbi_loadf(Specification.Path.c_str(), &ReadWidth, &ReadHeight, &ReadChannels, 4);
 		}
 		else
@@ -52,7 +52,7 @@ namespace platformer2d {
 		Channels = ReadChannels;
 		const uint64_t ImageSize = OpenGL::CalculateImageSize(Specification.Format, Width, Height);
 		LK_ASSERT(ImageSize <= UINT64_MAX, "ImageSize overflow");
-		LK_DEBUG("Image size: {} bytes (Channels: {})", ImageSize, Channels);
+		LK_TRACE_TAG("Texture", "[{}] Image size: {} bytes (Channels: {})", Specification.Path, ImageSize, Channels);
 		ImageBuffer = FBuffer(Data, ImageSize);
 
 		if (Data)
@@ -92,7 +92,7 @@ namespace platformer2d {
 			DebugName = std::format("{}", Path.filename());
 		}
 		Index = CreatedTextures++;
-		LK_DEBUG_TAG("Texture", "Index: {} ({})", Index, Path.filename());
+		LK_TRACE_TAG("Texture", "Index: {} ({})", Index, Path.filename());
 	}
 
 	CTexture::CTexture(const uint32_t InWidth, const uint32_t InHeight, void* InData)
@@ -136,7 +136,7 @@ namespace platformer2d {
 
 		DebugName = std::format("{}", Path.filename());
 		Index = CreatedTextures++;
-		LK_DEBUG_TAG("Texture", "Index: {}", Index);
+		LK_TRACE_TAG("Texture", "Index: {}", Index);
 	}
 
 	void CTexture::Bind(const uint32_t Slot) const
