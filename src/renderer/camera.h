@@ -6,6 +6,8 @@
 
 #include "core/assert.h"
 #include "core/core.h"
+#include "core/input/keyboard.h"
+#include "core/input/mouse.h"
 
 namespace platformer2d {
 
@@ -47,6 +49,10 @@ namespace platformer2d {
 		{
 			ViewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-Center.x, -Center.y, 0.0f));
 		}
+
+		void OnKeyPressed(const FKeyData& KeyData);
+		void OnMouseButtonPressed(const FMouseButtonData& ButtonData);
+		void OnMouseScrolled(const EMouseScrollDirection Direction);
 
 	public:
 		static inline constexpr float ZOOM_MIN = 0.010f;

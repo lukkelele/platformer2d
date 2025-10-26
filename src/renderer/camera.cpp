@@ -1,4 +1,6 @@
 #include "camera.h"
+#include "camera.h"
+#include "camera.h"
 
 #include <cmath>
 
@@ -16,15 +18,12 @@ namespace platformer2d {
 		, OrthographicFar(InFarP)
 		, AspectRatio(InWidth/InHeight)
 	{
-		//ProjectionMatrix = glm::ortho(
-		//	-(InWidth * 0.50f), (InWidth * 0.50f),
-		//	-(InHeight * 0.50f), (InHeight * 0.50f),
-		//	InNearP, 
-		//	InFarP
-		//);
-
 		UpdateView();
 		UpdateProjection();
+
+		CKeyboard::OnKeyPressed.Add(this, &CCamera::OnKeyPressed);
+		CMouse::OnMouseButtonPressed.Add(this, &CCamera::OnMouseButtonPressed);
+		CMouse::OnMouseScrolled.Add(this, &CCamera::OnMouseScrolled);
 	}
 
 	void CCamera::Update()
@@ -52,6 +51,36 @@ namespace platformer2d {
 	{
 		Zoom = std::max(ZOOM_MIN, std::min(ZOOM_MAX, InZoom));
 		UpdateProjection();
+	}
+
+	void CCamera::OnKeyPressed(const FKeyData& KeyData)
+	{
+		LK_TRACE_TAG("Camera", "OnKeyPressed: {} (Count: {})", Enum::ToString(KeyData.Key), KeyData.RepeatCount);
+		static constexpr float ZoomDiff = 0.010f;
+		if (KeyData.Key == EKey::Minus)
+		{
+			SetZoom(GetZoom() - ZoomDiff);
+		}
+
+		/* Modifiers */
+		/* @fixme: This should take the user keyboard layout into account... */
+		if (CKeyboard::IsKeyDown(EKey::LeftShift) || CKeyboard::IsKeyDown(EKey::RightShift))
+		{
+			if (KeyData.Key == EKey::Equal)
+			{
+				SetZoom(GetZoom() + ZoomDiff);
+			}
+		}
+	}
+
+	void CCamera::OnMouseButtonPressed(const FMouseButtonData& ButtonData)
+	{
+		LK_TRACE_TAG("Camera", "Mouse button: {}", Enum::ToString(ButtonData.Button));
+	}
+
+	void CCamera::OnMouseScrolled(const EMouseScrollDirection Direction)
+	{
+		LK_TRACE_TAG("Camera", "Mouse scroll direction: {}", Enum::ToString(Direction));
 	}
 
 }
