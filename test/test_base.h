@@ -25,7 +25,7 @@ namespace platformer2d::test {
 	class CTestBase
 	{
 	protected:
-		explicit CTestBase(int Argc, char* Argv[]);
+		explicit CTestBase(int Argc, char* Argv[], bool bInit = true);
 	public:
 		CTestBase() = delete;
 		virtual ~CTestBase() = default;

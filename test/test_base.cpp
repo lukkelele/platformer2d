@@ -90,17 +90,21 @@ namespace platformer2d::test {
 #endif
 	}
 
-	CTestBase::CTestBase(int Argc, char* Argv[])
+	CTestBase::CTestBase(int Argc, char* Argv[], const bool bInit)
 		: Args(Argc, Argv)
 		, BinaryDir(GetBinaryDir())
 	{
-		CLog::Initialize();
-		LK_INFO("{}", LK_TEST_NAME);
-		LK_DEBUG("Binary dir: {}", BinaryDir.generic_string());
-		LK_DEBUG("Assets dir: {}", AssetsDir.generic_string());
+		if (bInit)
+		{
+			CLog::Initialize();
+			LK_INFO("{}", LK_TEST_NAME);
+			LK_TRACE("Binary dir: {}", BinaryDir.generic_string());
+			LK_TRACE("Assets dir: {}", AssetsDir.generic_string());
 
-		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_NAME);
-		Window->Initialize();
+			Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_NAME);
+			Window->Initialize();
+			CImGuiLayer::AddViewportFlags(ImGuiWindowFlags_MenuBar);
+		}
 	}
 
 	void CTestBase::Stop()
