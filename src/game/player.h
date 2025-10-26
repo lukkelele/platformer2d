@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "core/delegate.h"
+#include "renderer/camera.h"
 #include "scene/actor.h"
 
 namespace platformer2d {
@@ -31,16 +32,13 @@ namespace platformer2d {
 		void Jump();
 
 		const FPlayerData& GetData() const { return Data; }
-		float GetMovementSpeed() const;
-
-		void SetMovementSpeed(float NewSpeed);
-		void SetMovementSpeedFactor(float SpeedFactor);
 
 		inline float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);
-
 		inline float GetDirectionForce() const { return DirForce; }
 		void SetDirectionForce(float Force);
+
+		inline const CCamera& GetCamera() const { return *Camera; }
 
 	private:
 		void CheckJumpState();
@@ -50,12 +48,10 @@ namespace platformer2d {
 		FOnLanded OnLanded;
 	private:
 		FPlayerData Data{};
+		std::unique_ptr<CCamera> Camera = nullptr;
 
-		float MovementSpeed = 3.20f * MovementSpeedFactor;
-		static inline float MovementSpeedFactor = 0.000010f;
-
-		float JumpImpulse = 0.92f;
-		float DirForce = 1.460f;
+		float JumpImpulse = 0.530f;
+		float DirForce = 5.630f;
 	};
 
 }

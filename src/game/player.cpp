@@ -10,11 +10,13 @@ namespace platformer2d {
 	CPlayer::CPlayer(const FActorSpecification& Spec)
 		: CActor(Spec)
 	{
+		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
 	CPlayer::CPlayer(const FBodySpecification& BodySpec)
 		: CActor(BodySpec)
 	{
+		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
@@ -53,21 +55,6 @@ namespace platformer2d {
 			Body->ApplyImpulse({ 0.0f, JumpImpulse });
 			OnJumped.Broadcast(Data);
 		}
-	}
-
-	float CPlayer::GetMovementSpeed() const
-	{
-		return (MovementSpeed * MovementSpeedFactor);
-	}
-
-	void CPlayer::SetMovementSpeed(const float NewSpeed)
-	{
-		MovementSpeed = (NewSpeed * MovementSpeedFactor);
-	}
-
-	void CPlayer::SetMovementSpeedFactor(const float SpeedFactor)
-	{
-		MovementSpeedFactor = SpeedFactor;
 	}
 
 	void CPlayer::SetJumpImpulse(const float Impulse)
