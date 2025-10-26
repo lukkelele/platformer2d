@@ -1,9 +1,15 @@
 project_library(core)
 project_library_sources(
+	application.h
+	application.cpp
 	assert.h
 	buffer.h
 	core.h
 	delegate.h
+	layer.h
+	layer.cpp
+	layerstack.h
+	layerstack.cpp
 	log.h
 	log.cpp
 	log_formatters.h
