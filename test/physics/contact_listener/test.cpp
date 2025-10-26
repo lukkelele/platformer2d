@@ -108,8 +108,6 @@ namespace platformer2d::test {
 		const CBody& PlayerBody = Player.GetBody();
 		b2World_SetPreSolveCallback(WorldID, PreSolveStatic, &Player /* == Player data */);
 
-		float MovementSpeed = 30.0f;
-		Player.SetMovementSpeed(MovementSpeed);
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
 		{
 			LK_TRACE("Player {} jumped", PlayerData.ID);
@@ -183,8 +181,7 @@ namespace platformer2d::test {
 		Timer.Reset();
 		while (Running)
 		{
-			//const float DeltaTime = (1.0f / Timer.GetDeltaTime());
-			constexpr float DeltaTime = (1.0f / 60.0f);
+			const float DeltaTime = Timer.GetDeltaTime();
 
 			Window.BeginFrame();
 			CKeyboard::Update();
@@ -196,7 +193,7 @@ namespace platformer2d::test {
 			UI_MenuBar();
 			ImGui::Text("%s", LK_TEST_NAME);
 			ImGui::Text("Resolution: %dx%d", WindowData.Width, WindowData.Height);
-			ImGui::Text("Delta Time: %.3f", DeltaTime);
+			ImGui::Text("Delta Time: %.3fms", DeltaTime);
 
 			ImGui::Checkbox("Draw Line", &bRendererDrawLine);
 
@@ -285,11 +282,6 @@ namespace platformer2d::test {
 			if (ImGui::IsItemActive())
 			{
 				PlayerTC.SetRotation2D(glm::radians(PlayerRot));
-			}
-			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 1.50f, 60.0f, "%.2f");
-			if (ImGui::IsItemActive())
-			{
-				Player.SetMovementSpeed(MovementSpeed);
 			}
 			ImGui::PopItemWidth();
 			const glm::vec2 PlayerBodyPos = PlayerBody.GetPosition();
