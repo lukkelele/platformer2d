@@ -40,7 +40,7 @@ namespace platformer2d {
 		{
 			using namespace std::chrono;
 			const time_point<high_resolution_clock> Now = high_resolution_clock::now();
-			const duration<float, std::milli> DeltaTime = Now - LastTime;
+			const duration<float> DeltaTime = Now - LastTime;
 			LastTime = Now;
 
 			return DeltaTime.count();
