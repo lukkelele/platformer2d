@@ -146,8 +146,6 @@ std::unique_ptr<CPlayer> CreatePlayer()
 	glm::vec3& PlayerScale = PlayerTC.Scale;
 	b2World_SetPreSolveCallback(CPhysicsWorld::GetWorldID(), PreSolveStatic, Player.get());
 
-	float MovementSpeed = 30.0f;
-	Player->SetMovementSpeed(MovementSpeed);
 	Player->OnJumped.Add([](const FPlayerData& PlayerData)
 	{
 		LK_TRACE("Player {} jumped", PlayerData.ID);
