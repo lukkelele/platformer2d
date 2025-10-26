@@ -66,6 +66,7 @@ namespace platformer2d {
 
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(BodyDef.type));
+		Shape = Spec.Shape;
 
 		if (std::holds_alternative<FPolygon>(Spec.Shape))
 		{

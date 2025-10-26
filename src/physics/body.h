@@ -54,7 +54,9 @@ namespace platformer2d {
 
 		void Tick(float InDeltaTime);
 
-		const b2BodyId& GetID() const { return ID; }
+		inline const b2BodyId& GetID() const { return ID; }
+		inline const b2ShapeId& GetShapeID() const { return ShapeID; }
+
 		glm::vec2 GetPosition() const;
 		void SetPosition(const glm::vec2& Pos) const;
 		void SetPositionX(float X) const;
@@ -79,6 +81,53 @@ namespace platformer2d {
 		void SetRestitution(float Restitution) const;
 		void SetFriction(float Friction) const;
 
+		inline const TShape& GetShape() const { return Shape; }
+
+		/**
+		 * @brief Safe shape accessor.
+		 */
+		template<EShape T>
+		const TShapeType<T>* TryGetShape() const noexcept
+		{
+			return std::get_if<TShapeType<T>>(&Shape);
+		}
+
+		template<EShape T>
+		const TShapeType<T>& GetShape() const
+		{
+			using ShapeClass = TShapeType<T>;
+#if 0
+			const ShapeClass* Ptr = std::get_if<ShapeClass>(&Shape);
+			LK_ASSERT(Ptr);
+			return *Ptr;
+#else
+			//return std::get<TShapeType<T>>(Shape);
+			return std::get<ShapeClass>(Shape);
+#endif
+		}
+
+		template<typename T>
+		T GetSize() const
+		{
+			if (ShapeType == EShape::Polygon)
+			{
+				auto& Ref = std::get<FPolygon>(Shape);
+				return Ref.Size;
+			}
+			else if (ShapeType == EShape::Line)
+			{
+				auto& Ref = std::get<FLine>(Shape);
+				LK_ASSERT(false, "Not implemented");
+			}
+			else if (ShapeType == EShape::Capsule)
+			{
+				auto& Ref = std::get<FCapsule>(Shape);
+				return { Ref.P0, Ref.P1 };
+			}
+
+			return 0.0f;
+		}
+
 	private:
 		void ScalePolygon(float Factor) const;
 		void ScaleLine(float Factor) const;
@@ -88,6 +137,7 @@ namespace platformer2d {
 		b2BodyId ID;
 		b2ShapeId ShapeID; /* @todo: Should support multiple shapes */
 		EShape ShapeType;
+		TShape Shape;
 
 		float DeltaTime = 0.0f;
 
