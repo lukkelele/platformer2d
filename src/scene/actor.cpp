@@ -6,14 +6,22 @@ namespace platformer2d {
 
 	CActor::CActor(const FActorSpecification& Spec)
 	{
+		Handle = GenerateHandle();
 	}
 
 	CActor::CActor(const FBodySpecification& BodySpec)
 	{
+		Handle = GenerateHandle();
+
 		Body = std::make_unique<CBody>(BodySpec);
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
 		TransformComp.Translation.y = BodyPos.y;
+	}
+
+	CActor::~CActor()
+	{
+		LK_DEBUG_TAG("Actor", "Delete: {}", Handle);
 	}
 
 	void CActor::Tick(const float DeltaTime)
@@ -40,6 +48,12 @@ namespace platformer2d {
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
 		Body->SetPosition(NewPos);
+	}
+
+	FActorHandle CActor::GenerateHandle()
+	{
+		Instances++;
+		return Instances;
 	}
 
 }
