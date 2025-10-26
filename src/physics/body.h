@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "core/core.h"
-#include "scene/actorspecification.h"
+#include "core/math/shapes.h"
 
 namespace platformer2d {
 
@@ -50,7 +50,6 @@ namespace platformer2d {
 	{
 	public:
 		CBody(const FBodySpecification& Spec);
-		[[deprecated("Replaced by FBodySpecification")]] CBody(const FActorSpecification& ActorSpec);
 		~CBody() = default;
 
 		void Tick(float InDeltaTime);

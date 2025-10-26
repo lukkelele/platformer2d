@@ -94,38 +94,6 @@ namespace platformer2d {
 		SetMass(1.0f);
 	}
 
-	CBody::CBody(const FActorSpecification& ActorSpec)
-	{
-		ID = CPhysicsWorld::CreateBody(ActorSpec.BodyDef);
-		const b2ShapeDef& ShapeDef = ActorSpec.ShapeDef;
-
-		if (std::holds_alternative<FPolygon>(ActorSpec.Shape))
-		{
-			ShapeType = EShape::Polygon;
-			const FPolygon& ShapeRef = std::get<FPolygon>(ActorSpec.Shape);
-			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
-			ShapeID = b2CreatePolygonShape(ID, &ActorSpec.ShapeDef, &Polygon);
-		}
-		else if (std::holds_alternative<FLine>(ActorSpec.Shape))
-		{
-			ShapeType = EShape::Line;
-			LK_ASSERT(false);
-		}
-		else if (std::holds_alternative<FCapsule>(ActorSpec.Shape))
-		{
-			ShapeType = EShape::Capsule;
-			const FCapsule& ShapeRef = std::get<FCapsule>(ActorSpec.Shape);
-			const b2Capsule Capsule = { 
-				{ ShapeRef.P0.x, ShapeRef.P0.y }, 
-				{ ShapeRef.P1.x, ShapeRef.P1.y }, 
-				ShapeRef.Radius 
-			};
-			ShapeID = b2CreateCapsuleShape(ID, &ActorSpec.ShapeDef, &Capsule);
-		}
-
-		SetMass(1.0f);
-	}
-
 	void CBody::Tick(const float InDeltaTime)
 	{
 		DeltaTime = InDeltaTime;
