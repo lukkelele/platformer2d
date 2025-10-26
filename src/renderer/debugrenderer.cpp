@@ -16,7 +16,7 @@ namespace platformer2d {
 
 	namespace
 	{
-		constexpr inline glm::vec4 QuadVertexPositions[4] = {
+		constexpr glm::vec4 QuadVertexPositions[4] = {
 			{ -0.50f, -0.50f, 0.0f, 1.0f },
 			{ -0.50f,  0.50f, 0.0f, 1.0f },
 			{  0.50f,  0.50f, 0.0f, 1.0f },
@@ -76,10 +76,6 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glGenBuffers(1, &CircleVBO));
 			LK_OpenGL_Verify(glBindVertexArray(CircleVAO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, CircleVBO));
-
-			//LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW));
-			//LK_OpenGL_Verify(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr));
-			//LK_OpenGL_Verify(glEnableVertexAttribArray(0));
 
 			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW));
 			LK_OpenGL_Verify(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr));
