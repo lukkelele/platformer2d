@@ -39,4 +39,29 @@ namespace platformer2d {
 
 	using TShape = std::variant<std::monostate, FPolygon, FCapsule, FLine>;
 
+	template<EShape> struct TShapeMap;
+	template<> struct TShapeMap<EShape::Polygon> { using Type = FPolygon; };
+	template<> struct TShapeMap<EShape::Line>    { using Type = FLine; };
+	template<> struct TShapeMap<EShape::Capsule> { using Type = FCapsule; };
+
+	template<EShape S>
+	using TShapeType = typename TShapeMap<S>::Type;
+
+	namespace _Internal
+	{
+		template<typename T>
+		concept IsShapeVariant = std::disjunction_v<
+			std::is_same<T, FPolygon>,
+			std::is_same<T, FLine>,
+			std::is_same<T, FCapsule>
+		>;
+	}
+
+	template<EShape T>
+	bool IsShape(const TShape& S)
+	{
+		LK_ASSERT(std::get_if<TShapeType<T>>(&S) != nullptr);
+		return std::holds_alternative<TShapeType<T>>(S);
+	}
+
 }

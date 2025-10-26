@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "core/assert.h"
+#include "shapes.h"
 
 #include <box2d/math_functions.h>
 
