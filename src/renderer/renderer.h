@@ -86,6 +86,7 @@ namespace platformer2d {
 
 		static void SetCameraViewProjection(const glm::mat4& ViewProj);
 
+		static std::shared_ptr<CTexture> GetWhiteTexture();
 		static const std::vector<std::shared_ptr<CTexture>> GetTextures();
 		static std::shared_ptr<CShader> GetShader(CShader::EType ShaderType);
 

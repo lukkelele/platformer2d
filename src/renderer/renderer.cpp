@@ -1,11 +1,4 @@
 #include "renderer.h"
-#include "renderer.h"
-#include "renderer.h"
-#include "renderer.h"
-#include "renderer.h"
-#include "renderer.h"
-#include "renderer.h"
-#include "renderer.h"
 
 #include <array>
 #include <atomic>
@@ -531,8 +524,12 @@ namespace platformer2d {
 
 	void CRenderer::SetCameraViewProjection(const glm::mat4& ViewProj)
 	{
-		/* Data is flushed later on. */
 		CameraData.ViewProjection = ViewProj;
+	}
+
+	std::shared_ptr<CTexture> CRenderer::GetWhiteTexture()
+	{
+		return Data.WhiteTexture;
 	}
 
 	const std::vector<std::shared_ptr<CTexture>> CRenderer::GetTextures()
