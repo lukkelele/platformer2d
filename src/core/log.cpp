@@ -187,7 +187,7 @@ namespace platformer2d {
 				}
 			}
 
-			LK_PRINTLN("LogFiles={} MaxLogFiles={}", LogFiles.size(), MaxLogFiles);
+			LK_LOG_PRINTLN("LogFiles={} MaxLogFiles={}", LogFiles.size(), MaxLogFiles);
 
 			/* Sort and remove oldest logfiles. */
 			if (LogFiles.size() > MaxLogFiles)
