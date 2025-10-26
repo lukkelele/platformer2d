@@ -39,6 +39,7 @@ macro(test_option name)
 	list(APPEND TEST_OPTIONS ${name})
 endmacro()
 
+test_option(LK_TEST_GAME_INSTANCE)
 test_option(LK_TEST_MOVEMENT_BASE_LEVEL)
 test_option(LK_TEST_MOVEMENT_BASE_LEVEL_PLAYER)
 test_option(LK_TEST_PHYSICS_SETUP)
