@@ -114,9 +114,6 @@ namespace platformer2d::test {
 		glm::vec3& PlayerPos = TransformComp.Translation;
 		glm::vec3& PlayerScale = TransformComp.Scale;
 
-		float MovementSpeed = 40.0f;
-		Player.SetMovementSpeed(MovementSpeed);
-
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
 		{
 			LK_INFO("Player {} jumped", PlayerData.ID);
@@ -170,12 +167,6 @@ namespace platformer2d::test {
 			if (ImGui::IsItemActive())
 			{
 				TransformComp.SetRotation2D(glm::radians(PlayerRot));
-			}
-
-			ImGui::SliderFloat("Movement Speed", &MovementSpeed, 1.50f, 60.0f, "%.2f");
-			if (ImGui::IsItemActive())
-			{
-				Player.SetMovementSpeed(MovementSpeed);
 			}
 			ImGui::PopID();
 
