@@ -29,8 +29,7 @@ namespace platformer2d {
 			| ImGuiWindowFlags_NoBackground
 			| ImGuiWindowFlags_NoSavedSettings;
 
-		constexpr ImGuiWindowFlags ViewportFlags = ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_MenuBar
+		ImGuiWindowFlags ViewportFlags = ImGuiWindowFlags_NoTitleBar
 			| ImGuiWindowFlags_NoCollapse
 			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
 			| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize
@@ -127,6 +126,16 @@ namespace platformer2d {
 
 		ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
+
+	void CImGuiLayer::AddViewportFlags(const ImGuiWindowFlags Flags)
+	{
+		ViewportFlags |= Flags;
+	}
+
+	void CImGuiLayer::RemoveViewportFlags(const ImGuiWindowFlags Flags)
+	{
+		ViewportFlags &= ~Flags;
 	}
 
 	void CImGuiLayer::SetDarkTheme()

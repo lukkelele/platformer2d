@@ -283,6 +283,8 @@ namespace platformer2d {
 
 	void CRenderer::EndFrame()
 	{
+		Flush();
+
 		ImGuiLayer->EndFrame();
 	}
 

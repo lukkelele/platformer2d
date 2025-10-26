@@ -16,6 +16,9 @@ namespace platformer2d {
 		void BeginFrame();
 		void EndFrame();
 
+		static void AddViewportFlags(ImGuiWindowFlags Flags);
+		static void RemoveViewportFlags(ImGuiWindowFlags Flags);
+
 		static void SetDarkTheme();
 	};
 

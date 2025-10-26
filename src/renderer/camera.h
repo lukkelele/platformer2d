@@ -14,7 +14,7 @@ namespace platformer2d {
 	class CCamera
 	{
 	public:
-		CCamera(float InWidth, float InHeight, float InNearP, float InFarP);
+		CCamera(float InWidth, float InHeight, float InNearP = -1.0f, float InFarP = 1.0f);
 		CCamera() = delete;
 		virtual ~CCamera() = default;
 
