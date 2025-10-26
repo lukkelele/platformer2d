@@ -19,13 +19,12 @@
 
 #include "game/player.h"
 #include "core/input/keyboard.h"
+#include "core/input/mouse.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
 #define PLATFORM_ENABLED 1
 #define GROUND_PLANE_ENABLED 1
-#define GROUND_PLANE_SEGMENT 0
-#define PLAYER_ACTORSPECIFICATION 0
 
 namespace platformer2d::test {
 
@@ -68,6 +67,7 @@ namespace platformer2d::test {
 
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
+		CMouse::Initialize();
 	}
 
 	void CTest::Run()
@@ -91,21 +91,6 @@ namespace platformer2d::test {
 		PlayerCapsule.P1 = { 0.0f, 0.20f };
 		PlayerCapsule.Radius = 0.10f;
 
-#if PLAYER_ACTORSPECIFICATION
-		FActorSpecification PlayerSpec;
-
-		b2BodyDef PlayerDef = b2DefaultBodyDef();
-		PlayerDef.position = { 0.0f, 1.0f };
-		PlayerDef.type = b2_dynamicBody;
-		PlayerDef.motionLocks.angularZ = true;
-		PlayerDef.linearDamping = 0.50f;
-		PlayerSpec.BodyDef = PlayerDef;
-
-		PlayerSpec.ShapeDef.material.friction = 0.10f;
-		PlayerSpec.ShapeDef.density = 0.60f;
-		PlayerSpec.Shape.emplace<FCapsule>(PlayerCapsule);
-		CPlayer Player(PlayerSpec);
-#else
 		FBodySpecification BodySpec;
 		BodySpec.Type = EBodyType::Dynamic;
 		BodySpec.Position = { 0.0f, 1.0f };
@@ -115,7 +100,6 @@ namespace platformer2d::test {
 		BodySpec.MotionLock = EMotionLock_Z;
 		BodySpec.Shape.emplace<FCapsule>(PlayerCapsule);
 		CPlayer Player(BodySpec);
-#endif
 
 		const FPlayerData& PlayerData = Player.GetData();
 		FTransformComponent& PlayerTC = Player.GetTransformComponent();
@@ -137,10 +121,10 @@ namespace platformer2d::test {
 		});
 
 #if PLATFORM_ENABLED
-		FActorSpecification PlatformSpec;
-		PlatformSpec.BodyDef.position = { 0.0f, -0.80 };
-		PlatformSpec.BodyDef.type = b2_staticBody;
-		PlatformSpec.ShapeDef.enablePreSolveEvents = true;
+		FBodySpecification PlatformSpec;
+		PlatformSpec.Position = { 0.0f, -0.80 };
+		PlatformSpec.Type = EBodyType::Static;
+		PlatformSpec.Flags = EBodyFlag_PreSolveEvents;
 
 		FPolygon PlatformPolygon = {
 			.Size = { 2.0f, 0.08f }
@@ -169,26 +153,18 @@ namespace platformer2d::test {
 		b2BodyId PlaneID;
 		constexpr float HalfW = 12.0f;
 		constexpr float HalfH = 0.10f;
-#if GROUND_PLANE_SEGMENT
-		b2Segment PlaneSegment;
-#endif
-		{
 #if GROUND_PLANE_ENABLED
+		{
 			b2BodyDef PlaneDef = b2DefaultBodyDef();
 			PlaneDef.type = b2_staticBody;
 			PlaneDef.position = { 0.0f, -0.60f };
 			PlaneID = b2CreateBody(CPhysicsWorld::GetWorldID(), &PlaneDef);
 			b2ShapeDef PlaneShapeDef = b2DefaultShapeDef();
-#if GROUND_PLANE_SEGMENT
-			PlaneSegment = { { -50.0f, 0.0f }, { 50.0f, 0.0f } };
-			b2CreateSegmentShape(PlaneID, &PlaneShapeDef, &PlaneSegment);
-#else
 			PlaneShapeDef.enablePreSolveEvents = true;
 			b2Polygon PlaneBox = b2MakeBox(HalfW, HalfH);
 			b2CreatePolygonShape(PlaneID, &PlaneShapeDef, &PlaneBox);
-#endif /* GROUND_PLANE_SEGMENT */
-#endif
 		}
+#endif
 
 		b2BodyId SmallPlatformID;
 		constexpr float SmallPlatformHalfW = 0.20f;
@@ -243,14 +219,11 @@ namespace platformer2d::test {
 				Camera->SetZoom(CameraZoom);
 			}
 
+			ImGui::SameLine(0, 40.0f);
+			const auto [MousePosX, MousePosY] = CMouse::GetPos();
+			ImGui::Text("Mouse Pos: (%.2f, %.2f)", MousePosX, MousePosY);
+
 #if GROUND_PLANE_ENABLED
-#if GROUND_PLANE_SEGMENT
-			const glm::vec4 PlaneColor = { 1.0f, 0.10f, 0.0f, 1.0f };
-			b2Vec2 PlanePos = b2Body_GetPosition(PlaneID);
-			const glm::vec3 PlaneP0 = { PlanePos.x - (0.50f * PlaneSegment.point2.x), PlanePos.y, 0.0f };
-			const glm::vec3 PlaneP1 = { PlanePos.x + (0.50f * PlaneSegment.point2.x), PlanePos.y, 0.0f };
-			CRenderer::DrawLine(PlaneP0, PlaneP1, PlaneColor, 3);
-#else
 			{
 				const glm::vec4& PlaneColor = FragColor;
 				const b2Vec2 PlanePos = b2Body_GetPosition(PlaneID);
@@ -258,7 +231,6 @@ namespace platformer2d::test {
 				const glm::vec2 Size = { 2.0f * HalfW, 2.0f * HalfH };
 				CRenderer::DrawQuad(Pos, Size, PlaneColor, 0.0f);
 			}
-#endif
 #endif
 			{
 				const glm::vec4& SmallPlatformColor = FragColor;
