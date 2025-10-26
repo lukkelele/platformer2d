@@ -53,7 +53,6 @@ if (MSVC)
 		/wd4307
 		/wd26451
 		/wd26813  # 'Use bitwise and'
-		/e0253    # Incorrect warning 'Expected a ;' for [[deprecated]]
 	)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	project_add_compile_definitions(LK_COMPILER_GCC)
@@ -115,7 +114,7 @@ target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}"
 )
-target_compile_definitions(${PROJECT_NAME} PRIVATE
+project_add_compile_definitions(
 	SCREEN_WIDTH=${LK_SCREEN_WIDTH}
 	SCREEN_HEIGHT=${LK_SCREEN_HEIGHT}
 )
