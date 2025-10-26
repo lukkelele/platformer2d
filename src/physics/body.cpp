@@ -252,9 +252,19 @@ namespace platformer2d {
 		b2Shape_SetCapsule(ShapeID, &Shape);
 	}
 
+	float CBody::GetRestitution() const
+	{
+		return b2Shape_GetRestitution(ShapeID);
+	}
+
 	void CBody::SetRestitution(const float Restitution) const
 	{
 		b2Shape_SetRestitution(ShapeID, Restitution);
+	}
+
+	float CBody::GetFriction() const
+	{
+		return b2Shape_GetFriction(ShapeID);
 	}
 
 	void CBody::SetFriction(const float Friction) const

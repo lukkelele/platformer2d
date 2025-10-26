@@ -39,6 +39,8 @@ namespace platformer2d {
 		float GravityScale = 1.0f;
 		float LinearDamping = 0.0f;
 		float AngularDamping = 0.0f;
+		float DirForce = 5.630f;
+		float JumpImpulse = 0.530f;
 		bool bSensor = false;
 		EBodyFlag Flags = EBodyFlag_None;
 		EMotionLock MotionLock = EMotionLock_None;
@@ -78,7 +80,9 @@ namespace platformer2d {
 		void SetShape(const b2Segment& Line);
 
 		void SetScale(float Factor) const;
+		float GetRestitution() const;
 		void SetRestitution(float Restitution) const;
+		float GetFriction() const;
 		void SetFriction(float Friction) const;
 
 		inline const TShape& GetShape() const { return Shape; }

@@ -1,5 +1,6 @@
 #include "physicsworld.h"
 
+#include "core/math/math.h"
 #include "game/player.h"
 
 namespace platformer2d {
@@ -39,6 +40,11 @@ namespace platformer2d {
 	{
 		LK_ASSERT(bInitialized);
 		return b2CreateBody(WorldID, &BodyDef);
+	}
+
+	void CPhysicsWorld::SetGravity(const glm::vec2& Gravity)
+	{
+		b2World_SetGravity(WorldID, Math::Convert(Gravity));
 	}
 
 	void CPhysicsWorld::InitDebugDraw(b2DebugDraw& DebugDrawRef)
