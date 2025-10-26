@@ -10,6 +10,7 @@
 
 #include "renderer/opengl.h"
 #include "input/keyboard.h"
+#include "input/mouse.h"
 
 namespace platformer2d {
 
@@ -85,6 +86,35 @@ namespace platformer2d {
 					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Held);
 					break;
 				}
+			}
+		});
+
+		glfwSetMouseButtonCallback(GlfwWindow, [](GLFWwindow* Window, int Button, int Action, int Modifiers)
+		{
+			switch (Action)
+			{
+				case GLFW_PRESS:
+				{
+					CMouse::UpdateButtonState(static_cast<EMouseButton>(Button), EMouseButtonState::Pressed);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					CMouse::UpdateButtonState(static_cast<EMouseButton>(Button), EMouseButtonState::Released);
+					break;
+				}
+			}
+		});
+
+		glfwSetScrollCallback(GlfwWindow, [](GLFWwindow* Window, double OffsetX, double OffsetY)
+		{
+			if (OffsetY > 0)
+			{
+				CMouse::UpdateScrollState(EMouseScrollDirection::Up);
+			}
+			else if (OffsetY < 0)
+			{
+				CMouse::UpdateScrollState(EMouseScrollDirection::Down);
 			}
 		});
 	}
