@@ -842,11 +842,11 @@ namespace platformer2d::Core {
 		inline void Broadcast(TArgs... Args)
 		{
 			Lock();
-			for (size_t i = 0; i < Dispatchers.size(); ++i)
+			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++)
 			{
-				if (Dispatchers[i].Handle.IsValid())
+				if (Dispatchers[Idx].Handle.IsValid())
 				{
-					Dispatchers[i].Callback.Execute(Args...);
+					Dispatchers[Idx].Callback.Execute(Args...);
 				}
 			}
 			Unlock();
@@ -862,23 +862,25 @@ namespace platformer2d::Core {
 				return false;
 			}
 
-			for (size_t i = 0; i < Dispatchers.size(); ++i)
+			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++)
 			{
-				if (Dispatchers[i].Handle == Handle)
+				if (Dispatchers[Idx].Handle != Handle)
 				{
-					if (IsLocked())
-					{
-						Dispatchers[i].Callback.Clear();
-					}
-					else
-					{
-						std::swap(Dispatchers[i], Dispatchers[Dispatchers.size() - 1]);
-						Dispatchers.pop_back();
-					}
-
-					Handle.Reset();
-					return true;
+					continue;
 				}
+
+				if (IsLocked())
+				{
+					Dispatchers[Idx].Callback.Clear();
+				}
+				else
+				{
+					std::swap(Dispatchers[Idx], Dispatchers[Dispatchers.size() - 1]);
+					Dispatchers.pop_back();
+				}
+
+				Handle.Reset();
+				return true;
 			}
 
 			return false;
