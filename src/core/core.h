@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <type_traits>
+#include <span>
 
 #include "assert.h"
 #include "log.h"
@@ -14,5 +15,11 @@
 namespace platformer2d {
 
 	using LRendererID = uint32_t;
+
+	namespace Core
+	{
+		int ParseSvgPath(std::string_view, const glm::vec2& Offset,
+						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
+	}
 
 }

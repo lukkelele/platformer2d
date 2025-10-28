@@ -5,6 +5,7 @@ project_library_sources(
 	assert.h
 	buffer.h
 	core.h
+	core.cpp
 	delegate.h
 	layer.h
 	layer.cpp
