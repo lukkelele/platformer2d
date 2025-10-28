@@ -100,7 +100,7 @@ int main(int Argc, char* Argv[])
 		DrawPlatform(*Platform);
 
 		ImGui::Begin("Physics");
-		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetWorldID());
+		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 		glm::vec2 PlayerBodyPos = Player->GetBody().GetPosition();
 		ImGui::Text("Player Body: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
@@ -144,7 +144,7 @@ std::unique_ptr<CPlayer> CreatePlayer()
 	FTransformComponent& PlayerTC = Player->GetTransformComponent();
 	glm::vec3& PlayerPos = PlayerTC.Translation;
 	glm::vec3& PlayerScale = PlayerTC.Scale;
-	b2World_SetPreSolveCallback(CPhysicsWorld::GetWorldID(), PreSolveStatic, Player.get());
+	b2World_SetPreSolveCallback(CPhysicsWorld::GetID(), PreSolveStatic, Player.get());
 
 	Player->OnJumped.Add([](const FPlayerData& PlayerData)
 	{

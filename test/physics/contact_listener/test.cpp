@@ -63,7 +63,7 @@ namespace platformer2d::test {
 	{
 		const glm::vec2 Gravity = { 0.0f, -3.20f };
 		CPhysicsWorld::Initialize(Gravity);
-		WorldID = CPhysicsWorld::GetWorldID();
+		WorldID = CPhysicsWorld::GetID();
 
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
@@ -156,7 +156,7 @@ namespace platformer2d::test {
 			b2BodyDef PlaneDef = b2DefaultBodyDef();
 			PlaneDef.type = b2_staticBody;
 			PlaneDef.position = { 0.0f, -0.60f };
-			PlaneID = b2CreateBody(CPhysicsWorld::GetWorldID(), &PlaneDef);
+			PlaneID = b2CreateBody(CPhysicsWorld::GetID(), &PlaneDef);
 			b2ShapeDef PlaneShapeDef = b2DefaultShapeDef();
 			PlaneShapeDef.enablePreSolveEvents = true;
 			b2Polygon PlaneBox = b2MakeBox(HalfW, HalfH);
@@ -171,7 +171,7 @@ namespace platformer2d::test {
 			b2BodyDef SmallPlatformDef = b2DefaultBodyDef();
 			SmallPlatformDef.type = b2_staticBody;
 			SmallPlatformDef.position = { -0.43f, 0.14f };
-			SmallPlatformID = b2CreateBody(CPhysicsWorld::GetWorldID(), &SmallPlatformDef);
+			SmallPlatformID = b2CreateBody(CPhysicsWorld::GetID(), &SmallPlatformDef);
 			b2ShapeDef SmallPlatformShapeDef = b2DefaultShapeDef();
 			SmallPlatformShapeDef.enablePreSolveEvents = true;
 			b2Polygon SmallPlatformBox = b2MakeBox(SmallPlatformHalfW, SmallPlatformHalfH);
