@@ -65,7 +65,8 @@ namespace platformer2d {
 		static void Flush();
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
 
 		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
 		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
@@ -148,8 +149,6 @@ namespace platformer2d {
 		static inline std::unique_ptr<CUniformBuffer> CameraUniformBuffer = nullptr;
 
 		static inline bool bDebugRender = false;
-
-		static inline constexpr int MAX_TEXTURES = 16;
 	};
 
 }

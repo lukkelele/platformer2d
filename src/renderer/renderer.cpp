@@ -27,6 +27,7 @@ namespace platformer2d {
 
 	namespace
 	{
+		constexpr int MAX_TEXTURES = 16;
 		constexpr int CIRCLE_SEGMENTS = 32;
 	}
 
@@ -406,7 +407,7 @@ namespace platformer2d {
 		QuadIndexCount += 6;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, CTexture& Texture,
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture,
 							 const glm::vec4& Color, const float RotationDeg)
 	{
 		if (QuadIndexCount >= MaxIndices)
@@ -431,6 +432,12 @@ namespace platformer2d {
 
 		QuadIndexCount += 6;
 		DrawStats.QuadCount++;
+	}
+
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const ETexture Texture,
+							 const glm::vec4& Color, const float RotationDeg)
+	{
+		DrawQuad(Pos, Size, GetTexture(Texture), Color, RotationDeg);
 	}
 
 	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)
