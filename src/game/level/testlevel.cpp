@@ -78,9 +78,9 @@ namespace platformer2d::Level {
 
 		Platform = CreatePlatform();
 
-		const std::vector<std::shared_ptr<CTexture>>& Textures = CRenderer::GetTextures();
-		PlayerTexture = Textures[1];
-		PlatformTexture = Textures[2];
+		const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& Textures = CRenderer::GetTextures();
+		PlayerTexture = Textures.at(ETexture::Player);
+		PlatformTexture = Textures.at(ETexture::Platform);
 		LK_VERIFY(PlayerTexture && PlatformTexture);
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)

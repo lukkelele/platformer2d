@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "renderer.h"
 
 #include <array>
 #include <atomic>
@@ -26,14 +27,13 @@ namespace platformer2d {
 
 	namespace
 	{
-		constexpr int MAX_TEXTURES = 16;
 		constexpr int CIRCLE_SEGMENTS = 32;
 	}
 
 	struct FRendererData
 	{
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
-		std::vector<std::shared_ptr<CTexture>> Textures;
+		std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
 	};
 
 	namespace 
@@ -90,11 +90,11 @@ namespace platformer2d {
 
 		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
 		QuadShader->Bind();
-		for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+		for (auto& [Texture, TextureRef] : Data.Textures)
 		{
-			if (Data.Textures[Idx])
+			if (TextureRef != nullptr)
 			{
-				Data.Textures[Idx]->Bind(Idx);
+				TextureRef->Bind(static_cast<uint32_t>(Texture));
 			}
 		}
 
@@ -109,13 +109,13 @@ namespace platformer2d {
 	void CRenderer::Destroy()
 	{
 		Data.WhiteTexture = nullptr;
-		std::shared_ptr<CTexture> Texture = nullptr;
-		for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+		for (auto& [Texture, TextureRef] : Data.Textures)
 		{
-			if (Texture = Data.Textures[Idx]; Texture != nullptr)
+			if (TextureRef != nullptr)
 			{
-				Texture->Unbind(Idx);
-				Texture.reset();
+				LK_TRACE_TAG("Renderer", "Release: {}", Enum::ToString(Texture));
+				TextureRef->Unbind();
+				TextureRef.reset();
 			}
 		}
 	}
@@ -234,7 +234,7 @@ namespace platformer2d {
 			.SamplerFilter = ETextureFilter::Nearest,
 		};
 		Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
-		Data.Textures.emplace_back(Data.WhiteTexture);
+		Data.Textures.emplace(std::make_pair(ETexture::White, Data.WhiteTexture));
 
 		const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
 		LK_VERIFY(std::filesystem::exists(PlayerTexturePath), "Player texture does not exist");
@@ -246,7 +246,7 @@ namespace platformer2d {
 			.SamplerWrap = ETextureWrap::Clamp,
 			.SamplerFilter = ETextureFilter::Nearest,
 		};
-		Data.Textures.emplace_back(std::make_shared<CTexture>(PlayerTextureSpec));
+		Data.Textures.emplace(std::make_pair(ETexture::Player, std::make_shared<CTexture>(PlayerTextureSpec)));
 
 		const char* PlatformTexturePath = TEXTURES_DIR "/metal.png";
 		LK_VERIFY(std::filesystem::exists(PlatformTexturePath), "Platform texture does not exist");
@@ -256,13 +256,15 @@ namespace platformer2d {
 			.SamplerWrap = ETextureWrap::Clamp,
 			.SamplerFilter = ETextureFilter::Nearest,
 		};
-		Data.Textures.emplace_back(std::make_shared<CTexture>(PlatformTextureSpec));
+		Data.Textures.emplace(std::make_pair(ETexture::Platform, std::make_shared<CTexture>(PlatformTextureSpec)));
 
 		/* Bind every texture. */
-		for (int Idx = 0; Idx < Data.Textures.size(); Idx++)
+		for (auto& [Texture, TextureRef] : Data.Textures)
 		{
+			LK_VERIFY(TextureRef, "Invalid texture reference: {}", Enum::ToString(Texture));
+			const int Idx = static_cast<int>(Texture);
 			QuadShader->Set(std::format("u_texture{}", Idx), Idx);
-			Data.Textures[Idx]->Bind(Idx);
+			TextureRef->Bind(Idx);
 		}
 	}
 
@@ -532,7 +534,13 @@ namespace platformer2d {
 		return Data.WhiteTexture;
 	}
 
-	const std::vector<std::shared_ptr<CTexture>> CRenderer::GetTextures()
+	const CTexture& CRenderer::GetTexture(const ETexture Texture)
+	{
+		LK_ASSERT(Data.Textures.contains(Texture));
+		return *Data.Textures[Texture];
+	}
+
+	const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& CRenderer::GetTextures()
 	{
 		return Data.Textures;
 	}

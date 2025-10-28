@@ -10,6 +10,13 @@
 
 namespace platformer2d {
 
+	enum class ETexture
+	{
+		White,
+		Player,
+		Platform, /* @todo Rename this */
+	};
+
 	class CTexture
 	{
 	public:
@@ -52,5 +59,20 @@ namespace platformer2d {
 
 		static_assert(std::is_same_v<LRendererID, GLuint>, "LRendererID type mismatch");
 	};
+
+	namespace Enum
+	{
+		inline const char* ToString(const ETexture Texture)
+		{
+			switch (Texture)
+			{
+				case ETexture::White:  return "White";
+				case ETexture::Player: return "Player";
+				default: break;
+			}
+			LK_VERIFY(false);
+			return nullptr;
+		}
+	}
 
 }
