@@ -17,6 +17,7 @@ namespace platformer2d {
 
 	CApplication::~CApplication()
 	{
+		Shutdown();
 	}
 
 	void CApplication::Initialize()
@@ -34,8 +35,13 @@ namespace platformer2d {
 
 	void CApplication::Shutdown()
 	{
-		LK_DEBUG_TAG("Application", "Shutting down");
-		Window->Destroy();
+		if (bRunning)
+		{
+			LK_INFO_TAG("Application", "Shutting down");
+			Window->Destroy();
+
+			bRunning = false;
+		}
 	}
 
 	void CApplication::Run()
