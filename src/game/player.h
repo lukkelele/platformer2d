@@ -22,8 +22,8 @@ namespace platformer2d {
 		LK_DECLARE_EVENT(FOnJumped, CPlayer, const FPlayerData&);
 		LK_DECLARE_EVENT(FOnLanded, CPlayer, const FPlayerData&);
 	public:
-		CPlayer(const FActorSpecification& Spec = FActorSpecification());
-		CPlayer(const FBodySpecification& BodySpec);
+		CPlayer(const FActorSpecification& Spec = FActorSpecification(), ETexture InTexture = ETexture::Player);
+		CPlayer(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::Player);
 		CPlayer(CPlayer&&) = default;
 		CPlayer(const CPlayer&) = default;
 		~CPlayer() = default;

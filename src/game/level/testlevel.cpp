@@ -9,6 +9,7 @@
 #include "game/player.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
+#include "core/math/math.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
@@ -22,11 +23,12 @@ namespace platformer2d::Level {
 		FGameSpecification GameSpec = {
 			.Name = "TestLevel",
 			.Gravity = { 0.0f, -5.0f },
+			.Zoom = 0.25f,
 			.PlayerBody = {
 				.Type = EBodyType::Dynamic,
 				.Shape = FCapsule{
 					.P0 = { 0.0f, 0.0f },
-					.P1 = { 0.0f, 0.15f },
+					.P1 = { 0.0f, 0.20f },
 					.Radius = 0.10f,
 				},
 				.Position = { 0.0f, 1.0f },
@@ -37,15 +39,9 @@ namespace platformer2d::Level {
 			},
 		};
 
-		std::shared_ptr<CActor> Platform = nullptr;
-
-		std::shared_ptr<CTexture> PlayerTexture = nullptr;
-		std::shared_ptr<CTexture> PlatformTexture = nullptr;
-
 		std::vector<std::weak_ptr<CActor>> Actors;
 	}
 
-	std::shared_ptr<CActor> CreatePlatform();
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 
 	CTestLevel::CTestLevel()
@@ -72,26 +68,9 @@ namespace platformer2d::Level {
 		const FGameSpecification& Spec = GetSpecification();
 		CPhysicsWorld::SetGravity(Spec.Gravity);
 
-		Player = std::make_unique<CPlayer>(Spec.PlayerBody);
-		LK_VERIFY(Player);
-		b2World_SetPreSolveCallback(CPhysicsWorld::GetWorldID(), PreSolve, Player.get());
-
-		Platform = CreatePlatform();
-
-		const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& Textures = CRenderer::GetTextures();
-		PlayerTexture = Textures.at(ETexture::Player);
-		PlatformTexture = Textures.at(ETexture::Platform);
-		LK_VERIFY(PlayerTexture && PlatformTexture);
-
-		Player->OnJumped.Add([](const FPlayerData& PlayerData)
-		{
-			LK_TRACE("Player {} jumped", PlayerData.ID);
-		});
-
-		Player->OnLanded.Add([](const FPlayerData& PlayerData)
-		{
-			LK_TRACE("Player {} landed", PlayerData.ID);
-		});
+		CreatePlayer();
+		CreatePlatform();
+		LK_VERIFY(Player && Platform);
 
 		/* Remove player and platform from actors vector to not draw multiple times. */
 		const FActorHandle PlayerHandle = Player->GetHandle();
@@ -106,6 +85,13 @@ namespace platformer2d::Level {
 			return false;
 		};
 		std::erase_if(Actors, IsPlayerOrPlatform);
+
+		CreateGround();
+
+		if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
+		{
+			Camera->SetZoom(Spec.Zoom);
+		}
 	}
 
 	void CTestLevel::Destroy()
@@ -130,20 +116,30 @@ namespace platformer2d::Level {
 			const float Dist = glm::distance(Capsule->P0, Capsule->P1);
 			glm::vec2 PlayerSize = { Dist, Dist };
 			PlayerSize *= glm::vec2(Scale.x, Scale.y);
-			CRenderer::DrawQuad(Player->GetPosition(), PlayerSize, *PlayerTexture, FColor::White);
+			CRenderer::DrawQuad(Player->GetPosition(), PlayerSize, CRenderer::GetTexture(Player->GetTexture()), FColor::White);
 		}
 
 		const FTransformComponent& TC = Platform->GetTransformComponent();
-		CRenderer::DrawQuad(Platform->GetPosition(), TC.Scale, *PlatformTexture, FColor::White);
+		CRenderer::DrawQuad(Platform->GetPosition(), TC.Scale, CRenderer::GetTexture(Platform->GetTexture()), FColor::White);
 
 		for (const auto& ActorRef : Actors)
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
 				const FTransformComponent& TC = Actor->GetTransformComponent();
-				CRenderer::DrawQuad(Actor->GetPosition(), TC.Scale, *CRenderer::GetWhiteTexture(), FColor::White);
+				CRenderer::DrawQuad(Actor->GetPosition(), TC.Scale, Actor->GetTexture(), Actor->GetColor());
 			}
 		}
+	}
+
+	CCamera* CTestLevel::GetActiveCamera() const
+	{
+		if (Player)
+		{
+			return &Player->GetCamera();
+		}
+
+		return nullptr;
 	}
 
 	void CTestLevel::RenderUI()
@@ -162,6 +158,59 @@ namespace platformer2d::Level {
 	{
 		LK_DEBUG_TAG("TestLevel", "OnDetach");
 		Destroy();
+	}
+
+	void CTestLevel::CreatePlayer()
+	{
+		const FGameSpecification& Spec = GetSpecification();
+		Player = std::make_unique<CPlayer>(Spec.PlayerBody, ETexture::Player);
+		b2World_SetPreSolveCallback(CPhysicsWorld::GetID(), PreSolve, Player.get());
+
+		Player->OnJumped.Add([](const FPlayerData& PlayerData)
+		{
+			LK_TRACE("Player {} jumped", PlayerData.ID);
+		});
+
+		Player->OnLanded.Add([](const FPlayerData& PlayerData)
+		{
+			LK_TRACE("Player {} landed", PlayerData.ID);
+		});
+	}
+
+	void CTestLevel::CreatePlatform()
+	{
+		FBodySpecification Spec;
+		Spec.Position = { 0.0f, -0.80 };
+		Spec.Type = EBodyType::Static;
+		Spec.Flags = EBodyFlag_PreSolveEvents;
+
+		FPolygon Polygon = {
+			.Size = { 2.0f, 0.08f }
+		};
+		Spec.Shape.emplace<FPolygon>(Polygon);
+
+		Platform = CActor::Create<CActor>(Spec, ETexture::Platform);
+		FTransformComponent& TC = Platform->GetTransformComponent();
+		TC.SetScale(Polygon.Size);
+	}
+
+	void CTestLevel::CreateGround()
+	{
+		FBodySpecification Spec;
+		Spec.Position = { 0.0f, -0.90 };
+		Spec.Type = EBodyType::Static;
+		Spec.Flags = EBodyFlag_PreSolveEvents;
+
+		FPolygon Polygon = {
+			.Size = { 10.0f, 0.12f }
+		};
+		Spec.Shape.emplace<FPolygon>(Polygon);
+
+		Ground = CActor::Create<CActor>(Spec);
+		Ground->SetColor(FColor::Red);
+
+		FTransformComponent& TC = Ground->GetTransformComponent();
+		TC.SetScale(Polygon.Size);
 	}
 
 	void CTestLevel::UI_Player()
@@ -214,28 +263,9 @@ namespace platformer2d::Level {
 	void CTestLevel::UI_Physics()
 	{
 		ImGui::Begin("Physics");
-		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetWorldID());
+		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 		ImGui::End();
-	}
-
-	std::shared_ptr<CActor> CreatePlatform()
-	{
-		FBodySpecification PlatformSpec;
-		PlatformSpec.Position = { 0.0f, -0.80 };
-		PlatformSpec.Type = EBodyType::Static;
-		PlatformSpec.Flags = EBodyFlag_PreSolveEvents;
-
-		FPolygon PlatformPolygon = {
-			.Size = { 2.0f, 0.08f }
-		};
-		PlatformSpec.Shape.emplace<FPolygon>(PlatformPolygon);
-
-		std::shared_ptr<CActor> Platform = CActor::Create<CActor>(PlatformSpec);
-		FTransformComponent& PlatformTC = Platform->GetTransformComponent();
-		PlatformTC.SetScale(PlatformPolygon.Size);
-
-		return Platform;
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)

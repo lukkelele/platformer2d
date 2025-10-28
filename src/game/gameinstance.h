@@ -15,6 +15,8 @@ namespace platformer2d {
 		uint16_t ViewportWidth = SCREEN_WIDTH;
 		uint16_t ViewportHeight = SCREEN_HEIGHT;
 
+		float Zoom = 0.25f; /* Initial zoom. */
+
 		FBodySpecification PlayerBody{};
 	};
 
@@ -29,6 +31,7 @@ namespace platformer2d {
 		virtual void Destroy() = 0;
 
 		virtual void Tick(float DeltaTime) override = 0;
+		virtual CCamera* GetActiveCamera() const = 0;
 
 	protected:
 		const FGameSpecification& GetSpecification() const { return Spec; }
@@ -36,7 +39,6 @@ namespace platformer2d {
 	protected:
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
-		std::unique_ptr<CPlayer> Player = nullptr;
 	private:
 		FGameSpecification Spec{};
 	};

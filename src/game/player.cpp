@@ -1,4 +1,5 @@
 #include "player.h"
+#include "player.h"
 
 #include <imgui/imgui.h>
 
@@ -7,14 +8,14 @@
 
 namespace platformer2d {
 
-	CPlayer::CPlayer(const FActorSpecification& Spec)
-		: CActor(Spec)
+	CPlayer::CPlayer(const FActorSpecification& Spec, const ETexture InTexture)
+		: CActor(Spec, InTexture)
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
-	CPlayer::CPlayer(const FBodySpecification& BodySpec)
-		: CActor(BodySpec)
+	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
+		: CActor(BodySpec, InTexture)
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
