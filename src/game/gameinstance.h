@@ -18,12 +18,12 @@ namespace platformer2d {
 		FBodySpecification PlayerBody{};
 	};
 
-	class CGameInstance : public CLayer
+	class IGameInstance : public CLayer
 	{
 	public:
-		CGameInstance(const FGameSpecification& InSpec);
-		CGameInstance() = delete;
-		virtual ~CGameInstance() = default;
+		IGameInstance(const FGameSpecification& InSpec);
+		IGameInstance() = delete;
+		virtual ~IGameInstance() = default;
 		
 		virtual void Initialize() = 0;
 		virtual void Destroy() = 0;

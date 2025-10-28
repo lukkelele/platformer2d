@@ -49,7 +49,7 @@ namespace platformer2d::Level {
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 
 	CTestLevel::CTestLevel()
-		: CGameInstance(GameSpec)
+		: IGameInstance(GameSpec)
 	{
 		Actors.clear();
 	}

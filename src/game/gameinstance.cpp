@@ -2,7 +2,7 @@
 
 namespace platformer2d {
 
-	CGameInstance::CGameInstance(const FGameSpecification& InSpec)
+	IGameInstance::IGameInstance(const FGameSpecification& InSpec)
 		: CLayer(InSpec.Name)
 		, Spec(InSpec)
 		, ViewportWidth(InSpec.ViewportWidth)
