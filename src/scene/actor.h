@@ -1,11 +1,13 @@
 #pragma once
 
+#include "actorspecification.h"
 #include "core/core.h"
 #include "core/assert.h"
 #include "core/delegate.h"
 #include "components.h"
+#include "renderer/color.h"
+#include "renderer/texture.h"
 #include "physics/body.h"
-#include "actorspecification.h"
 
 namespace platformer2d {
 
@@ -16,8 +18,8 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnActorCreated, CActor, FActorHandle, std::weak_ptr<CActor>);
 	public:
-		CActor(const FActorSpecification& Spec = FActorSpecification());
-		CActor(const FBodySpecification& BodySpec);
+		CActor(const FActorSpecification& Spec = FActorSpecification(), ETexture InTexture = ETexture::White);
+		CActor(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White);
 		virtual ~CActor();
 
 		template<typename T, typename... TArgs>
@@ -40,6 +42,10 @@ namespace platformer2d {
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
 		inline const CBody& GetBody() const { return *Body; }
 
+		inline ETexture GetTexture() const { return Texture; }
+		inline const glm::vec4& GetColor() const { return Color; }
+		void SetColor(const glm::vec4& InColor);
+
 	private:
 		static FActorHandle GenerateHandle();
 
@@ -48,6 +54,8 @@ namespace platformer2d {
 	protected:
 		FTransformComponent TransformComp{};
 		std::unique_ptr<CBody> Body;
+		ETexture Texture = ETexture::White;
+		glm::vec4 Color = FColor::White;
 
 	private:
 		FActorHandle Handle;

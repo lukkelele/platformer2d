@@ -4,12 +4,14 @@
 
 namespace platformer2d {
 
-	CActor::CActor(const FActorSpecification& Spec)
+	CActor::CActor(const FActorSpecification& Spec, const ETexture InTexture)
+		: Texture(InTexture)
 	{
 		Handle = GenerateHandle();
 	}
 
-	CActor::CActor(const FBodySpecification& BodySpec)
+	CActor::CActor(const FBodySpecification& BodySpec, const ETexture InTexture)
+		: Texture(InTexture)
 	{
 		Handle = GenerateHandle();
 
@@ -48,6 +50,11 @@ namespace platformer2d {
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
 		Body->SetPosition(NewPos);
+	}
+
+	void CActor::SetColor(const glm::vec4& InColor)
+	{
+		Color = InColor;
 	}
 
 	FActorHandle CActor::GenerateHandle()
