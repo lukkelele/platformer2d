@@ -20,7 +20,7 @@ namespace platformer2d {
 		static void Update(float DeltaTime);
 
 		static b2BodyId CreateBody(const b2BodyDef& BodyDef);
-		static inline const b2WorldId& GetWorldID() { return WorldID; }
+		static inline const b2WorldId& GetID() { return WorldID; }
 		static void SetGravity(const glm::vec2& Gravity);
 
 		static void InitDebugDraw(b2DebugDraw& DebugDrawRef);
