@@ -19,6 +19,8 @@ project_library_sources(
 	renderer.cpp
 	rendercommandqueue.h
 	rendercommandqueue.cpp
+	ui.h
+	ui.cpp
 	uniformbuffer.h
 	uniformbuffer.cpp
 )
