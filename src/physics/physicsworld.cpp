@@ -1,4 +1,6 @@
 #include "physicsworld.h"
+#include "physicsworld.h"
+#include "physicsworld.h"
 
 #include "core/math/math.h"
 #include "game/player.h"
@@ -7,7 +9,8 @@ namespace platformer2d {
 
 	namespace
 	{
-		bool bInitialized;
+		bool bInitialized = false;
+		bool bPaused = false;
 	}
 
 	void CPhysicsWorld::Initialize(const glm::vec2& Gravity)
@@ -28,12 +31,27 @@ namespace platformer2d {
 
 	void CPhysicsWorld::Update(const float DeltaTime)
 	{
-		b2World_Step(WorldID, DeltaTime, Substep);
+		if (!bPaused)
+		{
+			b2World_Step(WorldID, DeltaTime, Substep);
+		}
 
 		if (DebugDraw)
 		{
 			b2World_Draw(WorldID, DebugDraw.get());
 		}
+	}
+
+	void CPhysicsWorld::Pause()
+	{
+		LK_DEBUG_TAG("PhysicsWorld", "Pause");
+		bPaused = true;
+	}
+
+	void CPhysicsWorld::Unpause()
+	{
+		LK_DEBUG_TAG("PhysicsWorld", "Unpause");
+		bPaused = false;
 	}
 
 	b2BodyId CPhysicsWorld::CreateBody(const b2BodyDef& BodyDef)

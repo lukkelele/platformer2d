@@ -18,6 +18,8 @@ namespace platformer2d {
 		static void Destroy();
 
 		static void Update(float DeltaTime);
+		static void Pause();
+		static void Unpause();
 
 		static b2BodyId CreateBody(const b2BodyDef& BodyDef);
 		static inline const b2WorldId& GetID() { return WorldID; }
