@@ -26,7 +26,6 @@ namespace
 	bool bBlendFunc = false;
 	bool bShowDrawStats = false;
 
-	std::vector<std::shared_ptr<CTexture>> Textures;
 	std::shared_ptr<CTexture> PlayerTexture = nullptr;
 	std::shared_ptr<CTexture> PlatformTexture = nullptr;
 
@@ -64,9 +63,9 @@ int main(int Argc, char* Argv[])
 	CKeyboard::Initialize();
 	CMouse::Initialize();
 
-	Textures = CRenderer::GetTextures();
-	PlayerTexture = Textures[1];
-	PlatformTexture = Textures[2];
+	const auto& Textures = CRenderer::GetTextures();
+	PlayerTexture = Textures.at(ETexture::Player);
+	PlatformTexture = Textures.at(ETexture::Platform);
 
 	std::unique_ptr<CPlayer> Player = CreatePlayer();
 	std::unique_ptr<CActor> Platform = CreatePlatform();
