@@ -2,14 +2,13 @@
 
 #include "core/window.h"
 #include "core/timer.h"
-#include "renderer/renderer.h"
-#include "renderer/debugrenderer.h"
-#include "renderer/vertexbufferlayout.h"
-
-#include "game/player.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
+#include "game/player.h"
+#include "renderer/renderer.h"
+#include "renderer/debugrenderer.h"
+#include "renderer/ui.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
@@ -92,6 +91,19 @@ namespace platformer2d::Level {
 		{
 			Camera->SetZoom(Spec.Zoom);
 		}
+
+		UI::OnGameMenuOpened.Add([](const bool Opened)
+		{
+			LK_DEBUG_TAG("TestLevel", "Game Menu: {}", Opened ? "Opened" : "Closed");
+			if (Opened)
+			{
+				CPhysicsWorld::Pause();
+			}
+			else
+			{
+				CPhysicsWorld::Unpause();
+			}
+		});
 	}
 
 	void CTestLevel::Destroy()
