@@ -67,7 +67,7 @@ namespace platformer2d {
 
 		glfwSetKeyCallback(GlfwWindow, [](GLFWwindow* Window, int Key, int ScanCode, int Action, int Modifiers)
 		{
-			LK_TRACE("Key={} Action={} Modifiers={}", Key, Action, Modifiers);
+			LK_TRACE_TAG("Window", "Key={} Action={} Modifiers={}", Key, Action, Modifiers);
 			FWindowData& WindowDataRef = *((FWindowData*)glfwGetWindowUserPointer(Window));
 			switch (Action)
 			{
