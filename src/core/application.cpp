@@ -5,6 +5,7 @@
 #include "core/input/mouse.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/vertexbufferlayout.h"
+#include "renderer/ui.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
@@ -31,6 +32,7 @@ namespace platformer2d {
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
 		CMouse::Initialize();
+		UI::Initialize();
 	}
 
 	void CApplication::Shutdown()
@@ -74,6 +76,7 @@ namespace platformer2d {
 				Layer->RenderUI();
 			}
 
+			UI::Render();
 			CRenderer::EndFrame();
 			CKeyboard::TransitionPressedKeys();
 			Window->EndFrame();
