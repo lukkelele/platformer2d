@@ -66,10 +66,15 @@ namespace platformer2d::UI {
 		const ImVec2 MenuSize = ImGui::GetWindowSize();
 		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 9.0f);
+		static constexpr float PaddingX = 12.0f;
+		static constexpr float PaddingY = 12.0f;
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
+		ImGui::SetCursorPos(ImVec2(PaddingX, PaddingY));
 		ImGui::Checkbox("Debug", &Internal.Settings.bDebug);
-		ImGui::PopStyleVar(1);
+		ImGui::PopStyleVar(2);
 
+		ImGui::Dummy(ImVec2(0.0f, PaddingY * 0.50f));
 		if (ImGui::Button("Style Editor", ButtonSize))
 		{
 			Settings.bStyleEditor = !Settings.bStyleEditor;
