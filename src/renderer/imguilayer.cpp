@@ -304,7 +304,7 @@ namespace platformer2d {
 			Roboto_BoldItalic.Font = EFont::Roboto;
 			Roboto_BoldItalic.Size = EFontSize::Regular;
 			Roboto_BoldItalic.Modifier = EFontModifier::BoldItalic;
-			Roboto_BoldItalic.FilePath = FONTS_DIR "/Roboto/Roboto-SemiMedium.ttf";
+			Roboto_BoldItalic.FilePath = FONTS_DIR "/Roboto/Roboto-BoldItalic.ttf";
 			UI::Font::Add(Roboto_BoldItalic);
 
 			Roboto_BoldItalic.Size = EFontSize::Smaller;
