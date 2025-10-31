@@ -20,6 +20,9 @@ namespace platformer2d {
 		static void RemoveViewportFlags(ImGuiWindowFlags Flags);
 
 		static void SetDarkTheme();
+
+	private:
+		void AddFonts();
 	};
 
 }

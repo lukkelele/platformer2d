@@ -8,6 +8,7 @@
 
 #include "core/core.h"
 #include "core/log.h"
+#include "font.h"
 
 namespace platformer2d {
 
@@ -53,22 +54,10 @@ namespace platformer2d {
 
 		ImGui_ImplGlfw_InitForOpenGL(InContext, true);
 		ImGui_ImplOpenGL3_Init("#version 450");
-		spdlog::info("ImGui Version: {}", ImGui::GetVersion());
+		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
 
+		AddFonts();
 		SetDarkTheme();
-
-		/** @todo Use generated header */
-		const char* SourceSansPro_Semibold = FONTS_DIR "/SourceCodePro/SourceSansPro-Semibold.ttf";
-
-		/* Add fonts. */
-		ImFontConfig FontConfig;
-		ImFont* Font = IO.Fonts->AddFontFromFileTTF(
-			SourceSansPro_Semibold,
-			22.0f,
-			&FontConfig,	
-			(FontConfig.GlyphRanges == nullptr ? IO.Fonts->GetGlyphRangesDefault() : FontConfig.GlyphRanges)
-		);
-		LK_ASSERT(Font, "Failed to load font: {}", SourceSansPro_Semibold);
 	}
 
 	CImGuiLayer::~CImGuiLayer()
@@ -136,6 +125,220 @@ namespace platformer2d {
 	void CImGuiLayer::RemoveViewportFlags(const ImGuiWindowFlags Flags)
 	{
 		ViewportFlags &= ~Flags;
+	}
+
+	void CImGuiLayer::AddFonts()
+	{
+		ImGuiIO& IO = ImGui::GetIO();
+
+		/********************
+		 * Source Sans Pro
+		 ********************/
+		{
+			FFontConfiguration SourceSansPro_Semibold;
+			SourceSansPro_Semibold.Font = EFont::SourceSansPro;
+			SourceSansPro_Semibold.Size = EFontSize::Regular;
+			SourceSansPro_Semibold.Modifier = EFontModifier::Normal;
+			SourceSansPro_Semibold.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Semibold.ttf";
+			UI::Font::Add(SourceSansPro_Semibold, true);
+
+			SourceSansPro_Semibold.Size = EFontSize::Smaller;
+			UI::Font::Add(SourceSansPro_Semibold);
+
+			SourceSansPro_Semibold.Size = EFontSize::Small;
+			UI::Font::Add(SourceSansPro_Semibold);
+
+			SourceSansPro_Semibold.Size = EFontSize::Large;
+			UI::Font::Add(SourceSansPro_Semibold);
+
+			SourceSansPro_Semibold.Size = EFontSize::Larger;
+			UI::Font::Add(SourceSansPro_Semibold);
+
+			SourceSansPro_Semibold.Size = EFontSize::Header;
+			UI::Font::Add(SourceSansPro_Semibold);
+
+			SourceSansPro_Semibold.Size = EFontSize::Title;
+			UI::Font::Add(SourceSansPro_Semibold);
+		}
+
+		{
+			FFontConfiguration SourceSansPro_Bold;
+			SourceSansPro_Bold.Font = EFont::SourceSansPro;
+			SourceSansPro_Bold.Size = EFontSize::Regular;
+			SourceSansPro_Bold.Modifier = EFontModifier::Bold;
+			SourceSansPro_Bold.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Bold.ttf";
+			UI::Font::Add(SourceSansPro_Bold);
+
+			SourceSansPro_Bold.Size = EFontSize::Smaller;
+			UI::Font::Add(SourceSansPro_Bold);
+
+			SourceSansPro_Bold.Size = EFontSize::Small;
+			UI::Font::Add(SourceSansPro_Bold);
+
+			SourceSansPro_Bold.Size = EFontSize::Large;
+			UI::Font::Add(SourceSansPro_Bold);
+
+			SourceSansPro_Bold.Size = EFontSize::Larger;
+			UI::Font::Add(SourceSansPro_Bold);
+
+			SourceSansPro_Bold.Size = EFontSize::Header;
+			UI::Font::Add(SourceSansPro_Bold);
+
+			SourceSansPro_Bold.Size = EFontSize::Title;
+			UI::Font::Add(SourceSansPro_Bold);
+		}
+
+		{
+			FFontConfiguration SourceSansPro_Italic;
+			SourceSansPro_Italic.Font = EFont::SourceSansPro;
+			SourceSansPro_Italic.Size = EFontSize::Regular;
+			SourceSansPro_Italic.Modifier = EFontModifier::Italic;
+			SourceSansPro_Italic.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Italic.ttf";
+			UI::Font::Add(SourceSansPro_Italic);
+
+			SourceSansPro_Italic.Size = EFontSize::Smaller;
+			UI::Font::Add(SourceSansPro_Italic);
+
+			SourceSansPro_Italic.Size = EFontSize::Small;
+			UI::Font::Add(SourceSansPro_Italic);
+
+			SourceSansPro_Italic.Size = EFontSize::Large;
+			UI::Font::Add(SourceSansPro_Italic);
+
+			SourceSansPro_Italic.Size = EFontSize::Larger;
+			UI::Font::Add(SourceSansPro_Italic);
+
+			SourceSansPro_Italic.Size = EFontSize::Header;
+			UI::Font::Add(SourceSansPro_Italic);
+
+			SourceSansPro_Italic.Size = EFontSize::Title;
+			UI::Font::Add(SourceSansPro_Italic);
+		}
+
+		/********************
+		 * Roboto
+		 ********************/
+		{
+			FFontConfiguration Roboto_Regular;
+			Roboto_Regular.Font = EFont::Roboto;
+			Roboto_Regular.Size = EFontSize::Regular;
+			Roboto_Regular.Modifier = EFontModifier::Normal;
+			Roboto_Regular.FilePath = FONTS_DIR "/Roboto/Roboto-Regular.ttf";
+			UI::Font::Add(Roboto_Regular);
+
+			Roboto_Regular.Size = EFontSize::Smaller;
+			UI::Font::Add(Roboto_Regular);
+
+			Roboto_Regular.Size = EFontSize::Small;
+			UI::Font::Add(Roboto_Regular);
+
+			Roboto_Regular.Size = EFontSize::Large;
+			UI::Font::Add(Roboto_Regular);
+
+			Roboto_Regular.Size = EFontSize::Larger;
+			UI::Font::Add(Roboto_Regular);
+
+			Roboto_Regular.Size = EFontSize::Header;
+			UI::Font::Add(Roboto_Regular);
+
+			Roboto_Regular.Size = EFontSize::Title;
+			UI::Font::Add(Roboto_Regular);
+		}
+
+		{
+			FFontConfiguration Roboto_Bold;
+			Roboto_Bold.Font = EFont::Roboto;
+			Roboto_Bold.Size = EFontSize::Regular;
+			Roboto_Bold.Modifier = EFontModifier::Bold;
+			Roboto_Bold.FilePath = FONTS_DIR "/Roboto/Roboto-Bold.ttf";
+			UI::Font::Add(Roboto_Bold);
+
+			Roboto_Bold.Size = EFontSize::Smaller;
+			UI::Font::Add(Roboto_Bold);
+
+			Roboto_Bold.Size = EFontSize::Small;
+			UI::Font::Add(Roboto_Bold);
+
+			Roboto_Bold.Size = EFontSize::Large;
+			UI::Font::Add(Roboto_Bold);
+
+			Roboto_Bold.Size = EFontSize::Larger;
+			UI::Font::Add(Roboto_Bold);
+
+			Roboto_Bold.Size = EFontSize::Header;
+			UI::Font::Add(Roboto_Bold);
+
+			Roboto_Bold.Size = EFontSize::Title;
+			UI::Font::Add(Roboto_Bold);
+		}
+
+		{
+			FFontConfiguration Roboto_SemiMedium;
+			Roboto_SemiMedium.Font = EFont::Roboto;
+			Roboto_SemiMedium.Size = EFontSize::Regular;
+			Roboto_SemiMedium.Modifier = EFontModifier::SemiMedium;
+			Roboto_SemiMedium.FilePath = FONTS_DIR "/Roboto/Roboto-SemiMedium.ttf";
+			UI::Font::Add(Roboto_SemiMedium);
+
+			Roboto_SemiMedium.Size = EFontSize::Smaller;
+			UI::Font::Add(Roboto_SemiMedium);
+
+			Roboto_SemiMedium.Size = EFontSize::Small;
+			UI::Font::Add(Roboto_SemiMedium);
+
+			Roboto_SemiMedium.Size = EFontSize::Large;
+			UI::Font::Add(Roboto_SemiMedium);
+
+			Roboto_SemiMedium.Size = EFontSize::Larger;
+			UI::Font::Add(Roboto_SemiMedium);
+
+			Roboto_SemiMedium.Size = EFontSize::Header;
+			UI::Font::Add(Roboto_SemiMedium);
+
+			Roboto_SemiMedium.Size = EFontSize::Title;
+			UI::Font::Add(Roboto_SemiMedium);
+		}
+
+		{
+			FFontConfiguration Roboto_BoldItalic;
+			Roboto_BoldItalic.Font = EFont::Roboto;
+			Roboto_BoldItalic.Size = EFontSize::Regular;
+			Roboto_BoldItalic.Modifier = EFontModifier::BoldItalic;
+			Roboto_BoldItalic.FilePath = FONTS_DIR "/Roboto/Roboto-SemiMedium.ttf";
+			UI::Font::Add(Roboto_BoldItalic);
+
+			Roboto_BoldItalic.Size = EFontSize::Smaller;
+			UI::Font::Add(Roboto_BoldItalic);
+
+			Roboto_BoldItalic.Size = EFontSize::Small;
+			UI::Font::Add(Roboto_BoldItalic);
+
+			Roboto_BoldItalic.Size = EFontSize::Large;
+			UI::Font::Add(Roboto_BoldItalic);
+
+			Roboto_BoldItalic.Size = EFontSize::Larger;
+			UI::Font::Add(Roboto_BoldItalic);
+
+			Roboto_BoldItalic.Size = EFontSize::Header;
+			UI::Font::Add(Roboto_BoldItalic);
+
+			Roboto_BoldItalic.Size = EFontSize::Title;
+			UI::Font::Add(Roboto_BoldItalic);
+		}
+
+		/********************
+		 * FontAwesome
+		 ********************/
+		{
+			static constexpr ImWchar FontAwesomeRanges[] = { LK_ICON_MIN, LK_ICON_MAX, 0 };
+			FFontConfiguration FontAwesome;
+			FontAwesome.Font = EFont::FontAwesome;
+			FontAwesome.Size = EFontSize::Regular;
+			FontAwesome.FilePath = FONTS_DIR "/FontAwesome/fontawesome-webfont.ttf";
+			FontAwesome.GlyphRanges = FontAwesomeRanges;
+			FontAwesome.MergeWithLast = true;
+			UI::Font::Add(FontAwesome);
+		}
 	}
 
 	void CImGuiLayer::SetDarkTheme()
