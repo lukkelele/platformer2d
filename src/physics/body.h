@@ -100,14 +100,7 @@ namespace platformer2d {
 		const TShapeType<T>& GetShape() const
 		{
 			using ShapeClass = TShapeType<T>;
-#if 0
-			const ShapeClass* Ptr = std::get_if<ShapeClass>(&Shape);
-			LK_ASSERT(Ptr);
-			return *Ptr;
-#else
-			//return std::get<TShapeType<T>>(Shape);
 			return std::get<ShapeClass>(Shape);
-#endif
 		}
 
 		template<typename T>
