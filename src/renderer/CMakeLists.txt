@@ -7,6 +7,7 @@ project_library_sources(
 	color.h
 	font.h
 	font.cpp
+	fontawesome.h
 	imguilayer.h
 	imguilayer.cpp
 	opengl.h
