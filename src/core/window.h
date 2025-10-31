@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "core/log.h"
+#include "core/delegate.h"
 
 namespace platformer2d {
 
@@ -16,6 +17,7 @@ namespace platformer2d {
 		uint16_t Height = 0;
 		std::string Title{};
 		bool bVSync = false;
+		class CWindow* WindowRef = nullptr;
 
 		FWindowData() = default;
 		FWindowData(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
@@ -28,6 +30,8 @@ namespace platformer2d {
 
 	class CWindow
 	{
+	public:
+		LK_DECLARE_EVENT(FOnResized, CWindow, uint16_t /* Width */, uint16_t /* Height */);
 	public:
 		CWindow(uint16_t InWidth, uint16_t InHeight, std::string_view InTitle = "platformer2d");
 		CWindow() = delete;
@@ -44,12 +48,18 @@ namespace platformer2d {
 		void SetVSync(bool Enabled);
 		bool GetVSync() const { return Data.bVSync; }
 
-		const FWindowData& GetData() const { return Data; }
-		GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }
+		void SetSize(uint16_t InWidth, uint16_t InHeight);
 
+		const FWindowData& GetData() const { return Data; }
+		inline GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }
+
+	public:
+		static inline FOnResized OnResized;
 	private:
 		GLFWwindow* GlfwWindow = nullptr;
 		FWindowData Data{};
+
+		static inline CWindow* Instance = nullptr;
 	};
 
 }

@@ -14,8 +14,6 @@
 
 namespace platformer2d {
 
-	static CWindow* Instance = NULL;
-
 	CWindow::CWindow(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
 		: Data(InWidth, InHeight, InTitle)
 	{
@@ -43,6 +41,7 @@ namespace platformer2d {
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
+		Data.WindowRef = this;
 		GlfwWindow = glfwCreateWindow(Data.Width, Data.Height, Data.Title.c_str(), nullptr, nullptr);
 		LK_VERIFY(GlfwWindow);
 		glfwMakeContextCurrent(GlfwWindow);
@@ -50,15 +49,14 @@ namespace platformer2d {
 
 		glfwSetWindowSizeCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow, int NewWidth, int NewHeight) 
 		{
-			CWindow* Window = CWindow::Get();
-			LK_ASSERT(Window);
-			Window->Data.Width = NewWidth;
-			Window->Data.Height = NewHeight;
+			FWindowData& Data = *((FWindowData*)glfwGetWindowUserPointer(InGlfwWindow));
+			LK_ASSERT(Data.WindowRef);
+			Data.WindowRef->SetSize(NewWidth, NewHeight);
 		});
 
 		glfwSetWindowCloseCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow)
 		{
-			spdlog::info("Closing window");
+			LK_INFO_TAG("Window", "Closing");
 			glfwSetWindowShouldClose(InGlfwWindow, GLFW_TRUE);
 			std::exit(0); /** @todo Should do proper shutdown */
 		});
@@ -139,7 +137,14 @@ namespace platformer2d {
 	{
 		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "enabled" : "disabled");
 		glfwSwapInterval(Enabled);
-		Instance->Data.bVSync = Enabled;
+		Data.bVSync = Enabled;
+	}
+
+	void CWindow::SetSize(const uint16_t InWidth, const uint16_t InHeight)
+	{
+		Data.Width = InWidth;
+		Data.Height = InHeight;
+		OnResized.Broadcast(InWidth, InHeight);
 	}
 
 }

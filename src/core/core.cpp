@@ -5,6 +5,8 @@
 
 namespace platformer2d::Core {
 
+	FGlobal Global{};
+
 	static void SkipWhitespaceAndCommas(const char*& Ptr, const char* End)
 	{
 		while ((Ptr < End) 

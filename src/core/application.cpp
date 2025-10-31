@@ -32,7 +32,6 @@ namespace platformer2d {
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
 		CMouse::Initialize();
-		UI::Initialize();
 	}
 
 	void CApplication::Shutdown()
@@ -58,6 +57,12 @@ namespace platformer2d {
 		Timer.Reset();
 		while (!glfwWindowShouldClose(GlfwWindow))
 		{
+			if (Core::Global.bShouldShutdown)
+			{
+				LK_DEBUG_TAG("Application", "Global shutdown flag set");
+				break;
+			}
+
 			const float DeltaTime = Timer.GetDeltaTime();
 			CPhysicsWorld::Update(DeltaTime);
 
@@ -76,7 +81,6 @@ namespace platformer2d {
 				Layer->RenderUI();
 			}
 
-			UI::Render();
 			CRenderer::EndFrame();
 			CKeyboard::TransitionPressedKeys();
 			Window->EndFrame();
