@@ -38,12 +38,12 @@ namespace platformer2d {
 
 	namespace OpenGL::Internal
 	{
-		inline static void CheckForErrors()
+		inline void CheckForErrors()
 		{
 			while (glGetError() != GL_NO_ERROR);
 		}
 
-		static bool VerifyFunctionResult(const char* InFunction, const char* InFile, int InLine)
+		inline bool VerifyFunctionResult(const char* InFunction, const char* InFile, int InLine)
 		{
 			while (GLenum Error = glGetError())
 			{
