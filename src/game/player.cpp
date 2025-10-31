@@ -4,6 +4,7 @@
 
 #include "core/log.h"
 #include "core/input/keyboard.h"
+#include "core/window.h"
 
 namespace platformer2d {
 
@@ -11,12 +12,14 @@ namespace platformer2d {
 		: CActor(Spec, InTexture)
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
+		CWindow::OnResized.Add(this, &CPlayer::OnWindowResize);
 	}
 
 	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
 		: CActor(BodySpec, InTexture)
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
+		CWindow::OnResized.Add(this, &CPlayer::OnWindowResize);
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
@@ -36,14 +39,6 @@ namespace platformer2d {
 		if (CKeyboard::IsKeyDown(EKey::Space))
 		{
 			Jump();
-		}
-
-		/* Main menu. */
-		if (CKeyboard::IsKeyDown(EKey::Escape) && !CKeyboard::IsKeyHeld(EKey::Escape))
-		{
-			const FKeyData& KeyData = CKeyboard::GetKeyData(EKey::Escape);
-			LK_DEBUG("Key: Escape (Repeat={} State={} OldState={})", 
-					 KeyData.RepeatCount, KeyData.State, KeyData.OldState);
 		}
 	}
 
@@ -91,6 +86,15 @@ namespace platformer2d {
 		{
 			Data.bJumping = false;
 			OnLanded.Broadcast(Data);
+		}
+	}
+
+	/* @fixme This might be redundant as the camera does set the viewport size on every scene start */
+	void CPlayer::OnWindowResize(const uint16_t Width, const uint16_t Height)
+	{
+		if (Camera)
+		{
+			Camera->SetViewportSize(Width, Height);
 		}
 	}
 

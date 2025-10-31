@@ -43,6 +43,7 @@ namespace platformer2d {
 
 	private:
 		void CheckJumpState();
+		void OnWindowResize(uint16_t Width, uint16_t Height);
 
 	public:
 		FOnJumped OnJumped;
