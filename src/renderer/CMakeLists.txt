@@ -5,6 +5,8 @@ project_library_sources(
 	camera.h
 	camera.cpp
 	color.h
+	font.h
+	font.cpp
 	imguilayer.h
 	imguilayer.cpp
 	opengl.h
