@@ -1,5 +1,4 @@
 #include "renderer.h"
-#include "renderer.h"
 
 #include <array>
 #include <atomic>
@@ -22,6 +21,7 @@
 #include "imguilayer.h"
 #include "opengl.h"
 #include "rendercommandqueue.h"
+#include "ui.h"
 
 namespace platformer2d {
 
@@ -105,6 +105,8 @@ namespace platformer2d {
 #ifdef LK_BUILD_DEBUG
 		bDebugRender = true;
 #endif
+
+		UI::Initialize();
 	}
 
 	void CRenderer::Destroy()
@@ -279,6 +281,7 @@ namespace platformer2d {
 
 	void CRenderer::EndFrame()
 	{
+		UI::Render();
 		Flush();
 
 		ImGuiLayer->EndFrame();
