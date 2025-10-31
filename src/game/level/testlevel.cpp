@@ -112,6 +112,18 @@ namespace platformer2d::Level {
 		Player.reset();
 	}
 
+	void CTestLevel::OnAttach()
+	{
+		LK_DEBUG_TAG("TestLevel", "OnAttach");
+		Initialize();
+	}
+
+	void CTestLevel::OnDetach()
+	{
+		LK_DEBUG_TAG("TestLevel", "OnDetach");
+		Destroy();
+	}
+
 	void CTestLevel::Tick(const float DeltaTime)
 	{
 		CCamera& Camera = Player->GetCamera();
@@ -142,6 +154,13 @@ namespace platformer2d::Level {
 				CRenderer::DrawQuad(Actor->GetPosition(), TC.Scale, Actor->GetTexture(), Actor->GetColor());
 			}
 		}
+
+		/* Draw dark overlay whenever the pause menu is open. */
+		if (UI::IsGameMenuOpen())
+		{
+			const glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.80f };
+			CRenderer::DrawQuad({ 0.0f, 0.0f }, { ViewportWidth, ViewportHeight }, OverlayColor);
+		}
 	}
 
 	CCamera* CTestLevel::GetActiveCamera() const
@@ -158,18 +177,6 @@ namespace platformer2d::Level {
 	{
 		UI_Player();
 		UI_Physics();
-	}
-
-	void CTestLevel::OnAttach()
-	{
-		LK_DEBUG_TAG("TestLevel", "OnAttach");
-		Initialize();
-	}
-
-	void CTestLevel::OnDetach()
-	{
-		LK_DEBUG_TAG("TestLevel", "OnDetach");
-		Destroy();
 	}
 
 	void CTestLevel::CreatePlayer()

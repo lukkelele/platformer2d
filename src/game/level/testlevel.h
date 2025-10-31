@@ -15,12 +15,12 @@ namespace platformer2d::Level {
 		virtual void Initialize() override;
 		virtual void Destroy() override;
 
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+
 		virtual void Tick(float DeltaTime) override;
 		virtual CCamera* GetActiveCamera() const override;
 		virtual void RenderUI() override;
-
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
 
 	private:
 		void CreatePlayer();
