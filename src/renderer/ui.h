@@ -17,4 +17,6 @@ namespace platformer2d::UI {
 	void OpenGameMenu();
 	void CloseGameMenu();
 	void ToggleGameMenu();
+	bool IsGameMenuOpen();
+
 }
