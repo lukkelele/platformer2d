@@ -26,6 +26,7 @@ namespace platformer2d::UI {
 		{ EFontSize::Larger,  30.0f },
 		{ EFontSize::Header,  34.0f },
 		{ EFontSize::Title,   44.0f },
+		{ EFontSize::Banner,  56.0f },
 	};
 
 	void Font::Add(const FFontConfiguration& FontConfig, const bool IsDefault)

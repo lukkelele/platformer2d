@@ -13,14 +13,15 @@ namespace platformer2d {
 
 	enum class EFontSize
 	{
-		None,
+		None = -1,
 		Regular,
 		Smaller,
 		Small,
 		Large,
 		Larger,
-		Title,
 		Header,
+		Title,
+		Banner,
 		COUNT
 	};
 
