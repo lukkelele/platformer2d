@@ -47,10 +47,13 @@ namespace platformer2d::UI {
 
 		TFontArray& ArrayRef = FontMap.at(FontConfig.Modifier)[FontConfig.Font];
 		/* Verify the font hasn't been added yet. */
-		LK_VERIFY(ArrayRef[static_cast<int>(FontConfig.Size)] == nullptr, "Font {} ({}) already added", 
-				  Enum::ToString(FontConfig.Font), Enum::ToString(FontConfig.Size));
+		if (FontConfig.Font != EFont::FontAwesome)
+		{
+			LK_VERIFY(ArrayRef[static_cast<int>(FontConfig.Size)] == nullptr,
+					  "Font {} ({}) already added", Enum::ToString(FontConfig.Font), Enum::ToString(FontConfig.Size));
+		}
 		ArrayRef[static_cast<int>(FontConfig.Size)] = Font;
-		LK_DEBUG_TAG("Font", "Added: {} ({})", FontConfig.FilePath.filename(), FontSizeMap.at(FontConfig.Size));
+		LK_TRACE_TAG("Font", "Added: {} ({})", FontConfig.FilePath.filename(), FontSizeMap.at(FontConfig.Size));
 
 		if (IsDefault)
 		{

@@ -132,6 +132,17 @@ namespace platformer2d {
 		ImGuiIO& IO = ImGui::GetIO();
 
 		/********************
+		 * FontAwesome
+		 ********************/
+		constexpr ImWchar FontAwesomeRanges[] = { LK_ICON_MIN, LK_ICON_MAX, 0 };
+		FFontConfiguration FontAwesome;
+		FontAwesome.Font = EFont::FontAwesome;
+		FontAwesome.Size = EFontSize::Regular;
+		FontAwesome.FilePath = FONTS_DIR "/FontAwesome/fontawesome-webfont.ttf";
+		FontAwesome.GlyphRanges = FontAwesomeRanges;
+		FontAwesome.MergeWithLast = true;
+
+		/********************
 		 * Source Sans Pro
 		 ********************/
 		{
@@ -141,38 +152,31 @@ namespace platformer2d {
 			SourceSansPro_Semibold.Modifier = EFontModifier::Normal;
 			SourceSansPro_Semibold.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Semibold.ttf";
 			UI::Font::Add(SourceSansPro_Semibold, true);
-
-			/********************
-			 * FontAwesome
-			 *
-			 * Merge with last.
-			 ********************/
-			constexpr ImWchar FontAwesomeRanges[] = { LK_ICON_MIN, LK_ICON_MAX, 0 };
-			FFontConfiguration FontAwesome;
-			FontAwesome.Font = EFont::FontAwesome;
-			FontAwesome.Size = EFontSize::Regular;
-			FontAwesome.FilePath = FONTS_DIR "/FontAwesome/fontawesome-webfont.ttf";
-			FontAwesome.GlyphRanges = FontAwesomeRanges;
-			FontAwesome.MergeWithLast = true;
 			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Semibold.Size = EFontSize::Smaller;
 			UI::Font::Add(SourceSansPro_Semibold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Semibold.Size = EFontSize::Small;
 			UI::Font::Add(SourceSansPro_Semibold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Semibold.Size = EFontSize::Large;
 			UI::Font::Add(SourceSansPro_Semibold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Semibold.Size = EFontSize::Larger;
 			UI::Font::Add(SourceSansPro_Semibold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Semibold.Size = EFontSize::Header;
 			UI::Font::Add(SourceSansPro_Semibold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Semibold.Size = EFontSize::Title;
 			UI::Font::Add(SourceSansPro_Semibold);
+			UI::Font::Add(FontAwesome);
 		}
 
 		{
@@ -182,24 +186,31 @@ namespace platformer2d {
 			SourceSansPro_Bold.Modifier = EFontModifier::Bold;
 			SourceSansPro_Bold.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Bold.ttf";
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Bold.Size = EFontSize::Smaller;
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Bold.Size = EFontSize::Small;
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Bold.Size = EFontSize::Large;
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Bold.Size = EFontSize::Larger;
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Bold.Size = EFontSize::Header;
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Bold.Size = EFontSize::Title;
 			UI::Font::Add(SourceSansPro_Bold);
+			UI::Font::Add(FontAwesome);
 		}
 
 		{
@@ -209,24 +220,31 @@ namespace platformer2d {
 			SourceSansPro_Italic.Modifier = EFontModifier::Italic;
 			SourceSansPro_Italic.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Italic.ttf";
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Italic.Size = EFontSize::Smaller;
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Italic.Size = EFontSize::Small;
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Italic.Size = EFontSize::Large;
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Italic.Size = EFontSize::Larger;
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Italic.Size = EFontSize::Header;
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 
 			SourceSansPro_Italic.Size = EFontSize::Title;
 			UI::Font::Add(SourceSansPro_Italic);
+			UI::Font::Add(FontAwesome);
 		}
 
 		/********************
@@ -239,24 +257,31 @@ namespace platformer2d {
 			Roboto_Regular.Modifier = EFontModifier::Normal;
 			Roboto_Regular.FilePath = FONTS_DIR "/Roboto/Roboto-Regular.ttf";
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Regular.Size = EFontSize::Smaller;
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Regular.Size = EFontSize::Small;
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Regular.Size = EFontSize::Large;
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Regular.Size = EFontSize::Larger;
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Regular.Size = EFontSize::Header;
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Regular.Size = EFontSize::Title;
 			UI::Font::Add(Roboto_Regular);
+			UI::Font::Add(FontAwesome);
 		}
 
 		{
@@ -266,24 +291,31 @@ namespace platformer2d {
 			Roboto_Bold.Modifier = EFontModifier::Bold;
 			Roboto_Bold.FilePath = FONTS_DIR "/Roboto/Roboto-Bold.ttf";
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Bold.Size = EFontSize::Smaller;
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Bold.Size = EFontSize::Small;
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Bold.Size = EFontSize::Large;
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Bold.Size = EFontSize::Larger;
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Bold.Size = EFontSize::Header;
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_Bold.Size = EFontSize::Title;
 			UI::Font::Add(Roboto_Bold);
+			UI::Font::Add(FontAwesome);
 		}
 
 		{
@@ -296,21 +328,27 @@ namespace platformer2d {
 
 			Roboto_SemiMedium.Size = EFontSize::Smaller;
 			UI::Font::Add(Roboto_SemiMedium);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_SemiMedium.Size = EFontSize::Small;
 			UI::Font::Add(Roboto_SemiMedium);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_SemiMedium.Size = EFontSize::Large;
 			UI::Font::Add(Roboto_SemiMedium);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_SemiMedium.Size = EFontSize::Larger;
 			UI::Font::Add(Roboto_SemiMedium);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_SemiMedium.Size = EFontSize::Header;
 			UI::Font::Add(Roboto_SemiMedium);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_SemiMedium.Size = EFontSize::Title;
 			UI::Font::Add(Roboto_SemiMedium);
+			UI::Font::Add(FontAwesome);
 		}
 
 		{
@@ -320,24 +358,31 @@ namespace platformer2d {
 			Roboto_BoldItalic.Modifier = EFontModifier::BoldItalic;
 			Roboto_BoldItalic.FilePath = FONTS_DIR "/Roboto/Roboto-BoldItalic.ttf";
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_BoldItalic.Size = EFontSize::Smaller;
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_BoldItalic.Size = EFontSize::Small;
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_BoldItalic.Size = EFontSize::Large;
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_BoldItalic.Size = EFontSize::Larger;
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_BoldItalic.Size = EFontSize::Header;
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 
 			Roboto_BoldItalic.Size = EFontSize::Title;
 			UI::Font::Add(Roboto_BoldItalic);
+			UI::Font::Add(FontAwesome);
 		}
 	}
 
