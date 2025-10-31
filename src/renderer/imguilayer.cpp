@@ -142,6 +142,20 @@ namespace platformer2d {
 			SourceSansPro_Semibold.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Semibold.ttf";
 			UI::Font::Add(SourceSansPro_Semibold, true);
 
+			/********************
+			 * FontAwesome
+			 *
+			 * Merge with last.
+			 ********************/
+			constexpr ImWchar FontAwesomeRanges[] = { LK_ICON_MIN, LK_ICON_MAX, 0 };
+			FFontConfiguration FontAwesome;
+			FontAwesome.Font = EFont::FontAwesome;
+			FontAwesome.Size = EFontSize::Regular;
+			FontAwesome.FilePath = FONTS_DIR "/FontAwesome/fontawesome-webfont.ttf";
+			FontAwesome.GlyphRanges = FontAwesomeRanges;
+			FontAwesome.MergeWithLast = true;
+			UI::Font::Add(FontAwesome);
+
 			SourceSansPro_Semibold.Size = EFontSize::Smaller;
 			UI::Font::Add(SourceSansPro_Semibold);
 
@@ -324,20 +338,6 @@ namespace platformer2d {
 
 			Roboto_BoldItalic.Size = EFontSize::Title;
 			UI::Font::Add(Roboto_BoldItalic);
-		}
-
-		/********************
-		 * FontAwesome
-		 ********************/
-		{
-			static constexpr ImWchar FontAwesomeRanges[] = { LK_ICON_MIN, LK_ICON_MAX, 0 };
-			FFontConfiguration FontAwesome;
-			FontAwesome.Font = EFont::FontAwesome;
-			FontAwesome.Size = EFontSize::Regular;
-			FontAwesome.FilePath = FONTS_DIR "/FontAwesome/fontawesome-webfont.ttf";
-			FontAwesome.GlyphRanges = FontAwesomeRanges;
-			FontAwesome.MergeWithLast = true;
-			UI::Font::Add(FontAwesome);
 		}
 	}
 
