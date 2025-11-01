@@ -1,6 +1,7 @@
 #include "ui.h"
 
 #include "core/input/keyboard.h"
+#include "game/gameinstance.h"
 #include "renderer/color.h"
 #include "renderer/font.h"
 
@@ -129,6 +130,30 @@ namespace platformer2d::UI {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 		ImGui::SetCursorPos(ImVec2(PaddingX, PaddingY));
 		ImGui::Checkbox("Debug", &GameMenu.Settings.bDebug);
+
+		ImGui::SeparatorText("Camera");
+		IGameInstance* GameInstance = IGameInstance::Get();
+		if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr)
+		{
+			Font::Push(EFont::Roboto, EFontSize::Large, EFontModifier::Italic);
+			ImGui::SetCursorPosX(44.0f);
+			const ImVec2 CursorPos = ImGui::GetCursorPos();
+			ImGui::SetCursorPosY(CursorPos.y + 2.0f);
+			ImGui::Text("Zoom");
+			Font::Pop();
+
+			Font::Push(EFont::Roboto, EFontSize::Large, EFontModifier::Bold);
+			float Zoom = Camera->GetZoom();
+			ImGui::SameLine(0.0f, 20.0f);
+			ImGui::SetCursorPosY(CursorPos.y);
+			ImGui::SliderFloat("##CameraZoom", &Zoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
+			if (ImGui::IsItemActive())
+			{
+				Camera->SetZoom(Zoom);
+			}
+			Font::Pop();
+		}
+
 		ImGui::PopStyleVar(2);
 
 		ImGui::Dummy(ImVec2(0.0f, PaddingY * 0.50f));
