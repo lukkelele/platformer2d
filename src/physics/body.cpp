@@ -64,25 +64,43 @@ namespace platformer2d {
 		ShapeDef.material.friction = Spec.Friction;
 		ShapeDef.isSensor = Spec.bSensor;
 
+		/**
+		 * @fixme: Improve the handling of the shape reference here.
+		 * Should not be needed to check variant twice to make the initial
+		 * body definition rotation be set correctly.
+		 */
+		if (std::holds_alternative<FPolygon>(Spec.Shape))
+		{
+			ShapeType = EShape::Polygon;
+			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
+			BodyDef.rotation = b2MakeRot(ShapeRef.Rotation);
+			LK_DEBUG_TAG("Body", "Rotation: {} rad", ShapeRef.Rotation);
+		}
+		else if (std::holds_alternative<FLine>(Spec.Shape))
+		{
+			ShapeType = EShape::Line;
+		}
+		else if (std::holds_alternative<FCapsule>(Spec.Shape))
+		{
+			ShapeType = EShape::Capsule;
+		}
+
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(BodyDef.type));
 		Shape = Spec.Shape;
 
 		if (std::holds_alternative<FPolygon>(Spec.Shape))
 		{
-			ShapeType = EShape::Polygon;
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
 			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
 		}
 		else if (std::holds_alternative<FLine>(Spec.Shape))
 		{
-			ShapeType = EShape::Line;
 			LK_ASSERT(false);
 		}
 		else if (std::holds_alternative<FCapsule>(Spec.Shape))
 		{
-			ShapeType = EShape::Capsule;
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
 			const b2Capsule Capsule = {
 				{ ShapeRef.P0.x, ShapeRef.P0.y },
@@ -133,9 +151,14 @@ namespace platformer2d {
 
 	void CBody::SetRotation(const float AngleRad) const
 	{
+#if 0
 		const b2Vec2 Pos = b2Body_GetPosition(ID);
 		const b2Transform Transform = { Pos, b2MakeRot(AngleRad) };
 		b2Body_SetTargetTransform(ID, Transform, DeltaTime);
+#else
+		const b2Transform Transform = b2Body_GetTransform(ID);
+		b2Body_SetTransform(ID, Transform.p, b2MakeRot(AngleRad));
+#endif
 	}
 
 	glm::vec2 CBody::GetLinearVelocity() const
