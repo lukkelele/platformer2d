@@ -27,13 +27,13 @@ namespace platformer2d {
 		IGameInstance() = delete;
 		virtual ~IGameInstance() = default;
 
-		static IGameInstance* Get() { return Instance; }
-
 		virtual void Initialize() = 0;
 		virtual void Destroy() = 0;
 
 		virtual void Tick(float DeltaTime) override = 0;
 		virtual CCamera* GetActiveCamera() const = 0;
+
+		static IGameInstance* Get() { return Instance; }
 
 	protected:
 		const FGameSpecification& GetSpecification() const { return Spec; }
