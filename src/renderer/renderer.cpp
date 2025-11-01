@@ -421,6 +421,7 @@ namespace platformer2d {
 		static constexpr float TileFactor = 1.0f;
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
+            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++)
