@@ -149,24 +149,17 @@ namespace platformer2d {
 		DebugDraw.DrawSolidPolygonFcn = [](b2Transform Transform, const b2Vec2* Vertices, int Count,
 										   float Radius, b2HexColor HexColor, void* Ctx)
 		{
-			LK_WARN("DrawSolidPolygon: Count={} Radius={}", Count, Radius);
-			constexpr float Rot = 0.0f;
+			const float Rot = std::atan2(Transform.q.s, Transform.q.c);
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
+			//LK_WARN("DrawSolidPolygon: Count={} Radius={} Rot={}", Count, Radius, Rot);
 
 			/* Quad */
 			if (Count == 4)
 			{
-				/* AABB */
-				const b2Vec2& V0 = Vertices[0];
-				const b2Vec2& V1 = Vertices[1];
-				const b2Vec2& V2 = Vertices[2];
-				const b2Vec2& V3 = Vertices[3];
-				const float MinX = std::min(std::min(V0.x, V1.x), std::min(V2.x, V3.x));
-				const float MinY = std::min(std::min(V0.y, V1.y), std::min(V2.y, V3.y));
-				const float MaxX = std::max(std::max(V0.x, V1.x), std::max(V2.x, V3.x));
-				const float MaxY = std::max(std::max(V0.y, V1.y), std::max(V2.y, V3.y));
-				const glm::vec2 Pos  = { (MinX + MaxX) * 0.50f, (MinY + MaxY) * 0.50f };
-				const glm::vec2 Size = { (MaxX - MinX), (MaxY - MinY) };
+				const glm::vec2 Pos = { Transform.p.x, Transform.p.y };
+				const glm::vec2 E0 = { (Vertices[1].x - Vertices[0].x), (Vertices[1].y - Vertices[0].y) };
+				const glm::vec2 E1 = { (Vertices[2].x - Vertices[1].x), (Vertices[2].y - Vertices[1].y) };
+				const glm::vec2 Size = { glm::length(E0), glm::length(E1) };
 				CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
 			}
 		};
@@ -186,6 +179,7 @@ namespace platformer2d {
 	void CDebugRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, const float RotationDeg)
 	{
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
+            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
 		glm::vec2 Vertices[4] = {};
