@@ -39,6 +39,7 @@ namespace platformer2d::Level {
 		};
 
 		std::vector<std::weak_ptr<CActor>> Actors;
+		std::vector<std::shared_ptr<CActor>> LevelActors;
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -46,6 +47,7 @@ namespace platformer2d::Level {
 	CTestLevel::CTestLevel()
 		: IGameInstance(GameSpec)
 	{
+		Instance = this;
 		Actors.clear();
 	}
 
@@ -83,9 +85,10 @@ namespace platformer2d::Level {
 			}
 			return false;
 		};
-		std::erase_if(Actors, IsPlayerOrPlatform);
+		const std::size_t ErasedActors = std::erase_if(Actors, IsPlayerOrPlatform);
+		LK_DEBUG_TAG("TestLevel", "Erased {} actors", ErasedActors);
 
-		CreateGround();
+		CreateTerrain();
 
 		if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
 		{
@@ -151,14 +154,20 @@ namespace platformer2d::Level {
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
 				const FTransformComponent& TC = Actor->GetTransformComponent();
-				CRenderer::DrawQuad(Actor->GetPosition(), TC.Scale, Actor->GetTexture(), Actor->GetColor());
+				CRenderer::DrawQuad(
+					Actor->GetPosition(),
+					TC.Scale,
+					Actor->GetTexture(),
+					Actor->GetColor(),
+					glm::degrees(TC.GetRotation2D())
+				);
 			}
 		}
 
 		/* Draw dark overlay whenever the pause menu is open. */
 		if (UI::IsGameMenuOpen())
 		{
-			const glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.80f };
+			static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.80f };
 			CRenderer::DrawQuad({ 0.0f, 0.0f }, { ViewportWidth, ViewportHeight }, OverlayColor);
 		}
 	}
@@ -213,23 +222,52 @@ namespace platformer2d::Level {
 		TC.SetScale(Polygon.Size);
 	}
 
-	void CTestLevel::CreateGround()
+	void CTestLevel::CreateTerrain()
 	{
-		FBodySpecification Spec;
-		Spec.Position = { 0.0f, -0.90 };
-		Spec.Type = EBodyType::Static;
-		Spec.Flags = EBodyFlag_PreSolveEvents;
+		float OffsetX = 0.0f;
+		float OffsetY = 0.0f;
+		{
+			FBodySpecification Spec;
+			Spec.Position = { 0.0f, -0.90 };
+			Spec.Type = EBodyType::Static;
+			Spec.Flags = EBodyFlag_PreSolveEvents;
 
-		FPolygon Polygon = {
-			.Size = { 10.0f, 0.12f }
-		};
-		Spec.Shape.emplace<FPolygon>(Polygon);
+			FPolygon Polygon = {
+				.Size = { 10.0f, 0.09 },
+				.Rotation = glm::radians(5.0f),
+			};
+			Spec.Shape.emplace<FPolygon>(Polygon);
 
-		Ground = CActor::Create<CActor>(Spec);
-		Ground->SetColor(FColor::Red);
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
+			Actor->SetColor(FColor::LightGreen);
+			LevelActors.emplace_back(Actor);
 
-		FTransformComponent& TC = Ground->GetTransformComponent();
-		TC.SetScale(Polygon.Size);
+			FTransformComponent& TC = Actor->GetTransformComponent();
+
+			OffsetX = (Spec.Position.x + Polygon.Size.x);
+			OffsetY = Spec.Position.y;
+		}
+
+		{
+			FBodySpecification Spec;
+			Spec.Position = { 5.0f, OffsetY };
+			Spec.Type = EBodyType::Static;
+			Spec.Flags = EBodyFlag_PreSolveEvents;
+
+			FPolygon Polygon = {
+				.Size = { 2.0f, 0.08f },
+				.Rotation = glm::radians(15.0f),
+			};
+			Spec.Shape.emplace<FPolygon>(Polygon);
+
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
+			Actor->SetColor(FColor::Blue);
+			LevelActors.emplace_back(Actor);
+
+			FTransformComponent& TC = Actor->GetTransformComponent();
+			OffsetX = (Spec.Position.x + Polygon.Size.x);
+			OffsetY = Spec.Position.y;
+		}
 	}
 
 	void CTestLevel::UI_Player()
@@ -275,6 +313,8 @@ namespace platformer2d::Level {
 		ImGui::SliderFloat("Restitution", &PlayerRestitution, 0.0f, 2.0f, "%.3f");
 		if (ImGui::IsItemActive()) PlayerBody.SetRestitution(PlayerRestitution);
 
+		ImGui::Text("Actors: %d", Actors.size());
+
 		ImGui::PopItemWidth();
 		ImGui::End();
 	}
@@ -291,33 +331,40 @@ namespace platformer2d::Level {
 	{
 		LK_ASSERT(b2Shape_IsValid(ShapeA));
 		LK_ASSERT(b2Shape_IsValid(ShapeB));
-
 		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
 		const b2ShapeId PlayerShapeID = Player.GetBody().GetShapeID();
 
-		float Sign = 0.0f;
+		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
+		if (!InvolvesPlayer)
+		{
+			return true; /* Enable normal contacts. */
+		}
+
+		/* Make normal point from platform to player. */
 		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))
 		{
-			Sign = -1.0f;
+			Normal.x = -Normal.x;
+			Normal.y = -Normal.y;
 		}
-		else if (B2_ID_EQUALS(ShapeB, PlayerShapeID))
+
+		const b2Vec2 Up = { 0.0f, 1.0f };
+		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
+		if (UpDot <= 0.0f)
 		{
-			Sign = 1.0f;
-		}
-		else
-		{
-			/* Not colliding with the player, enable contact. */
+			/* Side/ceiling/backface -> behave as a solid. */
 			return true;
 		}
 
-		if ((Sign * Normal.y) > 0.95f)
+		const b2BodyId PlayerBody = Player.GetBody().GetID();
+		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
+		const float Vn = V.x * Normal.x + V.y * Normal.y;
+		if (Vn > 0.0f)
 		{
-			return true;
+			/* Moving along the normal (from below toward the platform) -> ignore contact. */
+			return false;
 		}
 
-		/* Normal points down, disable contact. */
-		return false;
+		return true;
 	}
-
 
 }

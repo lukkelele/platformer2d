@@ -25,7 +25,7 @@ namespace platformer2d::Level {
 	private:
 		void CreatePlayer();
 		void CreatePlatform();
-		void CreateGround();
+		void CreateTerrain();
 
 		void UI_Player();
 		void UI_Physics();
@@ -33,7 +33,6 @@ namespace platformer2d::Level {
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CActor> Platform = nullptr;
-		std::shared_ptr<CActor> Ground = nullptr;
 	};
 
 }
