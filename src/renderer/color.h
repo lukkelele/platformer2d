@@ -47,12 +47,13 @@ namespace platformer2d {
 	private:
 		using B = TColorInternal<Range>;
 	public:
-		static inline glm::vec4 White       = { B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f) };
-		static inline glm::vec4 Black       = { B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f) };
-		static inline glm::vec4 Red         = { B::Scale(1.0f), B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f) };
-		static inline glm::vec4 Green       = { B::Scale(0.0f), B::Scale(1.0f), B::Scale(0.0f), B::Scale(1.0f) };
-		static inline glm::vec4 Blue        = { B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f), B::Scale(1.0f) };
-		static inline glm::vec4 Transparent = { B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f) };
+		static inline glm::vec4 White       = { B::Scale(1.0f),  B::Scale(1.0f),  B::Scale(1.0f),  B::Scale(1.0f) };
+		static inline glm::vec4 Black       = { B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(1.0f) };
+		static inline glm::vec4 Red         = { B::Scale(1.0f),  B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(1.0f) };
+		static inline glm::vec4 Green       = { B::Scale(0.0f),  B::Scale(1.0f),  B::Scale(0.0f),  B::Scale(1.0f) };
+		static inline glm::vec4 LightGreen  = { B::Scale(0.0f),  B::Scale(0.75f), B::Scale(0.0f),  B::Scale(1.0f) };
+		static inline glm::vec4 Blue        = { B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(1.0f),  B::Scale(1.0f) };
+		static inline glm::vec4 Transparent = { B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(0.0f) };
 	};
 
 	template<EColorRange Range = EColorRange::Normalized>
