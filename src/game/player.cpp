@@ -1,4 +1,5 @@
 #include "player.h"
+#include "player.h"
 
 #include <imgui/imgui.h>
 
@@ -40,6 +41,12 @@ namespace platformer2d {
 		{
 			Jump();
 		}
+
+		if (bCameraLock)
+		{
+			Camera->Target(Body->GetPosition(), DeltaTime);
+		}
+		Camera->Update();
 	}
 
 	void CPlayer::Jump()
@@ -60,6 +67,11 @@ namespace platformer2d {
 	void CPlayer::SetDirectionForce(const float Force)
 	{
 		DirForce = Force;
+	}
+
+	void CPlayer::SetCameraLock(bool Locked)
+	{
+		bCameraLock = true;
 	}
 
 	void CPlayer::CheckJumpState()

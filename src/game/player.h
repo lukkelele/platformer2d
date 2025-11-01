@@ -40,6 +40,7 @@ namespace platformer2d {
 
 		inline CCamera& GetCamera() { return *Camera; }
 		inline const CCamera& GetCamera() const { return *Camera; }
+		void SetCameraLock(bool Locked);
 
 	private:
 		void CheckJumpState();
@@ -51,8 +52,9 @@ namespace platformer2d {
 	private:
 		FPlayerData Data{};
 		std::unique_ptr<CCamera> Camera = nullptr;
+		bool bCameraLock = true;
 
-		float JumpImpulse = 0.530f;
+		float JumpImpulse = 2.450f;
 		float DirForce = 5.630f;
 	};
 
