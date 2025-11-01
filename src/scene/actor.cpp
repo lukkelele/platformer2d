@@ -19,6 +19,12 @@ namespace platformer2d {
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
 		TransformComp.Translation.y = BodyPos.y;
+		TransformComp.SetRotation2D(Body->GetRotation());
+
+		if (const FPolygon* Polygon = std::get_if<FPolygon>(&BodySpec.Shape); Polygon != nullptr)
+		{
+			TransformComp.SetScale(Polygon->Size);
+		}
 	}
 
 	CActor::~CActor()
@@ -33,6 +39,7 @@ namespace platformer2d {
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
 		TransformComp.Translation.y = BodyPos.y;
+		TransformComp.SetRotation2D(Body->GetRotation());
 	}
 
 	glm::vec2 CActor::GetPosition() const
@@ -50,6 +57,12 @@ namespace platformer2d {
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
 		Body->SetPosition(NewPos);
+	}
+
+	void CActor::SetRotation(const float AngleRad)
+	{
+		TransformComp.SetRotation2D(AngleRad);
+		Body->SetRotation(AngleRad);
 	}
 
 	void CActor::SetColor(const glm::vec4& InColor)

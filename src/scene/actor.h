@@ -37,6 +37,7 @@ namespace platformer2d {
 		glm::vec2 GetPosition() const;
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
+		void SetRotation(float AngleRad);
 
 		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
