@@ -26,7 +26,9 @@ namespace platformer2d {
 		IGameInstance(const FGameSpecification& InSpec);
 		IGameInstance() = delete;
 		virtual ~IGameInstance() = default;
-		
+
+		static IGameInstance* Get() { return Instance; }
+
 		virtual void Initialize() = 0;
 		virtual void Destroy() = 0;
 
@@ -39,6 +41,8 @@ namespace platformer2d {
 	protected:
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
+
+		static inline IGameInstance* Instance = nullptr;
 	private:
 		FGameSpecification Spec{};
 	};
