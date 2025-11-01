@@ -32,6 +32,10 @@ namespace platformer2d {
 		void SetZoom(float InZoom);
 		float GetZoom() const { return Zoom; }	
 
+		void Target(const glm::vec2& TargetPos, float DeltaTime = 0.0f);
+		void SetFollowSpeed(float InFollowSpeed);
+		void SetDeadzone(const glm::vec2& InDeadzone);
+
 	private:
 		FORCEINLINE void UpdateProjection()
 		{
@@ -58,7 +62,7 @@ namespace platformer2d {
 		static inline constexpr float ZOOM_MIN = 0.010f;
 		static inline constexpr float ZOOM_MAX = 1.0f;
 	private:
-		glm::vec3 Center = { 0.0f, 0.0f, 0.0f };
+		glm::vec2 Center = { 0.0f, 0.0f };
 
 		float ViewportWidth;
 		float ViewportHeight;
@@ -75,6 +79,9 @@ namespace platformer2d {
 
 		glm::mat4 ViewMatrix = glm::mat4(1.0f);
 		glm::mat4 ProjectionMatrix = glm::mat4(1.0f);
+
+		glm::vec2 DeadzoneHalf = { 0.10f, 0.0f }; /* World units. */
+		float FollowSpeed = 10.0f;
 	};
 
 }

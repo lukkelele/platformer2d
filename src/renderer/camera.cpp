@@ -1,6 +1,4 @@
 #include "camera.h"
-#include "camera.h"
-#include "camera.h"
 
 #include <cmath>
 
@@ -71,6 +69,56 @@ namespace platformer2d {
 				SetZoom(GetZoom() + ZoomDiff);
 			}
 		}
+	}
+
+	void CCamera::Target(const glm::vec2& TargetPos, const float DeltaTime)
+	{
+		/* Dead-zone logic. */
+		if (DeltaTime > 0.0f)
+		{
+			glm::vec2 Center2 = glm::vec2(Center.x, Center.y);
+			glm::vec2 Offset = TargetPos - Center2;
+			glm::vec2 Desired = Center2;
+
+			if (Offset.x > DeadzoneHalf.x)
+			{
+				Desired.x = TargetPos.x - DeadzoneHalf.x;
+			}
+			if (Offset.x < -DeadzoneHalf.x)
+			{
+				Desired.x = TargetPos.x + DeadzoneHalf.x;
+			}
+			if (Offset.y > DeadzoneHalf.y)
+			{
+				Desired.y = TargetPos.y - DeadzoneHalf.y;
+			}
+			if (Offset.y < -DeadzoneHalf.y)
+			{
+				Desired.y = TargetPos.y + DeadzoneHalf.y;
+			}
+
+			const float T = 1.0f - std::exp(-FollowSpeed * DeltaTime);
+			Center2 += (Desired - Center2) * T;
+
+			Center.x = Center2.x;
+			Center.y = Center2.y;
+		}
+		else
+		{
+			/* Instant target lock. */
+			Center.x = TargetPos.x;
+			Center.y = TargetPos.y;
+		}
+	}
+
+	void CCamera::SetFollowSpeed(const float InFollowSpeed)
+	{
+		FollowSpeed = InFollowSpeed;
+	}
+
+	void CCamera::SetDeadzone(const glm::vec2& InDeadzone)
+	{
+		DeadzoneHalf = InDeadzone;
 	}
 
 	void CCamera::OnMouseButtonPressed(const FMouseButtonData& ButtonData)
