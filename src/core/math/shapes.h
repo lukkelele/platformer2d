@@ -3,6 +3,7 @@
 #include <variant>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include "core/macros.h"
 #include "physics/bodytype.h"
@@ -21,7 +22,7 @@ namespace platformer2d {
 	{
 		glm::vec2 Size = { 1.0f, 1.0f };
 		float Radius = 0.50f;
-		float Rotation = 0.50f;
+		float Rotation = glm::pi<float>(); /* Radians */
 	};
 
 	struct FCapsule
