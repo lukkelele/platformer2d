@@ -20,8 +20,8 @@ namespace platformer2d {
 		UpdateProjection();
 
 		CKeyboard::OnKeyPressed.Add(this, &CCamera::OnKeyPressed);
-		CMouse::OnMouseButtonPressed.Add(this, &CCamera::OnMouseButtonPressed);
-		CMouse::OnMouseScrolled.Add(this, &CCamera::OnMouseScrolled);
+		CMouse::OnButtonPressed.Add(this, &CCamera::OnMouseButtonPressed);
+		CMouse::OnScrolled.Add(this, &CCamera::OnMouseScrolled);
 	}
 
 	void CCamera::Update()
@@ -54,10 +54,9 @@ namespace platformer2d {
 	void CCamera::OnKeyPressed(const FKeyData& KeyData)
 	{
 		LK_TRACE_TAG("Camera", "OnKeyPressed: {} (Count: {})", Enum::ToString(KeyData.Key), KeyData.RepeatCount);
-		static constexpr float ZoomDiff = 0.010f;
 		if (KeyData.Key == EKey::Minus)
 		{
-			SetZoom(GetZoom() - ZoomDiff);
+			SetZoom(GetZoom() - ZOOM_DIFF);
 		}
 
 		/* Modifiers */
@@ -66,7 +65,7 @@ namespace platformer2d {
 		{
 			if (KeyData.Key == EKey::Equal)
 			{
-				SetZoom(GetZoom() + ZoomDiff);
+				SetZoom(GetZoom() + ZOOM_DIFF);
 			}
 		}
 	}

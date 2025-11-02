@@ -61,6 +61,7 @@ namespace platformer2d {
 	public:
 		static inline constexpr float ZOOM_MIN = 0.010f;
 		static inline constexpr float ZOOM_MAX = 1.0f;
+		static inline constexpr float ZOOM_DIFF = 0.010f;
 	private:
 		glm::vec2 Center = { 0.0f, 0.0f };
 
