@@ -61,10 +61,16 @@ namespace platformer2d {
 		Body->SetPosition(NewPos);
 	}
 
+	float CActor::GetRotation() const
+	{
+		//return Body->GetRotation();
+		return TransformComp.GetRotation2D();
+	}
+
 	void CActor::SetRotation(const float AngleRad)
 	{
-		TransformComp.SetRotation2D(AngleRad);
 		Body->SetRotation(AngleRad);
+		TransformComp.SetRotation2D(AngleRad);
 	}
 
 	void CActor::SetColor(const glm::vec4& InColor)

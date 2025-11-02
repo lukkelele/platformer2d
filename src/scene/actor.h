@@ -11,7 +11,7 @@
 
 namespace platformer2d {
 
-	using FActorHandle = uint64_t;
+	using FActorHandle = uint32_t;
 
 	class CActor
 	{
@@ -37,6 +37,11 @@ namespace platformer2d {
 		glm::vec2 GetPosition() const;
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
+
+		/**
+		 * @brief Get rotation in radians.
+		 */
+		float GetRotation() const;
 		void SetRotation(float AngleRad);
 
 		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
@@ -64,7 +69,7 @@ namespace platformer2d {
 	private:
 		FActorHandle Handle;
 
-		static inline uint64_t Instances = 0;
+		static inline uint32_t Instances = 0;
 		static_assert(std::is_same_v<FActorHandle, decltype(Instances)>);
 	};
 
