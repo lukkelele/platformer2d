@@ -37,14 +37,13 @@ namespace platformer2d {
 
 	enum class EMouseScrollDirection
 	{
-		None,
 		Up,
 		Down
 	};
 
 	namespace Enum
 	{
-		static constexpr const char* ToString(const EMouseButton MouseButton)
+		inline const char* ToString(const EMouseButton MouseButton)
 		{
 			switch (MouseButton)
 			{
@@ -56,10 +55,11 @@ namespace platformer2d {
 				case EMouseButton::Button5: return "Button5";
 				case EMouseButton::None:    return "None";
 			}
+			LK_VERIFY(false);
 			return nullptr;
 		}
 
-		static constexpr const char* ToString(const ECursorMode CursorMode)
+		inline const char* ToString(const ECursorMode CursorMode)
 		{
 			switch (CursorMode)
 			{
@@ -67,17 +67,18 @@ namespace platformer2d {
 				case ECursorMode::Hidden: return "Hidden";
 				case ECursorMode::Locked: return "Locked";
 			}
+			LK_VERIFY(false);
 			return nullptr;
 		}
 
-		static constexpr const char* ToString(const EMouseScrollDirection ScrollDirection)
+		inline const char* ToString(const EMouseScrollDirection ScrollDirection)
 		{
 			switch (ScrollDirection)
 			{
 				case EMouseScrollDirection::Up:   return "Up";
 				case EMouseScrollDirection::Down: return "Down";
-				case EMouseScrollDirection::None: return "None";
 			}
+			LK_VERIFY(false);
 			return nullptr;
 		}
 	}

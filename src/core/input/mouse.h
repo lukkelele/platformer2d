@@ -17,8 +17,8 @@ namespace platformer2d {
 	class CMouse
 	{
 	public:
-		LK_DECLARE_EVENT(FOnMouseButtonPressed, CMouse, const FMouseButtonData&);
-		LK_DECLARE_EVENT(FOnMouseScrolled, CMouse, const EMouseScrollDirection);
+		LK_DECLARE_EVENT(FOnButtonPressed, CMouse, const FMouseButtonData&);
+		LK_DECLARE_EVENT(FOnScrolled, CMouse, EMouseScrollDirection);
 	public:
 		CMouse() = delete;
 		~CMouse() = delete;
@@ -41,8 +41,8 @@ namespace platformer2d {
 		CMouse& operator=(CMouse&&) = delete;
 
 	public:
-		static inline FOnMouseButtonPressed OnMouseButtonPressed;
-		static inline FOnMouseScrolled OnMouseScrolled;
+		static inline FOnButtonPressed OnButtonPressed;
+		static inline FOnScrolled OnScrolled;
 	private:
 		static inline std::map<EMouseButton, FMouseButtonData> ButtonDataMap{};
 	};
