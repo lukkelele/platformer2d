@@ -80,7 +80,7 @@ namespace platformer2d {
 		 * Index 1: stdout
 		 */
 		CoreSinks[0]->set_pattern("[%T] [%l] [%n] %v");
-		CoreSinks[1]->set_pattern("[%T] [%^%l%$] %v");
+		CoreSinks[1]->set_pattern("%^[%T] [%l] %v%$");
 
 		Logger_Core = std::make_shared<spdlog::logger>("CORE", CoreSinks.begin(), CoreSinks.end());
 		Logger_Core->set_level(spdlog::level::trace);
