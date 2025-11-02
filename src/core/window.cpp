@@ -6,6 +6,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
+#include <stb/stb_image.h>
 #include <spdlog/spdlog.h>
 
 #include "renderer/opengl.h"
@@ -41,6 +42,7 @@ namespace platformer2d {
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
+		LK_DEBUG_TAG("Window", "Create ({}, {})", Data.Width, Data.Height);
 		Data.WindowRef = this;
 		GlfwWindow = glfwCreateWindow(Data.Width, Data.Height, Data.Title.c_str(), nullptr, nullptr);
 		LK_VERIFY(GlfwWindow);
@@ -50,15 +52,14 @@ namespace platformer2d {
 		glfwSetWindowSizeCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow, int NewWidth, int NewHeight) 
 		{
 			FWindowData& Data = *((FWindowData*)glfwGetWindowUserPointer(InGlfwWindow));
-			LK_ASSERT(Data.WindowRef);
+			LK_ASSERT(Data.WindowRef, "Invalid window reference");
 			Data.WindowRef->SetSize(NewWidth, NewHeight);
 		});
 
 		glfwSetWindowCloseCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow)
 		{
-			LK_INFO_TAG("Window", "Closing");
+			LK_TRACE_TAG("Window", "Set close flag");
 			glfwSetWindowShouldClose(InGlfwWindow, GLFW_TRUE);
-			std::exit(0); /** @todo Should do proper shutdown */
 		});
 
 		SetVSync(true);
@@ -115,11 +116,18 @@ namespace platformer2d {
 				CMouse::UpdateScrollState(EMouseScrollDirection::Down);
 			}
 		});
+
+		/* Set window icon. */
+		const std::filesystem::path IconPath = TEXTURES_DIR "/test/test_player.png";
+		SetIcon(IconPath);
+
+		Centralize();
 	}
 
 	void CWindow::Destroy()
 	{
 		glfwTerminate();
+		GlfwWindow = nullptr;
 	}
 
 	void CWindow::BeginFrame()
@@ -133,6 +141,23 @@ namespace platformer2d {
 		glfwPollEvents();
 	}
 
+	void CWindow::SetSize(const uint16_t InWidth, const uint16_t InHeight)
+	{
+		if ((Data.Width != InWidth) || (Data.Height != InHeight))
+		{
+			Data.Width = InWidth;
+			Data.Height = InHeight;
+			OnResized.Broadcast(InWidth, InHeight);
+		}
+	}
+
+	void CWindow::SetTitle(std::string_view NewTitle)
+	{
+		LK_ASSERT(GlfwWindow);
+		LK_DEBUG_TAG("Window", "Set title: {}", NewTitle);
+		glfwSetWindowTitle(GlfwWindow, NewTitle.data());
+	}
+
 	void CWindow::SetVSync(const bool Enabled)
 	{
 		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "enabled" : "disabled");
@@ -140,11 +165,35 @@ namespace platformer2d {
 		Data.bVSync = Enabled;
 	}
 
-	void CWindow::SetSize(const uint16_t InWidth, const uint16_t InHeight)
+	void CWindow::SetIcon(const std::filesystem::path ImagePath)
 	{
-		Data.Width = InWidth;
-		Data.Height = InHeight;
-		OnResized.Broadcast(InWidth, InHeight);
+		LK_ASSERT(std::filesystem::exists(ImagePath), "Invalid path: {}", ImagePath);
+		GLFWimage Icon{};
+		Icon.pixels = stbi_load(ImagePath.generic_string().c_str(), &Icon.width, &Icon.height, 0, 4);
+		LK_ASSERT(Icon.pixels);
+		glfwSetWindowIcon(GlfwWindow, 1, &Icon);
+		stbi_image_free(Icon.pixels);
+	}
+
+	void CWindow::Centralize()
+	{
+		GLFWmonitor* PrimaryMonitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* VideoMode = glfwGetVideoMode(PrimaryMonitor);
+		LK_ASSERT(VideoMode);
+
+		int WindowWidth{};
+		int WindowHeight{};
+		glfwGetWindowSize(GlfwWindow, &WindowWidth, &WindowHeight);
+
+		int MonitorX{};
+		int MonitorY{};
+		glfwGetMonitorPos(PrimaryMonitor, &MonitorX, &MonitorY);
+
+		const int PosX = MonitorX + (VideoMode->width - WindowWidth) / 2;
+		const int PosY = MonitorY + (VideoMode->height - WindowHeight) / 2;
+
+		glfwSetWindowPos(GlfwWindow, PosX, PosY);
+		LK_TRACE_TAG("Window", "Centered at ({}, {})", PosX, PosY);
 	}
 
 }

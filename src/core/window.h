@@ -45,13 +45,17 @@ namespace platformer2d {
 		void BeginFrame();
 		void EndFrame();
 
+		void SetSize(uint16_t InWidth, uint16_t InHeight);
+		void SetTitle(std::string_view NewTitle);
 		void SetVSync(bool Enabled);
 		bool GetVSync() const { return Data.bVSync; }
 
-		void SetSize(uint16_t InWidth, uint16_t InHeight);
-
 		const FWindowData& GetData() const { return Data; }
 		inline GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }
+
+	private:
+		void SetIcon(std::filesystem::path ImagePath);
+		void Centralize();
 
 	public:
 		static inline FOnResized OnResized;
