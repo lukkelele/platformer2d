@@ -10,7 +10,7 @@ namespace platformer2d::Level {
 	{
 	public:
 		CTestLevel();
-		virtual ~CTestLevel();
+		virtual ~CTestLevel() = default;
 
 		virtual void Initialize() override;
 		virtual void Destroy() override;
@@ -27,8 +27,8 @@ namespace platformer2d::Level {
 		void CreatePlatform();
 		void CreateTerrain();
 
+		void UI_Level();
 		void UI_Player();
-		void UI_Physics();
 
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;

@@ -14,6 +14,11 @@ namespace platformer2d {
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
+
+		if (Name.empty())
+		{
+			Name = "Player";
+		}
 	}
 
 	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
@@ -22,6 +27,11 @@ namespace platformer2d {
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
+
+		if (Name.empty())
+		{
+			Name = "Player";
+		}
 	}
 
 	void CPlayer::Tick(const float DeltaTime)

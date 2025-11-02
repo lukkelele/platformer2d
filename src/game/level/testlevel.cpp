@@ -2,13 +2,15 @@
 
 #include "core/window.h"
 #include "core/timer.h"
+#include "core/selectioncontext.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
 #include "game/player.h"
 #include "renderer/renderer.h"
 #include "renderer/debugrenderer.h"
-#include "renderer/ui.h"
+#include "renderer/ui/ui.h"
+#include "renderer/ui/widgets.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
@@ -22,7 +24,7 @@ namespace platformer2d::Level {
 		FGameSpecification GameSpec = {
 			.Name = "TestLevel",
 			.Gravity = { 0.0f, -5.0f },
-			.Zoom = 0.25f,
+			.Zoom = 0.32f,
 			.PlayerBody = {
 				.Type = EBodyType::Dynamic,
 				.Shape = FCapsule{
@@ -30,7 +32,7 @@ namespace platformer2d::Level {
 					.P1 = { 0.0f, 0.20f },
 					.Radius = 0.10f,
 				},
-				.Position = { 0.0f, 1.0f },
+				.Position = { 0.0f, 0.50f },
 				.Friction = 0.10f,
 				.Density = 0.60f,
 				.LinearDamping = 0.50f,
@@ -38,8 +40,9 @@ namespace platformer2d::Level {
 			},
 		};
 
-		std::vector<std::weak_ptr<CActor>> Actors;
 		std::vector<std::shared_ptr<CActor>> LevelActors;
+
+		constexpr float UI_BG_ALPHA = 0.70f;
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -48,22 +51,22 @@ namespace platformer2d::Level {
 		: IGameInstance(GameSpec)
 	{
 		Instance = this;
-		Actors.clear();
-	}
-
-	CTestLevel::~CTestLevel()
-	{
+		LevelActors.clear();
 	}
 
 	void CTestLevel::Initialize()
 	{
+		LK_VERIFY(Instance);
 		LK_DEBUG_TAG("TestLevel", "Initialize");
 		LK_ASSERT(Player == nullptr);
 
-		CActor::OnActorCreated.Add([](const FActorHandle Handle, std::weak_ptr<CActor> Actor)
+		CActor::OnActorCreated.Add([](const FActorHandle Handle, std::weak_ptr<CActor> ActorRef)
 		{
-			LK_INFO_TAG("TestLevel", "Created actor: {}", Handle);
-			Actors.emplace_back(Actor);
+			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
+			{
+				LK_DEBUG_TAG("TestLevel", "Actor created: {} ({})", Actor->GetName(), Handle);
+				LevelActors.emplace_back(Actor);
+			}
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
@@ -73,31 +76,14 @@ namespace platformer2d::Level {
 		CreatePlatform();
 		LK_VERIFY(Player && Platform);
 
-		/* Remove player and platform from actors vector to not draw multiple times. */
-		const FActorHandle PlayerHandle = Player->GetHandle();
-		const FActorHandle PlatformHandle = Platform->GetHandle();
-		auto IsPlayerOrPlatform = [PlayerHandle, PlatformHandle](std::weak_ptr<CActor> ActorRef) -> bool
-		{
-			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
-			{
-				const FActorHandle Handle = Actor->GetHandle();
-				return ((Handle == PlayerHandle) || (Handle == PlatformHandle));
-			}
-			return false;
-		};
-		const std::size_t ErasedActors = std::erase_if(Actors, IsPlayerOrPlatform);
-		LK_DEBUG_TAG("TestLevel", "Erased {} actors", ErasedActors);
-
 		CreateTerrain();
 
-		if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
-		{
-			Camera->SetZoom(Spec.Zoom);
-		}
+		CCamera* Camera = GetActiveCamera();
+		LK_VERIFY(Camera);
+		Camera->SetZoom(Spec.Zoom);
 
 		UI::OnGameMenuOpened.Add([](const bool Opened)
 		{
-			LK_DEBUG_TAG("TestLevel", "Game Menu: {}", Opened ? "Opened" : "Closed");
 			if (Opened)
 			{
 				CPhysicsWorld::Pause();
@@ -111,31 +97,35 @@ namespace platformer2d::Level {
 
 	void CTestLevel::Destroy()
 	{
-		LK_DEBUG_TAG("TestLevel", "Destroy");
+		LK_TRACE_TAG("TestLevel", "Destroy");
 		Player.reset();
+
+		LK_DEBUG_TAG("TestLevel", "Releasing level resources");
+		LevelActors.clear();
 	}
 
 	void CTestLevel::OnAttach()
 	{
-		LK_DEBUG_TAG("TestLevel", "OnAttach");
+		LK_TRACE_TAG("TestLevel", "OnAttach");
 		Initialize();
 	}
 
 	void CTestLevel::OnDetach()
 	{
-		LK_DEBUG_TAG("TestLevel", "OnDetach");
+		LK_TRACE_TAG("TestLevel", "OnDetach");
 		Destroy();
 	}
 
 	void CTestLevel::Tick(const float DeltaTime)
 	{
 		CCamera& Camera = Player->GetCamera();
-		CRenderer::BeginScene(Camera);
 		Camera.SetViewportSize(ViewportWidth, ViewportHeight);
+		CRenderer::BeginScene(Camera);
 
 		Player->Tick(DeltaTime);
 		Platform->Tick(DeltaTime);
 
+		/* Render player. */
 		const FCapsule* Capsule = Player->GetBody().TryGetShape<EShape::Capsule>();
 		if (Capsule)
 		{
@@ -143,25 +133,26 @@ namespace platformer2d::Level {
 			const float Dist = glm::distance(Capsule->P0, Capsule->P1);
 			glm::vec2 PlayerSize = { Dist, Dist };
 			PlayerSize *= glm::vec2(Scale.x, Scale.y);
-			CRenderer::DrawQuad(Player->GetPosition(), PlayerSize, CRenderer::GetTexture(Player->GetTexture()), FColor::White);
+			CRenderer::DrawQuad(
+				Player->GetPosition(),
+				PlayerSize,
+				CRenderer::GetTexture(Player->GetTexture()),
+				FColor::White,
+				glm::degrees(Player->GetRotation())
+			);
 		}
 
-		const FTransformComponent& TC = Platform->GetTransformComponent();
-		CRenderer::DrawQuad(Platform->GetPosition(), TC.Scale, CRenderer::GetTexture(Platform->GetTexture()), FColor::White);
-
-		for (const auto& ActorRef : Actors)
+		/* Render level. */
+		for (const std::shared_ptr<CActor>& Actor : LevelActors)
 		{
-			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
-			{
-				const FTransformComponent& TC = Actor->GetTransformComponent();
-				CRenderer::DrawQuad(
-					Actor->GetPosition(),
-					TC.Scale,
-					Actor->GetTexture(),
-					Actor->GetColor(),
-					glm::degrees(TC.GetRotation2D())
-				);
-			}
+			const FTransformComponent& TC = Actor->GetTransformComponent();
+			CRenderer::DrawQuad(
+				Actor->GetPosition(),
+				TC.Scale,
+				Actor->GetTexture(),
+				Actor->GetColor(),
+				glm::degrees(TC.GetRotation2D())
+			);
 		}
 
 		/* Draw dark overlay whenever the pause menu is open. */
@@ -174,18 +165,13 @@ namespace platformer2d::Level {
 
 	CCamera* CTestLevel::GetActiveCamera() const
 	{
-		if (Player)
-		{
-			return &Player->GetCamera();
-		}
-
-		return nullptr;
+		return (Player ? &Player->GetCamera() : nullptr);
 	}
 
 	void CTestLevel::RenderUI()
 	{
+		UI_Level();
 		UI_Player();
-		UI_Physics();
 	}
 
 	void CTestLevel::CreatePlayer()
@@ -208,7 +194,8 @@ namespace platformer2d::Level {
 	void CTestLevel::CreatePlatform()
 	{
 		FBodySpecification Spec;
-		Spec.Position = { 0.0f, -0.80 };
+		Spec.Name = "Metal";
+		Spec.Position = { 0.0f, -0.72f };
 		Spec.Type = EBodyType::Static;
 		Spec.Flags = EBodyFlag_PreSolveEvents;
 
@@ -217,57 +204,115 @@ namespace platformer2d::Level {
 		};
 		Spec.Shape.emplace<FPolygon>(Polygon);
 
-		Platform = CActor::Create<CActor>(Spec, ETexture::Platform);
+		Platform = CActor::Create<CActor>(Spec, ETexture::Metal);
 		FTransformComponent& TC = Platform->GetTransformComponent();
 		TC.SetScale(Polygon.Size);
 	}
 
 	void CTestLevel::CreateTerrain()
 	{
-		float OffsetX = 0.0f;
-		float OffsetY = 0.0f;
+		/* Object 1. */
 		{
 			FBodySpecification Spec;
-			Spec.Position = { 0.0f, -0.90 };
 			Spec.Type = EBodyType::Static;
+			Spec.Position = { 2.38f, -0.18f };
 			Spec.Flags = EBodyFlag_PreSolveEvents;
+			Spec.Name = "Spawn-Right-Platform";
 
 			FPolygon Polygon = {
-				.Size = { 10.0f, 0.09 },
-				.Rotation = glm::radians(5.0f),
+				.Size = { 3.0f, 0.09 },
+				.Rotation = glm::radians(21.81f),
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::Metal);
 			Actor->SetColor(FColor::LightGreen);
-			LevelActors.emplace_back(Actor);
-
-			FTransformComponent& TC = Actor->GetTransformComponent();
-
-			OffsetX = (Spec.Position.x + Polygon.Size.x);
-			OffsetY = Spec.Position.y;
 		}
 
+		/* Object 2. */
 		{
 			FBodySpecification Spec;
-			Spec.Position = { 5.0f, OffsetY };
 			Spec.Type = EBodyType::Static;
+			Spec.Position = { -1.48f, -0.04f };
 			Spec.Flags = EBodyFlag_PreSolveEvents;
+			Spec.Name = "Spawn-Wall-Left";
 
 			FPolygon Polygon = {
-				.Size = { 2.0f, 0.08f },
-				.Rotation = glm::radians(15.0f),
+				.Size = { 1.45f, 0.95f },
+				.Rotation = glm::radians(90.0f),
+			};
+			Spec.Shape.emplace<FPolygon>(Polygon);
+
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::Bricks);
+		}
+
+		/* Object 3. */
+		{
+			FBodySpecification Spec;
+			Spec.Type = EBodyType::Static;
+			Spec.Position = { -0.43f, -0.10f };
+			Spec.Flags = EBodyFlag_PreSolveEvents;
+			Spec.Name = "FlyingPlatform-1";
+
+			FPolygon Polygon = {
+				.Size = { 0.40f, 0.06f },
+				.Rotation = glm::radians(0.0f),
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
 			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
-			Actor->SetColor(FColor::Blue);
-			LevelActors.emplace_back(Actor);
-
-			FTransformComponent& TC = Actor->GetTransformComponent();
-			OffsetX = (Spec.Position.x + Polygon.Size.x);
-			OffsetY = Spec.Position.y;
+			Actor->SetColor(FColor::Convert(RGBA32::Magenta));
 		}
+	}
+
+	void CTestLevel::UI_Level()
+	{
+		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
+		if (!ImGui::Begin("Level"))
+		{
+			return;
+		}
+
+		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
+
+		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
+		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
+
+		ImGui::Text("Actors: %d", LevelActors.size());
+
+		UI::Draw::ActorNode(*Player);
+		for (auto& Actor : LevelActors)
+		{
+			UI::Draw::ActorNode(*Actor);
+		}
+
+		{
+			ImGui::Text("Texture: Wood");
+			ImGui::PushID("Wood");
+			constexpr ETexture Texture = ETexture::Wood;
+			if (ImGui::Button("Clamp")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Clamp);
+			ImGui::SameLine();
+			if (ImGui::Button("Repeat")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Repeat);
+			if (ImGui::Button("Linear")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Linear);
+			ImGui::SameLine();
+			if (ImGui::Button("Nearest")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
+			ImGui::PopID();
+		}
+		{
+			ImGui::Text("Texture: Bricks");
+			ImGui::PushID("Bricks");
+			constexpr ETexture Texture = ETexture::Bricks;
+			if (ImGui::Button("Clamp")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Clamp);
+			ImGui::SameLine();
+			if (ImGui::Button("Repeat")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Repeat);
+			if (ImGui::Button("Linear")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Linear);
+			ImGui::SameLine();
+			if (ImGui::Button("Nearest")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
+			ImGui::PopID();
+		}
+
+		UI::Font::Pop();
+		ImGui::End();
 	}
 
 	void CTestLevel::UI_Player()
@@ -275,19 +320,24 @@ namespace platformer2d::Level {
 		const CBody& PlayerBody = Player->GetBody();
 		const FPlayerData& PlayerData = Player->GetData();
 
-		ImGui::Begin("Player");
+		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
+		if (!ImGui::Begin("Player"))
+		{
+			return;
+		}
+
 		glm::vec2 PlayerBodyPos = Player->GetBody().GetPosition();
-		ImGui::Text("Body: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
+		ImGui::Text("Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 		PlayerBodyPos = Player->GetPosition();
 		ImGui::Text("Transform Component: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
 
-		ImGui::Dummy(ImVec2(0, 8));
+		ImGui::Text("Camera Zoom: %.2f", Player->GetCamera().GetZoom());
+
+		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
+		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
 
 		ImGui::PushItemWidth(220.0f);
-		const glm::vec2 PlayerLinearVelocity = PlayerBody.GetLinearVelocity();
-		ImGui::Text("Body Linear Velocity: (%.2f, %.2f)", PlayerLinearVelocity.x, PlayerLinearVelocity.y);
-
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
 		ImGui::SliderFloat("Jump Impulse", &PlayerJumpImpulse, 0.0f, 10.0f, "%.5f");
 		if (ImGui::IsItemActive()) Player->SetJumpImpulse(PlayerJumpImpulse);
@@ -313,17 +363,17 @@ namespace platformer2d::Level {
 		ImGui::SliderFloat("Restitution", &PlayerRestitution, 0.0f, 2.0f, "%.3f");
 		if (ImGui::IsItemActive()) PlayerBody.SetRestitution(PlayerRestitution);
 
-		ImGui::Text("Actors: %d", Actors.size());
-
 		ImGui::PopItemWidth();
-		ImGui::End();
-	}
 
-	void CTestLevel::UI_Physics()
-	{
-		ImGui::Begin("Physics");
-		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
-		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
+		ImGui::Dummy(ImVec2(0, 6));
+		UI::Draw::ActorNode_VectorControl(*Player);
+		ImGui::Dummy(ImVec2(0, 6));
+
+		if (ImGui::Button("Rotate Platform"))
+		{
+			Platform->SetRotation(Platform->GetRotation() + glm::radians(45.0f));
+		}
+
 		ImGui::End();
 	}
 
