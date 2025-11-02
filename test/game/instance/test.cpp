@@ -32,7 +32,7 @@ namespace platformer2d::test {
 	{
 		Application->Initialize();
 
-		Running = true;
+		bRunning = true;
 		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
 
 		std::shared_ptr<Level::CTestLevel> TestLevel = std::make_shared<Level::CTestLevel>();
@@ -44,6 +44,7 @@ namespace platformer2d::test {
 
 	void CTest::Destroy()
 	{
+		LK_DEBUG_TAG("Test", "Destroy");
 		Application->Shutdown();
 	}
 

@@ -17,9 +17,13 @@ using namespace platformer2d::test;
 int main(int Argc, char* Argv[])
 {
 	spdlog::set_level(spdlog::level::debug);
-	CTest Test(Argc, Argv);
-	Test.Run();
-	Test.Destroy();
 
+	{
+		CTest Test(Argc, Argv);
+		Test.Run();
+		Test.Destroy();
+	}
+
+	LK_INFO_TAG("Main", "Exit: {}", errno);
 	return 0;
 }
