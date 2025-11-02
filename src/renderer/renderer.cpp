@@ -66,8 +66,7 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
 		LK_OpenGL_Verify(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
-		//LK_OpenGL_Verify(glDepthFunc(GL_LESS));
-		LK_OpenGL_Verify(glDepthFunc(GL_ALWAYS)); /* @todo Change to GL_LESS */
+		LK_OpenGL_Verify(glDepthFunc(GL_LESS));
 
 		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
 
@@ -99,6 +98,7 @@ namespace platformer2d {
 			}
 		}
 
+		/* @todo Move the ImGui layer to CWindow instead. */
 		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
 
 		CDebugRenderer::Initialize();
@@ -121,6 +121,9 @@ namespace platformer2d {
 				TextureRef.reset();
 			}
 		}
+
+		ImGuiLayer->Destroy();
+		ImGuiLayer.release();
 	}
 
 	void CRenderer::SetupQuadRenderer()

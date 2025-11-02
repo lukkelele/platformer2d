@@ -328,7 +328,7 @@ namespace platformer2d::UI {
 		const float Time = ImGui::GetTime();
 		const float InvWavelength = (1.0f / WaveLengthPx);
 
-		for (const char* Ptr = Text; *Ptr; Ptr != nullptr)
+		for (const char* Ptr = Text; *Ptr;)
 		{
 			if (*Ptr == '\n')
 			{
