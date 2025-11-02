@@ -44,7 +44,8 @@ namespace platformer2d {
 
 	private:
 		void CheckJumpState();
-		void OnWindowResize(uint16_t Width, uint16_t Height);
+		void OnWindowResized(uint16_t Width, uint16_t Height);
+		void OnMouseScrolled(EMouseScrollDirection Direction);
 
 	public:
 		FOnJumped OnJumped;
@@ -54,7 +55,7 @@ namespace platformer2d {
 		std::unique_ptr<CCamera> Camera = nullptr;
 		bool bCameraLock = true;
 
-		float JumpImpulse = 2.450f;
+		float JumpImpulse = 2.890f;
 		float DirForce = 5.630f;
 	};
 

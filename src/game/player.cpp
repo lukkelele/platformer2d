@@ -1,5 +1,4 @@
 #include "player.h"
-#include "player.h"
 
 #include <imgui/imgui.h>
 
@@ -13,14 +12,16 @@ namespace platformer2d {
 		: CActor(Spec, InTexture)
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
-		CWindow::OnResized.Add(this, &CPlayer::OnWindowResize);
+		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
+		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
 	}
 
 	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
 		: CActor(BodySpec, InTexture)
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
-		CWindow::OnResized.Add(this, &CPlayer::OnWindowResize);
+		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
+		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
@@ -102,11 +103,26 @@ namespace platformer2d {
 	}
 
 	/* @fixme This might be redundant as the camera does set the viewport size on every scene start */
-	void CPlayer::OnWindowResize(const uint16_t Width, const uint16_t Height)
+	void CPlayer::OnWindowResized(const uint16_t Width, const uint16_t Height)
 	{
 		if (Camera)
 		{
 			Camera->SetViewportSize(Width, Height);
+		}
+	}
+
+	void CPlayer::OnMouseScrolled(const EMouseScrollDirection Direction)
+	{
+		LK_TRACE_TAG("Player", "Mouse scroll: {}", Enum::ToString(Direction));
+		if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl))
+		{
+			if (Camera)
+			{
+				const float ZoomDiff = (Direction == EMouseScrollDirection::Up)
+					? -CCamera::ZOOM_DIFF
+					: CCamera::ZOOM_DIFF;
+				Camera->SetZoom(Camera->GetZoom() + ZoomDiff);
+			}
 		}
 	}
 
