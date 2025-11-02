@@ -7,45 +7,10 @@ namespace platformer2d {
 
 	CBody::CBody(const FBodySpecification& Spec)
 	{
+		ShapeType = DetermineShapeType(Spec.Shape);
+
 		b2BodyDef BodyDef = b2DefaultBodyDef();
-		switch (Spec.Type)
-		{
-			case EBodyType::Static:
-				BodyDef.type = b2_staticBody;
-				break;
-			case EBodyType::Dynamic:
-				BodyDef.type = b2_dynamicBody;
-				break;
-			case EBodyType::Kinematic:
-				BodyDef.type = b2_kinematicBody;
-				break;
-			default:
-				LK_VERIFY(false);
-		}
-
-		BodyDef.position = Math::Convert(Spec.Position);
-		BodyDef.gravityScale = Spec.GravityScale;
-		BodyDef.angularDamping = Spec.AngularDamping;
-		BodyDef.linearDamping = Spec.LinearDamping;
-
-		if (Spec.MotionLock != EMotionLock_None)
-		{
-			if (Spec.MotionLock & EMotionLock_X)
-			{
-				BodyDef.motionLocks.linearX = true;
-				LK_TRACE_TAG("Body", "Motion lock: X");
-			}
-			if (Spec.MotionLock & EMotionLock_Y)
-			{
-				BodyDef.motionLocks.linearY = true;
-				LK_TRACE_TAG("Body", "Motion lock: Y");
-			}
-			if (Spec.MotionLock & EMotionLock_Z)
-			{
-				BodyDef.motionLocks.angularZ = true;
-				LK_TRACE_TAG("Body", "Motion lock: Z");
-			}
-		}
+		SetBodyDef(BodyDef, Spec);
 
 		b2ShapeDef ShapeDef = b2DefaultShapeDef();
 		if (Spec.Flags & EBodyFlag_PreSolveEvents)
@@ -64,43 +29,25 @@ namespace platformer2d {
 		ShapeDef.material.friction = Spec.Friction;
 		ShapeDef.isSensor = Spec.bSensor;
 
-		/**
-		 * @fixme: Improve the handling of the shape reference here.
-		 * Should not be needed to check variant twice to make the initial
-		 * body definition rotation be set correctly.
-		 */
-		if (std::holds_alternative<FPolygon>(Spec.Shape))
-		{
-			ShapeType = EShape::Polygon;
-			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
-			BodyDef.rotation = b2MakeRot(ShapeRef.Rotation);
-			LK_DEBUG_TAG("Body", "Rotation: {} rad", ShapeRef.Rotation);
-		}
-		else if (std::holds_alternative<FLine>(Spec.Shape))
-		{
-			ShapeType = EShape::Line;
-		}
-		else if (std::holds_alternative<FCapsule>(Spec.Shape))
-		{
-			ShapeType = EShape::Capsule;
-		}
-
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(BodyDef.type));
 		Shape = Spec.Shape;
 
 		if (std::holds_alternative<FPolygon>(Spec.Shape))
 		{
+			LK_ASSERT(ShapeType == EShape::Polygon);
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
 			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
 		}
 		else if (std::holds_alternative<FLine>(Spec.Shape))
 		{
+			LK_ASSERT(ShapeType == EShape::Line);
 			LK_ASSERT(false);
 		}
 		else if (std::holds_alternative<FCapsule>(Spec.Shape))
 		{
+			LK_ASSERT(ShapeType == EShape::Capsule);
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
 			const b2Capsule Capsule = {
 				{ ShapeRef.P0.x, ShapeRef.P0.y },
@@ -151,14 +98,8 @@ namespace platformer2d {
 
 	void CBody::SetRotation(const float AngleRad) const
 	{
-#if 0
-		const b2Vec2 Pos = b2Body_GetPosition(ID);
-		const b2Transform Transform = { Pos, b2MakeRot(AngleRad) };
-		b2Body_SetTargetTransform(ID, Transform, DeltaTime);
-#else
 		const b2Transform Transform = b2Body_GetTransform(ID);
 		b2Body_SetTransform(ID, Transform.p, b2MakeRot(AngleRad));
-#endif
 	}
 
 	glm::vec2 CBody::GetLinearVelocity() const
@@ -216,6 +157,11 @@ namespace platformer2d {
 
 	void CBody::SetScale(const float Factor) const
 	{
+		SetScale({ Factor, Factor });
+	}
+
+	void CBody::SetScale(const glm::vec2& Factor) const
+	{
 		switch (ShapeType)
 		{
 			case EShape::Polygon:
@@ -236,40 +182,100 @@ namespace platformer2d {
 		}
 	}
 
-	void CBody::ScalePolygon(const float Factor) const
+	void CBody::SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const
+	{
+		switch (Spec.Type)
+		{
+			case EBodyType::Static:
+				BodyDef.type = b2_staticBody;
+				break;
+			case EBodyType::Dynamic:
+				BodyDef.type = b2_dynamicBody;
+				break;
+			case EBodyType::Kinematic:
+				BodyDef.type = b2_kinematicBody;
+				break;
+			default:
+				LK_VERIFY(false);
+		}
+
+		BodyDef.position = Math::Convert(Spec.Position);
+		BodyDef.gravityScale = Spec.GravityScale;
+		BodyDef.angularDamping = Spec.AngularDamping;
+		BodyDef.linearDamping = Spec.LinearDamping;
+
+		/**
+		 * @fixme: Improve the handling of the shape reference here.
+		 * Should not be needed to check variant twice to make the initial
+		 * body definition rotation be set correctly.
+		 */
+		if (ShapeType == EShape::Polygon)
+		{
+			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
+			BodyDef.rotation = b2MakeRot(ShapeRef.Rotation);
+			LK_TRACE_TAG("Body", "Rotation: {} rad", ShapeRef.Rotation);
+		}
+		else if (ShapeType == EShape::Line)
+		{
+		}
+		else if (ShapeType == EShape::Capsule)
+		{
+		}
+
+		if (Spec.MotionLock != EMotionLock_None)
+		{
+			if (Spec.MotionLock & EMotionLock_X)
+			{
+				BodyDef.motionLocks.linearX = true;
+				LK_TRACE_TAG("Body", "Motion lock: X");
+			}
+			if (Spec.MotionLock & EMotionLock_Y)
+			{
+				BodyDef.motionLocks.linearY = true;
+				LK_TRACE_TAG("Body", "Motion lock: Y");
+			}
+			if (Spec.MotionLock & EMotionLock_Z)
+			{
+				BodyDef.motionLocks.angularZ = true;
+				LK_TRACE_TAG("Body", "Motion lock: Z");
+			}
+		}
+	}
+
+	void CBody::ScalePolygon(const glm::vec2& Factor) const
 	{
 		LK_ASSERT(ShapeType == EShape::Polygon);
 		b2Polygon Shape = b2Shape_GetPolygon(ShapeID);
 		for (int Idx = 0; Idx < Shape.count; Idx++)
 		{
-			Shape.vertices[Idx].x *= Factor;
-			Shape.vertices[Idx].y *= Factor;
+			Shape.vertices[Idx].x *= Factor.x;
+			Shape.vertices[Idx].y *= Factor.y;
 		}
-		Shape.radius *= Factor;
+		Shape.radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
 		LK_DEBUG_TAG("Body", "New polygon radius: {}", Shape.radius);
 
 		b2Shape_SetPolygon(ShapeID, &Shape);
 	}
 
-	void CBody::ScaleLine(const float Factor) const
+	void CBody::ScaleLine(const glm::vec2& Factor) const
 	{
 		LK_ASSERT(ShapeType == EShape::Line);
 		b2Segment Shape = b2Shape_GetSegment(ShapeID);
-		Shape.point1.x *= Factor;
-		Shape.point1.y *= Factor;
-		Shape.point2.x *= Factor;
-		Shape.point2.y *= Factor;
+		Shape.point1.x *= Factor.x;
+		Shape.point1.y *= Factor.y;
+		Shape.point2.x *= Factor.x;
+		Shape.point2.y *= Factor.y;
 	}
 
-	void CBody::ScaleCapsule(const float Factor) const
+	void CBody::ScaleCapsule(const glm::vec2& Factor) const
 	{
 		LK_ASSERT(ShapeType == EShape::Capsule);
 		b2Capsule Shape = b2Shape_GetCapsule(ShapeID);
-		Shape.center1.x *= Factor;
-		Shape.center1.y *= Factor;
-		Shape.center2.x *= Factor;
-		Shape.center2.y *= Factor;
-		Shape.radius *= Factor;
+		Shape.center1.x *= Factor.x;
+		Shape.center1.y *= Factor.y;
+		Shape.center2.x *= Factor.x;
+		Shape.center2.y *= Factor.y;
+		Shape.radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
 		LK_DEBUG_TAG("Body", "New capsule radius: {}", Shape.radius);
 
 		b2Shape_SetCapsule(ShapeID, &Shape);

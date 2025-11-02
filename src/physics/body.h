@@ -45,6 +45,7 @@ namespace platformer2d {
 		EBodyFlag Flags = EBodyFlag_None;
 		EMotionLock MotionLock = EMotionLock_None;
 
+		std::string Name{};
 		void* UserData = nullptr;
 	};
 
@@ -52,6 +53,7 @@ namespace platformer2d {
 	{
 	public:
 		CBody(const FBodySpecification& Spec);
+		CBody() = delete;
 		~CBody() = default;
 
 		void Tick(float InDeltaTime);
@@ -80,6 +82,7 @@ namespace platformer2d {
 		void SetShape(const b2Segment& Line);
 
 		void SetScale(float Factor) const;
+		void SetScale(const glm::vec2& Factor) const;
 		float GetRestitution() const;
 		void SetRestitution(float Restitution) const;
 		float GetFriction() const;
@@ -126,9 +129,11 @@ namespace platformer2d {
 		}
 
 	private:
-		void ScalePolygon(float Factor) const;
-		void ScaleLine(float Factor) const;
-		void ScaleCapsule(float Factor) const;
+		void SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const;
+
+		void ScalePolygon(const glm::vec2& Factor) const;
+		void ScaleLine(const glm::vec2& Factor) const;
+		void ScaleCapsule(const glm::vec2& Factor) const;
 
 	private:
 		b2BodyId ID;
