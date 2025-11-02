@@ -42,7 +42,7 @@ namespace platformer2d::test {
 
 	void CTest::Run()
 	{
-		Running = true;
+		bRunning = true;
 		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
 		LK_DEBUG("Catch result: {}", CatchResult);
 
@@ -108,7 +108,7 @@ namespace platformer2d::test {
 			}
 		};
 
-		while (Running)
+		while (bRunning)
 		{
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);

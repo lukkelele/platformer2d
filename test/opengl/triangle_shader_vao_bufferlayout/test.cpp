@@ -40,7 +40,7 @@ namespace platformer2d::test {
 
 	void CTest::Run()
 	{
-		Running = true;
+		bRunning = true;
 		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
 		const CWindow& Window = GetWindow();
@@ -79,7 +79,7 @@ namespace platformer2d::test {
 		const GLuint ProgramID = Shader.GetRendererID();
 		LK_DEBUG("Shader program: {}", ProgramID);
 
-		while (Running)
+		while (bRunning)
 		{
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);

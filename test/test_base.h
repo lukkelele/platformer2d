@@ -34,7 +34,7 @@ namespace platformer2d::test {
 		virtual void Stop();
 		virtual void Destroy() = 0;
 
-		bool IsRunning() const { return Running; }
+		bool IsRunning() const { return bRunning; }
 		CWindow& GetWindow() const { return *Window; }
 		const std::filesystem::path& GetBinaryDirectory() const { return BinaryDir; }
 		static const std::filesystem::path& GetAssetsDirectory() { return AssetsDir; }
@@ -46,7 +46,7 @@ namespace platformer2d::test {
 		static bool UI_BlendFunction();
 
 	protected:
-		bool Running = false;
+		bool bRunning = false;
 		struct {
 			int Argc;
 			char** Argv;

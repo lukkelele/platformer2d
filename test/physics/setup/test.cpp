@@ -56,7 +56,7 @@ namespace platformer2d::test {
 
 	void CTest::Run()
 	{
-		Running = true;
+		bRunning = true;
 		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
 		LK_DEBUG("Catch result: {}", CatchResult);
 
@@ -179,7 +179,7 @@ namespace platformer2d::test {
 		int SubStepCount = 4;
 
 		Timer.Reset();
-		while (Running)
+		while (bRunning)
 		{
 			const float DeltaTime = Timer.GetDeltaTime();
 			Window.BeginFrame();

@@ -109,7 +109,7 @@ namespace platformer2d::test {
 
 	void CTestBase::Stop()
 	{
-		Running = false;
+		bRunning = false;
 	}
 
 	void CTestBase::InitRenderContext(GLFWwindow* GlfwWindow)
