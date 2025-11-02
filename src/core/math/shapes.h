@@ -65,4 +65,12 @@ namespace platformer2d {
 		return std::holds_alternative<TShapeType<T>>(S);
 	}
 
+	inline EShape DetermineShapeType(const TShape& S)
+	{
+		if (std::holds_alternative<FPolygon>(S)) return EShape::Polygon;
+		else if (std::holds_alternative<FLine>(S)) return EShape::Line;
+		else if (std::holds_alternative<FCapsule>(S)) return EShape::Capsule;
+		else return EShape::None;
+	}
+
 }
