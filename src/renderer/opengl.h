@@ -71,6 +71,10 @@ namespace platformer2d::OpenGL {
 	GLenum ImageFormatToDataFormat(EImageFormat Format);
 
 	uint32_t CalculateMipCount(uint32_t Width, uint32_t Height);
+
+	/**
+	 * @brief Get bytes per pixel.
+	 */
 	uint32_t GetFormatBPP(EImageFormat ImageFormat);
 	uint32_t CalculateImageSize(EImageFormat ImageFormat, uint32_t Width, uint32_t Height);
 

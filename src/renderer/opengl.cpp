@@ -103,7 +103,8 @@ namespace platformer2d::OpenGL {
 	{
 		switch (Format)
 		{
-			case EImageFormat::RGB: return GL_RGB;
+			case EImageFormat::RGB:
+			case EImageFormat::RGB8: return GL_RGB;
 
 			/* RGBA. */
 			case EImageFormat::RGBA:
@@ -125,6 +126,7 @@ namespace platformer2d::OpenGL {
 		switch (Format)
 		{
 			case EImageFormat::RGB:
+			case EImageFormat::RGB8:
 			case EImageFormat::RGBA:
 			case EImageFormat::RGBA8:	return GL_UNSIGNED_BYTE;
 			case EImageFormat::RGBA16F:
@@ -219,11 +221,12 @@ namespace platformer2d::OpenGL {
 	{
 		switch (ImageFormat)
 		{
-			case EImageFormat::RGB:
-			case EImageFormat::RGBA8:   return 4;
-			case EImageFormat::RGBA:    return 4;
-			case EImageFormat::RGBA16F: return 2 * 4;
-			case EImageFormat::RGBA32F: return 4 * 4;
+			case EImageFormat::RGB:     return 1 * 3;
+			case EImageFormat::RGB8:    return 1 * 3;
+			case EImageFormat::RGBA8:   return 1 * 4;
+			case EImageFormat::RGBA:    return 1 * 4;
+			case EImageFormat::RGBA16F: return 2 * 4; /* 2 bytes per channel. */
+			case EImageFormat::RGBA32F: return 4 * 4; /* 4 bytes per channel. */
 		}
 
 		LK_ASSERT(false, "Invalid image format: {}", static_cast<int>(ImageFormat));
