@@ -1,5 +1,6 @@
 #include "imguilayer.h"
 
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -8,15 +9,16 @@
 
 #include "core/core.h"
 #include "core/log.h"
+#include "core/window.h"
 #include "font.h"
 
 namespace platformer2d {
 
 	namespace PanelID 
 	{
-		static const char* const Dockspace = "##Dockspace";
-		static const char* const HostWindow = "##HostWindow";
-		static const char* const Viewport  = "##Viewport";
+		const char* const Dockspace = "##Dockspace";
+		const char* const HostWindow = "##HostWindow";
+		const char* const Viewport  = "##Viewport";
 	}
 
 	namespace
@@ -45,8 +47,7 @@ namespace platformer2d {
 
 	CImGuiLayer::CImGuiLayer(GLFWwindow* InContext)
 	{
-		LK_ASSERT(InContext);
-
+		LK_VERIFY(InContext);
 		ImGui::CreateContext();
 		ImGuiIO& IO = ImGui::GetIO();
 		IO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -54,14 +55,20 @@ namespace platformer2d {
 
 		ImGui_ImplGlfw_InitForOpenGL(InContext, true);
 		ImGui_ImplOpenGL3_Init("#version 450");
-		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
+		LK_INFO("ImGui: {}", ImGui::GetVersion());
 
 		AddFonts();
 		SetDarkTheme();
+
+		CWindow::OnResized.Add(this, &CImGuiLayer::OnWindowResized);
 	}
 
-	CImGuiLayer::~CImGuiLayer()
+	void CImGuiLayer::Destroy()
 	{
+		LK_DEBUG_TAG("ImGuiLayer", "Destroy");
+		ImGui_ImplGlfw_Shutdown();
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui::DestroyContext();
 	}
 
 	void CImGuiLayer::BeginFrame()
@@ -79,8 +86,8 @@ namespace platformer2d {
 		ImGuiID DockspaceID = ImGui::GetID(PanelID::Dockspace);
 		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr)
 		{
-			LK_WARN("Removing existing layout");
 			/* Remove existing layout. */
+			LK_TRACE_TAG("ImGuiLayer", "Removing existing dock layout");
 			ImGui::DockBuilderRemoveNode(DockspaceID);
 			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace 
 				| ImGuiDockNodeFlags_NoWindowMenuButton;
@@ -255,6 +262,12 @@ namespace platformer2d {
 
 			AddFont(Roboto_BoldItalic);
 		}
+	}
+
+	void CImGuiLayer::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
+	{
+		ImGuiIO& IO = ImGui::GetIO();
+		IO.DisplaySize = ImVec2(static_cast<float>(InWidth), static_cast<float>(InHeight));
 	}
 
 	void CImGuiLayer::SetDarkTheme()

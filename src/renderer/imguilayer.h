@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include <imgui/imgui.h>
 
 struct GLFWwindow;
@@ -11,7 +13,9 @@ namespace platformer2d {
 	public:
 		CImGuiLayer(GLFWwindow* InContext);
 		CImGuiLayer() = delete;
-		~CImGuiLayer();
+		~CImGuiLayer() = default;
+
+		void Destroy();
 
 		void BeginFrame();
 		void EndFrame();
@@ -23,6 +27,7 @@ namespace platformer2d {
 
 	private:
 		void AddFonts();
+		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 	};
 
 }
