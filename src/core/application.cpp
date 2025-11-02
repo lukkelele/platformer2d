@@ -5,7 +5,7 @@
 #include "core/input/mouse.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/vertexbufferlayout.h"
-#include "renderer/ui.h"
+#include "renderer/ui/ui.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
