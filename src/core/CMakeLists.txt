@@ -16,6 +16,8 @@ project_library_sources(
 	log_formatters.h
 	macros.h
 	platform.h
+	selectioncontext.h
+	selectioncontext.cpp
 	template.h
 	timer.h
 	window.h
