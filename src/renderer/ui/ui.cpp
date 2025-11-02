@@ -1,4 +1,4 @@
-#include "ui.h"
+#include "renderer/ui/ui.h"
 
 #include "core/input/keyboard.h"
 #include "game/gameinstance.h"
@@ -30,7 +30,8 @@ namespace platformer2d::UI {
 		} Settings;
 	};
 
-	namespace {
+	namespace 
+	{
 		FGameMenu GameMenu{};
 	}
 

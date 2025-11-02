@@ -6,6 +6,7 @@
 #include "core/core.h"
 #include "core/delegate.h"
 #include "renderer/font.h"
+#include "renderer/ui/scoped.h"
 
 namespace platformer2d::UI {
 

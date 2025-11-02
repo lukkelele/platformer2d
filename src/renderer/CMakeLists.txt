@@ -8,6 +8,7 @@ project_library_sources(
 	font.h
 	font.cpp
 	fontawesome.h
+	imgui.h
 	imguilayer.h
 	imguilayer.cpp
 	opengl.h
@@ -22,11 +23,11 @@ project_library_sources(
 	renderer.cpp
 	rendercommandqueue.h
 	rendercommandqueue.cpp
-	ui.h
-	ui.cpp
 	uniformbuffer.h
 	uniformbuffer.cpp
 )
+
+add_subdirectory(ui)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	project_library_sources(
