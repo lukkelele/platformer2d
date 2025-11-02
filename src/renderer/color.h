@@ -80,6 +80,22 @@ namespace platformer2d {
 			const uint32_t A = static_cast<uint32_t>(InColor.a * 255.0f);
 			return (A << 24) | (B << 16) | (G << 8) | R;
 		}
+
+		template<>
+		static inline constexpr ImVec4 Convert(const glm::vec4& InColor)
+		{
+			return ImVec4(InColor.r, InColor.g, InColor.b, InColor.a);
+		}
+
+		template<>
+		static inline constexpr ImVec4 Convert(const uint32_t InColor)
+		{
+			const float R = static_cast<float>((InColor >>  0) & 0xFF) / 255.0f;
+			const float G = static_cast<float>((InColor >>  8) & 0xFF) / 255.0f;
+			const float B = static_cast<float>((InColor >> 16) & 0xFF) / 255.0f;
+			const float A = static_cast<float>((InColor >> 24) & 0xFF) / 255.0f;
+			return ImVec4(R, G, B, A);
+		}
 	};
 
 	template<EColorRange Range = EColorRange::Normalized>

@@ -93,7 +93,7 @@ namespace platformer2d {
 
 	namespace Enum
 	{
-		static std::string ToString(EImageFormat Format)
+		inline const char* ToString(const EImageFormat Format)
 		{
 			switch (Format)
 			{
@@ -101,15 +101,37 @@ namespace platformer2d {
 				case EImageFormat::RG16F:   return "RG16F";
 				case EImageFormat::RG32F:   return "RG32F";
 				case EImageFormat::RGB:     return "RGB";
+				case EImageFormat::RGB8:    return "RGB8";
 				case EImageFormat::RGBA:    return "RGBA";
 				case EImageFormat::RGBA8:   return "RGBA8";
 				case EImageFormat::RGBA16F: return "RGBA16F";
 				case EImageFormat::RGBA32F: return "RGBA32F";
 				case EImageFormat::SRGB:    return "SRGB";
 			}
+			LK_VERIFY(false, "Unknown image format: {}", static_cast<int>(Format));
+			return nullptr;
+		}
 
-			LK_ASSERT(false, "Unknown image format: {}", static_cast<int>(Format));
-			return "Unknown";
+		inline const char* ToString(const ETextureWrap Wrap)
+		{
+			switch (Wrap)
+			{
+				case ETextureWrap::Clamp:  return "Clamp";
+				case ETextureWrap::Repeat: return "Repeat";
+			}
+			LK_VERIFY(false, "Unknown texture wrap: {}", static_cast<int>(Wrap));
+			return nullptr;
+		}
+
+		inline const char* ToString(const ETextureFilter Filter)
+		{
+			switch (Filter)
+			{
+				case ETextureFilter::Linear:  return "Linear";
+				case ETextureFilter::Nearest: return "Nearest";
+			}
+			LK_VERIFY(false, "Unknown texture filter: {}", static_cast<int>(Filter));
+			return nullptr;
 		}
 	}
 

@@ -21,7 +21,7 @@
 #include "imguilayer.h"
 #include "opengl.h"
 #include "rendercommandqueue.h"
-#include "ui.h"
+#include "ui/ui.h"
 
 namespace platformer2d {
 
@@ -98,7 +98,7 @@ namespace platformer2d {
 			}
 		}
 
-		/* @todo Move the ImGui layer to CWindow instead. */
+		/* @todo Move the ImGui layer to CWindow, or keep here? */
 		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
 
 		CDebugRenderer::Initialize();
@@ -228,41 +228,77 @@ namespace platformer2d {
 		LK_VERIFY(QuadShader, "QuadShader not initialized");
 		Data.Textures.reserve(MAX_TEXTURES);
 
-		const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
-		LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
-		LK_TRACE_TAG("Renderer", "Load white texture");
-		FTextureSpecification WhiteTextureSpec = {
-			.Path = WhiteTexturePath,
-			.Width = 1,
-			.Height = 1,
-			.Format = EImageFormat::RGBA8,
-			.SamplerWrap = ETextureWrap::Clamp,
-			.SamplerFilter = ETextureFilter::Nearest,
-		};
-		Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
-		Data.Textures.emplace(std::make_pair(ETexture::White, Data.WhiteTexture));
+		{
+			const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
+			LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
+			LK_TRACE_TAG("Renderer", "Load white texture");
+			FTextureSpecification WhiteTextureSpec = {
+				.Path = WhiteTexturePath,
+				.Width = 1,
+				.Height = 1,
+				.Format = EImageFormat::RGBA8,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
+			LK_VERIFY(!Data.Textures.contains(ETexture::White));
+			Data.Textures.emplace(std::make_pair(ETexture::White, Data.WhiteTexture));
+		}
 
-		const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
-		LK_VERIFY(std::filesystem::exists(PlayerTexturePath), "Player texture does not exist");
-		FTextureSpecification PlayerTextureSpec = {
-			.Path = PlayerTexturePath,
-			.Width = 200,
-			.Height = 200,
-			.Format = EImageFormat::RGBA8,
-			.SamplerWrap = ETextureWrap::Clamp,
-			.SamplerFilter = ETextureFilter::Nearest,
-		};
-		Data.Textures.emplace(std::make_pair(ETexture::Player, std::make_shared<CTexture>(PlayerTextureSpec)));
+		{
+			const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
+			LK_VERIFY(std::filesystem::exists(PlayerTexturePath), "Player texture does not exist");
+			FTextureSpecification PlayerTextureSpec = {
+				.Path = PlayerTexturePath,
+				.Width = 200,
+				.Height = 200,
+				.Format = EImageFormat::RGBA8,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			LK_VERIFY(!Data.Textures.contains(ETexture::Player));
+			Data.Textures.emplace(std::make_pair(ETexture::Player, std::make_shared<CTexture>(PlayerTextureSpec)));
+		}
 
-		const char* PlatformTexturePath = TEXTURES_DIR "/metal.png";
-		LK_VERIFY(std::filesystem::exists(PlatformTexturePath), "Platform texture does not exist");
-		FTextureSpecification PlatformTextureSpec = {
-			.Path = PlatformTexturePath,
-			.Format = EImageFormat::RGBA8,
-			.SamplerWrap = ETextureWrap::Clamp,
-			.SamplerFilter = ETextureFilter::Nearest,
-		};
-		Data.Textures.emplace(std::make_pair(ETexture::Platform, std::make_shared<CTexture>(PlatformTextureSpec)));
+		{
+			const char* MetalTexturePath = TEXTURES_DIR "/metal.png";
+			LK_VERIFY(std::filesystem::exists(MetalTexturePath), "Metal texture does not exist");
+			FTextureSpecification MetalTextureSpec = {
+				.Path = MetalTexturePath,
+				.Format = EImageFormat::RGBA8,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			LK_VERIFY(!Data.Textures.contains(ETexture::Metal));
+			Data.Textures.emplace(std::make_pair(ETexture::Metal, std::make_shared<CTexture>(MetalTextureSpec)));
+		}
+
+		{
+			//const char* BricksTexturePath = TEXTURES_DIR "/bricks.jpg";
+			const char* BricksTexturePath = TEXTURES_DIR "/bricks.png";
+			FTextureSpecification BricksTextureSpec = {
+				.Path = BricksTexturePath,
+				.Format = EImageFormat::RGBA8,
+				//.SamplerWrap = ETextureWrap::Clamp,
+				//.SamplerFilter = ETextureFilter::Nearest,
+				.SamplerWrap = ETextureWrap::Repeat,
+				.SamplerFilter = ETextureFilter::Linear,
+			};
+			LK_VERIFY(!Data.Textures.contains(ETexture::Bricks));
+			Data.Textures.emplace(std::make_pair(ETexture::Bricks, std::make_shared<CTexture>(BricksTextureSpec)));
+		}
+
+		{
+			const char* WoodTexturePath = TEXTURES_DIR "/wood.png";
+			FTextureSpecification WoodTextureSpec = {
+				.Path = WoodTexturePath,
+				.Format = EImageFormat::RGBA8,
+				.SamplerWrap = ETextureWrap::Clamp,
+				.SamplerFilter = ETextureFilter::Nearest,
+			};
+			LK_VERIFY(!Data.Textures.contains(ETexture::Wood));
+			Data.Textures.emplace(std::make_pair(ETexture::Wood, std::make_shared<CTexture>(WoodTextureSpec)));
+		}
 
 		/* Bind every texture. */
 		for (auto& [Texture, TextureRef] : Data.Textures)
@@ -271,6 +307,7 @@ namespace platformer2d {
 			const int Idx = static_cast<int>(Texture);
 			QuadShader->Set(std::format("u_texture{}", Idx), Idx);
 			TextureRef->Bind(Idx);
+			TextureRef->SetIndex(Idx);
 		}
 	}
 
@@ -280,6 +317,15 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		ImGuiLayer->BeginFrame();
+
+		QuadShader->Bind();
+		for (auto& [Texture, TextureRef] : Data.Textures)
+		{
+			if (TextureRef != nullptr)
+			{
+				TextureRef->Bind(static_cast<uint32_t>(Texture));
+			}
+		}
 	}
 
 	void CRenderer::EndFrame()

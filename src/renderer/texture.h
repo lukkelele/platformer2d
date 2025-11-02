@@ -14,7 +14,9 @@ namespace platformer2d {
 	{
 		White,
 		Player,
-		Platform, /* @todo Rename this */
+		Metal,
+		Bricks,
+		Wood,
 	};
 
 	class CTexture
@@ -36,6 +38,9 @@ namespace platformer2d {
 		uint32_t GetChannels() const { return Channels; }
 		const std::filesystem::path& GetFilePath() const { return Path; }
 
+		void SetWrap(ETextureWrap InWrap) const;
+		void SetFilter(ETextureFilter InFilter) const;
+
 		std::size_t GetIndex() const { return Index; }
 		void SetIndex(std::size_t InIndex);
 
@@ -50,6 +55,7 @@ namespace platformer2d {
 		uint32_t Width = 1;
 		uint32_t Height = 1;
 		uint8_t Channels = 0;
+		uint8_t Mips = 1;
 		std::filesystem::path Path{};
 		std::string DebugName{};
 

@@ -73,6 +73,7 @@ namespace platformer2d {
 			LK_ASSERT(ImageBuffer.Data);
 		}
 
+		Mips = Specification.Mips;
 		const bool bMipmap = (Specification.Mips > 1);
 		if (bMipmap)
 		{
@@ -157,7 +158,7 @@ namespace platformer2d {
 			RendererID = 0;
 		}
 
-		const uint32_t MipCount = OpenGL::CalculateMipCount(Width, Height);
+		const uint32_t MipCount = OpenGL::CalculateMipCount(Width, Height); /* @todo Use 'Mips' member here or? */
 		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
 		LK_OpenGL_Verify(glTextureStorage2D(
 			RendererID,
@@ -181,6 +182,22 @@ namespace platformer2d {
 				ImageBuffer.Data
 			));
 		}
+	}
+
+	void CTexture::SetWrap(const ETextureWrap InWrap) const
+	{
+		LK_DEBUG_TAG("Texture", "Set wrap: {} ({}) (Index {})", Enum::ToString(InWrap), Path.filename(), Index);
+		Bind(Index);
+		OpenGL::SetTextureWrap(RendererID, InWrap);
+		Unbind(Index);
+	}
+
+	void CTexture::SetFilter(const ETextureFilter InFilter) const
+	{
+		LK_DEBUG_TAG("Texture", "Set filter: {} ({}) (Index {})", Enum::ToString(InFilter), Path.filename(), Index);
+		Bind(Index);
+		OpenGL::SetTextureFilter(RendererID, InFilter, (Mips > 1));
+		Unbind(Index);
 	}
 
 	void CTexture::SetIndex(const std::size_t InIndex)

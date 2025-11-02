@@ -4,6 +4,8 @@
 
 #include <imgui/imgui.h>
 
+#include "renderer/imgui.h"
+
 struct GLFWwindow;
 
 namespace platformer2d {
