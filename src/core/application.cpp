@@ -39,9 +39,13 @@ namespace platformer2d {
 		if (bRunning)
 		{
 			LK_INFO_TAG("Application", "Shutting down");
-			Window->Destroy();
-
 			bRunning = false;
+
+			Window->Destroy();
+			Window.release();
+
+			LK_TRACE_TAG("Application", "Release layerstack");
+			LayerStack.Destroy();
 		}
 	}
 
@@ -59,7 +63,6 @@ namespace platformer2d {
 		{
 			if (Core::Global.bShouldShutdown)
 			{
-				LK_DEBUG_TAG("Application", "Global shutdown flag set");
 				break;
 			}
 
