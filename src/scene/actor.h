@@ -47,6 +47,8 @@ namespace platformer2d {
 		inline const glm::vec4& GetColor() const { return Color; }
 		void SetColor(const glm::vec4& InColor);
 
+		inline std::string_view GetName() const { return Name; }
+
 	private:
 		static FActorHandle GenerateHandle();
 
@@ -57,6 +59,7 @@ namespace platformer2d {
 		std::unique_ptr<CBody> Body;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
+		std::string Name;
 
 	private:
 		FActorHandle Handle;

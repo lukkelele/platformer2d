@@ -5,13 +5,15 @@
 namespace platformer2d {
 
 	CActor::CActor(const FActorSpecification& Spec, const ETexture InTexture)
-		: Texture(InTexture)
+		: Name("")
+		, Texture(InTexture)
 	{
 		Handle = GenerateHandle();
 	}
 
 	CActor::CActor(const FBodySpecification& BodySpec, const ETexture InTexture)
-		: Texture(InTexture)
+		: Name(BodySpec.Name)
+		, Texture(InTexture)
 	{
 		Handle = GenerateHandle();
 
