@@ -14,6 +14,8 @@
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 
+#define PLAYER_SHAPE_CAPSULE 0
+
 namespace platformer2d::Level {
 
 	namespace
@@ -27,11 +29,19 @@ namespace platformer2d::Level {
 			.Zoom = 0.32f,
 			.PlayerBody = {
 				.Type = EBodyType::Dynamic,
+#if PLAYER_SHAPE_CAPSULE
 				.Shape = FCapsule{
 					.P0 = { 0.0f, 0.0f },
-					.P1 = { 0.0f, 0.20f },
+					.P1 = { 0.0f, 0.15f },
 					.Radius = 0.10f,
 				},
+#else
+				.Shape = FPolygon{
+					.Size = { 0.20f, 0.24f },
+					.Radius = 0.12f,
+					.Rotation = glm::radians(0.0f),
+				},
+#endif
 				.Position = { 0.0f, 0.50f },
 				.Friction = 0.10f,
 				.Density = 0.60f,
@@ -126,12 +136,12 @@ namespace platformer2d::Level {
 		Platform->Tick(DeltaTime);
 
 		/* Render player. */
+#if PLAYER_SHAPE_CAPSULE
 		const FCapsule* Capsule = Player->GetBody().TryGetShape<EShape::Capsule>();
 		if (Capsule)
 		{
+			glm::vec2 PlayerSize = Player->GetBody().GetSize();
 			const glm::vec3 Scale = Player->GetTransformComponent().GetScale();
-			const float Dist = glm::distance(Capsule->P0, Capsule->P1);
-			glm::vec2 PlayerSize = { Dist, Dist };
 			PlayerSize *= glm::vec2(Scale.x, Scale.y);
 			CRenderer::DrawQuad(
 				Player->GetPosition(),
@@ -141,6 +151,20 @@ namespace platformer2d::Level {
 				glm::degrees(Player->GetRotation())
 			);
 		}
+#else
+		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
+		if (Polygon)
+		{
+			const glm::vec2 PlayerSize = Player->GetSize();
+			CRenderer::DrawQuad(
+				Player->GetPosition(),
+				PlayerSize,
+				CRenderer::GetTexture(Player->GetTexture()),
+				FColor::White,
+				glm::degrees(Player->GetRotation())
+			);
+		}
+#endif
 
 		/* Render level. */
 		for (const std::shared_ptr<CActor>& Actor : LevelActors)
