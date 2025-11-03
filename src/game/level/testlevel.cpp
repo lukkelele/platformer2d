@@ -50,9 +50,12 @@ namespace platformer2d::Level {
 			},
 		};
 
-		std::vector<std::shared_ptr<CActor>> LevelActors;
-
 		constexpr float UI_BG_ALPHA = 0.70f;
+		constexpr const char* UI_ID_LEVEL = "Level";
+		constexpr const char* UI_ID_PLAYER = "Player";
+
+		std::vector<std::shared_ptr<CActor>> Actors;
+		std::weak_ptr<CActor> RotatingPlatform;
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -61,7 +64,7 @@ namespace platformer2d::Level {
 		: IGameInstance(GameSpec)
 	{
 		Instance = this;
-		LevelActors.clear();
+		Actors.clear();
 	}
 
 	void CTestLevel::Initialize()
@@ -75,7 +78,7 @@ namespace platformer2d::Level {
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
 				LK_DEBUG_TAG("TestLevel", "Actor created: {} ({})", Actor->GetName(), Handle);
-				LevelActors.emplace_back(Actor);
+				Actors.emplace_back(Actor);
 			}
 		});
 
@@ -111,7 +114,7 @@ namespace platformer2d::Level {
 		Player.reset();
 
 		LK_DEBUG_TAG("TestLevel", "Releasing level resources");
-		LevelActors.clear();
+		Actors.clear();
 	}
 
 	void CTestLevel::OnAttach()
@@ -134,6 +137,8 @@ namespace platformer2d::Level {
 
 		Player->Tick(DeltaTime);
 		Platform->Tick(DeltaTime);
+
+		Tick_Objects();
 
 		/* Render player. */
 #if PLAYER_SHAPE_CAPSULE
@@ -167,7 +172,7 @@ namespace platformer2d::Level {
 #endif
 
 		/* Render level. */
-		for (const std::shared_ptr<CActor>& Actor : LevelActors)
+		for (const std::shared_ptr<CActor>& Actor : Actors)
 		{
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
@@ -287,13 +292,41 @@ namespace platformer2d::Level {
 			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
 			Actor->SetColor(FColor::Convert(RGBA32::Magenta));
 		}
+
+		/* Object 4. */
+		{
+			FBodySpecification Spec;
+			Spec.Type = EBodyType::Static;
+			Spec.Position = { 0.43f, 0.02f };
+			Spec.Flags = EBodyFlag_PreSolveEvents;
+			Spec.Name = "Rotating-Platform";
+
+			FPolygon Polygon = {
+				.Size = { 0.40f, 0.06f },
+				.Rotation = glm::radians(0.0f),
+			};
+			Spec.Shape.emplace<FPolygon>(Polygon);
+
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
+			Actor->SetColor(FColor::Convert(RGBA32::DarkCyan));
+			RotatingPlatform = Actor;
+		}
+	}
+
+	void CTestLevel::Tick_Objects()
+	{
+		if (std::shared_ptr<CActor> Actor = RotatingPlatform.lock(); Actor != nullptr)
+		{
+			Actor->SetRotation(Actor->GetRotation() + glm::radians(0.75f));
+		}
 	}
 
 	void CTestLevel::UI_Level()
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
-		if (!ImGui::Begin("Level"))
+		if (!ImGui::Begin(UI_ID_LEVEL))
 		{
+			ImGui::End();
 			return;
 		}
 
@@ -302,38 +335,16 @@ namespace platformer2d::Level {
 		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 
-		ImGui::Text("Actors: %d", LevelActors.size());
+		ImGui::Text("Actors: %d", Actors.size());
 
 		UI::Draw::ActorNode(*Player);
-		for (auto& Actor : LevelActors)
+		for (auto& Actor : Actors)
 		{
 			UI::Draw::ActorNode(*Actor);
 		}
 
-		{
-			ImGui::Text("Texture: Wood");
-			ImGui::PushID("Wood");
-			constexpr ETexture Texture = ETexture::Wood;
-			if (ImGui::Button("Clamp")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Clamp);
-			ImGui::SameLine();
-			if (ImGui::Button("Repeat")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Repeat);
-			if (ImGui::Button("Linear")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Linear);
-			ImGui::SameLine();
-			if (ImGui::Button("Nearest")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
-			ImGui::PopID();
-		}
-		{
-			ImGui::Text("Texture: Bricks");
-			ImGui::PushID("Bricks");
-			constexpr ETexture Texture = ETexture::Bricks;
-			if (ImGui::Button("Clamp")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Clamp);
-			ImGui::SameLine();
-			if (ImGui::Button("Repeat")) CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Repeat);
-			if (ImGui::Button("Linear")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Linear);
-			ImGui::SameLine();
-			if (ImGui::Button("Nearest")) CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
-			ImGui::PopID();
-		}
+		ImGui::Dummy(ImVec2(0, 16));
+		UI_TextureModifier();
 
 		UI::Font::Pop();
 		ImGui::End();
@@ -347,6 +358,7 @@ namespace platformer2d::Level {
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
 		if (!ImGui::Begin("Player"))
 		{
+			ImGui::End();
 			return;
 		}
 
@@ -361,7 +373,7 @@ namespace platformer2d::Level {
 		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
 		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
 
-		ImGui::PushItemWidth(220.0f);
+		ImGui::PushItemWidth(160.0f);
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
 		ImGui::SliderFloat("Jump Impulse", &PlayerJumpImpulse, 0.0f, 10.0f, "%.5f");
 		if (ImGui::IsItemActive()) Player->SetJumpImpulse(PlayerJumpImpulse);
@@ -399,6 +411,142 @@ namespace platformer2d::Level {
 		}
 
 		ImGui::End();
+	}
+
+	void CTestLevel::UI_TextureModifier()
+	{
+		static const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
+			Enum::ToString(ETexture::White),
+			Enum::ToString(ETexture::Player),
+			Enum::ToString(ETexture::Metal),
+			Enum::ToString(ETexture::Bricks),
+			Enum::ToString(ETexture::Wood),
+		};
+
+		static constexpr float ButtonPaddingY = 7.0f;
+		static constexpr ImVec2 ButtonSize(84, 42);
+		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
+
+		static int SelectedTextureIdx = 0;
+		static const char* SelectedTexture = TextureNames[SelectedTextureIdx];
+
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0, 14));
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+
+		static const char* ComboName = "Texture";
+		const ImVec2 ComboNameLen = ImGui::CalcTextSize(ComboName);
+
+		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
+		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+
+		UI::ShiftCursorX(20.0f);
+		ImGui::Text(ComboName);
+
+		ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
+		UI::ShiftCursorY(-4.0f);
+
+		ImGui::SetNextItemWidth(ItemWidth);
+		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedTextureIdx]))
+		{
+			SelectedTexture = TextureNames[SelectedTextureIdx];
+			for (int Idx = 0; Idx < TextureNames.size(); Idx++)
+			{
+				const char* Option = TextureNames[Idx];
+				if (Option == nullptr)
+				{
+					continue;
+				}
+
+				const bool IsSelected = (Option == SelectedTexture);
+				if (ImGui::Selectable(Option, IsSelected))
+				{
+					SelectedTextureIdx = Idx;
+				}
+			}
+
+			ImGui::EndCombo();
+		}
+
+		const ETexture Texture = static_cast<ETexture>(SelectedTextureIdx);
+		const CTexture& TextureRef = CRenderer::GetTexture(Texture);
+
+		/* Texture preview. */
+		ImGui::SameLine(0.0f, 12.0f);
+		UI::ShiftCursorY(-4.0f);
+		ImGui::Image(
+			static_cast<ImU64>(TextureRef.GetID()),
+			ImVec2(32.0f, 32.0f),
+			ImVec2(0.0f, 1.0f), /* Uv0. */
+			ImVec2(1.0f, 0.0f)  /* Uv1. */
+		);
+
+		static constexpr std::string_view Marker = "assets/textures/";
+		auto StripPrefix = [](const std::filesystem::path& Path) -> std::string
+		{
+			const std::string Str = Path.generic_string();
+			const std::size_t Pos = Str.find(Marker);
+			if (Pos != std::string::npos)
+			{
+				return Str.substr(Pos);
+			}
+			return Str;
+		};
+
+		ImGui::Dummy(ImVec2(0, 6));
+		{
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::BoldItalic));
+			ImGui::Indent();
+			ImGui::Text("Size:%-4s%dx%d", " ", TextureRef.GetWidth(), TextureRef.GetHeight());
+			const std::string TrimmedPath = StripPrefix(TextureRef.GetFilePath());
+			ImGui::Text("Path:%-4s%s", " ", TrimmedPath.c_str());
+			ImGui::Unindent();
+		}
+		ImGui::Dummy(ImVec2(0, 12));
+
+		{
+			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 10);
+			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
+			UI::FScopedStyle FrameBorder(ImGuiStyleVar_FrameBorderSize, 2.0f);
+			UI::FScopedColor ButtonCol(ImGuiCol_Button, RGBA32::Titlebar::Default);
+			UI::FScopedColor ButtonActiveCol(ImGuiCol_ButtonActive, RGBA32::LightGray);
+			UI::FScopedColor ButtonHoveredCol(ImGuiCol_ButtonHovered, RGBA32::SelectionMuted);
+
+			UI::ShiftCursorX(60.0f);
+			ImGui::Text("Wrap");
+
+			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
+			UI::ShiftCursorY(-ButtonPaddingY);
+			if (ImGui::Button("Clamp", ButtonSize))
+			{
+				CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Clamp);
+			}
+			ImGui::SameLine(0.0f, ButtonPaddingY);
+			UI::ShiftCursorY(-ButtonPaddingY);
+			if (ImGui::Button("Repeat", ButtonSize))
+			{
+				CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Repeat);
+			}
+
+			ImGui::Dummy(ImVec2(0, 6));
+
+			UI::ShiftCursorX(60.0f);
+			ImGui::Text("Filter");
+
+			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
+			UI::ShiftCursorY(-ButtonPaddingY);
+			if (ImGui::Button("Linear", ButtonSize))
+			{
+				CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Linear);
+			}
+
+			ImGui::SameLine(0.0f, ButtonPaddingY);
+			UI::ShiftCursorY(-ButtonPaddingY);
+			if (ImGui::Button("Nearest", ButtonSize))
+			{
+				CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
+			}
+		}
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
