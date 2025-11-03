@@ -512,7 +512,7 @@ namespace platformer2d::Level {
 			UI::FScopedColor ButtonActiveCol(ImGuiCol_ButtonActive, RGBA32::LightGray);
 			UI::FScopedColor ButtonHoveredCol(ImGuiCol_ButtonHovered, RGBA32::SelectionMuted);
 
-			UI::ShiftCursorX(60.0f);
+			UI::ShiftCursorX(35.0f);
 			ImGui::Text("Wrap");
 
 			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
@@ -530,7 +530,7 @@ namespace platformer2d::Level {
 
 			ImGui::Dummy(ImVec2(0, 6));
 
-			UI::ShiftCursorX(60.0f);
+			UI::ShiftCursorX(35.0f);
 			ImGui::Text("Filter");
 
 			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
