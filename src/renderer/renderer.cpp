@@ -27,7 +27,6 @@ namespace platformer2d {
 
 	namespace
 	{
-		constexpr int MAX_TEXTURES = 16;
 		constexpr int CIRCLE_SEGMENTS = 32;
 	}
 
@@ -255,7 +254,6 @@ namespace platformer2d {
 
 			Data.Textures.emplace(std::make_pair(Texture, std::make_shared<CTexture>(Spec)));
 		};
-
 
 		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, { 1.0f, 1.0f });
 		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Player, EImageFormat::RGBA8);

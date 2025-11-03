@@ -104,6 +104,8 @@ namespace platformer2d {
 		CRenderer& operator=(const CRenderer&) = delete;
 		CRenderer& operator=(CRenderer&&) = delete;
 
+	public:
+		static inline constexpr int MAX_TEXTURES = 16;
 	private:
 		static inline FBackendInfo BackendInfo;
 		static inline glm::vec4 ClearColor{ 0.20f, 0.20f, 0.20f, 1.0f };
@@ -113,7 +115,7 @@ namespace platformer2d {
 		static inline GLuint QuadVBO = 0;
 		static inline GLuint QuadEBO = 0;
 		static inline uint32_t QuadIndexCount = 0;
-		constexpr static inline glm::vec4 QuadVertexPositions[4] = {
+		static inline constexpr glm::vec4 QuadVertexPositions[4] = {
 			{ -0.50f, -0.50f, 0.0f, 1.0f },
 			{ -0.50f,  0.50f, 0.0f, 1.0f },
 			{  0.50f,  0.50f, 0.0f, 1.0f },
