@@ -12,6 +12,9 @@
 #include "log.h"
 #include "macros.h"
 
+#define LK_MARK_NOT_IMPLEMENTED() \
+	LK_VERIFY(false, "Not implemented: {}::{}", __FILE__, __LINE__)
+
 namespace platformer2d {
 
 	using LRendererID = uint32_t;
