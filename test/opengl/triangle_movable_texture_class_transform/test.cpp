@@ -119,7 +119,7 @@ namespace platformer2d::test {
 		LK_INFO("Texture: {}x{}", ReadWidth, ReadHeight);
 		LK_ASSERT(TextureData && (ReadWidth > 0) && (ReadHeight > 0), "Corrupt texture");
 		CTexture Texture(ReadWidth, ReadHeight, TextureData);
-		const uint32_t TextureID = Texture.GetRendererID();
+		const uint32_t TextureID = Texture.GetID();
 
 		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
 		glm::vec4 FragColor{ 0.410f, 0.181f, 0.813f, 1.0f };

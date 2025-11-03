@@ -104,14 +104,14 @@ namespace platformer2d::test {
 			.SamplerFilter = ETextureFilter::Nearest,
 		};
 		CTexture PlayerTexture(Spec);
-		PlayerTexture.SetIndex(1);
-		LK_INFO("PlayerTexture Index: {}", PlayerTexture.GetIndex());
+		PlayerTexture.SetSlot(1);
+		LK_INFO("PlayerTexture Index: {}", PlayerTexture.GetSlot());
 
 		Spec.Path = BricksTexturePath;
 		Spec.Width = 512;
 		Spec.Height = 512;
 		CTexture PlatformTexture(Spec);
-		LK_INFO("PlatformTexture Index: {}", PlatformTexture.GetIndex());
+		LK_INFO("PlatformTexture Index: {}", PlatformTexture.GetSlot());
 
 		/*********************************
 		 * Player
@@ -279,7 +279,7 @@ namespace platformer2d::test {
 			{
 				TransformComp.SetRotation2D(glm::radians(PlayerRot));
 			}
-			ImGui::Text("Player Texture: %d", PlayerTexture.GetIndex());
+			ImGui::Text("Player Texture: %d", PlayerTexture.GetSlot());
 			ImGui::PopID();
 
 			Player.Tick(DeltaTime);
@@ -328,7 +328,7 @@ namespace platformer2d::test {
 			}
 			else
 			{
-				const std::size_t PlayerTexIndex = PlayerTexture.GetIndex();
+				const std::size_t PlayerTexIndex = PlayerTexture.GetSlot();
 				PlayerTexture.Bind(PlayerTexIndex);
 				Shader.Set("u_transform", PlayerTransform);
 				Shader.Set("u_texture", 1);
