@@ -24,6 +24,30 @@ namespace platformer2d::UI {
 		ImGui::SetCursorPos(ImVec2(Cursor.x + InX, Cursor.y + InY));
 	}
 
+	inline ImColor ColorWithMultipliedValue(const ImColor& Color, const float Multiplier)
+	{
+		const ImVec4& ColorRaw = Color.Value;
+		float Hue, Saturation, Value;
+		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
+		return ImColor::HSV(Hue, Saturation, std::min(Value * Multiplier, 1.0f));
+	}
+
+	inline ImColor ColorWithMultipliedSaturation(const ImColor& Color, const float Multiplier)
+	{
+		const ImVec4& ColorRaw = Color.Value;
+		float Hue, Saturation, Value;
+		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
+		return ImColor::HSV(Hue, std::min(Saturation * Multiplier, 1.0f), Value);
+	}
+
+	inline ImColor ColorWithMultipliedHue(const ImColor& Color, const float Multiplier)
+	{
+		const ImVec4& ColorRaw = Color.Value;
+		float Hue, Saturation, Value;
+		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
+		return ImColor::HSV(std::min(Hue * Multiplier, 1.0f), Saturation, Value);
+	}
+
 	namespace Draw 
 	{
 		inline void Underline(bool FullWidth = false, const float OffsetX = 0.0f, const float OffsetY = -1.0f)
@@ -61,7 +85,6 @@ namespace platformer2d::UI {
 				}
 			}
 		}
-
 	}
 
 }

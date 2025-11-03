@@ -164,6 +164,7 @@ namespace platformer2d::UI {
 		}
 		if (Settings.bStyleEditor)
 		{
+			FScopedFont Font(Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal));
 			ImGui::Begin("##StyleEditor", &Settings.bStyleEditor);
 			ImGui::ShowStyleEditor(&Style);
 			ImGui::End();
