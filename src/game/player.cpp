@@ -38,6 +38,7 @@ namespace platformer2d {
 	{
 		CActor::Tick(DeltaTime);
 
+		SyncTransformComponent();
 		CheckJumpState();
 
 		if (CKeyboard::IsKeyDown(EKey::A))
@@ -85,6 +86,13 @@ namespace platformer2d {
 		bCameraLock = true;
 	}
 
+	glm::vec2 CPlayer::GetSize() const
+	{
+		glm::vec2 Size = Body->GetSize();
+		Size *= glm::vec2(TransformComp.Scale.x, TransformComp.Scale.y);
+		return Size;
+	}
+
 	void CPlayer::CheckJumpState()
 	{
 		static constexpr int MAX_CONTACTS = 4;
@@ -109,6 +117,16 @@ namespace platformer2d {
 		{
 			Data.bJumping = false;
 			OnLanded.Broadcast(Data);
+		}
+	}
+
+	void CPlayer::SyncTransformComponent()
+	{
+		if (Body)
+		{
+			const glm::vec2 BodySize = Body->GetSize();
+			TransformComp.Scale.x = BodySize.x;
+			TransformComp.Scale.y = BodySize.y;
 		}
 	}
 

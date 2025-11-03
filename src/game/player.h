@@ -42,8 +42,15 @@ namespace platformer2d {
 		inline const CCamera& GetCamera() const { return *Camera; }
 		void SetCameraLock(bool Locked);
 
+		/**
+		 * @brief Get scaled size.
+		 */
+		glm::vec2 GetSize() const;
+
 	private:
 		void CheckJumpState();
+		void SyncTransformComponent();
+
 		void OnWindowResized(uint16_t Width, uint16_t Height);
 		void OnMouseScrolled(EMouseScrollDirection Direction);
 
