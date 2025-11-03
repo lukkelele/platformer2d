@@ -106,27 +106,7 @@ namespace platformer2d {
 			return std::get<ShapeClass>(Shape);
 		}
 
-		template<typename T>
-		T GetSize() const
-		{
-			if (ShapeType == EShape::Polygon)
-			{
-				auto& Ref = std::get<FPolygon>(Shape);
-				return Ref.Size;
-			}
-			else if (ShapeType == EShape::Line)
-			{
-				auto& Ref = std::get<FLine>(Shape);
-				LK_ASSERT(false, "Not implemented");
-			}
-			else if (ShapeType == EShape::Capsule)
-			{
-				auto& Ref = std::get<FCapsule>(Shape);
-				return { Ref.P0, Ref.P1 };
-			}
-
-			return 0.0f;
-		}
+		glm::vec2 GetSize() const;
 
 	private:
 		void SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const;

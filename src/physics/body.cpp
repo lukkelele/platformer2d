@@ -182,6 +182,27 @@ namespace platformer2d {
 		}
 	}
 
+	glm::vec2 CBody::GetSize() const
+	{
+		if (ShapeType == EShape::Polygon)
+		{
+			auto& Ref = std::get<FPolygon>(Shape);
+			return GetBoundingBox(Ref);
+		}
+		else if (ShapeType == EShape::Line)
+		{
+			auto& Ref = std::get<FLine>(Shape);
+			return GetBoundingBox(Ref);
+		}
+		else if (ShapeType == EShape::Capsule)
+		{
+			auto& Ref = std::get<FCapsule>(Shape);
+			return GetBoundingBox(Ref);
+		}
+
+		return { 0.0f, 0.0f };
+	}
+
 	void CBody::SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const
 	{
 		switch (Spec.Type)
