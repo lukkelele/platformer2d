@@ -60,6 +60,17 @@ namespace platformer2d {
 		};
 	}
 
+	FORCEINLINE static void BindTextures()
+	{
+		for (auto& [Texture, TextureRef] : Data.Textures)
+		{
+			if (TextureRef != nullptr)
+			{
+				TextureRef->Bind(static_cast<uint32_t>(Texture));
+			}
+		}
+	}
+
 	void CRenderer::Initialize()
 	{
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -81,22 +92,15 @@ namespace platformer2d {
 			CommandQueue[Idx] = new CRenderCommandQueue();
 		}
 
-		/* Quad */
 		SetupQuadRenderer();
 		SetupLineRenderer();
 		SetupCircleRenderer();
 
 		LoadTextures();
-
 		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
+
 		QuadShader->Bind();
-		for (auto& [Texture, TextureRef] : Data.Textures)
-		{
-			if (TextureRef != nullptr)
-			{
-				TextureRef->Bind(static_cast<uint32_t>(Texture));
-			}
-		}
+		BindTextures();
 
 		/* @todo Move the ImGui layer to CWindow, or keep here? */
 		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
@@ -228,77 +232,36 @@ namespace platformer2d {
 		LK_VERIFY(QuadShader, "QuadShader not initialized");
 		Data.Textures.reserve(MAX_TEXTURES);
 
+		auto LoadTexture = [](std::string_view Path, const ETexture Texture,
+							  const EImageFormat Format = EImageFormat::RGBA8,
+							  const glm::vec2& Size = { 0.0f, 0.0f }) -> void
 		{
-			const char* WhiteTexturePath = TEXTURES_DIR "/white.png";
-			LK_VERIFY(std::filesystem::exists(WhiteTexturePath));
-			LK_TRACE_TAG("Renderer", "Load white texture");
-			FTextureSpecification WhiteTextureSpec = {
-				.Path = WhiteTexturePath,
-				.Width = 1,
-				.Height = 1,
-				.Format = EImageFormat::RGBA8,
+			LK_VERIFY(std::filesystem::exists(Path), "Texture {} does not exist", static_cast<int>(Texture));
+			LK_VERIFY(!Data.Textures.contains(Texture));
+			FTextureSpecification Spec = {
+				.Path = Path.data(),
+				.Format = Format,
 				.SamplerWrap = ETextureWrap::Clamp,
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
-			Data.WhiteTexture = std::make_shared<CTexture>(WhiteTextureSpec);
-			LK_VERIFY(!Data.Textures.contains(ETexture::White));
-			Data.Textures.emplace(std::make_pair(ETexture::White, Data.WhiteTexture));
-		}
+			if (Size.x > 0.0f)
+			{
+				Spec.Width = Size.x;
+			}
+			if (Size.y > 0.0f)
+			{
+				Spec.Height = Size.y;
+			}
 
-		{
-			const char* PlayerTexturePath = TEXTURES_DIR "/test/test_player.png";
-			LK_VERIFY(std::filesystem::exists(PlayerTexturePath), "Player texture does not exist");
-			FTextureSpecification PlayerTextureSpec = {
-				.Path = PlayerTexturePath,
-				.Width = 200,
-				.Height = 200,
-				.Format = EImageFormat::RGBA8,
-				.SamplerWrap = ETextureWrap::Clamp,
-				.SamplerFilter = ETextureFilter::Nearest,
-			};
-			LK_VERIFY(!Data.Textures.contains(ETexture::Player));
-			Data.Textures.emplace(std::make_pair(ETexture::Player, std::make_shared<CTexture>(PlayerTextureSpec)));
-		}
+			Data.Textures.emplace(std::make_pair(Texture, std::make_shared<CTexture>(Spec)));
+		};
 
-		{
-			const char* MetalTexturePath = TEXTURES_DIR "/metal.png";
-			LK_VERIFY(std::filesystem::exists(MetalTexturePath), "Metal texture does not exist");
-			FTextureSpecification MetalTextureSpec = {
-				.Path = MetalTexturePath,
-				.Format = EImageFormat::RGBA8,
-				.SamplerWrap = ETextureWrap::Clamp,
-				.SamplerFilter = ETextureFilter::Nearest,
-			};
-			LK_VERIFY(!Data.Textures.contains(ETexture::Metal));
-			Data.Textures.emplace(std::make_pair(ETexture::Metal, std::make_shared<CTexture>(MetalTextureSpec)));
-		}
 
-		{
-			//const char* BricksTexturePath = TEXTURES_DIR "/bricks.jpg";
-			const char* BricksTexturePath = TEXTURES_DIR "/bricks.png";
-			FTextureSpecification BricksTextureSpec = {
-				.Path = BricksTexturePath,
-				.Format = EImageFormat::RGBA8,
-				//.SamplerWrap = ETextureWrap::Clamp,
-				//.SamplerFilter = ETextureFilter::Nearest,
-				.SamplerWrap = ETextureWrap::Repeat,
-				.SamplerFilter = ETextureFilter::Linear,
-			};
-			LK_VERIFY(!Data.Textures.contains(ETexture::Bricks));
-			Data.Textures.emplace(std::make_pair(ETexture::Bricks, std::make_shared<CTexture>(BricksTextureSpec)));
-		}
-
-		{
-			const char* WoodTexturePath = TEXTURES_DIR "/wood.png";
-			FTextureSpecification WoodTextureSpec = {
-				.Path = WoodTexturePath,
-				.Format = EImageFormat::RGBA8,
-				.SamplerWrap = ETextureWrap::Clamp,
-				.SamplerFilter = ETextureFilter::Nearest,
-			};
-			LK_VERIFY(!Data.Textures.contains(ETexture::Wood));
-			Data.Textures.emplace(std::make_pair(ETexture::Wood, std::make_shared<CTexture>(WoodTextureSpec)));
-		}
+		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, { 1.0f, 1.0f });
+		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Player, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/metal.png", ETexture::Metal, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/bricks.png", ETexture::Bricks, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/wood.png", ETexture::Wood, EImageFormat::RGBA8);
 
 		/* Bind every texture. */
 		for (auto& [Texture, TextureRef] : Data.Textures)
@@ -307,7 +270,7 @@ namespace platformer2d {
 			const int Idx = static_cast<int>(Texture);
 			QuadShader->Set(std::format("u_texture{}", Idx), Idx);
 			TextureRef->Bind(Idx);
-			TextureRef->SetIndex(Idx);
+			TextureRef->SetSlot(Idx);
 		}
 	}
 
@@ -319,13 +282,7 @@ namespace platformer2d {
 		ImGuiLayer->BeginFrame();
 
 		QuadShader->Bind();
-		for (auto& [Texture, TextureRef] : Data.Textures)
-		{
-			if (TextureRef != nullptr)
-			{
-				TextureRef->Bind(static_cast<uint32_t>(Texture));
-			}
-		}
+		BindTextures();
 	}
 
 	void CRenderer::EndFrame()
@@ -478,7 +435,7 @@ namespace platformer2d {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
-			QuadVertexBufferPtr->TexIndex = Texture.GetIndex();
+			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
 			QuadVertexBufferPtr++;
 		}
@@ -613,7 +570,7 @@ namespace platformer2d {
 			case CShader::EType::Line:   return LineShader;
 			case CShader::EType::Circle: return CircleShader;
 		}
-		LK_ASSERT(false);
+		LK_VERIFY(false);
 		return nullptr;
 	}
 
