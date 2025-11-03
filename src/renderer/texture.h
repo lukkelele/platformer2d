@@ -32,25 +32,26 @@ namespace platformer2d {
 
 		void Invalidate();
 
-		LRendererID GetRendererID() const { return RendererID; }
+		LRendererID GetID() const { return ID; }
 		uint32_t GetWidth() const { return Width; }
 		uint32_t GetHeight() const { return Height; }
-		uint32_t GetChannels() const { return Channels; }
+		uint8_t GetChannels() const { return Channels; }
+		uint8_t GetMips() const { return Mips; }
 		const std::filesystem::path& GetFilePath() const { return Path; }
 
 		void SetWrap(ETextureWrap InWrap) const;
 		void SetFilter(ETextureFilter InFilter) const;
 
-		std::size_t GetIndex() const { return Index; }
-		void SetIndex(std::size_t InIndex);
+		std::size_t GetSlot() const { return Slot; }
+		void SetSlot(std::size_t InSlot);
 
-		const FBuffer& GetImageBuffer() const { return ImageBuffer; }
-		const std::string& GetDebugName() const { return DebugName; }
+		[[nodiscard]] const FBuffer& GetImageBuffer() const { return ImageBuffer; }
+		[[nodiscard]] const std::string& GetDebugName() const { return DebugName; }
 
 	private:
-		LRendererID RendererID{};
+		LRendererID ID{};
 		FBuffer ImageBuffer;
-		std::size_t Index;
+		std::size_t Slot;
 
 		uint32_t Width = 1;
 		uint32_t Height = 1;
@@ -74,6 +75,9 @@ namespace platformer2d {
 			{
 				case ETexture::White:  return "White";
 				case ETexture::Player: return "Player";
+				case ETexture::Bricks: return "Bricks";
+				case ETexture::Metal:  return "Metal";
+				case ETexture::Wood:   return "Wood";
 				default: break;
 			}
 			LK_VERIFY(false);

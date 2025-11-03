@@ -17,8 +17,8 @@ namespace platformer2d {
 		, DebugName(Specification.DebugName)
 	{
 		LK_ASSERT((Specification.Width > 0) && (Specification.Height > 0) && !Specification.Path.empty());
-		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
-		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, RendererID));
+		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &ID));
+		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, ID));
 
 		Format = OpenGL::GetImageFormat(Specification.Format);
 		InternalFormat = OpenGL::GetImageInternalFormat(Specification.Format);
@@ -78,7 +78,7 @@ namespace platformer2d {
 		if (bMipmap)
 		{
 			LK_DEBUG_TAG("Texture", "[{}] Generating mipmap (Mips: {})", Path.filename(), Specification.Mips);
-			LK_OpenGL_Verify(glGenerateTextureMipmap(RendererID));
+			LK_OpenGL_Verify(glGenerateTextureMipmap(ID));
 		}
 		else
 		{
@@ -92,8 +92,8 @@ namespace platformer2d {
 		{
 			DebugName = std::format("{}", Path.filename());
 		}
-		Index = CreatedTextures++;
-		LK_TRACE_TAG("Texture", "Index: {} ({})", Index, Path.filename());
+		Slot = CreatedTextures++;
+		LK_TRACE_TAG("Texture", "Index: {} ({})", Slot, Path.filename());
 	}
 
 	CTexture::CTexture(const uint32_t InWidth, const uint32_t InHeight, void* InData)
@@ -101,8 +101,8 @@ namespace platformer2d {
 		, Height(InHeight)
 	{
 		LK_ASSERT((InWidth > 0) && (InHeight > 0));
-		LK_OpenGL_Verify(glGenTextures(1, &RendererID));
-		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, RendererID));
+		LK_OpenGL_Verify(glGenTextures(1, &ID));
+		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, ID));
 
 		/**
 		 * @todo Pass texture wrap/filter args from constructor.
@@ -136,13 +136,13 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
 		DebugName = std::format("{}", Path.filename());
-		Index = CreatedTextures++;
-		LK_TRACE_TAG("Texture", "Index: {}", Index);
+		Slot = CreatedTextures++;
+		LK_TRACE_TAG("Texture", "Index: {}", Slot);
 	}
 
 	void CTexture::Bind(const uint32_t Slot) const
 	{
-		LK_OpenGL_Verify(glBindTextureUnit(Slot, RendererID));
+		LK_OpenGL_Verify(glBindTextureUnit(Slot, ID));
 	}
 
 	void CTexture::Unbind(const uint32_t Slot) const
@@ -152,16 +152,16 @@ namespace platformer2d {
 
 	void CTexture::Invalidate()
 	{
-		if (RendererID)
+		if (ID)
 		{
-			LK_OpenGL_Verify(glDeleteTextures(1, &RendererID));
-			RendererID = 0;
+			LK_OpenGL_Verify(glDeleteTextures(1, &ID));
+			ID = 0;
 		}
 
 		const uint32_t MipCount = OpenGL::CalculateMipCount(Width, Height); /* @todo Use 'Mips' member here or? */
-		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &RendererID));
+		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &ID));
 		LK_OpenGL_Verify(glTextureStorage2D(
-			RendererID,
+			ID,
 			MipCount,
 			InternalFormat,
 			Width,
@@ -171,7 +171,7 @@ namespace platformer2d {
 		if (ImageBuffer)
 		{
 			LK_OpenGL_Verify(glTextureSubImage2D(
-				RendererID,
+				ID,
 				0,
 				0,
 				0,
@@ -186,23 +186,23 @@ namespace platformer2d {
 
 	void CTexture::SetWrap(const ETextureWrap InWrap) const
 	{
-		LK_DEBUG_TAG("Texture", "Set wrap: {} ({}) (Index {})", Enum::ToString(InWrap), Path.filename(), Index);
-		Bind(Index);
-		OpenGL::SetTextureWrap(RendererID, InWrap);
-		Unbind(Index);
+		LK_DEBUG_TAG("Texture", "Set wrap: {} ({}) (Index {})", Enum::ToString(InWrap), Path.filename(), Slot);
+		Bind(Slot);
+		OpenGL::SetTextureWrap(ID, InWrap);
+		Unbind(Slot);
 	}
 
 	void CTexture::SetFilter(const ETextureFilter InFilter) const
 	{
-		LK_DEBUG_TAG("Texture", "Set filter: {} ({}) (Index {})", Enum::ToString(InFilter), Path.filename(), Index);
-		Bind(Index);
-		OpenGL::SetTextureFilter(RendererID, InFilter, (Mips > 1));
-		Unbind(Index);
+		LK_DEBUG_TAG("Texture", "Set filter: {} ({}) (Index {})", Enum::ToString(InFilter), Path.filename(), Slot);
+		Bind(Slot);
+		OpenGL::SetTextureFilter(ID, InFilter, (Mips > 1));
+		Unbind(Slot);
 	}
 
-	void CTexture::SetIndex(const std::size_t InIndex)
+	void CTexture::SetSlot(const std::size_t InSlot)
 	{
-		Index = InIndex;
+		Slot = InSlot;
 	}
 
 }
