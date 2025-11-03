@@ -56,10 +56,19 @@ namespace platformer2d {
 			std::is_same<T, FLine>,
 			std::is_same<T, FCapsule>
 		>;
+
+		template<typename T>
+		struct TAlwaysFalse
+		{
+			static constexpr bool value = false;
+		};
+
+		template<typename T>
+		constexpr bool TAlwaysFalse_v = TAlwaysFalse<T>::value;
 	}
 
 	template<EShape T>
-	bool IsShape(const TShape& S)
+	inline bool IsShape(const TShape& S)
 	{
 		LK_ASSERT(std::get_if<TShapeType<T>>(&S) != nullptr);
 		return std::holds_alternative<TShapeType<T>>(S);
@@ -71,6 +80,42 @@ namespace platformer2d {
 		else if (std::holds_alternative<FLine>(S)) return EShape::Line;
 		else if (std::holds_alternative<FCapsule>(S)) return EShape::Capsule;
 		else return EShape::None;
+	}
+
+	template<typename TShape>
+	inline glm::vec2 GetBoundingBox(const TShape& S)
+	{
+		static_assert(_Internal::TAlwaysFalse_v<TShape>, "Specialization missing");
+		return glm::vec2(0.0f, 0.0f);
+	}
+
+	template<>
+	inline glm::vec2 GetBoundingBox<FPolygon>(const FPolygon& S)
+	{
+		const float C = std::cos(S.Rotation);
+		const float Si = std::sin(S.Rotation);
+		const float AbsC = std::abs(C);
+		const float AbsS = std::abs(Si);
+
+		const float Width = (AbsC * S.Size.x) + (AbsS * S.Size.y) + (2.0f * S.Radius);
+		const float Height = (AbsS * S.Size.x) + (AbsC * S.Size.y) + (2.0f * S.Radius);
+
+		return glm::vec2(Width, Height);
+	}
+
+	template<>
+	inline glm::vec2 GetBoundingBox<FLine>(const FLine& S)
+	{
+		const glm::vec2 Delta = S.P1 - S.P0;
+		return Delta;
+	}
+
+	template<>
+	inline glm::vec2 GetBoundingBox<FCapsule>(const FCapsule& S)
+	{
+		const glm::vec2 Segment = S.P1 - S.P0;
+		const glm::vec2 AbsSeg = glm::abs(Segment);
+		return AbsSeg + glm::vec2(2.0f * S.Radius, 2.0f * S.Radius);
 	}
 
 }
