@@ -69,7 +69,7 @@ namespace platformer2d {
 
 	namespace Enum
 	{
-		inline const char* ToString(const ETexture Texture)
+		inline constexpr const char* ToString(const ETexture Texture)
 		{
 			switch (Texture)
 			{
@@ -80,7 +80,6 @@ namespace platformer2d {
 				case ETexture::Wood:   return "Wood";
 				default: break;
 			}
-			LK_VERIFY(false);
 			return nullptr;
 		}
 	}

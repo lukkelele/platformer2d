@@ -74,4 +74,10 @@ namespace platformer2d::UI {
 		ImGui::PopFont();
 	}
 
+	ImFont* Font::Get(EFont Font, EFontSize Size, EFontModifier Modifier)
+	{
+		ImFont* FontRef = FontMap.at(Modifier)[Font][static_cast<int>(Size)];
+		return FontRef;
+	}
+
 }

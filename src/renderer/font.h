@@ -60,6 +60,7 @@ namespace platformer2d {
 		void Add(const FFontConfiguration& FontConfig, bool IsDefault = false);
 		void Push(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
 		void Pop();
+		ImFont* Get(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
 	}
 
 	namespace Enum
