@@ -1,5 +1,7 @@
 #include "testlevel.h"
 
+#include <numeric>
+
 #include "core/window.h"
 #include "core/timer.h"
 #include "core/selectioncontext.h"
@@ -141,22 +143,6 @@ namespace platformer2d::Level {
 		Tick_Objects();
 
 		/* Render player. */
-#if PLAYER_SHAPE_CAPSULE
-		const FCapsule* Capsule = Player->GetBody().TryGetShape<EShape::Capsule>();
-		if (Capsule)
-		{
-			glm::vec2 PlayerSize = Player->GetBody().GetSize();
-			const glm::vec3 Scale = Player->GetTransformComponent().GetScale();
-			PlayerSize *= glm::vec2(Scale.x, Scale.y);
-			CRenderer::DrawQuad(
-				Player->GetPosition(),
-				PlayerSize,
-				CRenderer::GetTexture(Player->GetTexture()),
-				FColor::White,
-				glm::degrees(Player->GetRotation())
-			);
-		}
-#else
 		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
 		if (Polygon)
 		{
@@ -169,7 +155,6 @@ namespace platformer2d::Level {
 				glm::degrees(Player->GetRotation())
 			);
 		}
-#endif
 
 		/* Render level. */
 		for (const std::shared_ptr<CActor>& Actor : Actors)
@@ -183,6 +168,16 @@ namespace platformer2d::Level {
 				glm::degrees(TC.GetRotation2D())
 			);
 		}
+
+		const CTexture& BgTexture = CRenderer::GetTexture(ETexture::Background);
+		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
+		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
+		CRenderer::DrawQuad(
+			{0.0f, 0.0f},
+			BgSize,
+			BgTexture,
+			FColor::White
+		);
 
 		/* Draw dark overlay whenever the pause menu is open. */
 		if (UI::IsGameMenuOpen())
@@ -332,10 +327,15 @@ namespace platformer2d::Level {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
+		ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
+
+		const int Gcd = std::gcd(ViewportWidth, ViewportHeight);
+		ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
+
 		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 
-		ImGui::Text("Actors: %d", Actors.size());
+		ImGui::Text("Actors: %d", Actors.size() + 1);
 
 		UI::Draw::ActorNode(*Player);
 		for (auto& Actor : Actors)
@@ -417,6 +417,7 @@ namespace platformer2d::Level {
 	{
 		static const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
 			Enum::ToString(ETexture::White),
+			Enum::ToString(ETexture::Background),
 			Enum::ToString(ETexture::Player),
 			Enum::ToString(ETexture::Metal),
 			Enum::ToString(ETexture::Bricks),
