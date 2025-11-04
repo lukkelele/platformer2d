@@ -1,9 +1,11 @@
-#include "renderer/ui/ui.h"
+#include "ui.h"
 
+#include "ui_core.h"
 #include "core/input/keyboard.h"
 #include "game/gameinstance.h"
 #include "renderer/color.h"
 #include "renderer/font.h"
+#include "renderer/renderer.h"
 
 namespace platformer2d::UI {
 
@@ -33,11 +35,6 @@ namespace platformer2d::UI {
 	namespace 
 	{
 		FGameMenu GameMenu{};
-	}
-
-	bool IsGameMenuOpen()
-	{
-		return GameMenu.bOpen;
 	}
 
 	void RainbowTextGradient(const char* Text, const float Speed = 0.15f);
@@ -155,6 +152,16 @@ namespace platformer2d::UI {
 			Font::Pop();
 		}
 
+		UI::ShiftCursorY(10.0f);
+		ImGui::Indent();
+		if (ImGui::TreeNodeEx("Blend Function", ImGuiTreeNodeFlags_None))
+		{
+			BlendFunction();
+			ImGui::TreePop();
+		}
+		ImGui::Unindent();
+
+		ImGui::Dummy(ImVec2(0.0f, 12.0f));
 		ImGui::PopStyleVar(2);
 
 		ImGui::Dummy(ImVec2(0.0f, PaddingY * 0.50f));
@@ -287,8 +294,135 @@ namespace platformer2d::UI {
 	void ToggleGameMenu()
 	{
 		GameMenu.bOpen = !GameMenu.bOpen;
-		LK_DEBUG_TAG("UI", "Toggle Game Menu: {}", GameMenu.bOpen ? "Open" : "Closed");
+		LK_TRACE_TAG("UI", "Toggle Game Menu: {}", GameMenu.bOpen ? "Open" : "Closed");
 		OnGameMenuOpened.Broadcast(GameMenu.bOpen);
+	}
+
+	bool IsGameMenuOpen()
+	{
+		return GameMenu.bOpen;
+	}
+
+	bool BlendFunction()
+	{
+		#define UI_COMBO_OPTION(Value) { Value, #Value }
+		static constexpr std::pair<GLenum, const char*> SourceBlendFuncs[] = {
+			UI_COMBO_OPTION(GL_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE),
+			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
+		};
+		static constexpr std::pair<GLenum, const char*> DestBlendFuncs[] = {
+			UI_COMBO_OPTION(GL_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
+			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
+		};
+		#undef UI_COMBO_OPTION
+
+		static constexpr float ItemWidth = 380.0f;
+		bool bSetBlendFunc = false;
+
+		static int SelectedSourceBlendFunc = -1;
+		if (SelectedSourceBlendFunc == -1)
+		{
+			const int SourceFunc = CRenderer::GetBlendSource();
+			switch (SourceFunc)
+			{
+				case GL_SRC_ALPHA:
+					SelectedSourceBlendFunc = 0;
+					break;
+				case GL_DST_ALPHA:
+					SelectedSourceBlendFunc = 1;
+					break;
+				case GL_ONE:
+					SelectedSourceBlendFunc = 2;
+					break;
+				case GL_ONE_MINUS_SRC_ALPHA:
+					SelectedSourceBlendFunc = 3;
+					break;
+				case GL_ONE_MINUS_DST_ALPHA:
+					SelectedSourceBlendFunc = 4;
+					break;
+				case GL_ONE_MINUS_CONSTANT_ALPHA:
+					SelectedSourceBlendFunc = 5;
+					break;
+			}
+		}
+
+		static int SelectedDestBlendFunc = -1;
+		if (SelectedDestBlendFunc == -1)
+		{
+			const int DestFunc = CRenderer::GetBlendDestination();
+			switch (DestFunc)
+			{
+				case GL_SRC_ALPHA:
+					SelectedDestBlendFunc = 0;
+					break;
+				case GL_DST_ALPHA:
+					SelectedDestBlendFunc = 1;
+					break;
+				case GL_ONE_MINUS_SRC_ALPHA:
+					SelectedDestBlendFunc = 2;
+					break;
+				case GL_ONE_MINUS_DST_ALPHA:
+					SelectedDestBlendFunc = 3;
+					break;
+				case GL_ONE_MINUS_CONSTANT_ALPHA:
+					SelectedDestBlendFunc = 4;
+					break;
+			}
+		}
+
+		ImGui::PushID(LK_FUNCSIG "_Source");
+		ImGui::SetNextItemWidth(ItemWidth);
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].second))
+		{
+			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
+			{
+				const bool bSelected = (SelectedSourceBlendFunc == N);
+				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected))
+				{
+					SelectedSourceBlendFunc = N;
+					LK_INFO("Source: {}", SourceBlendFuncs[N].second);
+					bSetBlendFunc = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopID();
+
+		ImGui::PushID(LK_FUNCSIG "_Destination");
+		ImGui::SetNextItemWidth(ItemWidth);
+		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].second))
+		{
+			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
+			{
+				const bool bSelected = (SelectedDestBlendFunc == N);
+				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected))
+				{
+					SelectedDestBlendFunc = N;
+					LK_TRACE_TAG("UI", "Destination: {}", DestBlendFuncs[N].second);
+					bSetBlendFunc = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopID();
+
+		if (bSetBlendFunc)
+		{
+			LK_OpenGL_Verify(glBlendFunc(
+				SourceBlendFuncs[SelectedSourceBlendFunc].first,
+				DestBlendFuncs[SelectedDestBlendFunc].first
+			));
+		}
+
+		return bSetBlendFunc;
 	}
 
 	void RainbowTextGradient(const char* Text, const float Speed)

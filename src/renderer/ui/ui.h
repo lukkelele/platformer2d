@@ -21,4 +21,9 @@ namespace platformer2d::UI {
 	void ToggleGameMenu();
 	bool IsGameMenuOpen();
 
+	/**
+	 * @brief Combo dropdown.
+	 */
+	bool BlendFunction();
+
 }
