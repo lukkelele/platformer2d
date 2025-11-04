@@ -13,6 +13,7 @@ namespace platformer2d {
 	enum class ETexture
 	{
 		White,
+		Background,
 		Player,
 		Metal,
 		Bricks,
@@ -73,11 +74,12 @@ namespace platformer2d {
 		{
 			switch (Texture)
 			{
-				case ETexture::White:  return "White";
-				case ETexture::Player: return "Player";
-				case ETexture::Bricks: return "Bricks";
-				case ETexture::Metal:  return "Metal";
-				case ETexture::Wood:   return "Wood";
+				case ETexture::White:      return "White";
+				case ETexture::Background: return "Background";
+				case ETexture::Player:     return "Player";
+				case ETexture::Bricks:     return "Bricks";
+				case ETexture::Metal:      return "Metal";
+				case ETexture::Wood:       return "Wood";
 				default: break;
 			}
 			return nullptr;
