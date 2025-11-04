@@ -35,6 +35,7 @@ namespace platformer2d {
 		void Target(const glm::vec2& TargetPos, float DeltaTime = 0.0f);
 		void SetFollowSpeed(float InFollowSpeed);
 		void SetDeadzone(const glm::vec2& InDeadzone);
+		glm::vec2 GetHalfSize() const;
 
 	private:
 		FORCEINLINE void UpdateProjection()

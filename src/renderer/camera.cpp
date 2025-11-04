@@ -120,6 +120,13 @@ namespace platformer2d {
 		DeadzoneHalf = InDeadzone;
 	}
 
+	glm::vec2 CCamera::GetHalfSize() const
+	{
+		const float HalfHeight = (OrthographicSize * Zoom) * 0.50f;
+		const float HalfWidth = HalfHeight * AspectRatio;
+		return glm::vec2(HalfWidth, HalfHeight);
+	}
+
 	void CCamera::OnMouseButtonPressed(const FMouseButtonData& ButtonData)
 	{
 		LK_TRACE_TAG("Camera", "Mouse button: {}", Enum::ToString(ButtonData.Button));
