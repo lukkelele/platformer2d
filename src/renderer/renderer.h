@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include <glm/glm.hpp>
 
 #include "core/core.h"
@@ -92,6 +94,11 @@ namespace platformer2d {
 		static const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& GetTextures();
 
 		static std::shared_ptr<CShader> GetShader(CShader::EType ShaderType);
+
+		static void SetBlendFunction(uint32_t Source, uint32_t Destination);
+		static uint32_t GetBlendSource();
+		static uint32_t GetBlendDestination();
+		static std::pair<uint32_t, uint32_t> GetBlendFunction();
 
 		static void SetDebugRender(bool Enabled);
 

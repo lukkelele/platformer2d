@@ -34,6 +34,9 @@ namespace platformer2d {
 	{
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
 		std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
+
+		uint32_t BlendSource = 0;
+		uint32_t BlendDestination = 0;
 	};
 
 	namespace 
@@ -74,10 +77,9 @@ namespace platformer2d {
 	{
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
-		LK_OpenGL_Verify(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		SetBlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
 		LK_OpenGL_Verify(glDepthFunc(GL_LESS));
-
 		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
 
 		OpenGL::LoadInfo(BackendInfo);
@@ -256,6 +258,7 @@ namespace platformer2d {
 		};
 
 		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, { 1.0f, 1.0f });
+		LoadTexture(TEXTURES_DIR "/sunny.png", ETexture::Background, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Player, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/metal.png", ETexture::Metal, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/bricks.png", ETexture::Bricks, EImageFormat::RGBA8);
@@ -570,6 +573,29 @@ namespace platformer2d {
 		}
 		LK_VERIFY(false);
 		return nullptr;
+	}
+
+	void CRenderer::SetBlendFunction(const uint32_t Source, const uint32_t Destination)
+	{
+		Data.BlendSource = Source;
+		Data.BlendDestination = Destination;
+		LK_DEBUG_TAG("Renderer", "Source={} Dst={}", Data.BlendSource, Data.BlendDestination);
+		LK_OpenGL_Verify(glBlendFunc(Data.BlendSource, Data.BlendDestination));
+	}
+
+	int CRenderer::GetBlendSource()
+	{
+		return Data.BlendSource;
+	}
+
+	int CRenderer::GetBlendDestination()
+	{
+		return Data.BlendDestination;
+	}
+
+	std::pair<uint32_t, uint32_t> CRenderer::GetBlendFunction()
+	{
+		return std::make_pair(Data.BlendSource, Data.BlendDestination);
 	}
 
 	void CRenderer::SetDebugRender(const bool Enabled)
