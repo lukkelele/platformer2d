@@ -19,6 +19,8 @@ namespace platformer2d {
 		{
 			Name = "Player";
 		}
+
+		LK_VERIFY(Body);
 	}
 
 	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
@@ -32,6 +34,8 @@ namespace platformer2d {
 		{
 			Name = "Player";
 		}
+
+		LK_VERIFY(Body);
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
