@@ -35,8 +35,14 @@ namespace platformer2d {
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
 		std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
 
-		uint32_t BlendSource = 0;
-		uint32_t BlendDestination = 0;
+		struct
+		{
+			bool bBlending = false;
+			uint32_t BlendSource = 0;
+			uint32_t BlendDestination = 0;
+			bool bDepthTest = false;
+			uint32_t DepthFunc = 0;
+		} GL;
 	};
 
 	namespace 
@@ -78,8 +84,8 @@ namespace platformer2d {
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
 		SetBlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
-		LK_OpenGL_Verify(glDepthFunc(GL_LESS));
+		SetDepthTest(true);
+		SetDepthFunction(GL_LESS);
 		LK_OpenGL_Verify(glEnable(GL_LINE_SMOOTH));
 
 		OpenGL::LoadInfo(BackendInfo);
@@ -259,7 +265,8 @@ namespace platformer2d {
 
 		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, { 1.0f, 1.0f });
 		LoadTexture(TEXTURES_DIR "/sunny.png", ETexture::Background, EImageFormat::RGBA8);
-		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Player, EImageFormat::RGBA8);
+		//LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Player, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/characters.png", ETexture::Player, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/metal.png", ETexture::Metal, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/bricks.png", ETexture::Bricks, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/wood.png", ETexture::Wood, EImageFormat::RGBA8);
@@ -402,6 +409,7 @@ namespace platformer2d {
 		static constexpr float TileFactor = 1.0f;
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
+            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++)
@@ -420,6 +428,12 @@ namespace platformer2d {
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture,
 							 const glm::vec4& Color, const float RotationDeg)
 	{
+		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, Color, RotationDeg);
+	}
+
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture,
+							 const glm::vec4& Color, float RotationDeg)
+	{
 		if (QuadIndexCount >= MaxIndices)
 		{
 			NextBatch();
@@ -427,7 +441,7 @@ namespace platformer2d {
 
 		static constexpr float TileFactor = 1.0f;
 
-		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
             * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
@@ -436,6 +450,81 @@ namespace platformer2d {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
+			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
+			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr++;
+		}
+
+		QuadIndexCount += 6;
+		DrawStats.QuadCount++;
+	}
+
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture,
+							 const glm::vec2(&TexCoords)[4], const glm::vec4& Color, const float RotationDeg)
+	{
+		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, TexCoords, Color, RotationDeg);
+	}
+
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture,
+							 const glm::vec2(&TexCoords)[4], const glm::vec4& Color, const float RotationDeg)
+	{
+		if (QuadIndexCount >= MaxIndices)
+		{
+			NextBatch();
+		}
+
+		static constexpr float TileFactor = 1.0f;
+
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
+            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+
+		for (std::size_t Idx = 0; Idx < 4; Idx++)
+		{
+			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
+			QuadVertexBufferPtr->Color = Color;
+			QuadVertexBufferPtr->TexCoord = TexCoords[Idx];
+			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
+			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr++;
+		}
+
+		QuadIndexCount += 6;
+		DrawStats.QuadCount++;
+	}
+
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV,
+							 const glm::vec4& Color, const float RotationDeg)
+	{
+		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, UV, Color, RotationDeg);
+	}
+
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV,
+							 const glm::vec4& Color, const float RotationDeg)
+	{
+		if (QuadIndexCount >= MaxIndices)
+		{
+			NextBatch();
+		}
+
+		static constexpr float TileFactor = 1.0f;
+
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
+            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+
+		const std::array<glm::vec2, 4> TexCoords = {
+			glm::vec2(UV.U0, UV.V0),
+			glm::vec2(UV.U0, UV.V1),
+			glm::vec2(UV.U1, UV.V1),
+			glm::vec2(UV.U1, UV.V0)
+		};
+
+		for (std::size_t Idx = 0; Idx < 4; Idx++)
+		{
+			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
+			QuadVertexBufferPtr->Color = Color;
+			QuadVertexBufferPtr->TexCoord = TexCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
 			QuadVertexBufferPtr++;
@@ -532,6 +621,37 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glLineWidth(LineConfig.Width));
 	}
 
+	void CRenderer::SetDepthTest(const bool Enabled)
+	{
+		LK_DEBUG_TAG("Renderer", "Depth test: {}", Enabled ? "Enabled" : "Disabled");
+		Data.GL.bDepthTest = Enabled;
+		if (Enabled)
+		{
+			LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
+		}
+		else
+		{
+			LK_OpenGL_Verify(glDisable(GL_DEPTH_TEST));
+		}
+	}
+
+	bool CRenderer::GetDepthTest()
+	{
+		return Data.GL.bDepthTest;
+	}
+
+	void CRenderer::SetDepthFunction(const uint32_t DepthFunc)
+	{
+		LK_DEBUG_TAG("Renderer", "Depth function: {}", DepthFunc);
+		Data.GL.DepthFunc = DepthFunc;
+		LK_OpenGL_Verify(glDepthFunc(Data.GL.DepthFunc));
+	}
+
+	uint32_t CRenderer::GetDepthFunction()
+	{
+		return Data.GL.DepthFunc;
+	}
+
 	const FDrawStatistics& CRenderer::GetDrawStatistics()
 	{
 		return DrawStats;
@@ -575,27 +695,40 @@ namespace platformer2d {
 		return nullptr;
 	}
 
+	void CRenderer::SetBlending(const bool Enabled)
+	{
+		Data.GL.bBlending = Enabled;
+		if (Enabled)
+		{
+			LK_OpenGL_Verify(glEnable(GL_BLEND));
+		}
+		else
+		{
+			LK_OpenGL_Verify(glDisable(GL_BLEND));
+		}
+	}
+
 	void CRenderer::SetBlendFunction(const uint32_t Source, const uint32_t Destination)
 	{
-		Data.BlendSource = Source;
-		Data.BlendDestination = Destination;
-		LK_DEBUG_TAG("Renderer", "Source={} Dst={}", Data.BlendSource, Data.BlendDestination);
-		LK_OpenGL_Verify(glBlendFunc(Data.BlendSource, Data.BlendDestination));
+		Data.GL.BlendSource = Source;
+		Data.GL.BlendDestination = Destination;
+		LK_DEBUG_TAG("Renderer", "Source={} Dst={}", Data.GL.BlendSource, Data.GL.BlendDestination);
+		LK_OpenGL_Verify(glBlendFunc(Data.GL.BlendSource, Data.GL.BlendDestination));
 	}
 
-	int CRenderer::GetBlendSource()
+	uint32_t CRenderer::GetBlendSource()
 	{
-		return Data.BlendSource;
+		return Data.GL.BlendSource;
 	}
 
-	int CRenderer::GetBlendDestination()
+	uint32_t CRenderer::GetBlendDestination()
 	{
-		return Data.BlendDestination;
+		return Data.GL.BlendDestination;
 	}
 
 	std::pair<uint32_t, uint32_t> CRenderer::GetBlendFunction()
 	{
-		return std::make_pair(Data.BlendSource, Data.BlendDestination);
+		return std::make_pair(Data.GL.BlendSource, Data.GL.BlendDestination);
 	}
 
 	void CRenderer::SetDebugRender(const bool Enabled)

@@ -10,6 +10,7 @@
 #include "color.h"
 #include "imguilayer.h"
 #include "shader.h"
+#include "sprite.h"
 #include "texture.h"
 #include "uniformbuffer.h"
 
@@ -68,6 +69,11 @@ namespace platformer2d {
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f);
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
 
 		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
@@ -81,6 +87,10 @@ namespace platformer2d {
 
 		static void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
 		static void SetLineWidth(uint16_t LineWidth);
+		static void SetDepthTest(bool Enabled);
+		static bool GetDepthTest();
+		static void SetDepthFunction(uint32_t DepthFunc);
+		static uint32_t GetDepthFunction();
 
 		static const FBackendInfo& GetBackendInfo() { return BackendInfo; }
 
@@ -92,9 +102,9 @@ namespace platformer2d {
 		static std::shared_ptr<CTexture> GetWhiteTexture();
 		static const CTexture& GetTexture(ETexture Texture);
 		static const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& GetTextures();
-
 		static std::shared_ptr<CShader> GetShader(CShader::EType ShaderType);
 
+		static void SetBlending(bool Enabled);
 		static void SetBlendFunction(uint32_t Source, uint32_t Destination);
 		static uint32_t GetBlendSource();
 		static uint32_t GetBlendDestination();
