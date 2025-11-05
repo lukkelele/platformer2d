@@ -46,6 +46,7 @@ namespace platformer2d {
 
 		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
+		inline CBody& GetBody() { return *Body; }
 		inline const CBody& GetBody() const { return *Body; }
 
 		inline ETexture GetTexture() const { return Texture; }
