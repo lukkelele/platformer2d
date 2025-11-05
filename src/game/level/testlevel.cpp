@@ -60,6 +60,16 @@ namespace platformer2d::Level {
 		std::weak_ptr<CActor> RotatingPlatform;
 	}
 
+	static std::shared_ptr<CActor> FindActorByName(std::string_view Name)
+	{
+		auto IsNameEqual = [Name](const std::shared_ptr<CActor>& Actor)
+		{
+			return (Name == Actor->GetName());
+		};
+		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsNameEqual);
+		return (Iter != Actors.end()) ? *Iter : nullptr;
+	}
+
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 
 	CTestLevel::CTestLevel()
@@ -88,8 +98,8 @@ namespace platformer2d::Level {
 		CPhysicsWorld::SetGravity(Spec.Gravity);
 
 		CreatePlayer();
+		LK_VERIFY(Player);
 		CreatePlatform();
-		LK_VERIFY(Player && Platform);
 
 		CreateTerrain();
 
@@ -138,48 +148,49 @@ namespace platformer2d::Level {
 		CRenderer::BeginScene(Camera);
 
 		Player->Tick(DeltaTime);
-		Platform->Tick(DeltaTime);
+		Tick_Objects(DeltaTime);
 
-		Tick_Objects();
-
-		const CTexture& BgTexture = CRenderer::GetTexture(ETexture::Background);
-		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
-		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
-		CRenderer::DrawQuad(
-			{0.0f, 0.0f, 0.0f},
-			BgSize,
-			BgTexture,
-			FColor::White
-		);
+		DrawBackground();
 
 		/* Render player. */
 		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
 		if (Polygon)
 		{
+			static CTimer PlayerTimer;
 			const glm::vec2 PlayerSize = Player->GetSize();
-#if 0
-			CRenderer::DrawQuad(
-				Player->GetPosition(),
-				PlayerSize,
-				CRenderer::GetTexture(Player->GetTexture()),
-				FColor::White,
-				glm::degrees(Player->GetRotation())
-			);
-#else
-			static constexpr glm::vec2 TilePos(3, 2);
+
+			/**
+		     * WALK: frames 1,2,3,4, cycle
+			 * JUMP: frame 5 for "jump preparation", frame 6 for moving upwards, frame 7 for moving downards and frame 8 for landing
+			 * HIT: frames 9,10,9
+			 * SLASH: frames 11,12,13 (you might use them in the order 12,11,12,13 if you want an extra "preparation" frame before the actual slash)
+			 * PUNCH: 14,12 (again, you might use them in the order 12,14,12)
+			 */
 			static constexpr glm::vec2 TileSize(32, 32);
 			static constexpr glm::vec2 SheetSize(736, 128);
+
+			static glm::vec2 TilePos = { 3, 2 };
+			const auto Time = PlayerTimer.GetElapsed<std::chrono::milliseconds>();
+			if (Time > 750ms)
+			{
+				TilePos.x++;
+				if (TilePos.x > 4)
+				{
+					TilePos.x = 1;
+				}
+
+				PlayerTimer.Reset();
+			}
 			FSpriteUV UV = GetSpriteUV(TilePos, TileSize, SheetSize);
 
 			CRenderer::DrawQuad(
-				glm::vec3(Player->GetPosition(), 1.0f),
+				glm::vec3(Player->GetPosition(), 0.010f),
 				PlayerSize,
 				CRenderer::GetTexture(Player->GetTexture()),
 				UV,
 				FColor::White,
 				glm::degrees(Player->GetRotation())
 			);
-#endif
 		}
 
 		/* Render level. */
@@ -187,7 +198,7 @@ namespace platformer2d::Level {
 		{
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
-				Actor->GetPosition(),
+				glm::vec3(Actor->GetPosition(), 0.50f),
 				TC.Scale,
 				Actor->GetTexture(),
 				Actor->GetColor(),
@@ -234,7 +245,7 @@ namespace platformer2d::Level {
 	void CTestLevel::CreatePlatform()
 	{
 		FBodySpecification Spec;
-		Spec.Name = "Metal";
+		Spec.Name = "SpawnPlatform";
 		Spec.Position = { 0.0f, -0.72f };
 		Spec.Type = EBodyType::Static;
 		Spec.Flags = EBodyFlag_PreSolveEvents;
@@ -244,7 +255,7 @@ namespace platformer2d::Level {
 		};
 		Spec.Shape.emplace<FPolygon>(Polygon);
 
-		Platform = CActor::Create<CActor>(Spec, ETexture::Metal);
+		std::shared_ptr<CActor> Platform = CActor::Create<CActor>(Spec, ETexture::Metal);
 		FTransformComponent& TC = Platform->GetTransformComponent();
 		TC.SetScale(Polygon.Size);
 	}
@@ -324,8 +335,13 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::Tick_Objects()
+	void CTestLevel::Tick_Objects(const float DeltaTime)
 	{
+		for (const auto& Object : Actors)
+		{
+			Object->Tick(DeltaTime);
+		}
+
 		if (std::shared_ptr<CActor> Actor = RotatingPlatform.lock(); Actor != nullptr)
 		{
 			Actor->SetRotation(Actor->GetRotation() + glm::radians(0.75f));
@@ -368,8 +384,9 @@ namespace platformer2d::Level {
 
 	void CTestLevel::UI_Player()
 	{
-		const CBody& PlayerBody = Player->GetBody();
+		CBody& PlayerBody = Player->GetBody();
 		const FPlayerData& PlayerData = Player->GetData();
+		FTransformComponent& TC = Player->GetTransformComponent();
 
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
 		if (!ImGui::Begin("Player"))
@@ -381,8 +398,12 @@ namespace platformer2d::Level {
 		glm::vec2 PlayerBodyPos = Player->GetBody().GetPosition();
 		ImGui::Text("Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 		PlayerBodyPos = Player->GetPosition();
-		ImGui::Text("Transform Component: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
+		ImGui::Text("TC Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
+
+		const glm::vec2 PlayerSize = Player->GetSize();
+		ImGui::Text("Size: (%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
+		ImGui::Text("TC Scale: (%.2f, %.2f)", TC.Scale.x, TC.Scale.y);
 
 		ImGui::Text("Camera Zoom: %.2f", Player->GetCamera().GetZoom());
 
@@ -398,10 +419,13 @@ namespace platformer2d::Level {
 		ImGui::SliderFloat("Direction Force", &PlayerDirForce, 0.0f, 10.0f, "%.5f");
 		if (ImGui::IsItemActive()) Player->SetDirectionForce(PlayerDirForce);
 
-		static float BodyScale = 1.0f;
+		static float BodyScale = TC.Scale.x;
 		ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
 		ImGui::SameLine();
-		if (ImGui::Button("Apply##Scale")) PlayerBody.SetScale(BodyScale);
+		if (ImGui::Button("Apply##Scale"))
+		{
+			PlayerBody.SetScale(BodyScale);
+		}
 
 		float Mass = PlayerBody.GetMass();
 		ImGui::SliderFloat("Mass", &Mass, 0.0f, 10.0f, "%.2f");
@@ -423,7 +447,15 @@ namespace platformer2d::Level {
 
 		if (ImGui::Button("Rotate Platform"))
 		{
-			Platform->SetRotation(Platform->GetRotation() + glm::radians(45.0f));
+			static constexpr const char* PlatformName = "SpawnPlatform";
+			if (std::shared_ptr<CActor> Platform = FindActorByName(PlatformName); Platform != nullptr)
+			{
+				Platform->SetRotation(Platform->GetRotation() + glm::radians(45.0f));
+			}
+			else
+			{
+				LK_WARN_TAG("TestLevel", "No actor exists with name: {}", PlatformName);
+			}
 		}
 
 		ImGui::End();
@@ -564,6 +596,19 @@ namespace platformer2d::Level {
 				CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
 			}
 		}
+	}
+
+	void CTestLevel::DrawBackground() const
+	{
+		const CTexture& BgTexture = CRenderer::GetTexture(ETexture::Background);
+		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
+		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
+		CRenderer::DrawQuad(
+			{ 0.0f, 0.0f, 0.0f },
+			BgSize,
+			BgTexture,
+			FColor::White
+		);
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)

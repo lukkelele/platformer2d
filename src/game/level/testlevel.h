@@ -27,15 +27,16 @@ namespace platformer2d::Level {
 		void CreatePlatform();
 		void CreateTerrain();
 
-		void Tick_Objects();
+		void Tick_Objects(float DeltaTime);
 
 		void UI_Level();
 		void UI_Player();
 		void UI_TextureModifier();
 
+		void DrawBackground() const;
+
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;
-		std::shared_ptr<CActor> Platform = nullptr;
 	};
 
 }
