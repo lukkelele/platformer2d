@@ -127,6 +127,30 @@ namespace platformer2d {
 		return glm::vec2(HalfWidth, HalfHeight);
 	}
 
+	std::pair<float, float> CCamera::GetMinRange() const
+	{
+		const float HalfHeight = (OrthographicSize * Zoom) * 0.50f;
+		const float HalfWidth = HalfHeight * AspectRatio;
+		return std::make_pair(-HalfWidth, -HalfHeight);
+	}
+
+	std::pair<float, float> CCamera::GetMaxRange() const
+	{
+		const float HalfHeight = (OrthographicSize * Zoom) * 0.50f;
+		const float HalfWidth = HalfHeight * AspectRatio;
+		return std::make_pair(HalfWidth, HalfHeight);
+	}
+
+	std::pair<glm::vec2, glm::vec2> CCamera::GetMinMaxRange() const
+	{
+		const float HalfHeight = (OrthographicSize * Zoom) * 0.50f;
+		const float HalfWidth = HalfHeight * AspectRatio;
+		return std::make_pair(
+			glm::vec2(-HalfWidth, -HalfHeight),
+			glm::vec2(HalfWidth, HalfHeight)
+		);
+	}
+
 	void CCamera::OnMouseButtonPressed(const FMouseButtonData& ButtonData)
 	{
 		LK_TRACE_TAG("Camera", "Mouse button: {}", Enum::ToString(ButtonData.Button));

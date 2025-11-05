@@ -37,6 +37,10 @@ namespace platformer2d {
 		void SetDeadzone(const glm::vec2& InDeadzone);
 		glm::vec2 GetHalfSize() const;
 
+		std::pair<float, float> GetMinRange() const;
+		std::pair<float, float> GetMaxRange() const;
+		std::pair<glm::vec2, glm::vec2> GetMinMaxRange() const;
+
 	private:
 		FORCEINLINE void UpdateProjection()
 		{
