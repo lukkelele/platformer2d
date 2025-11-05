@@ -61,6 +61,9 @@ namespace platformer2d {
 		inline const b2BodyId& GetID() const { return ID; }
 		inline const b2ShapeId& GetShapeID() const { return ShapeID; }
 
+		inline bool IsDirty() const { return bDirty; }
+		void SetDirty(bool Dirty);
+
 		glm::vec2 GetPosition() const;
 		void SetPosition(const glm::vec2& Pos) const;
 		void SetPositionX(float X) const;
@@ -81,8 +84,8 @@ namespace platformer2d {
 		void SetShape(const b2Capsule& Capsule);
 		void SetShape(const b2Segment& Line);
 
-		void SetScale(float Factor) const;
-		void SetScale(const glm::vec2& Factor) const;
+		void SetScale(float Factor);
+		void SetScale(const glm::vec2& Factor);
 		float GetRestitution() const;
 		void SetRestitution(float Restitution) const;
 		float GetFriction() const;
@@ -121,6 +124,7 @@ namespace platformer2d {
 		EShape ShapeType;
 		TShape Shape;
 
+		bool bDirty = false;
 		float DeltaTime = 0.0f;
 
 		friend class CPhysicsWorld;

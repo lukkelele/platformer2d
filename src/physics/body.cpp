@@ -65,6 +65,17 @@ namespace platformer2d {
 		DeltaTime = InDeltaTime;
 	}
 
+	void CBody::SetDirty(const bool Dirty)
+	{
+		bDirty = Dirty;
+	}
+
+	glm::vec2 CBody::GetPosition() const
+	{
+		const b2Vec2 Pos = b2Body_GetPosition(ID);
+		return glm::vec2(Pos.x, Pos.y);
+	}
+
 	void CBody::SetPosition(const glm::vec2& Pos) const
 	{
 		const b2Transform Transform = { b2Vec2(Pos.x, Pos.y), b2MakeRot(B2_PI) };
@@ -83,12 +94,6 @@ namespace platformer2d {
 		const b2Vec2 Pos = b2Body_GetPosition(ID);
 		const b2Transform Transform = { b2Vec2(Pos.x, Y), b2MakeRot(B2_PI) };
 		b2Body_SetTargetTransform(ID, Transform, DeltaTime);
-	}
-
-	glm::vec2 CBody::GetPosition() const
-	{
-		const b2Vec2 Pos = b2Body_GetPosition(ID);
-		return glm::vec2(Pos.x, Pos.y);
 	}
 
 	float CBody::GetRotation() const
@@ -155,13 +160,14 @@ namespace platformer2d {
 		b2Shape_SetSegment(ShapeID, &Line);
 	}
 
-	void CBody::SetScale(const float Factor) const
+	void CBody::SetScale(const float Factor)
 	{
 		SetScale({ Factor, Factor });
 	}
 
-	void CBody::SetScale(const glm::vec2& Factor) const
+	void CBody::SetScale(const glm::vec2& Factor)
 	{
+		bDirty = true;
 		switch (ShapeType)
 		{
 			case EShape::Polygon:
@@ -271,9 +277,10 @@ namespace platformer2d {
 		{
 			Shape.vertices[Idx].x *= Factor.x;
 			Shape.vertices[Idx].y *= Factor.y;
+			LK_DEBUG_TAG("Body", "Vertex[{}]: ({}, {})", Idx, Shape.vertices[Idx].x, Shape.vertices[Idx].y);
 		}
 		Shape.radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
-		LK_DEBUG_TAG("Body", "New polygon radius: {}", Shape.radius);
+		LK_DEBUG_TAG("Body", "Polygon radius: {}", Shape.radius);
 
 		b2Shape_SetPolygon(ShapeID, &Shape);
 	}
