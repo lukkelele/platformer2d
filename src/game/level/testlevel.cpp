@@ -142,11 +142,22 @@ namespace platformer2d::Level {
 
 		Tick_Objects();
 
+		const CTexture& BgTexture = CRenderer::GetTexture(ETexture::Background);
+		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
+		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
+		CRenderer::DrawQuad(
+			{0.0f, 0.0f, 0.0f},
+			BgSize,
+			BgTexture,
+			FColor::White
+		);
+
 		/* Render player. */
 		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
 		if (Polygon)
 		{
 			const glm::vec2 PlayerSize = Player->GetSize();
+#if 0
 			CRenderer::DrawQuad(
 				Player->GetPosition(),
 				PlayerSize,
@@ -154,6 +165,21 @@ namespace platformer2d::Level {
 				FColor::White,
 				glm::degrees(Player->GetRotation())
 			);
+#else
+			static constexpr glm::vec2 TilePos(3, 2);
+			static constexpr glm::vec2 TileSize(32, 32);
+			static constexpr glm::vec2 SheetSize(736, 128);
+			FSpriteUV UV = GetSpriteUV(TilePos, TileSize, SheetSize);
+
+			CRenderer::DrawQuad(
+				glm::vec3(Player->GetPosition(), 1.0f),
+				PlayerSize,
+				CRenderer::GetTexture(Player->GetTexture()),
+				UV,
+				FColor::White,
+				glm::degrees(Player->GetRotation())
+			);
+#endif
 		}
 
 		/* Render level. */
@@ -168,16 +194,6 @@ namespace platformer2d::Level {
 				glm::degrees(TC.GetRotation2D())
 			);
 		}
-
-		const CTexture& BgTexture = CRenderer::GetTexture(ETexture::Background);
-		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
-		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
-		CRenderer::DrawQuad(
-			{0.0f, 0.0f},
-			BgSize,
-			BgTexture,
-			FColor::White
-		);
 
 		/* Draw dark overlay whenever the pause menu is open. */
 		if (UI::IsGameMenuOpen())
