@@ -29,6 +29,31 @@ namespace platformer2d::Math {
 	glm::vec3 ConvertWorldToScreen(const glm::vec3& Point, const glm::vec3& Center,
 								   float Width, float Height, float Zoom);
 
+	inline float Normalize(const float Value, const float RangeMin, const float RangeMax)
+	{
+		return (Value - RangeMin) / (RangeMax - RangeMin);
+	}
+
+	inline glm::vec2 Normalize(const glm::vec2& Coord, const glm::vec2& RangeMin, const glm::vec2& RangeMax)
+	{
+		return glm::vec2 (
+			(Coord.x - RangeMin.x) / (RangeMax.x - RangeMin.x),
+			(Coord.y - RangeMin.y) / (RangeMax.y - RangeMin.y)
+		);
+	}
+
+	inline glm::vec2 ToScreen(const glm::vec2& Normalized, const glm::vec2& ViewportSize)
+	{
+		return Normalized * ViewportSize;
+	}
+
+	inline glm::vec2 ToNdc(const glm::vec2& Normalized)
+	{
+		return glm::vec2(
+			Normalized.x * (2.0f - 1.0f),
+			Normalized.y * (2.0f - 1.0f)
+		);
+	}
 
 	template<typename TVector>
 	requires _Internal::IsGlmVec<TVector>

@@ -2,6 +2,7 @@
 
 #include "lk_config.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
