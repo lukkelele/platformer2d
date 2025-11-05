@@ -16,7 +16,7 @@ namespace platformer2d::UI::Draw {
 		/* Transform Component */
 		ImGui::TableNextRow();
 		FTransformComponent& TC = Actor.GetTransformComponent();
-		Changed |= UI::Draw::Vec2Control("Transform", TC.Translation, 0.010f, 0.010f);
+		Changed |= UI::Draw::Vec2Control("Translation", TC.Translation, 0.010f, 0.010f);
 		if (Changed)
 		{
 			Actor.SetPosition({ TC.Translation.x, TC.Translation.y });
