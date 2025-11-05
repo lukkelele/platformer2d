@@ -13,8 +13,10 @@ project_library_sources(
 	imguilayer.cpp
 	opengl.h
 	opengl.cpp
-	shader.h 
+	shader.h
 	shader.cpp
+	sprite.h
+	sprite.cpp
 	texture.h
 	texture.cpp
 	texturearray.h
