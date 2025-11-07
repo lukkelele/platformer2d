@@ -33,6 +33,11 @@ namespace platformer2d {
 		const glm::vec2& GetTilePos() const { return TilePos; }
 		const glm::vec2& GetTileSize() const { return TileSize; }
 
+		void SetTilePos(uint16_t X, uint16_t Y);
+		void SetTilePos(const glm::vec2& InTilePos);
+		std::size_t IncrementTilePosX(std::size_t Times = 1);
+		std::size_t DecrementTilePosX(std::size_t Times = 1);
+
 		[[nodiscard]] static FSpriteUV CalculateUV(const glm::vec2& InTilePos, const glm::vec2& InTileSize,
 												   const glm::vec2& InSheetSize, bool InVerticalFlip = false);
 		static void CalculateUV(FSpriteUV& InSpriteUV, const glm::vec2& InTilePos,

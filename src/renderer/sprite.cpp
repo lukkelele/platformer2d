@@ -29,6 +29,30 @@ namespace platformer2d {
 		}
 	}
 
+	void CSprite::SetTilePos(const uint16_t X, const uint16_t Y)
+	{
+		SetTilePos({ X, Y });
+	}
+
+	void CSprite::SetTilePos(const glm::vec2& InTilePos)
+	{
+		TilePos = InTilePos;
+	}
+
+	std::size_t CSprite::IncrementTilePosX(const std::size_t Times)
+	{
+		LK_ASSERT(Times > 0);
+		TilePos.x += Times;
+		return TilePos.x;
+	}
+
+	std::size_t CSprite::DecrementTilePosX(const std::size_t Times)
+	{
+		LK_ASSERT(Times > 0);
+		TilePos.x -= Times;
+		return TilePos.x;
+	}
+
 	FSpriteUV CSprite::CalculateUV(const glm::vec2& TilePos, const glm::vec2& TileSize,
 								   const glm::vec2& SheetSize, const bool VerticalFlip)
 	{
