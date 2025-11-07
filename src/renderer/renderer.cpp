@@ -537,7 +537,7 @@ namespace platformer2d {
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const ETexture Texture,
 							 const glm::vec4& Color, const float RotationDeg)
 	{
-		DrawQuad(Pos, Size, GetTexture(Texture), Color, RotationDeg);
+		DrawQuad(Pos, Size, *GetTexture(Texture), Color, RotationDeg);
 	}
 
 	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)
@@ -672,10 +672,10 @@ namespace platformer2d {
 		return Data.WhiteTexture;
 	}
 
-	const CTexture& CRenderer::GetTexture(const ETexture Texture)
+	std::shared_ptr<CTexture> CRenderer::GetTexture(const ETexture Texture)
 	{
 		LK_ASSERT(Data.Textures.contains(Texture));
-		return *Data.Textures[Texture];
+		return Data.Textures[Texture];
 	}
 
 	const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& CRenderer::GetTextures()
