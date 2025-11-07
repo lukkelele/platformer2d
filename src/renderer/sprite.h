@@ -6,6 +6,8 @@
 
 namespace platformer2d {
 
+	class CTexture;
+
 	struct FSpriteUV
 	{
 		float U0 = 0.0f;
@@ -14,9 +16,35 @@ namespace platformer2d {
 		float V1 = 0.0f;
 	};
 
-	FSpriteUV GetSpriteUV(const glm::vec2& TilePos, const glm::vec2& TileSize, 
-						  const glm::vec2& SheetSize, bool VerticalFlip = false);
-	void GetSpriteUV(FSpriteUV& SpriteUV, const glm::vec2& TilePos, const glm::vec2& TileSize,
-					 const glm::vec2& SheetSize, bool VerticalFlip = false);
+	class CSprite
+	{
+	public:
+		CSprite(std::shared_ptr<CTexture> InTexture, const glm::vec2& InTilePos,
+				const glm::vec2& InTileSize, bool InVerticalFlip = false);
+		CSprite() = delete;
+		~CSprite();
+
+		const FSpriteUV& GetUV() const { return UV; }
+		std::shared_ptr<CTexture> GetTexture() const { return Texture; }
+
+		const glm::vec2& GetSize() const { return Size; }
+		float GetWidth() const { return Size.x; }
+		float GetHeight() const { return Size.y; }
+		const glm::vec2& GetTilePos() const { return TilePos; }
+		const glm::vec2& GetTileSize() const { return TileSize; }
+
+		[[nodiscard]] static FSpriteUV CalculateUV(const glm::vec2& InTilePos, const glm::vec2& InTileSize,
+												   const glm::vec2& InSheetSize, bool InVerticalFlip = false);
+		static void CalculateUV(FSpriteUV& InSpriteUV, const glm::vec2& InTilePos,
+								const glm::vec2& InTileSize, const glm::vec2& InSheetSize, bool InVerticalFlip = false);
+
+	private:
+		std::shared_ptr<CTexture> Texture = nullptr;
+		FSpriteUV UV;
+		glm::vec2 Size;
+		glm::vec2 TilePos;
+		glm::vec2 TileSize;
+		bool bVerticalFlip;
+	};
 
 }
