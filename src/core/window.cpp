@@ -1,7 +1,5 @@
 #include "window.h"
 
-#include <stdio.h>
-
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -163,6 +161,14 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "enabled" : "disabled");
 		glfwSwapInterval(Enabled);
 		Data.bVSync = Enabled;
+	}
+
+	uint16_t CWindow::GetRefreshRate() const
+	{
+		GLFWmonitor* Monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* Mode = glfwGetVideoMode(Monitor);
+		LK_ASSERT(Monitor && Mode);
+		return Mode->refreshRate;
 	}
 
 	void CWindow::SetIcon(const std::filesystem::path ImagePath)

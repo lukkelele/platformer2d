@@ -49,6 +49,7 @@ namespace platformer2d {
 		void SetTitle(std::string_view NewTitle);
 		void SetVSync(bool Enabled);
 		bool GetVSync() const { return Data.bVSync; }
+		uint16_t GetRefreshRate() const;
 
 		const FWindowData& GetData() const { return Data; }
 		inline GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }
