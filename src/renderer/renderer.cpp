@@ -32,6 +32,8 @@ namespace platformer2d {
 
 	struct FRendererData
 	{
+		uint16_t FrameIndex = 0;
+		uint16_t RefreshRate = 0;
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
 		std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
 
@@ -111,6 +113,8 @@ namespace platformer2d {
 
 		/* @todo Move the ImGui layer to CWindow, or keep here? */
 		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
+		Data.RefreshRate = CWindow::Get()->GetRefreshRate();
+		LK_VERIFY(Data.RefreshRate > 0, "Failed to get window refresh rate");
 
 		CDebugRenderer::Initialize();
 #ifdef LK_BUILD_DEBUG
@@ -286,6 +290,7 @@ namespace platformer2d {
 	{
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
 
 		ImGuiLayer->BeginFrame();
 
@@ -395,6 +400,11 @@ namespace platformer2d {
 			CameraUniformBuffer->Unbind();
 			CircleShader->Unbind();
 		}
+	}
+
+	uint16_t CRenderer::GetFrameIndex()
+	{
+		return Data.FrameIndex;
 	}
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size,

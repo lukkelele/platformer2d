@@ -66,6 +66,7 @@ namespace platformer2d {
 		static void StartBatch();
 		static void NextBatch();
 		static void Flush();
+		static uint16_t GetFrameIndex();
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
@@ -122,7 +123,7 @@ namespace platformer2d {
 		CRenderer& operator=(CRenderer&&) = delete;
 
 	public:
-		static inline constexpr int MAX_TEXTURES = 16;
+		static constexpr int MAX_TEXTURES = 16;
 	private:
 		static inline FBackendInfo BackendInfo;
 		static inline glm::vec4 ClearColor{ 0.20f, 0.20f, 0.20f, 1.0f };
@@ -132,7 +133,7 @@ namespace platformer2d {
 		static inline GLuint QuadVBO = 0;
 		static inline GLuint QuadEBO = 0;
 		static inline uint32_t QuadIndexCount = 0;
-		static inline constexpr glm::vec4 QuadVertexPositions[4] = {
+		static constexpr glm::vec4 QuadVertexPositions[4] = {
 			{ -0.50f, -0.50f, 0.0f, 1.0f },
 			{ -0.50f,  0.50f, 0.0f, 1.0f },
 			{  0.50f,  0.50f, 0.0f, 1.0f },
