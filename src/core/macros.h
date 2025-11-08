@@ -2,7 +2,7 @@
 
 #include "lk_config.h"
 
-#define LK_UNUSED(Arg)       ((void)(Arg))
+#define LK_UNUSED(...)       (void)(sizeof(__VA_ARGS__))
 #define LK_ARRAYSIZE(Array)  (static_cast<int>((sizeof(Array) / sizeof(*(Array)))))
 #define LK_STRINGIFY(x)      #x
 #define LK_BIT(x)            (1 << x)
