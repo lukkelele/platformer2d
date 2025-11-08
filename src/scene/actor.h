@@ -48,6 +48,7 @@ namespace platformer2d {
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
 		inline CBody& GetBody() { return *Body; }
 		inline const CBody& GetBody() const { return *Body; }
+		bool IsMoving() const;
 
 		inline ETexture GetTexture() const { return Texture; }
 		inline const glm::vec4& GetColor() const { return Color; }

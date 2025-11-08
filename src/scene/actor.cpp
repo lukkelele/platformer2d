@@ -63,7 +63,6 @@ namespace platformer2d {
 
 	float CActor::GetRotation() const
 	{
-		//return Body->GetRotation();
 		return TransformComp.GetRotation2D();
 	}
 
@@ -71,6 +70,16 @@ namespace platformer2d {
 	{
 		Body->SetRotation(AngleRad);
 		TransformComp.SetRotation2D(AngleRad);
+	}
+
+	bool CActor::IsMoving() const
+	{
+		if (!Body)
+		{
+			return false;
+		}
+
+		return (Body->GetLinearVelocity().x > CBody::LINEAR_VELOCITY_X_EPSILON);
 	}
 
 	void CActor::SetColor(const glm::vec4& InColor)
