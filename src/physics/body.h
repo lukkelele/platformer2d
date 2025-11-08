@@ -73,6 +73,7 @@ namespace platformer2d {
 		void SetRotation(float AngleRad) const;
 		glm::vec2 GetLinearVelocity() const;
 		void SetLinearVelocity(const glm::vec2& InVelocity) const;
+		float GetAngularVelocity() const;
 
 		void ApplyForce(const glm::vec2& InForce, bool bWakeUp = true) const;
 		void ApplyImpulse(const glm::vec2& InImpulse, bool bWakeUp = true) const;
@@ -111,6 +112,9 @@ namespace platformer2d {
 
 		glm::vec2 GetSize() const;
 
+	public:
+		static constexpr float LINEAR_VELOCITY_X_EPSILON = 0.010f;
+		static constexpr float LINEAR_VELOCITY_Y_EPSILON = 0.050f;
 	private:
 		void SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const;
 

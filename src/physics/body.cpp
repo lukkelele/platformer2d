@@ -118,6 +118,11 @@ namespace platformer2d {
 		b2Body_SetLinearVelocity(ID, b2Vec2(InVelocity.x, InVelocity.y));
 	}
 
+	float CBody::GetAngularVelocity() const
+	{
+		return b2Body_GetAngularVelocity(ID);
+	}
+
 	void CBody::ApplyForce(const glm::vec2& InForce, const bool bWakeUp) const
 	{
 		b2Body_ApplyForceToCenter(ID, { InForce.x, InForce.y }, bWakeUp);
