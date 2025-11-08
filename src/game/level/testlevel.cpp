@@ -159,16 +159,6 @@ namespace platformer2d::Level {
 			static CTimer PlayerTimer;
 			const glm::vec2 PlayerSize = Player->GetSize();
 
-			/**
-		     * WALK: frames 1,2,3,4, cycle
-			 * JUMP: frame 5 for "jump preparation", frame 6 for moving upwards, frame 7 for moving downards and frame 8 for landing
-			 * HIT: frames 9,10,9
-			 * SLASH: frames 11,12,13 (you might use them in the order 12,11,12,13 if you want an extra "preparation" frame before the actual slash)
-			 * PUNCH: 14,12 (again, you might use them in the order 12,14,12)
-			 */
-			static constexpr glm::vec2 TileSize(32, 32);
-			static constexpr glm::vec2 SheetSize(736, 128);
-
 			static glm::vec2 TilePos = { 3, 2 };
 			const auto Time = PlayerTimer.GetElapsed<std::chrono::milliseconds>();
 			if (Time > 750ms)
@@ -181,13 +171,12 @@ namespace platformer2d::Level {
 
 				PlayerTimer.Reset();
 			}
-			FSpriteUV UV = GetSpriteUV(TilePos, TileSize, SheetSize);
 
 			CRenderer::DrawQuad(
 				glm::vec3(Player->GetPosition(), 0.010f),
 				PlayerSize,
-				CRenderer::GetTexture(Player->GetTexture()),
-				UV,
+				*CRenderer::GetTexture(Player->GetTexture()),
+				Player->GetSprite().GetUV(),
 				FColor::White,
 				glm::degrees(Player->GetRotation())
 			);
@@ -399,6 +388,7 @@ namespace platformer2d::Level {
 		ImGui::Text("Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 		PlayerBodyPos = Player->GetPosition();
 		ImGui::Text("TC Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
+		ImGui::Text("Movement State: %s", Enum::ToString(PlayerData.MovementState));
 		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
 
 		const glm::vec2 PlayerSize = Player->GetSize();
@@ -409,6 +399,8 @@ namespace platformer2d::Level {
 
 		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
 		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
+		const float AngularVelocity = PlayerBody.GetAngularVelocity();
+		ImGui::Text("Angular Velocity: %.2f", AngularVelocity);
 
 		ImGui::PushItemWidth(160.0f);
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
@@ -418,6 +410,7 @@ namespace platformer2d::Level {
 		float PlayerDirForce = Player->GetDirectionForce();
 		ImGui::SliderFloat("Direction Force", &PlayerDirForce, 0.0f, 10.0f, "%.5f");
 		if (ImGui::IsItemActive()) Player->SetDirectionForce(PlayerDirForce);
+		ImGui::Text("Last Direction Force: %.5f", Player->GetLastDirectionForce());
 
 		static float BodyScale = TC.Scale.x;
 		ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
@@ -518,38 +511,40 @@ namespace platformer2d::Level {
 		}
 
 		const ETexture Texture = static_cast<ETexture>(SelectedTextureIdx);
-		const CTexture& TextureRef = CRenderer::GetTexture(Texture);
-
-		/* Texture preview. */
-		ImGui::SameLine(0.0f, 12.0f);
-		UI::ShiftCursorY(-4.0f);
-		ImGui::Image(
-			static_cast<ImU64>(TextureRef.GetID()),
-			ImVec2(32.0f, 32.0f),
-			ImVec2(0.0f, 1.0f), /* Uv0. */
-			ImVec2(1.0f, 0.0f)  /* Uv1. */
-		);
-
-		static constexpr std::string_view Marker = "assets/textures/";
-		auto StripPrefix = [](const std::filesystem::path& Path) -> std::string
+		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(Texture); TextureRef != nullptr)
 		{
-			const std::string Str = Path.generic_string();
-			const std::size_t Pos = Str.find(Marker);
-			if (Pos != std::string::npos)
+			/* Texture preview. */
+			ImGui::SameLine(0.0f, 12.0f);
+			UI::ShiftCursorY(-4.0f);
+			ImGui::Image(
+				static_cast<ImU64>(TextureRef->GetID()),
+				ImVec2(32.0f, 32.0f),
+				ImVec2(0.0f, 1.0f), /* Uv0. */
+				ImVec2(1.0f, 0.0f)  /* Uv1. */
+			);
+
+			static constexpr std::string_view Marker = "assets/textures/";
+			auto StripPrefix = [](const std::filesystem::path& Path) -> std::string
 			{
-				return Str.substr(Pos);
-			}
-			return Str;
-		};
+				const std::string Str = Path.generic_string();
+				const std::size_t Pos = Str.find(Marker);
+				if (Pos != std::string::npos)
+				{
+					return Str.substr(Pos);
+				}
+				return Str;
+			};
 
-		ImGui::Dummy(ImVec2(0, 6));
-		{
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::BoldItalic));
-			ImGui::Indent();
-			ImGui::Text("Size:%-4s%dx%d", " ", TextureRef.GetWidth(), TextureRef.GetHeight());
-			const std::string TrimmedPath = StripPrefix(TextureRef.GetFilePath());
-			ImGui::Text("Path:%-4s%s", " ", TrimmedPath.c_str());
-			ImGui::Unindent();
+			ImGui::Dummy(ImVec2(0, 6));
+
+			{
+				UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::BoldItalic));
+				ImGui::Indent();
+				ImGui::Text("Size:%-4s%dx%d", " ", TextureRef->GetWidth(), TextureRef->GetHeight());
+				const std::string TrimmedPath = StripPrefix(TextureRef->GetFilePath());
+				ImGui::Text("Path:%-4s%s", " ", TrimmedPath.c_str());
+				ImGui::Unindent();
+			}
 		}
 		ImGui::Dummy(ImVec2(0, 12));
 
@@ -568,13 +563,13 @@ namespace platformer2d::Level {
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Clamp", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Clamp);
+				CRenderer::GetTexture(Texture)->SetWrap(ETextureWrap::Clamp);
 			}
 			ImGui::SameLine(0.0f, ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Repeat", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture).SetWrap(ETextureWrap::Repeat);
+				CRenderer::GetTexture(Texture)->SetWrap(ETextureWrap::Repeat);
 			}
 
 			ImGui::Dummy(ImVec2(0, 6));
@@ -586,21 +581,21 @@ namespace platformer2d::Level {
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Linear", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Linear);
+				CRenderer::GetTexture(Texture)->SetFilter(ETextureFilter::Linear);
 			}
 
 			ImGui::SameLine(0.0f, ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Nearest", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture).SetFilter(ETextureFilter::Nearest);
+				CRenderer::GetTexture(Texture)->SetFilter(ETextureFilter::Nearest);
 			}
 		}
 	}
 
 	void CTestLevel::DrawBackground() const
 	{
-		const CTexture& BgTexture = CRenderer::GetTexture(ETexture::Background);
+		const CTexture& BgTexture = *CRenderer::GetTexture(ETexture::Background);
 		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
 		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
 		CRenderer::DrawQuad(
