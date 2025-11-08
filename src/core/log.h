@@ -305,10 +305,6 @@ namespace platformer2d {
 		{
 			PrintLn("{2}{0}: {1}{3}", Prefix, FormattedString, LK_ANSI_COLOR_BG_BRIGHT_RED, LK_ANSI_COLOR_RESET);
 		}
-
-	#if LK_ASSERT_MESSAGE_BOX
-		MessageBoxA(nullptr, FormattedString.c_str(), "platformer2d error", (MB_OK | MB_ICONERROR));
-	#endif
 	}
 
 	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Message)
@@ -321,12 +317,7 @@ namespace platformer2d {
 		{
 			PrintLn("{1}{0}{2}", Message, LK_ANSI_COLOR_BG_BRIGHT_RED, LK_ANSI_COLOR_RESET);
 		}
-		
-	#if LK_ASSERT_MESSAGE_BOX
-		MessageBoxA(nullptr, Message.data(), "platformer2d error", (MB_OK | MB_ICONERROR));
-	#endif
 	}
-
 }
 
 #undef LK_LOG_ASSERT
