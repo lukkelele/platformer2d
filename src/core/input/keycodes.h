@@ -118,7 +118,7 @@ namespace platformer2d {
 
 	namespace Enum 
 	{
-		static constexpr const char* ToString(const EKey Key)
+		inline constexpr const char* ToString(const EKey Key)
 		{
 			switch (Key)
 			{
@@ -212,7 +212,7 @@ namespace platformer2d {
 			}
 		}
 
-		static constexpr const char* ToString(const EKeyState State)
+		inline constexpr const char* ToString(const EKeyState State)
 		{
 			switch (State)
 			{

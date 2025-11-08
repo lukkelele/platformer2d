@@ -36,6 +36,9 @@ namespace platformer2d {
 
 		static bool IsKeyDown(EKey Key);
 		static bool IsKeyHeld(EKey Key);
+		static bool IsAnyKeysDown(std::span<const EKey> Keys);
+		static bool IsAnyKeysDown(std::span<const EKey> Keys, std::vector<EKey>& Result);
+		static bool IsAnyKeysDown(const EKey* KeysArray, std::size_t N);
 
 		static FKeyData& GetKeyData(EKey Key);
 		static std::size_t GetPressedKeys(std::vector<EKey>& InKeys);

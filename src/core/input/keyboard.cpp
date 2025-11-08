@@ -59,6 +59,65 @@ namespace platformer2d {
 		return ((KeyDataMap.find(Key) != KeyDataMap.end()) && (KeyDataMap[Key].State == EKeyState::Held));
 	}
 
+	bool CKeyboard::IsAnyKeysDown(std::span<const EKey> Keys)
+	{
+		if (!ActiveWindow)
+		{
+			return false;
+		}
+
+		for (const EKey Key : Keys)
+		{
+			const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
+			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool CKeyboard::IsAnyKeysDown(std::span<const EKey> Keys, std::vector<EKey>& Result)
+	{
+		if (!ActiveWindow)
+		{
+			return false;
+		}
+
+		Result.clear();
+		for (const EKey Key : Keys)
+		{
+			const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
+			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT))
+			{
+				Result.push_back(Key);
+			}
+		}
+
+		return !Result.empty();
+	}
+
+	bool CKeyboard::IsAnyKeysDown(const EKey* KeysArray, const std::size_t N)
+	{
+		LK_ASSERT(KeysArray && (N > 0));
+		if (!ActiveWindow)
+		{
+			return false;
+		}
+
+		for (int Idx = 0; Idx < N; Idx++)
+		{
+			const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(KeysArray[Idx]));
+			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	FKeyData& CKeyboard::GetKeyData(const EKey Key)
 	{
 		LK_ASSERT(KeyDataMap.contains(Key), "Key '{}' is not in the map", Enum::ToString(Key));
