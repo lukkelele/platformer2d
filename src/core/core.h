@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <memory>
 #include <type_traits>
+#include <source_location>
 #include <span>
 
 #include "assert.h"
@@ -15,6 +16,9 @@
 
 #define LK_MARK_NOT_IMPLEMENTED() \
 	LK_VERIFY(false, "Not implemented: {}::{}", __FILE__, __LINE__)
+
+#define LK_THROW_ENUM_ERR(EnumValue) \
+	LK_VERIFY(false, "{} failed with value: {}", std::source_location::current().function_name(), ::platformer2d::Enum::AsUnderlying(EnumValue));
 
 namespace platformer2d {
 
@@ -30,6 +34,15 @@ namespace platformer2d {
 			bool bShouldShutdown = false;
 		};
 		extern FGlobal Global;
+	}
+
+	namespace Enum
+	{
+		template<typename TEnum>
+		constexpr std::underlying_type_t<TEnum> AsUnderlying(const TEnum E)
+		{
+			return static_cast<std::underlying_type_t<TEnum>>(E);
+		}
 	}
 
 }
