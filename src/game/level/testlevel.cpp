@@ -118,6 +118,9 @@ namespace platformer2d::Level {
 				CPhysicsWorld::Unpause();
 			}
 		});
+
+		CWindow::OnResized.Add(this, &CTestLevel::OnWindowResized);
+		CWindow::Get()->Maximize();
 	}
 
 	void CTestLevel::Destroy()
@@ -349,15 +352,21 @@ namespace platformer2d::Level {
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
 		ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
+		{
+			ImGuiViewport* Viewport = ImGui::GetMainViewport();
+			ImGui::Text("Main Viewport: (%.1f, %.1f)", Viewport->Size.x, Viewport->Size.y);
+		}
 
 		const int Gcd = std::gcd(ViewportWidth, ViewportHeight);
 		ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
+
+		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
+		ImGui::Text("Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
 
 		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 
 		ImGui::Text("Actors: %d", Actors.size() + 1);
-
 		UI::Draw::ActorNode(*Player);
 		for (auto& Actor : Actors)
 		{
@@ -395,7 +404,15 @@ namespace platformer2d::Level {
 		ImGui::Text("Size: (%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
 		ImGui::Text("TC Scale: (%.2f, %.2f)", TC.Scale.x, TC.Scale.y);
 
-		ImGui::Text("Camera Zoom: %.2f", Player->GetCamera().GetZoom());
+		CCamera& Camera = Player->GetCamera();
+		ImGui::Text("Camera Zoom: %.2f", Camera.GetZoom());
+		const bool CameraLocked = Player->IsCameraLocked();
+		ImGui::Text("Camera Lock: %s", CameraLocked ? "Active" : "Not active");
+		ImGui::SameLine();
+		if (ImGui::Button("Toggle"))
+		{
+			Player->SetCameraLock(!CameraLocked);
+		}
 
 		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
 		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
@@ -604,6 +621,13 @@ namespace platformer2d::Level {
 			BgTexture,
 			FColor::White
 		);
+	}
+
+	void CTestLevel::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
+	{
+		ViewportWidth = InWidth;
+		ViewportHeight = InHeight;
+		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)

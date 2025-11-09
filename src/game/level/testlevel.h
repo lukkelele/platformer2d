@@ -35,6 +35,8 @@ namespace platformer2d::Level {
 
 		void DrawBackground() const;
 
+		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
+
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;
 	};
