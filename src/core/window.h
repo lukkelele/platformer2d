@@ -50,6 +50,8 @@ namespace platformer2d {
 		void SetVSync(bool Enabled);
 		bool GetVSync() const { return Data.bVSync; }
 		uint16_t GetRefreshRate() const;
+		void Maximize();
+		bool IsMaximized() const;
 
 		const FWindowData& GetData() const { return Data; }
 		inline GLFWwindow* GetGlfwWindow() const { return GlfwWindow; }

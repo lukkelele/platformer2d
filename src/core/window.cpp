@@ -115,6 +115,13 @@ namespace platformer2d {
 			}
 		});
 
+		glfwSetWindowMaximizeCallback(GlfwWindow, [](GLFWwindow* Window, int Maximized)
+		{
+			LK_DEBUG_TAG("Window", "Maximize callback");
+			FWindowData& WindowData = *static_cast<FWindowData*>(glfwGetWindowUserPointer(Window));
+			LK_UNUSED(WindowData);
+		});
+
 		/* Set window icon. */
 		const std::filesystem::path IconPath = TEXTURES_DIR "/test/test_player.png";
 		SetIcon(IconPath);
@@ -145,6 +152,7 @@ namespace platformer2d {
 		{
 			Data.Width = InWidth;
 			Data.Height = InHeight;
+			LK_OpenGL_Verify(glViewport(0, 0, Data.Width, Data.Height));
 			OnResized.Broadcast(InWidth, InHeight);
 		}
 	}
@@ -169,6 +177,19 @@ namespace platformer2d {
 		const GLFWvidmode* Mode = glfwGetVideoMode(Monitor);
 		LK_ASSERT(Monitor && Mode);
 		return Mode->refreshRate;
+	}
+
+	void CWindow::Maximize()
+	{
+		if (GlfwWindow && !IsMaximized())
+		{
+			glfwMaximizeWindow(GlfwWindow);
+		}
+	}
+
+	bool CWindow::IsMaximized() const
+	{
+		return (glfwGetWindowAttrib(GlfwWindow, GLFW_MAXIMIZED) == GLFW_TRUE);
 	}
 
 	void CWindow::SetIcon(const std::filesystem::path ImagePath)
