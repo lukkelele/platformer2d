@@ -57,6 +57,7 @@ namespace platformer2d {
 
 		inline CCamera& GetCamera() { return *Camera; }
 		inline const CCamera& GetCamera() const { return *Camera; }
+		bool IsCameraLocked() const { return bCameraLock; }
 		void SetCameraLock(bool Locked);
 
 		/**

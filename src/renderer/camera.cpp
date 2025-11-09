@@ -14,7 +14,7 @@ namespace platformer2d {
 					 const float InNearP, const float InFarP)
 		: OrthographicNear(InNearP)
 		, OrthographicFar(InFarP)
-		, AspectRatio(InWidth/InHeight)
+		, AspectRatio(InWidth / InHeight)
 	{
 		UpdateView();
 		UpdateProjection();
@@ -33,6 +33,7 @@ namespace platformer2d {
 	{
 		ViewportWidth = static_cast<float>(InWidth);
 		ViewportHeight = static_cast<float>(InHeight);
+		AspectRatio = (ViewportWidth / ViewportHeight);
 
 		UpdateProjection();
 	}

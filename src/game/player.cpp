@@ -147,9 +147,9 @@ namespace platformer2d {
 		DirForce = Force;
 	}
 
-	void CPlayer::SetCameraLock(bool Locked)
+	void CPlayer::SetCameraLock(const bool Locked)
 	{
-		bCameraLock = true;
+		bCameraLock = Locked;
 	}
 
 	glm::vec2 CPlayer::GetSize() const
@@ -343,7 +343,13 @@ namespace platformer2d {
 
 	void CPlayer::OnWindowResized(const uint16_t Width, const uint16_t Height)
 	{
-		LK_UNUSED(Width, Height);
+		if (Camera)
+		{
+			LK_TRACE_TAG("Player", "Window resized: ({}, {})", Width, Height);
+			Camera->SetViewportSize(Width, Height);
+			Camera->UpdateView();
+			Camera->UpdateProjection();
+		}
 	}
 
 	void CPlayer::OnMouseScrolled(const EMouseScrollDirection Direction)

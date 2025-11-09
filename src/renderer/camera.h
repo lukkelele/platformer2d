@@ -41,7 +41,6 @@ namespace platformer2d {
 		std::pair<float, float> GetMaxRange() const;
 		std::pair<glm::vec2, glm::vec2> GetMinMaxRange() const;
 
-	private:
 		FORCEINLINE void UpdateProjection()
 		{
 			const float HalfHeight = (OrthographicSize * Zoom) * 0.50f;
@@ -59,24 +58,25 @@ namespace platformer2d {
 			ViewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-Center.x, -Center.y, 0.0f));
 		}
 
+	private:
 		void OnKeyPressed(const FKeyData& KeyData);
 		void OnMouseButtonPressed(const FMouseButtonData& ButtonData);
 		void OnMouseScrolled(const EMouseScrollDirection Direction);
 
 	public:
-		static inline constexpr float ZOOM_MIN = 0.010f;
-		static inline constexpr float ZOOM_MAX = 1.0f;
-		static inline constexpr float ZOOM_DIFF = 0.010f;
+		static constexpr float ZOOM_MIN = 0.010f;
+		static constexpr float ZOOM_MAX = 1.0f;
+		static constexpr float ZOOM_DIFF = 0.010f;
 	private:
 		glm::vec2 Center = { 0.0f, 0.0f };
 
 		float ViewportWidth;
 		float ViewportHeight;
+		float AspectRatio;
 
 		float OrthographicSize = 10.0f;
 		float OrthographicNear = -1.0f;
 		float OrthographicFar = 1.0f;
-		float AspectRatio;
 
 		float Zoom = 0.25f;
 
