@@ -5,6 +5,7 @@
 
 #include "core/core.h"
 #include "renderer/color.h"
+#include "scoped.h"
 
 namespace platformer2d::UI {
 
@@ -46,6 +47,49 @@ namespace platformer2d::UI {
 		float Hue, Saturation, Value;
 		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
 		return ImColor::HSV(std::min(Hue * Multiplier, 1.0f), Saturation, Value);
+	}
+
+	inline bool IsItemHovered(const float DelayInSeconds = 0.10f, ImGuiHoveredFlags Flags = ImGuiHoveredFlags_None)
+	{
+		return ImGui::IsItemHovered() && (GImGui->HoveredIdTimer > DelayInSeconds); /* HoveredIdNotActiveTimer. */
+	}
+
+	inline void HelpMarker(const char* HelpDesc, const char* HelpSymbol = "(?)")
+	{
+		static constexpr float WrapPosOffset = 35.0f;
+		ImGui::TextDisabled(HelpSymbol);
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
+			ImGui::TextUnformatted(HelpDesc);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+	}
+
+	inline void HoverText(const char* Text)
+	{
+		static constexpr float WrapPosOffset = 35.0f;
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
+			ImGui::TextUnformatted(Text);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+	}
+
+	inline void SetTooltip(std::string_view Text, const float DelayInSeconds = 0.10f,
+						   const bool AllowWhenDisabled = true, const ImVec2 Padding = ImVec2(5, 5))
+	{
+		if (IsItemHovered(DelayInSeconds, AllowWhenDisabled ? ImGuiHoveredFlags_AllowWhenDisabled : ImGuiHoveredFlags_None))
+		{
+			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, Padding);
+			UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::Text::Brighter);
+			ImGui::SetTooltip(Text.data());
+		}
 	}
 
 	namespace Draw 
