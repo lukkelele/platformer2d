@@ -2,7 +2,11 @@
 
 ## 2025-11-09
 ![testlevel-1](doc/img/2025-11-09/testlevel-1.png)
-![testlevel-gif](doc/gif/platformer2d-2025-11-09_1.gif)
+![testlevel-gif](doc/gif/2025-11-09/testlevel-1.gif)
+
+![game-menu](doc/gif/2025-11-09/game-menu.gif)
+<br>
+The menu gif is a bit distorted with the colors
 
 ## 2025-11-03
 
