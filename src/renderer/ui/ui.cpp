@@ -37,7 +37,8 @@ namespace platformer2d::UI {
 		FGameMenu GameMenu{};
 	}
 
-	void RainbowTextGradient(const char* Text, const float Speed = 0.15f);
+	void ColdTextGradient(const char* Text, float Speed = 2.0f);
+	void RainbowTextGradient(const char* Text, float Speed = 0.15f);
 	void RainbowTextSynced(const char* Text, float WaveLengthPx = 180.0f, float SpeedPxPerSec = 30.0f,
 						   float Saturation = 1.0f, float Value = 1.0f);
 
@@ -54,14 +55,15 @@ namespace platformer2d::UI {
 			static const std::string Title = "platformer2d";
 			const ImVec2 TitleSize = ImGui::CalcTextSize(Title.c_str());
 			ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (TitleSize.x * 0.50f));
-			RainbowTextSynced("platformer2d");
+			ColdTextGradient("platformer2d");
 			Font::Pop();
 
 			Font::Push(EFont::Roboto, EFontSize::Regular, EFontModifier::BoldItalic);
-			static const std::string Desc = "a game written by Lukas Gunnarsson";
+			static const std::string Desc = "made by lukkelele";
 			const ImVec2 DescSize = ImGui::CalcTextSize(Desc.c_str());
 			ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (DescSize.x * 0.50f));
 			ImGui::TextColored(ImColor(IM_COL32(100, 100, 100, 255)), Desc.c_str());
+			UI::HoverText("Lukas Gunnarsson");
 			Font::Pop();
 
 			/* @todo Versioning info here */
@@ -81,8 +83,8 @@ namespace platformer2d::UI {
 		}
 		ImGui::PopStyleVar(1); /* FrameRounding */
 
-		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		ImGui::SetCursorPosY(Avail.y + Style.ItemSpacing.y);
+		/* Place Quit and Play buttons at the bottom. */
+		ImGui::SetCursorPosY(MenuSize.y - ButtonSize.y - 2 * (Style.ItemSpacing.y + Style.FramePadding.y));
 
 		const ImVec2 HalfButtonSize = { (ButtonSize.x * 0.50f), ButtonSize.y };
 
@@ -99,7 +101,7 @@ namespace platformer2d::UI {
 
 		/* Play button. */
 		ImGui::SameLine();
-		ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 205, 15, 192));
+		ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::NiceGreen);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
 		if (ImGui::Button(LK_ICON_PLAY " Play", HalfButtonSize))
 		{
@@ -188,10 +190,8 @@ namespace platformer2d::UI {
 
 		Font::Pop();
 
-		{
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			ImGui::SetCursorPosY(Avail.y + (2.0f * ButtonSize.y));
-		}
+		UI::ShiftCursorY(ImGui::GetContentRegionAvail().y - ButtonSize.y);
+		FScopedColor ButtonHovered(ImGuiCol_ButtonHovered, RGBA32::Compliment);
 		if (ImGui::Button(LK_ICON_BACKWARD, ButtonSize))
 		{
 			GameMenu.View = EGameMenuView::Default;
@@ -207,10 +207,14 @@ namespace platformer2d::UI {
 		}
 
 		static constexpr float YFactor = 0.80f;
-		const ImVec2 WindowSize((Viewport->Size.x * 0.33f), Viewport->Size.y * YFactor);
-		const ImVec2 WindowPos(
+		const ImVec2 WindowSize = ImVec2(
+			(std::clamp(Viewport->Size.x * 0.33f, 630.0f, 680.0f)),
+			(Viewport->Size.y * YFactor)
+		);
+		const ImVec2 WindowPos = ImVec2(
 			(Viewport->Size.x * 0.50f) - (WindowSize.x * 0.50f),
-			(Viewport->Size.y * (1.0f - YFactor)) * 0.50f);
+			((Viewport->Size.y * (1.0f - YFactor)) * 0.50f)
+		);
 
 		ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize(WindowSize, ImGuiCond_Always);
@@ -425,6 +429,49 @@ namespace platformer2d::UI {
 		return bSetBlendFunc;
 	}
 
+	void ColdTextGradient(const char* Text, const float Speed)
+	{
+		const float Time = ImGui::GetTime() * Speed;
+
+		const ImVec2 StartPos = ImGui::GetCursorScreenPos();
+		ImFont* Font = ImGui::GetFont();
+		const float FontSize = ImGui::GetFontSize();
+
+		ImVec2 Pos = StartPos;
+		ImDrawList* DrawList = ImGui::GetWindowDrawList();
+
+		for (const char* Ptr = Text; *Ptr; Ptr++)
+		{
+			/* Create smooth oscillation between 0.0 and 1.0f */
+			const float T = 0.50f * (std::sin(Time + (*Ptr) * 0.15f) + 1.0f);
+
+			static const ImVec4 Colors[] =
+			{
+				FColor::Convert<ImVec4>(FColor::White),
+				FColor::Convert<ImVec4>(FColor::LightGray),
+				FColor::Convert<ImVec4>(FColor::LightBlue),
+				FColor::Convert<ImVec4>(FColor::Cyan),
+			};
+
+			/* Interpolate between colors. */
+			const int Index1 = static_cast<int>(T * 3.0f);
+			const int Index2 = std::min(Index1 + 1, 3);
+			const float LocalT = (T * 3.0f) - static_cast<float>(Index1);
+
+			ImVec4 Col;
+			Col.x = Colors[Index1].x + (Colors[Index2].x - Colors[Index1].x) * LocalT;
+			Col.y = Colors[Index1].y + (Colors[Index2].y - Colors[Index1].y) * LocalT;
+			Col.z = Colors[Index1].z + (Colors[Index2].z - Colors[Index1].z) * LocalT;
+			Col.w = 1.0f;
+
+			const char Character[2] = {*Ptr, 0};
+			DrawList->AddText(Font, FontSize, Pos, ImGui::ColorConvertFloat4ToU32(Col), Character);
+			Pos.x += Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Character).x;
+		}
+
+		ImGui::Dummy(ImVec2(Pos.x - StartPos.x, FontSize));
+	}
+
 	void RainbowTextGradient(const char* Text, const float Speed)
 	{
 		const float Time = ImGui::GetTime() * 0.5f;
@@ -444,9 +491,9 @@ namespace platformer2d::UI {
 
 			const char Character[2] = {*Ptr, 0};
 			DrawList->AddText(Font, FontSize, Pos, ImGui::ColorConvertFloat4ToU32(Col), Character);
-
 			Pos.x += Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Character).x;
 		}
+
 		ImGui::Dummy(ImVec2(Pos.x - StartPos.x, FontSize));
 	}
 
