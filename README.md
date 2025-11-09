@@ -6,12 +6,16 @@ A 2D game written in C++.
 I wanted to focus on learning more about rendering, physics simulation and CMake
 and thus this project was born.
 
+---
+
+* [Development](DEVELOPMENT.md)
+
 ## Showcase
 
 :warning: Barely any progress has been made yet, lots to come :warning:
 
 ![testlevel-1](doc/img/2025-11-09/testlevel-1.png)
-![testlevel-gif](doc/gif/platformer2d-2025-11-09_1.gif)
+![testlevel-gif](doc/gif/2025-11-09/testlevel-1.gif)
 
 ###
 
@@ -22,7 +26,8 @@ and thus this project was born.
  * body ([header](src/physics/body.h)/[source](src/physics/body.cpp))
 
 ### CURRENT TEST USED FOR DEVELOPMENT
-The project main.cpp is not used as of yet.
+The project main.cpp is not used as of yet.  
+The game instance test is used for now.
  * testlevel ([header](src/game/level/testlevel.h)/[source](src/game/level/testlevel.cpp))
  * [test/game/instance/test.cpp](test/game/instance/test.cpp)
  * [test/game/instance/main.cpp](test/game/instance/main.cpp)
