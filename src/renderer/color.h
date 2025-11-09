@@ -50,17 +50,18 @@ namespace platformer2d {
 		using VecType = glm::vec4;
 		using B = TColorInternal<Range>;
 	public:
-		static constexpr glm::vec4 White       = { B::Scale(1.0f),  B::Scale(1.0f),  B::Scale(1.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 Black       = { B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 Red         = { B::Scale(1.0f),  B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 Green       = { B::Scale(0.0f),  B::Scale(1.0f),  B::Scale(0.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 LightGreen  = { B::Scale(0.0f),  B::Scale(0.75f), B::Scale(0.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 Blue        = { B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(1.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 LightBlue   = { B::Scale(0.60f), B::Scale(0.80f), B::Scale(1.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 Gray        = { B::Scale(0.45f), B::Scale(0.45f), B::Scale(0.45f), B::Scale(1.0f) };
-		static constexpr glm::vec4 LightGray   = { B::Scale(0.70f), B::Scale(0.70f), B::Scale(0.70f), B::Scale(1.0f) };
-		static constexpr glm::vec4 Cyan        = { B::Scale(0.0f),  B::Scale(1.0f),  B::Scale(1.0f),  B::Scale(1.0f) };
-		static constexpr glm::vec4 Transparent = { B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(0.0f),  B::Scale(0.0f) };
+		static constexpr glm::vec4 White       = { B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 Black       = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 Red         = { B::Scale(1.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 Green       = { B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(0.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 LightGreen  = { B::Scale(0.0f),   B::Scale(0.75f),  B::Scale(0.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 Blue        = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 LightBlue   = { B::Scale(0.60f),  B::Scale(0.80f),  B::Scale(1.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 NiceBlue    = { B::Scale(0.325f), B::Scale(0.91f),  B::Scale(0.99f),  B::Scale(1.0f) };
+		static constexpr glm::vec4 Gray        = { B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(1.0f) };
+		static constexpr glm::vec4 LightGray   = { B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(1.0f) };
+		static constexpr glm::vec4 Cyan        = { B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 Transparent = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f) };
 
 		template<typename To = VecType, typename From>
 		static inline constexpr To Convert(const From InColor);
@@ -146,6 +147,7 @@ namespace platformer2d {
 		inline constexpr uint32_t DarkYellow     = IM_COL32(204, 204, 0, 255);
 		inline constexpr uint32_t BrightGreen    = IM_COL32(18, 140, 40, 255);
 		inline constexpr uint32_t NiceBlue       = IM_COL32(83, 232, 254, 255);
+		inline constexpr uint32_t NiceGreen      = IM_COL32(0, 205, 15, 192);
 
 		inline constexpr uint32_t Accent         = IM_COL32(236, 158, 36, 255);
 		inline constexpr uint32_t Highlight      = IM_COL32(39, 185, 242, 255);
