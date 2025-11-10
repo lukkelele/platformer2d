@@ -4,6 +4,7 @@
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "renderer/renderer.h"
+#include "scene/effectmanager.h"
 
 namespace platformer2d {
 
@@ -134,6 +135,8 @@ namespace platformer2d {
 			Data.MovementState = EMovementState::Airborne;
 			Body->ApplyImpulse({ 0.0f, JumpImpulse });
 			OnJumped.Broadcast(Data);
+
+			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms);
 		}
 	}
 
