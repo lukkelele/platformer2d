@@ -162,19 +162,6 @@ namespace platformer2d::Level {
 			static CTimer PlayerTimer;
 			const glm::vec2 PlayerSize = Player->GetSize();
 
-			static glm::vec2 TilePos = { 3, 2 };
-			const auto Time = PlayerTimer.GetElapsed<std::chrono::milliseconds>();
-			if (Time > 750ms)
-			{
-				TilePos.x++;
-				if (TilePos.x > 4)
-				{
-					TilePos.x = 1;
-				}
-
-				PlayerTimer.Reset();
-			}
-
 			CRenderer::DrawQuad(
 				glm::vec3(Player->GetPosition(), 0.010f),
 				PlayerSize,
