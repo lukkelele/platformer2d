@@ -4,6 +4,8 @@ project_library_sources(
 	actor.cpp
 	actorspecification.h
 	components.h
+	effectmanager.h
+	effectmanager.cpp
 )
 
 target_link_libraries(scene PUBLIC 
