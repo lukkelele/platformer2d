@@ -3,11 +3,12 @@
 #include "game/player.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
+#include "physics/physicsworld.h"
+#include "physics/body.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/vertexbufferlayout.h"
 #include "renderer/ui/ui.h"
-#include "physics/physicsworld.h"
-#include "physics/body.h"
+#include "scene/effectmanager.h"
 
 namespace platformer2d {
 
@@ -57,6 +58,8 @@ namespace platformer2d {
 		const FWindowData& WindowData = Window->GetData();
 		GLFWwindow* GlfwWindow = Window->GetGlfwWindow();
 
+		CEffectManager& EffectManager = CEffectManager::Get();
+
 		bRunning = true;
 		Timer.Reset();
 		while (!glfwWindowShouldClose(GlfwWindow))
@@ -77,6 +80,8 @@ namespace platformer2d {
 			{
 				Layer->Tick(DeltaTime);
 			}
+
+			EffectManager.Tick(DeltaTime);
 
 			/* Render UI. */
 			for (auto& Layer : LayerStack)
