@@ -22,6 +22,8 @@
 #include "opengl.h"
 #include "rendercommandqueue.h"
 #include "ui/ui.h"
+#include "asset/assetmanager.h"
+#include "scene/effectmanager.h"
 
 namespace platformer2d {
 
@@ -269,11 +271,11 @@ namespace platformer2d {
 
 		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, { 1.0f, 1.0f });
 		LoadTexture(TEXTURES_DIR "/sunny.png", ETexture::Background, EImageFormat::RGBA8);
-		//LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Player, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/characters.png", ETexture::Player, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/metal.png", ETexture::Metal, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/bricks.png", ETexture::Bricks, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/wood.png", ETexture::Wood, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/swoosh.png", ETexture::Swoosh, EImageFormat::RGBA8);
 
 		/* Bind every texture. */
 		for (auto& [Texture, TextureRef] : Data.Textures)
@@ -284,6 +286,9 @@ namespace platformer2d {
 			TextureRef->Bind(Idx);
 			TextureRef->SetSlot(Idx);
 		}
+
+		CAssetManager::Get().Initialize();
+		CEffectManager::Get().Initialize();
 	}
 
 	void CRenderer::BeginFrame()

@@ -18,6 +18,7 @@ namespace platformer2d {
 		Metal,
 		Bricks,
 		Wood,
+		Swoosh,
 	};
 
 	class CTexture
@@ -80,6 +81,7 @@ namespace platformer2d {
 				case ETexture::Bricks:     return "Bricks";
 				case ETexture::Metal:      return "Metal";
 				case ETexture::Wood:       return "Wood";
+				case ETexture::Swoosh:     return "Swoosh";
 				default: break;
 			}
 			return nullptr;
