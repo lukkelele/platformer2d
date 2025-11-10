@@ -33,7 +33,8 @@ namespace platformer2d {
 	{
 	public:
 		CSprite(std::shared_ptr<CTexture> InTexture, const glm::vec2& InTilePos,
-				const glm::vec2& InTileSize, bool FlipHorizontal = false, bool FlipVertical = false);
+				const glm::vec2& InTileSize, const FSpriteAnimation& InAnim = FSpriteAnimation(),
+				bool FlipHorizontal = false, bool FlipVertical = false);
 		CSprite() = delete;
 		~CSprite();
 
@@ -47,6 +48,7 @@ namespace platformer2d {
 		uint16_t GetTilePosX() const { return TilePos.x; }
 		uint16_t GetTilePosY() const { return TilePos.y; }
 		const glm::vec2& GetTileSize() const { return TileSize; }
+		const FSpriteAnimation& GetAnimation() const { return Anim; }
 
 		void SetTilePos(uint16_t X, uint16_t Y, bool FlipHorizontal = false, bool FlipVertical = false);
 		void SetTilePos(const glm::vec2& InTilePos, bool FlipHorizontal = false, bool FlipVertical = false);
@@ -70,6 +72,7 @@ namespace platformer2d {
 		glm::vec2 Size;
 		glm::vec2 TilePos;
 		glm::vec2 TileSize;
+		FSpriteAnimation Anim;
 	};
 
 }

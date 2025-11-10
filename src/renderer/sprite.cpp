@@ -5,14 +5,15 @@
 namespace platformer2d {
 
 	CSprite::CSprite(std::shared_ptr<CTexture> InTexture, const glm::vec2& InTilePos,
-					 const glm::vec2& InTileSize, const bool FlipHorizontal, const bool FlipVertical)
+					 const glm::vec2& InTileSize, const FSpriteAnimation& InAnim,
+					 const bool FlipHorizontal, const bool FlipVertical)
 		: Texture(InTexture)
 		, Size(InTexture->GetWidth(), Texture->GetHeight())
 		, TilePos(InTilePos)
 		, TileSize(InTileSize)
+		, Anim(InAnim)
 	{
 		LK_VERIFY(Texture && (Size.x > 0.0f) && (Size.y > 0.0f)
-				  && (TilePos.x > 0.0f) && (TilePos.y > 0.0f)
 				  && (TileSize.x > 0.0f) && (TileSize.y > 0.0f));
 		LK_DEBUG_TAG("Sprite", "Created: {} Size=({}, {}) TilePos=({}, {}) TileSize=({}, {})", InTexture->GetFilePath().filename(),
 					 Size.x, Size.y, TilePos.x, TilePos.y, TileSize.x, TileSize.y);
