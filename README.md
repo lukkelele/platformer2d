@@ -15,7 +15,7 @@ and thus this project was born.
 :warning: Barely any progress has been made yet, lots to come :warning:
 
 ![testlevel-1](doc/img/2025-11-09/testlevel-1.png)
-![testlevel-gif](doc/gif/2025-11-09/testlevel-1.gif)
+![testlevel-gif](doc/gif/2025-11-11/jump-swoosh.gif)
 
 ###
 
