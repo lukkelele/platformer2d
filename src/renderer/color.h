@@ -58,6 +58,7 @@ namespace platformer2d {
 		static constexpr glm::vec4 Blue        = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
 		static constexpr glm::vec4 LightBlue   = { B::Scale(0.60f),  B::Scale(0.80f),  B::Scale(1.0f),   B::Scale(1.0f) };
 		static constexpr glm::vec4 NiceBlue    = { B::Scale(0.325f), B::Scale(0.91f),  B::Scale(0.99f),  B::Scale(1.0f) };
+		static constexpr glm::vec4 SkyBlue     = { B::Scale(0.0f),   B::Scale(0.540f), B::Scale(0.87f),  B::Scale(1.0f) };
 		static constexpr glm::vec4 Gray        = { B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(1.0f) };
 		static constexpr glm::vec4 LightGray   = { B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(1.0f) };
 		static constexpr glm::vec4 Cyan        = { B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
