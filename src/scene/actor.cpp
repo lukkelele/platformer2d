@@ -36,12 +36,15 @@ namespace platformer2d {
 
 	void CActor::Tick(const float DeltaTime)
 	{
-		Body->Tick(DeltaTime);
+		if (bTickEnabled)
+		{
+			Body->Tick(DeltaTime);
 
-		const glm::vec2 BodyPos = Body->GetPosition();
-		TransformComp.Translation.x = BodyPos.x;
-		TransformComp.Translation.y = BodyPos.y;
-		TransformComp.SetRotation2D(Body->GetRotation());
+			const glm::vec2 BodyPos = Body->GetPosition();
+			TransformComp.Translation.x = BodyPos.x;
+			TransformComp.Translation.y = BodyPos.y;
+			TransformComp.SetRotation2D(Body->GetRotation());
+		}
 	}
 
 	glm::vec2 CActor::GetPosition() const
@@ -80,6 +83,12 @@ namespace platformer2d {
 		}
 
 		return (Body->GetLinearVelocity().x > CBody::LINEAR_VELOCITY_X_EPSILON);
+	}
+
+	void CActor::SetTickEnabled(const bool Enabled)
+	{
+		LK_TRACE_TAG("Actor", "[{}] Tick {}", Name, Enabled ? "enabled" : "disabled");
+		bTickEnabled = Enabled;
 	}
 
 	void CActor::SetColor(const glm::vec4& InColor)

@@ -50,6 +50,9 @@ namespace platformer2d {
 		inline const CBody& GetBody() const { return *Body; }
 		bool IsMoving() const;
 
+		inline bool GetTickEnabled() const { return bTickEnabled; }
+		void SetTickEnabled(bool Enabled);
+
 		inline ETexture GetTexture() const { return Texture; }
 		inline const glm::vec4& GetColor() const { return Color; }
 		void SetColor(const glm::vec4& InColor);
@@ -70,6 +73,7 @@ namespace platformer2d {
 
 	private:
 		FActorHandle Handle;
+		bool bTickEnabled = true;
 
 		static inline uint32_t Instances = 0;
 		static_assert(std::is_same_v<FActorHandle, decltype(Instances)>);
