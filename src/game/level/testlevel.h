@@ -34,6 +34,7 @@ namespace platformer2d::Level {
 		void UI_TextureModifier();
 
 		void DrawBackground() const;
+		void DrawClouds() const;
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 

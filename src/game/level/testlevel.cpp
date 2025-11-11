@@ -58,6 +58,24 @@ namespace platformer2d::Level {
 
 		std::vector<std::shared_ptr<CActor>> Actors;
 		std::weak_ptr<CActor> RotatingPlatform;
+
+		struct FCloud
+		{
+			glm::vec3 Position = { 0.0f, 0.0f, 0.60f };
+			glm::vec2 Size{};
+		};
+		std::vector<FCloud> Clouds = {
+			FCloud({  1.49, 2.42, 0.0001 }, { 0.93, 0.74 }),
+			FCloud({ -0.70, 2.20, 0.0002 }, { 1.15, 0.92 }),
+			FCloud({  1.50, 1.15, 0.0003 }, { 1.05, 0.84 }),
+			FCloud({  2.80, 0.39, 0.0004 }, { 0.95, 0.76 }),
+			FCloud({ -3.15, 2.30, 0.0005 }, { 1.13, 0.90 }),
+			FCloud({ -2.68, 0.58, 0.0006 }, { 0.99, 0.80 }),
+			FCloud({ -1.75, 1.34, 0.0007 }, { 1.03, 0.90 }),
+			FCloud({ -0.58, 1.63, 0.0008 }, { 0.99, 0.80 }),
+			FCloud({  0.84, 0.38, 0.0009 }, { 0.99, 0.80 }),
+			FCloud({ -0.20, 0.80, 0.0010 }, { 0.99, 0.80 }),
+		};
 	}
 
 	static std::shared_ptr<CActor> FindActorByName(std::string_view Name)
@@ -70,13 +88,16 @@ namespace platformer2d::Level {
 		return (Iter != Actors.end()) ? *Iter : nullptr;
 	}
 
-	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+	static void GenerateClouds(const std::size_t CloudCount = 7);
 
 	CTestLevel::CTestLevel()
 		: IGameInstance(GameSpec)
 	{
 		Instance = this;
 		Actors.clear();
+
+		CRenderer::SetClearColor(FColor::SkyBlue);
 	}
 
 	void CTestLevel::Initialize()
@@ -153,7 +174,7 @@ namespace platformer2d::Level {
 		Player->Tick(DeltaTime);
 		Tick_Objects(DeltaTime);
 
-		DrawBackground();
+		DrawClouds();
 
 		/* Render player. */
 		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
@@ -163,7 +184,7 @@ namespace platformer2d::Level {
 			const glm::vec2 PlayerSize = Player->GetSize();
 
 			CRenderer::DrawQuad(
-				glm::vec3(Player->GetPosition(), 0.010f),
+				glm::vec3(Player->GetPosition(), 0.030f),
 				PlayerSize,
 				*CRenderer::GetTexture(Player->GetTexture()),
 				Player->GetSprite().GetUV(),
@@ -353,6 +374,12 @@ namespace platformer2d::Level {
 		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 
+		glm::vec4 ClearColor = CRenderer::GetClearColor();
+		if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f"))
+		{
+			CRenderer::SetClearColor(ClearColor);
+		}
+
 		ImGui::Text("Actors: %d", Actors.size() + 1);
 		UI::Draw::ActorNode(*Player);
 		for (auto& Actor : Actors)
@@ -386,6 +413,11 @@ namespace platformer2d::Level {
 		ImGui::Text("TC Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 		ImGui::Text("Movement State: %s", Enum::ToString(PlayerData.MovementState));
 		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
+
+		auto [CurrentSpriteFrame, NextSpriteFrame] = Player->GetCurrentAndNextSpriteFrame();
+		ImGui::Text("Current Sprite Frame: %d", CurrentSpriteFrame);
+		ImGui::Text("Next Sprite Frame: %d", NextSpriteFrame);
+		ImGui::Dummy(ImVec2(0, 4));
 
 		const glm::vec2 PlayerSize = Player->GetSize();
 		ImGui::Text("Size: (%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
@@ -602,12 +634,16 @@ namespace platformer2d::Level {
 		const CTexture& BgTexture = *CRenderer::GetTexture(ETexture::Background);
 		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
 		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
-		CRenderer::DrawQuad(
-			{ 0.0f, 0.0f, 0.0f },
-			BgSize,
-			BgTexture,
-			FColor::White
-		);
+		CRenderer::DrawQuad({ 0.0f, 0.0f, 0.0f }, BgSize, BgTexture, FColor::White);
+	}
+
+	void CTestLevel::DrawClouds() const
+	{
+		const CTexture& Texture = *CRenderer::GetTexture(ETexture::Cloud);
+		for (const FCloud& Cloud : Clouds)
+		{
+			CRenderer::DrawQuad(Cloud.Position, Cloud.Size, Texture, FColor::White);
+		}
 	}
 
 	void CTestLevel::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
@@ -655,6 +691,40 @@ namespace platformer2d::Level {
 		}
 
 		return true;
+	}
+
+	void GenerateClouds(const std::size_t CloudCount)
+	{
+		static constexpr float MinX = -3.0f;
+		static constexpr float MaxX = 3.0f;
+		static constexpr float MinY = 0.20f;
+		static constexpr float MaxY = 1.0f;
+		static constexpr float MinScale = 0.90f;
+		static constexpr float MaxScale = 1.15f;
+
+		Clouds.clear();
+		Clouds.reserve(CloudCount);
+
+		std::random_device RandomDevice;
+		std::mt19937 Engine(RandomDevice());
+
+		std::uniform_real_distribution<float> DistX(MinX, MaxX);
+		std::uniform_real_distribution<float> DistY(MinY, MaxY);
+		std::uniform_real_distribution<float> DistScale(MinScale, MaxScale);
+
+		constexpr glm::vec2 BaseSize = glm::vec2(1.0f, 0.80f);
+		for (int Idx = 0; Idx < CloudCount; Idx++)
+		{
+			const float X = DistX(Engine);
+			const float Y = DistY(Engine);
+			const float Scale = DistScale(Engine);
+
+			FCloud Cloud;
+			Cloud.Position = glm::vec3(X, Y, Math::Randomize(0.0f, 0.25f));
+			Cloud.Size = BaseSize * Scale;
+			Clouds.push_back(Cloud);
+			LK_DEBUG_TAG("TestLevel", "Cloud {}: {}, {}", Idx, Cloud.Position, Cloud.Size);
+		}
 	}
 
 }
