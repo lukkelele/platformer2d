@@ -44,6 +44,17 @@ namespace platformer2d::UI::Draw {
 		}
 #endif
 
+		ImGui::TableNextRow();
+
+		ImGui::TableSetColumnIndex(0);
+		UI::ShiftCursor(17.0f, 4.0f);
+		ImGui::Text("Tick");
+
+		ImGui::TableSetColumnIndex(1);
+		UI::ShiftCursor(0.0f, 4.0f);
+
+		ImGui::Text("%s", Actor.GetTickEnabled() ? "Enabled" : "Disabled");
+
 		ImGui::EndTable();
 	}
 
