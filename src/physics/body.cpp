@@ -78,22 +78,19 @@ namespace platformer2d {
 
 	void CBody::SetPosition(const glm::vec2& Pos) const
 	{
-		const b2Transform Transform = { b2Vec2(Pos.x, Pos.y), b2MakeRot(B2_PI) };
-		b2Body_SetTargetTransform(ID, Transform, DeltaTime);
+		b2Body_SetTransform(ID, Math::Convert(Pos), b2Body_GetRotation(ID));
 	}
 
 	void CBody::SetPositionX(const float X) const
 	{
 		const b2Vec2 Pos = b2Body_GetPosition(ID);
-		const b2Transform Transform = { b2Vec2(X, Pos.y), b2MakeRot(B2_PI) };
-		b2Body_SetTargetTransform(ID, Transform, DeltaTime);
+		b2Body_SetTransform(ID, b2Vec2(X, Pos.y), b2Body_GetRotation(ID));
 	}
 
 	void CBody::SetPositionY(const float Y) const
 	{
 		const b2Vec2 Pos = b2Body_GetPosition(ID);
-		const b2Transform Transform = { b2Vec2(Pos.x, Y), b2MakeRot(B2_PI) };
-		b2Body_SetTargetTransform(ID, Transform, DeltaTime);
+		b2Body_SetTransform(ID, b2Vec2(Pos.x, Y), b2Body_GetRotation(ID));
 	}
 
 	float CBody::GetRotation() const
