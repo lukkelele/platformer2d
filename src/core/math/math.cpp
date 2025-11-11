@@ -2,6 +2,13 @@
 
 namespace platformer2d::Math {
 
+	float Randomize(const float Min, const float Max)
+	{
+		static std::mt19937 Engine(std::random_device{}());
+		std::uniform_real_distribution<float> Dist(Min, Max);
+		return Dist(Engine);
+	}
+
 	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
 								   const float Width, const float Height, const float Zoom)
 	{

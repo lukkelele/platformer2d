@@ -1,11 +1,12 @@
 #pragma once
 
+#include <random>
+
 #include <glm/glm.hpp>
+#include <box2d/math_functions.h>
 
 #include "core/assert.h"
 #include "shapes.h"
-
-#include <box2d/math_functions.h>
 
 namespace platformer2d::Math {
 
@@ -23,6 +24,8 @@ namespace platformer2d::Math {
 	{
 		return glm::vec2(-V.y, V.x);
 	}
+
+	float Randomize(float Min, float Max);
 
 	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
 								   float Width, float Height, float Zoom);
