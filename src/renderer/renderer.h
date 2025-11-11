@@ -86,6 +86,7 @@ namespace platformer2d {
 		static void DrawCircleFilled(const glm::vec2& P0, float Radius, const glm::vec4& Color, float Thickness = 1.0f);
 		static void DrawCircleFilled(const glm::vec3& P0, float Radius, const glm::vec4& Color, float Thickness = 1.0f);
 
+		static glm::vec4 GetClearColor() { return ClearColor; }
 		static void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
 		static void SetLineWidth(uint16_t LineWidth);
 		static void SetDepthTest(bool Enabled);
