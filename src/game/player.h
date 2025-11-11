@@ -65,8 +65,12 @@ namespace platformer2d {
 		 */
 		glm::vec2 GetSize() const;
 
+		std::pair<uint16_t, uint16_t> GetCurrentAndNextSpriteFrame() const { return std::make_pair(CurrentSpriteFrame, NextSpriteFrame); }
+
 	private:
 		void HandleInput();
+		void OnInputReceived();
+		bool InputReceivedLastTick() const { return (LastDirForce != 0.0f); }
 
 		void UpdateMovementState();
 		void MovementState_Idle();
@@ -98,6 +102,9 @@ namespace platformer2d {
 
 		bool bJustLanded = false;
 		bool bMovementInputLastTick = false;
+		std::chrono::steady_clock::time_point LastInputTime;
+		bool bWantToClimb = false;
+
 		bool bShouldUpdateSprite = false;
 
 		std::unique_ptr<CSprite> Sprite = nullptr;

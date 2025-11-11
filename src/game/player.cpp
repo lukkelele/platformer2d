@@ -10,34 +10,38 @@ namespace platformer2d {
 
 	namespace
 	{
-		/** @todo: The Y tilepos does not start from index 0... */
-		constexpr int SPRITE_TILEPOS_Y = 2; /* Second row in the spritesheet. */
+		constexpr int SPRITE_TILEPOS_Y = 2; /* Row in the spritesheet. */
 
 		enum class ESpriteFrame : uint16_t
 		{
-			/* Cycle: 1->2->3->4 */
-			WalkStart = 1,
+			/* Cycle: 0->1->2->3 */
+			WalkStart = 0,
+			Walk1 = 1,
 			Walk2 = 2,
-			Walk3 = 3,
-			WalkEnd = 4,
+			WalkEnd = 3,
 
-			JumpPreparation = 5,
-			JumpAscend = 6,
-			JumpDescend = 7,
-			JumpLanding = 8,
+			JumpPreparation = 4,
+			JumpAscend = 5,
+			JumpDescend = 6,
+			JumpLanding = 7,
 
-			/* Cycle: 9->10->9 */
-			Hit1 = 9,
-			Hit2 = 10,
+			/* Cycle: 8->9->8 */
+			Hit1 = 8,
+			Hit2 = 9,
 
-			/* 11->12->13 (With preparation: 12->11->12->13) */
-			Slash1 = 11,
-			Slash2 = 12,
-			Slash3 = 13,
+			/* 10->11->12 (With preparation: 11->10->11->12) */
+			Slash1 = 10,
+			Slash2 = 11,
+			Slash3 = 12,
 
-			/* 14->12 (Variation: 12->14->12) */
-			Punch1 = 12,
-			Punch2 = 14,
+			/* 13->11 (Variation: 11->13->11) */
+			Punch1 = 11,
+			Punch2 = 13,
+
+			WalkReversedStart = 18,
+			WalkReversed1 = 19,
+			WalkReversed2 = 20,
+			WalkReversedEnd = 21,
 
 			COUNT
 		};
@@ -58,6 +62,7 @@ namespace platformer2d {
 		: CActor(Spec, InTexture)
 		, NextSpriteFrame(Enum::AsUnderlying(ESpriteFrame::COUNT))
 	{
+		LK_VERIFY(InTexture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InTexture));
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
@@ -71,7 +76,7 @@ namespace platformer2d {
 		WalkAnim.StartTileX = TilePos.x;
 		WalkAnim.StartTileY = TilePos.y;
 		WalkAnim.FrameCount = 4;
-		WalkAnim.TicksPerFrame = 18;
+		WalkAnim.TicksPerFrame = WalkAnim.FrameCount * 4;
 		constexpr glm::vec2 TileSize = { 32, 32 };
 		LK_VERIFY(InTexture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InTexture));
 		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, TileSize);
@@ -97,7 +102,7 @@ namespace platformer2d {
 		WalkAnim.StartTileX = TilePos.x;
 		WalkAnim.StartTileY = TilePos.y;
 		WalkAnim.FrameCount = 4;
-		WalkAnim.TicksPerFrame = 24;
+		WalkAnim.TicksPerFrame = WalkAnim.FrameCount * 5;
 		constexpr glm::vec2 TileSize = { 32, 32 };
 		LK_VERIFY(InTexture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InTexture));
 		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, TileSize);
@@ -132,11 +137,13 @@ namespace platformer2d {
 		if (!Data.bJumping)
 		{
 			Data.bJumping = true;
-			Data.MovementState = EMovementState::Airborne;
+			SetMovementState(EMovementState::Airborne);
 			Body->ApplyImpulse({ 0.0f, JumpImpulse });
-			OnJumped.Broadcast(Data);
 
+			NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::JumpPreparation);
 			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms);
+
+			OnJumped.Broadcast(Data);
 		}
 	}
 
@@ -164,25 +171,34 @@ namespace platformer2d {
 
 	void CPlayer::HandleInput()
 	{
+		if (CKeyboard::IsKeyDown(EKey::W))
+		{
+			bWantToClimb = true;
+			LastDirForce = 0.0f;
+			OnInputReceived();
+		}
 		if (CKeyboard::IsKeyDown(EKey::A))
 		{
+			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({ -DirForce, 0.0f });
 			LookDir = EDirection::Left;
 			LastDirForce = -DirForce;
-			bMovementInputLastTick = true;
+			OnInputReceived();
 		}
 		if (CKeyboard::IsKeyDown(EKey::D))
 		{
+			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({ DirForce, 0.0f });
-			LookDir = EDirection::Right;
 			LastDirForce = DirForce;
-			bMovementInputLastTick = true;
+			LookDir = EDirection::Right;
+			OnInputReceived();
 		}
 		if (CKeyboard::IsKeyDown(EKey::Space))
 		{
+			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::JumpPreparation);
 			Jump();
 			LastDirForce = 0.0f;
-			bMovementInputLastTick = true;
+			OnInputReceived();
 		}
 
 		/* Clear movement input flag if needed. */
@@ -194,6 +210,12 @@ namespace platformer2d {
 		}
 	}
 
+	void CPlayer::OnInputReceived()
+	{
+		bMovementInputLastTick = true;
+		LastInputTime = std::chrono::steady_clock::now();
+	}
+
 	void CPlayer::UpdateMovementState()
 	{
 		if (bJustLanded)
@@ -202,6 +224,15 @@ namespace platformer2d {
 			/* The idle state will get evaluated to idle/running later. */
 			SetMovementState(EMovementState::Idle);
 			bJustLanded = false;
+		}
+
+		if (bWantToClimb)
+		{
+			if (!IsMoving())
+			{
+				/* @todo: Begin climbing if possible */
+			}
+			bWantToClimb = false;
 		}
 
 		switch (Data.MovementState)
@@ -233,7 +264,7 @@ namespace platformer2d {
 			if (MovingByInput)
 			{
 				SetMovementState(EMovementState::Running);
-				NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+				WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
 			}
 			else
 			{
@@ -244,7 +275,13 @@ namespace platformer2d {
 		else
 		{
 			/* Player character is idle. */
-			NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+			const auto TimeNow = std::chrono::steady_clock::now();
+			if (TimeNow - LastInputTime > 150ms)
+			{
+				/* Always turn the player character frontward after a brief delay. */
+				WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+				NextSpriteFrame = WalkAnim.StartTileX;
+			}
 		}
 	}
 
@@ -256,14 +293,15 @@ namespace platformer2d {
 
 		if (std::abs(LinearVelocity.x) > VelocityThresholdX)
 		{
-			/* Increment the frame by 1 because the sprite sheet begins at position 1. */
-			const uint16_t AnimFrame = WalkAnim.CalculateAnimFrame(FrameIndex) + 1;
+			const uint16_t AnimFrame = WalkAnim.CalculateAnimFrame(FrameIndex);
 			NextSpriteFrame = AnimFrame;
 		}
 		else if (!MovingByInput && std::abs(LinearVelocity.x) < VelocityThresholdX)
 		{
+			/* Player is idle. */
 			SetMovementState(EMovementState::Idle);
-			NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+			NextSpriteFrame = WalkAnim.StartTileX;
 		}
 	}
 
