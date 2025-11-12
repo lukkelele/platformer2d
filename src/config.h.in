@@ -1,5 +1,7 @@
 #pragma once
 
+#define BINARY_DIR     "@LK_BINARY_DIR@"
+
 #define ASSETS_DIR     "@LK_ASSETS_DIR@"
 #define FONTS_DIR      ASSETS_DIR "/fonts"
 #define TEXTURES_DIR   ASSETS_DIR "/textures"
