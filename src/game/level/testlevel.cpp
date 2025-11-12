@@ -1,5 +1,7 @@
 #include "testlevel.h"
 
+#include <fstream>
+#include <istream>
 #include <numeric>
 
 #include "core/window.h"
@@ -9,6 +11,7 @@
 #include "core/input/mouse.h"
 #include "core/math/math.h"
 #include "game/player.h"
+#include "game/spawner.h"
 #include "renderer/renderer.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/ui/ui.h"
@@ -45,7 +48,7 @@ namespace platformer2d::Level {
 				},
 #endif
 				.Position = { 0.0f, 0.50f },
-				.Friction = 0.10f,
+				.Friction = 0.750f,
 				.Density = 0.60f,
 				.LinearDamping = 0.50f,
 				.MotionLock = EMotionLock_Z,
@@ -225,6 +228,42 @@ namespace platformer2d::Level {
 		UI_Player();
 	}
 
+	bool CTestLevel::Serialize(const std::filesystem::path& Filepath)
+	{
+		LK_INFO_TAG("TestLevel", "Serializing: {}", Filepath);
+		YAML::Emitter Out;
+		for (const auto& Actor : Actors)
+		{
+			Actor->Serialize(Out);
+		}
+
+		std::ofstream OutFile(Filepath);
+		OutFile << Out.c_str();
+
+		return true;
+	}
+
+	bool CTestLevel::Deserialize(const std::filesystem::path& Filepath)
+	{
+		LK_INFO_TAG("TestLevel", "Deserializing: {}", Filepath);
+		LK_ASSERT(std::filesystem::exists(Filepath), "Filepath does not exist: {}", Filepath);
+		if (!std::filesystem::exists(Filepath))
+		{
+			LK_ERROR_TAG("TestLevel", "Filepath does not exist: {}", Filepath);
+			return false;
+		}
+
+		std::ifstream InputStream(Filepath);
+		std::stringstream StringStream;
+		StringStream << InputStream.rdbuf();
+		const std::string YamlString = StringStream.str();
+		LK_DEBUG("YAML:\n{}\n", YamlString);
+
+		YAML::Node Data = YAML::Load(YamlString);
+
+		return true;
+	}
+
 	void CTestLevel::CreatePlayer()
 	{
 		const FGameSpecification& Spec = GetSpecification();
@@ -266,17 +305,17 @@ namespace platformer2d::Level {
 		{
 			FBodySpecification Spec;
 			Spec.Type = EBodyType::Static;
-			Spec.Position = { 2.38f, -0.18f };
+			Spec.Position = { 3.29f, -0.33f };
 			Spec.Flags = EBodyFlag_PreSolveEvents;
-			Spec.Name = "Spawn-Right-Platform";
+			Spec.Name = "Right-Platform";
 
 			FPolygon Polygon = {
-				.Size = { 3.0f, 0.09 },
-				.Rotation = glm::radians(21.81f),
+				.Size = { 3.04f, 0.12f },
+				.Rotation = glm::radians(22.0f),
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::Metal);
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White);
 			Actor->SetColor(FColor::LightGreen);
 		}
 
@@ -333,6 +372,25 @@ namespace platformer2d::Level {
 			Actor->SetColor(FColor::Convert(RGBA32::DarkCyan));
 			RotatingPlatform = Actor;
 		}
+
+		/* Object 5. */
+		{
+			FBodySpecification Spec;
+			Spec.Type = EBodyType::Static;
+			Spec.Position = { 0.10f, -1.60f };
+			Spec.Flags = EBodyFlag_PreSolveEvents;
+			Spec.Name = "Bottom-Platform2";
+
+			FPolygon Polygon = {
+				.Size = { 9.60f, 0.22f },
+			};
+			Spec.Shape.emplace<FPolygon>(Polygon);
+
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White);
+			Actor->SetColor(FColor::Gray);
+		}
+
+		CSpawner::CreateStaticPolygon("R_Wall-1", { 4.830f, -0.90f }, { 0.10f, 1.20f }, FColor::Convert(RGBA32::Magenta));
 	}
 
 	void CTestLevel::Tick_Objects(const float DeltaTime)
@@ -380,6 +438,13 @@ namespace platformer2d::Level {
 			CRenderer::SetClearColor(ClearColor);
 		}
 
+		ImGui::Dummy(ImVec2(0, 8));
+		if (ImGui::Button("Serialize"))
+		{
+			Serialize(BINARY_DIR "/testlevel.yaml");
+		}
+		ImGui::Dummy(ImVec2(0, 8));
+
 		ImGui::Text("Actors: %d", Actors.size() + 1);
 		UI::Draw::ActorNode(*Player);
 		for (auto& Actor : Actors)
@@ -387,7 +452,17 @@ namespace platformer2d::Level {
 			UI::Draw::ActorNode(*Actor);
 		}
 
-		ImGui::Dummy(ImVec2(0, 16));
+		ImGui::Dummy(ImVec2(0, 10));
+		if (ImGui::Button("Log actors"))
+		{
+			for (auto& Actor : Actors)
+			{
+				LK_PRINTLN("{}\nPosition: {}\nRotation: {}\n",
+						   Actor->GetName(), Actor->GetPosition(), Actor->GetRotation());
+			}
+		}
+
+		ImGui::Dummy(ImVec2(0, 10));
 		UI_TextureModifier();
 
 		UI::Font::Pop();

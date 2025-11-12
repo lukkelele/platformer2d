@@ -22,6 +22,9 @@ namespace platformer2d::Level {
 		virtual CCamera* GetActiveCamera() const override;
 		virtual void RenderUI() override;
 
+		virtual bool Serialize(const std::filesystem::path& Filepath) override;
+		virtual bool Deserialize(const std::filesystem::path& Filepath) override;
+
 	private:
 		void CreatePlayer();
 		void CreatePlatform();
