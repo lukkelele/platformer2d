@@ -96,7 +96,7 @@ namespace platformer2d {
 		bool bCameraLock = true;
 
 		EDirection LookDir = EDirection::Right;
-		float JumpImpulse = 2.890f;
+		float JumpImpulse = 3.440f;
 		float DirForce = 5.630f;
 		float LastDirForce = 0.0f;
 
