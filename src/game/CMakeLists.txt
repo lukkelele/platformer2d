@@ -4,6 +4,8 @@ project_library_sources(
 	gameinstance.cpp
 	player.h
 	player.cpp
+	spawner.h
+	spawner.cpp
 )
 
 add_subdirectory(level)
