@@ -37,6 +37,7 @@ namespace platformer2d {
 		{
 			LK_ASSERT(ShapeType == EShape::Polygon);
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
+			LK_ASSERT((ShapeRef.Size.x > 0.0f) && (ShapeRef.Size.y > 0.0f), "Invalid size");
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
 			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
 		}
