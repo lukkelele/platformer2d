@@ -22,3 +22,6 @@
 [submodule "external/msdf-atlas-gen"]
 	path = external/msdf-atlas-gen
 	url = https://github.com/Chlumsky/msdf-atlas-gen
+[submodule "external/yaml-cpp"]
+	path = external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
