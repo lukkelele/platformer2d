@@ -96,6 +96,30 @@ namespace platformer2d {
 		Color = InColor;
 	}
 
+	void CActor::Serialize(YAML::Emitter& Out)
+	{
+		const FActorHandle ID = GetHandle();
+		LK_INFO_TAG("Actor", "Serialize: {} (Handle: {})", Name, ID);
+		Out << YAML::BeginMap; /* Actor */
+		Out << YAML::Key << "Actor";
+		Out << YAML::Value << ID;
+
+		Out << YAML::Key << "Name";
+		Out << YAML::Value << Name;
+
+		/* TransformComponent */
+		Out << YAML::Key << "TransformComponent";
+		Out << YAML::BeginMap;
+		const FTransformComponent& Transform = GetTransformComponent();
+		Out << YAML::Key << "Position" << YAML::Value << Transform.Translation;
+		Out << YAML::Key << "Rotation" << YAML::Value << Transform.GetRotationEuler();
+		Out << YAML::Key << "Scale" << YAML::Value << Transform.Scale;
+		Out << YAML::EndMap; /* TransformComponent */
+		/* ~TransformComponent */
+
+		Out << YAML::EndMap; /* Actor */
+	}
+
 	FActorHandle CActor::GenerateHandle()
 	{
 		Instances++;

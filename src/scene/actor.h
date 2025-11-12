@@ -8,12 +8,13 @@
 #include "renderer/color.h"
 #include "renderer/texture.h"
 #include "physics/body.h"
+#include "serialization/serializable.h"
 
 namespace platformer2d {
 
 	using FActorHandle = uint32_t;
 
-	class CActor
+	class CActor : public ISerializable
 	{
 	public:
 		LK_DECLARE_EVENT(FOnActorCreated, CActor, FActorHandle, std::weak_ptr<CActor>);
@@ -58,6 +59,8 @@ namespace platformer2d {
 		void SetColor(const glm::vec4& InColor);
 
 		inline std::string_view GetName() const { return Name; }
+
+		virtual void Serialize(YAML::Emitter& Out) override;
 
 	private:
 		static FActorHandle GenerateHandle();
