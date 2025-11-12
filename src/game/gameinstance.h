@@ -33,6 +33,9 @@ namespace platformer2d {
 		virtual void Tick(float DeltaTime) override = 0;
 		virtual CCamera* GetActiveCamera() const = 0;
 
+		virtual bool Serialize(const std::filesystem::path& Filepath) = 0;
+		virtual bool Deserialize(const std::filesystem::path& Filepath) = 0;
+
 		static IGameInstance* Get() { return Instance; }
 
 	protected:
