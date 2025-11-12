@@ -3,15 +3,24 @@
 ###################################################################
 set(PROJECT_INTERFACE platformer2d_interface)
 
-define_property(GLOBAL PROPERTY PROJECT_LIBS)
+define_property(GLOBAL PROPERTY PROJECT_LIBS
+	BRIEF_DOCS "Project libraries"
+	FULL_DOCS "Project libraries"
+)
 set_property(GLOBAL PROPERTY PROJECT_LIBS "")
 
 # Compile definitions.
-define_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS)
+define_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS
+	BRIEF_DOCS "Project compile definitions"
+	FULL_DOCS "Project compile definitions"
+)
 set_property(GLOBAL PROPERTY PROJECT_COMPILE_DEFINITIONS "")
 
 # Compile options.
-define_property(GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS)
+define_property(GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS
+	BRIEF_DOCS "Project compile options"
+	FULL_DOCS "Project compile options"
+)
 set_property(GLOBAL PROPERTY PROJECT_COMPILE_OPTIONS "")
 
 # Add definitions to define global property.
