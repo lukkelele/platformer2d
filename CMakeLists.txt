@@ -75,6 +75,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	project_add_compile_definitions(LK_BUILD_DEBUG)
 endif()
 
+set(LK_BINARY_DIR "${CMAKE_BINARY_DIR}")
 set(LK_ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 set(LK_LOGS_DIR "${CMAKE_SOURCE_DIR}/logs")
 make_directory(${CMAKE_BINARY_DIR}/intermediate)
@@ -97,6 +98,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/external/glm
 	${CMAKE_SOURCE_DIR}/external/imgui
 	${CMAKE_SOURCE_DIR}/external/spdlog/include
+	${CMAKE_SOURCE_DIR}/external/yaml-cpp/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
 )
 
@@ -109,6 +111,7 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	imgui
 	spdlog
 	stb_image
+	yaml-cpp
 )
 
 add_executable(${PROJECT_NAME})
