@@ -67,6 +67,11 @@ set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory(box2d)
 
 ##############################
+# Library: yaml-cpp
+##############################
+add_subdirectory(yaml-cpp)
+
+##############################
 # Library: msdf-atlas-gen
 ##############################
 #set(MSDFGEN_DISABLE_PNG ON) # TODO: libpng be added as dependency (?)
