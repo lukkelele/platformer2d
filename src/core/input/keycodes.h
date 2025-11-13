@@ -227,22 +227,34 @@ namespace platformer2d {
 }
 
 template<>
-struct std::formatter<platformer2d::EKey> : std::formatter<std::string>
+struct LK_FMT_LIB::formatter<platformer2d::EKey>
 {
+	template<typename ParseContext>
+	constexpr auto parse(ParseContext& Context)
+	{
+		return Context.begin();
+	}
+
 	template<typename FormatContext>
-    auto format(const platformer2d::EKey Key, FormatContext& Context) const
-    {
-		return std::formatter<std::string>::format(platformer2d::Enum::ToString(Key), Context);
-    }
+	auto format(const platformer2d::EKey Key, FormatContext& Context) const
+	{
+		return LK_FMT_LIB::format_to(Context.out(), "{}", platformer2d::Enum::ToString(Key));
+	}
 };
 
 template<>
-struct std::formatter<platformer2d::EKeyState> : std::formatter<std::string>
+struct LK_FMT_LIB::formatter<platformer2d::EKeyState>
 {
+	template<typename ParseContext>
+	constexpr auto parse(ParseContext& Context)
+	{
+		return Context.begin();
+	}
+
 	template<typename FormatContext>
-    auto format(const platformer2d::EKeyState State, FormatContext& Context) const
-    {
-		return std::formatter<std::string>::format(platformer2d::Enum::ToString(State), Context);
-    }
+	auto format(const platformer2d::EKeyState State, FormatContext& Context) const
+	{
+		return LK_FMT_LIB::format_to(Context.out(), "{}", platformer2d::Enum::ToString(State));
+	}
 };
 
