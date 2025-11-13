@@ -14,6 +14,8 @@
 
 namespace platformer2d {
 
+	CDebugRenderer::FLineConfig CDebugRenderer::LineConfig;
+
 	namespace
 	{
 		constexpr glm::vec4 QuadVertexPositions[4] = {
