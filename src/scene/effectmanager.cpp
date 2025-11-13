@@ -49,7 +49,7 @@ namespace platformer2d {
 	void CEffectManager::Tick(const float DeltaTime)
 	{
 		using namespace std::chrono;
-		const auto CurrentTime = high_resolution_clock::now();
+		const auto CurrentTime = steady_clock::now();
 
 		int Idx = 0;
 		ExpiredIdx.clear();
@@ -124,7 +124,7 @@ namespace platformer2d {
 		const FEffectEntry Entry = {
 			.Effect = Effect,
 			.Pos = Pos,
-			.TimeExpire = high_resolution_clock::now() + TimeActive,
+			.TimeExpire = steady_clock::now() + TimeActive,
 			.Size = Size,
 			.ZIndex = ZIndex,
 		};
