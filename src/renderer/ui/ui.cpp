@@ -1012,7 +1012,7 @@ namespace platformer2d::UI {
 		ImDrawList* DrawList = ImGui::GetWindowDrawList();
 		for (const char* Ptr = Text; *Ptr; Ptr++)
 		{
-			float Hue = std::fmodf(Time + (*Ptr) * Speed, 1.0f);
+			float Hue = std::fmod(Time + (*Ptr) * Speed, 1.0f);
 			ImVec4 Col;
 			ImGui::ColorConvertHSVtoRGB(Hue, 1.0f, 1.0f, Col.x, Col.y, Col.z);
 			Col.w = 1.0f;
