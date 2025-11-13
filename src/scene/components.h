@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdio>
-#include <format>
 #include <utility>
 #include <string>
 
@@ -101,7 +100,7 @@ namespace platformer2d {
 
 		std::string ToString() const
 		{
-			return std::format("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
+			return LK_FMT("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
 		}
 	};
 
