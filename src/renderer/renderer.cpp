@@ -27,6 +27,9 @@
 
 namespace platformer2d {
 
+	CRenderer::FLineConfig CRenderer::LineConfig;
+	CRenderer::FCameraData CRenderer::CameraData;
+
 	namespace
 	{
 		constexpr int CIRCLE_SEGMENTS = 32;
@@ -283,7 +286,7 @@ namespace platformer2d {
 		{
 			LK_VERIFY(TextureRef, "Invalid texture reference: {}", Enum::ToString(Texture));
 			const int Idx = static_cast<int>(Texture);
-			QuadShader->Set(std::format("u_texture{}", Idx), Idx);
+			QuadShader->Set(LK_FMT("u_texture{}", Idx), Idx);
 			TextureRef->Bind(Idx);
 			TextureRef->SetSlot(Idx);
 		}

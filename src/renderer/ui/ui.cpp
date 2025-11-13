@@ -381,7 +381,8 @@ namespace platformer2d::UI {
 			}
 		}
 
-		ImGui::PushID(LK_FUNCSIG "_Source");
+		static const std::string SourceID = LK_FMT("{}_Source", LK_FUNCSIG);
+		ImGui::PushID(SourceID.c_str());
 		ImGui::SetNextItemWidth(ItemWidth);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].second))
@@ -400,7 +401,8 @@ namespace platformer2d::UI {
 		}
 		ImGui::PopID();
 
-		ImGui::PushID(LK_FUNCSIG "_Destination");
+		static const std::string DestinationID = LK_FMT("{}_Destination", LK_FUNCSIG);
+		ImGui::PushID(DestinationID.c_str());
 		ImGui::SetNextItemWidth(ItemWidth);
 		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].second))
 		{
@@ -484,7 +486,7 @@ namespace platformer2d::UI {
 		ImDrawList* DrawList = ImGui::GetWindowDrawList();
 		for (const char* Ptr = Text; *Ptr; Ptr++)
 		{
-			float Hue = std::fmodf(Time + (*Ptr) * Speed, 1.0f);
+			float Hue = std::fmod(Time + (*Ptr) * Speed, 1.0f);
 			ImVec4 Col;
 			ImGui::ColorConvertHSVtoRGB(Hue, 1.0f, 1.0f, Col.x, Col.y, Col.z);
 			Col.w = 1.0f;

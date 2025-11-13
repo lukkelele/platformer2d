@@ -42,9 +42,11 @@ namespace platformer2d {
 		static inline GLuint LineVAO = 0;
 		static inline GLuint LineVBO = 0;
 		static inline std::shared_ptr<CShader> LineShader = nullptr;
-		struct FLineConfig {
+		struct FLineConfig
+		{
 			uint16_t Width = 2;
-		} static inline LineConfig;
+		};
+		static FLineConfig LineConfig;
 
 		static inline GLuint CircleVAO = 0;
 		static inline GLuint CircleVBO = 0;

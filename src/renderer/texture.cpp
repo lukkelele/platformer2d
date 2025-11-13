@@ -90,7 +90,7 @@ namespace platformer2d {
 
 		if (DebugName.empty())
 		{
-			DebugName = std::format("{}", Path.filename());
+			DebugName = LK_FMT("{}", Path.filename());
 		}
 		Slot = CreatedTextures++;
 		LK_TRACE_TAG("Texture", "Index: {} ({})", Slot, Path.filename());
@@ -135,7 +135,7 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
-		DebugName = std::format("{}", Path.filename());
+		DebugName = LK_FMT("{}", Path.filename());
 		Slot = CreatedTextures++;
 		LK_TRACE_TAG("Texture", "Index: {}", Slot);
 	}

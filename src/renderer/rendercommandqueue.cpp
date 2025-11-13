@@ -1,5 +1,6 @@
 #include "rendercommandqueue.h"
 
+#include <cstring>
 #include <memory>
 
 namespace platformer2d {

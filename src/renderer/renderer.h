@@ -151,9 +151,11 @@ namespace platformer2d {
 		static inline FLineVertex* LineVertexBufferBase = nullptr;
 		static inline FLineVertex* LineVertexBufferPtr = nullptr;
 		static inline std::shared_ptr<CShader> LineShader = nullptr;
-		struct FLineConfig {
+		struct FLineConfig
+		{
 			uint16_t Width = 2;
-		} static inline LineConfig;
+		};
+		static FLineConfig LineConfig;
 
 		static inline GLuint CircleVAO = 0;
 		static inline GLuint CircleVBO = 0;
@@ -166,7 +168,8 @@ namespace platformer2d {
 		struct FCameraData
 		{
 			glm::mat4 ViewProjection = glm::mat4(1.0f);
-		} static inline CameraData;
+		};
+		static FCameraData CameraData;
 		static inline std::unique_ptr<CUniformBuffer> CameraUniformBuffer = nullptr;
 
 		static inline bool bDebugRender = false;
