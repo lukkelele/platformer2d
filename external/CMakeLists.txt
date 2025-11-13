@@ -36,11 +36,17 @@ add_library(imgui STATIC
 )
 target_include_directories(imgui PUBLIC imgui imgui/backends)
 target_include_directories(imgui PRIVATE glfw/include)
+if (LK_COMPILER_GCC)
+	find_package(X11 REQUIRED)
+	target_link_libraries(imgui PRIVATE X11)
+endif()
 
 ##############################
 # Library: spdlog
 ##############################
-set(SPDLOG_USE_STD_FORMAT ON)
+if (LK_COMPILER_MSVC)
+	set(SPDLOG_USE_STD_FORMAT ON)
+endif()
 add_subdirectory(spdlog)
 
 ##############################
