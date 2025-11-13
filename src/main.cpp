@@ -65,7 +65,7 @@ int main(int Argc, char* Argv[])
 
 	const auto& Textures = CRenderer::GetTextures();
 	PlayerTexture = Textures.at(ETexture::Player);
-	PlatformTexture = Textures.at(ETexture::Platform);
+	PlatformTexture = Textures.at(ETexture::White);
 
 	std::unique_ptr<CPlayer> Player = CreatePlayer();
 	std::unique_ptr<CActor> Platform = CreatePlatform();
