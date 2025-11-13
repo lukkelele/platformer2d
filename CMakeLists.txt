@@ -31,8 +31,9 @@ set(PROJECT_EXECUTABLE ${PROJECT_NAME})
 add_library(${PROJECT_INTERFACE} INTERFACE)
 
 # Compiler.
-message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} (${CMAKE_CXX_COMPILER})")
 if (MSVC)
+	set(LK_COMPILER_MSVC ON)
 	project_add_compile_definitions(
 		LK_COMPILER_MSVC
 		__LK_VA_OPT # /Zc:preprocessor
@@ -57,8 +58,22 @@ if (MSVC)
 		/wd26813  # 'Use bitwise and'
 	)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	project_add_compile_definitions(LK_COMPILER_GCC)
+	set(LK_COMPILER_GCC ON)
+	project_add_compile_definitions(
+		LK_COMPILER_GCC
+	)
+	project_add_compile_options(
+		-Wno-format-security
+		-Wno-format
+	)
+
+	find_package(X11 REQUIRED)
+	target_link_libraries(${PROJECT_INTERFACE} INTERFACE
+		X11
+	)
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	set(LK_COMPILER_CLANG ON)
 	project_add_compile_definitions(LK_COMPILER_CLANG)
 else()
 	message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -70,7 +85,7 @@ project_add_compile_definitions(
 	LK_LOG_FORCE_INLINE=${LK_LOG_FORCE_INLINE}
 )
 
-message("Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	project_add_compile_definitions(LK_BUILD_DEBUG)
 endif()
