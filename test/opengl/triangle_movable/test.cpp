@@ -20,10 +20,10 @@ namespace platformer2d::test {
 		LK_ASSERT(LoopDuration > 0.0f);
 		const float Scale = (3.14159f * 2.0f) / LoopDuration;
 		const float ElapsedTime = static_cast<float>(glfwGetTime());
-		const float TimeThroughLoop = std::fmodf(ElapsedTime, LoopDuration);
+		const float TimeThroughLoop = std::fmod(ElapsedTime, LoopDuration);
 
-		Offset.x = std::cosf(TimeThroughLoop * Scale) * 0.50f;
-		Offset.y = std::sinf(TimeThroughLoop * Scale) * 0.50f;
+		Offset.x = std::cos(TimeThroughLoop * Scale) * 0.50f;
+		Offset.y = std::sin(TimeThroughLoop * Scale) * 0.50f;
 	}
 
 	static constexpr float VertexData[] = {
