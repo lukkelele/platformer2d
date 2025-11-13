@@ -213,8 +213,8 @@ namespace platformer2d::test {
 			const FDrawStatistics& DrawStats = CRenderer::GetDrawStatistics();
 			if (ImGui::TreeNodeEx("Draw Statistics", ImGuiTreeNodeFlags_SpanLabelWidth))
 			{
-				ImGui::Text("Quads: %d", DrawStats.QuadCount);
-				ImGui::Text("Lines: %d", DrawStats.LineCount);
+				ImGui::Text("Quads: %ld", DrawStats.QuadCount);
+				ImGui::Text("Lines: %ld", DrawStats.LineCount);
 
 				ImGui::TreePop();
 			}
@@ -240,7 +240,7 @@ namespace platformer2d::test {
 			ImGui::SetNextItemWidth(110.0f);
 			ImGui::SliderInt("##SubstepCount", &SubStepCount, 1, 20);
 
-			ImGui::Text("Dynamic Body ID: %d", DynamicBodyID);
+			ImGui::Text("Dynamic Body ID: %d", DynamicBodyID.index1);
 			const b2Vec2 DynamicBodyPos = b2Body_GetPosition(DynamicBodyID);
 			const b2Rot DynamicBodyRot = b2Body_GetRotation(DynamicBodyID);
 			ImGui::Text("Position: (%4.2f, %4.2f)", DynamicBodyPos.x, DynamicBodyPos.y);
@@ -279,7 +279,7 @@ namespace platformer2d::test {
 			{
 				TransformComp.SetRotation2D(glm::radians(PlayerRot));
 			}
-			ImGui::Text("Player Texture: %d", PlayerTexture.GetSlot());
+			ImGui::Text("Player Texture: %ld", PlayerTexture.GetSlot());
 			ImGui::PopID();
 
 			Player.Tick(DeltaTime);

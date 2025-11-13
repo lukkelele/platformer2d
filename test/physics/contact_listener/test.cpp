@@ -105,7 +105,7 @@ namespace platformer2d::test {
 		FTransformComponent& PlayerTC = Player.GetTransformComponent();
 		glm::vec3& PlayerPos = PlayerTC.Translation;
 		glm::vec3& PlayerScale = PlayerTC.Scale;
-		const CBody& PlayerBody = Player.GetBody();
+		CBody& PlayerBody = Player.GetBody();
 		b2World_SetPreSolveCallback(WorldID, PreSolveStatic, &Player /* == Player data */);
 
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
@@ -141,8 +141,8 @@ namespace platformer2d::test {
 		 * Platform -> Index 2
 		 ******************************/
 		auto& Textures = CRenderer::GetTextures();
-		std::shared_ptr<CTexture> PlayerTexture = Textures[1];
-		std::shared_ptr<CTexture> PlatformTexture = Textures[2];
+		std::shared_ptr<CTexture> PlayerTexture = Textures.at(ETexture::Player);
+		std::shared_ptr<CTexture> PlatformTexture = Textures.at(ETexture::Metal);
 
 		glm::vec4 ClearColor{ 0.28f, 0.34f, 0.36f, 1.0f };
 		CRenderer::SetClearColor(ClearColor);
