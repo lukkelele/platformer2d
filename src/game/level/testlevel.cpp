@@ -81,6 +81,15 @@ namespace platformer2d::Level {
 			FCloud({  0.84, 0.38, 0.0009 }, { 0.99, 0.80 }),
 			FCloud({ -0.20, 0.80, 0.0010 }, { 0.99, 0.80 }),
 		};
+
+		const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
+			Enum::ToString(ETexture::White),
+			Enum::ToString(ETexture::Background),
+			Enum::ToString(ETexture::Player),
+			Enum::ToString(ETexture::Metal),
+			Enum::ToString(ETexture::Bricks),
+			Enum::ToString(ETexture::Wood),
+		};
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -105,8 +114,21 @@ namespace platformer2d::Level {
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
-				LK_DEBUG_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
+				LK_TRACE_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				Actors.emplace_back(Actor);
+			}
+		});
+
+		CActor::OnActorMarkedForDeletion.Add([&](const FActorHandle Handle)
+		{
+			/**
+			 * Bind to lambda because the delegate expects a void return type,
+			 * which DeleteActor isn't.
+			 */
+			/* Move the player a little bit to cause physics to pass through. */
+			if (CTestLevel::DeleteActor(Handle))
+			{
+				Player->GetBody().ApplyForce({ 0.0f, 0.010f });
 			}
 		});
 
@@ -243,12 +265,24 @@ namespace platformer2d::Level {
 
 	bool CTestLevel::DoesActorExist(const FActorHandle Handle)
 	{
-		return FindActor(Handle) == nullptr;
+		return FindActor(Handle) != nullptr;
 	}
 
 	bool CTestLevel::DoesActorExist(std::string_view Name)
 	{
-		return FindActor(Name) == nullptr;
+		return FindActor(Name) != nullptr;
+	}
+
+	bool CTestLevel::DeleteActor(const FActorHandle Handle)
+	{
+		LK_INFO_TAG("TestLevel", "Delete: {}", Handle);
+		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
+		{
+			return (Handle == Actor->GetHandle());
+		};
+		const std::size_t Erased = std::erase_if(Actors, IsHandleEqual);
+		LK_ASSERT(Erased == 1, "Erased={}", Erased);
+		return (Erased == 1);
 	}
 
 	bool CTestLevel::Serialize(const std::filesystem::path& Filepath)
@@ -498,6 +532,61 @@ namespace platformer2d::Level {
 		}
 
 		ImGui::Dummy(ImVec2(0, 10));
+		ImGui::Separator();
+		ImGui::PushID("CreatorMenu");
+		{
+			UI::Font::Push(EFont::SourceSansPro, EFontSize::Larger);
+			UI::ShiftCursorX(32.0f);
+			ImGui::Text("Creator Menu");
+			UI::Font::Pop();
+
+			ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("LabelColumn", 0, 140.0f);
+			ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 140.0f);
+
+			ImGui::TableNextRow();
+			/* Column 0 */
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 7.0f);
+			ImGui::Text("Name");
+
+			/* Column 1 */
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(7.0f, 0.0f);
+			static char ActorNameBuf[128] = { "Unnamed" };
+			ImGui::SetNextItemWidth(160.0f);
+			ImGui::InputText("##ActorName", ActorNameBuf, LK_ARRAYSIZE(ActorNameBuf));
+
+			ImGui::TableNextRow();
+			static glm::vec2 Pos = { 0.0f, 0.0f };
+			UI::Draw::Vec2Control("Position", Pos, 0.0f, 0.010f, -100.0f, 100.0f);
+
+			ImGui::TableNextRow();
+			static glm::vec2 Size = { 0.20f, 0.20f };
+			UI::Draw::Vec2Control("Size", Size, 1.0f, 0.010f, 0.010f, 2.0f);
+
+			ImGui::EndTable();
+
+			static std::size_t SelectedTextureIdx = 0;
+			UI_TextureDropDown(SelectedTextureIdx);
+
+			UI::ShiftCursorX(32.0f);
+			if (ImGui::Button("Create"))
+			{
+				if (!DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
+				{
+					CSpawner::CreateStaticPolygon(ActorNameBuf, Pos, Size, FColor::Convert(RGBA32::Magenta));
+				}
+				else
+				{
+					LK_ERROR_TAG("TestLevel", "Actor already exists with name: \"{}\"", ActorNameBuf);
+				}
+			}
+		}
+		ImGui::PopID();
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0, 10));
+
 		UI_TextureModifier();
 
 		UI::Font::Pop();
@@ -600,26 +689,16 @@ namespace platformer2d::Level {
 		ImGui::End();
 	}
 
-	void CTestLevel::UI_TextureModifier()
+	void CTestLevel::UI_TextureDropDown(std::size_t& SelectedIdx)
 	{
-		static const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
-			Enum::ToString(ETexture::White),
-			Enum::ToString(ETexture::Background),
-			Enum::ToString(ETexture::Player),
-			Enum::ToString(ETexture::Metal),
-			Enum::ToString(ETexture::Bricks),
-			Enum::ToString(ETexture::Wood),
-		};
-
 		static constexpr float ButtonPaddingY = 7.0f;
 		static constexpr ImVec2 ButtonSize(84, 42);
 		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
 
-		static int SelectedTextureIdx = 0;
-		static const char* SelectedTexture = TextureNames[SelectedTextureIdx];
+		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < TextureNames.size()));
+		static const char* SelectedTexture = TextureNames[SelectedIdx];
 
-		ImGui::Separator();
-		ImGui::Dummy(ImVec2(0, 14));
+		ImGui::Dummy(ImVec2(0, 6));
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
 
 		static const char* ComboName = "Texture";
@@ -635,9 +714,9 @@ namespace platformer2d::Level {
 		UI::ShiftCursorY(-4.0f);
 
 		ImGui::SetNextItemWidth(ItemWidth);
-		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedTextureIdx]))
+		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedIdx]))
 		{
-			SelectedTexture = TextureNames[SelectedTextureIdx];
+			SelectedTexture = TextureNames[SelectedIdx];
 			for (int Idx = 0; Idx < TextureNames.size(); Idx++)
 			{
 				const char* Option = TextureNames[Idx];
@@ -649,12 +728,25 @@ namespace platformer2d::Level {
 				const bool IsSelected = (Option == SelectedTexture);
 				if (ImGui::Selectable(Option, IsSelected))
 				{
-					SelectedTextureIdx = Idx;
+					SelectedIdx = Idx;
 				}
 			}
 
 			ImGui::EndCombo();
 		}
+	}
+
+	void CTestLevel::UI_TextureModifier()
+	{
+		static constexpr float ButtonPaddingY = 7.0f;
+		static constexpr ImVec2 ButtonSize(84, 42);
+		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
+
+		ImGui::Dummy(ImVec2(0, 12));
+		static std::size_t SelectedTextureIdx = 0;
+		UI_TextureDropDown(SelectedTextureIdx);
+
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
 
 		const ETexture Texture = static_cast<ETexture>(SelectedTextureIdx);
 		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(Texture); TextureRef != nullptr)
@@ -788,7 +880,7 @@ namespace platformer2d::Level {
 				LK_TRACE("{}", CBody::ToString(BodySpec));
 			}
 
-			if (DoesActorExist(ActorHandle))
+			if (!DoesActorExist(ActorHandle))
 			{
 				std::shared_ptr<CActor> Actor = CActor::Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
 			}

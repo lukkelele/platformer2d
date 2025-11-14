@@ -26,6 +26,7 @@ namespace platformer2d::Level {
 		virtual std::shared_ptr<CActor> FindActor(std::string_view Name) override;
 		virtual bool DoesActorExist(FActorHandle Handle) override;
 		virtual bool DoesActorExist(std::string_view Name) override;
+		bool DeleteActor(FActorHandle Handle);
 
 		virtual bool Serialize(const std::filesystem::path& Filepath) override;
 		virtual bool Deserialize(const std::filesystem::path& Filepath) override;
@@ -40,6 +41,7 @@ namespace platformer2d::Level {
 		void UI_Level();
 		void UI_Player();
 		void UI_TextureModifier();
+		void UI_TextureDropDown(std::size_t& SelectedIdx);
 
 		void DrawBackground() const;
 		void DrawClouds() const;
