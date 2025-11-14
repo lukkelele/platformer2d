@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/core.h"
-#include "yamlserialization.h"
+#include "yaml.h"
 
 namespace platformer2d {
 
