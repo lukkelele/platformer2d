@@ -17,8 +17,7 @@ namespace platformer2d {
 		};
 		Spec.Shape.emplace<FPolygon>(Polygon);
 
-		std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White);
-		Actor->SetColor(Color);
+		std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, Color);
 
 		return Actor;
 	}
