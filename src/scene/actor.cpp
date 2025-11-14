@@ -27,7 +27,7 @@ namespace platformer2d {
 
 		if (const FPolygon* Polygon = std::get_if<FPolygon>(&BodySpec.Shape); Polygon != nullptr)
 		{
-			LK_DEBUG_TAG("Actor", "[{}] Scaling polygon -> {}", Handle, Polygon->Size);
+			LK_TRACE_TAG("Actor", "[{}] Scaling polygon -> {}", Handle, Polygon->Size);
 			TransformComp.SetScale(Polygon->Size);
 		}
 	}

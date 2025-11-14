@@ -18,6 +18,7 @@ namespace platformer2d {
 	{
 	public:
 		LK_DECLARE_EVENT(FOnActorCreated, CActor, FActorHandle, std::weak_ptr<CActor>);
+		LK_DECLARE_MULTICAST_DELEGATE(FOnActorMarkedForDeletion, FActorHandle);
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
 		CActor(FActorHandle InHandle, const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
@@ -29,6 +30,7 @@ namespace platformer2d {
 		{
 			static_assert(std::is_base_of_v<CActor, T>);
 			std::shared_ptr<T> Actor = std::shared_ptr<T>(new T(std::forward<TArgs>(Args)...));
+			Instances++;
 			CActor::OnActorCreated.Broadcast(Actor->GetHandle(), std::weak_ptr<CActor>(Actor));
 			return Actor;
 		}
@@ -68,6 +70,7 @@ namespace platformer2d {
 
 	public:
 		static inline FOnActorCreated OnActorCreated;
+		static inline FOnActorMarkedForDeletion OnActorMarkedForDeletion;
 	protected:
 		FTransformComponent TransformComp{};
 		std::unique_ptr<CBody> Body;
