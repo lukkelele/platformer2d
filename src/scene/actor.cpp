@@ -4,19 +4,21 @@
 
 namespace platformer2d {
 
-	CActor::CActor(const FActorSpecification& Spec, const ETexture InTexture)
-		: Name("")
-		, Texture(InTexture)
+	CActor::CActor(const FActorSpecification& Spec)
+		: Handle(GenerateHandle())
+		, Name("")
+		, Texture(Spec.Texture)
+		, Color(Spec.Color)
 	{
-		Handle = GenerateHandle();
 	}
 
-	CActor::CActor(const FBodySpecification& BodySpec, const ETexture InTexture)
-		: Name(BodySpec.Name)
+	CActor::CActor(const FActorHandle InHandle, const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
+		: Handle(InHandle)
+		, Name(BodySpec.Name)
 		, Texture(InTexture)
+		, Color(InColor)
 	{
-		Handle = GenerateHandle();
-
+		LK_DEBUG_TAG("Actor", "Create: {} ({})", Handle, (!Name.empty() ? Name : "NULL"));
 		Body = std::make_unique<CBody>(BodySpec);
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
@@ -25,8 +27,14 @@ namespace platformer2d {
 
 		if (const FPolygon* Polygon = std::get_if<FPolygon>(&BodySpec.Shape); Polygon != nullptr)
 		{
+			LK_DEBUG_TAG("Actor", "[{}] Scaling polygon -> {}", Handle, Polygon->Size);
 			TransformComp.SetScale(Polygon->Size);
 		}
+	}
+
+	CActor::CActor(const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
+		: CActor(GenerateHandle(), BodySpec, InTexture, InColor)
+	{
 	}
 
 	CActor::~CActor()
@@ -98,26 +106,34 @@ namespace platformer2d {
 
 	void CActor::Serialize(YAML::Emitter& Out)
 	{
-		const FActorHandle ID = GetHandle();
-		LK_INFO_TAG("Actor", "Serialize: {} (Handle: {})", Name, ID);
+		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
 		Out << YAML::BeginMap; /* Actor */
-		Out << YAML::Key << "Actor";
-		Out << YAML::Value << ID;
-
+		Out << YAML::Key << "ID";
+		Out << YAML::Value << Handle;
 		Out << YAML::Key << "Name";
 		Out << YAML::Value << Name;
 
+		Out << YAML::Key << "Texture";
+		Out << YAML::Value << std::to_underlying(Texture);
+		Out << YAML::Key << "Color";
+		Out << YAML::Value << Color;
+
 		/* TransformComponent */
+		const FTransformComponent& TC = GetTransformComponent();
 		Out << YAML::Key << "TransformComponent";
 		Out << YAML::BeginMap;
-		const FTransformComponent& Transform = GetTransformComponent();
-		Out << YAML::Key << "Position" << YAML::Value << Transform.Translation;
-		Out << YAML::Key << "Rotation" << YAML::Value << Transform.GetRotationEuler();
-		Out << YAML::Key << "Scale" << YAML::Value << Transform.Scale;
-		Out << YAML::EndMap; /* TransformComponent */
+		Out << YAML::Key << "Position" << YAML::Value << TC.Translation;
+		Out << YAML::Key << "Rotation" << YAML::Value << TC.GetRotation2D();
+		Out << YAML::Key << "Scale" << YAML::Value << TC.Scale;
+		Out << YAML::EndMap;
 		/* ~TransformComponent */
 
-		Out << YAML::EndMap; /* Actor */
+		if (Body)
+		{
+			Body->Serialize(Out);
+		}
+
+		Out << YAML::EndMap; /* ~Actor */
 	}
 
 	FActorHandle CActor::GenerateHandle()

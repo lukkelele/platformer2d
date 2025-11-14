@@ -19,8 +19,9 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnActorCreated, CActor, FActorHandle, std::weak_ptr<CActor>);
 	public:
-		CActor(const FActorSpecification& Spec = FActorSpecification(), ETexture InTexture = ETexture::White);
-		CActor(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White);
+		CActor(const FActorSpecification& Spec = FActorSpecification());
+		CActor(FActorHandle InHandle, const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
+		CActor(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
 		virtual ~CActor();
 
 		template<typename T, typename... TArgs>
@@ -51,7 +52,7 @@ namespace platformer2d {
 		inline const CBody& GetBody() const { return *Body; }
 		bool IsMoving() const;
 
-		inline bool GetTickEnabled() const { return bTickEnabled; }
+		inline bool IsTickEnabled() const { return bTickEnabled; }
 		void SetTickEnabled(bool Enabled);
 
 		inline ETexture GetTexture() const { return Texture; }
