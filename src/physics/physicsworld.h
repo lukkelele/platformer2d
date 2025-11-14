@@ -15,14 +15,17 @@ namespace platformer2d {
 		~CPhysicsWorld() = delete;
 
 		static void Initialize(const glm::vec2& Gravity = {0.0f, -10.0f});
-		static void Destroy();
+		static void Shutdown();
 
 		static void Update(float DeltaTime);
 		static void Pause();
 		static void Unpause();
 
-		static b2BodyId CreateBody(const b2BodyDef& BodyDef);
 		static inline const b2WorldId& GetID() { return WorldID; }
+
+		static b2BodyId CreateBody(const b2BodyDef& BodyDef);
+		static void Destroy(CBody& Body);
+
 		static void SetGravity(const glm::vec2& Gravity);
 
 		static void InitDebugDraw(b2DebugDraw& DebugDrawRef);

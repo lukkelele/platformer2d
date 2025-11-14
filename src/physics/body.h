@@ -55,7 +55,7 @@ namespace platformer2d {
 	public:
 		CBody(const FBodySpecification& Spec);
 		CBody() = delete;
-		~CBody() = default;
+		~CBody();
 
 		void Tick(float InDeltaTime);
 

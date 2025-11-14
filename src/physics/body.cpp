@@ -62,6 +62,15 @@ namespace platformer2d {
 		SetMass(1.0f); /* @todo: Use body spec */
 	}
 
+	CBody::~CBody()
+	{
+		if (b2Body_IsValid(ID))
+		{
+			LK_DEBUG_TAG("Body", "Destroy: {}", ID.index1);
+			b2DestroyBody(ID);
+		}
+	}
+
 	void CBody::Tick(const float InDeltaTime)
 	{
 		DeltaTime = InDeltaTime;
@@ -237,7 +246,7 @@ namespace platformer2d {
 				Out << YAML::Value << GetRotation();
 				Out << YAML::Key << "Radius";
 				Out << YAML::Value << ShapeRef.Radius;
-				LK_DEBUG_TAG("Body", "Polygon: Size={} Rotation={} Radius={}", ShapeRef.Size, ShapeRef.Rotation, ShapeRef.Radius);
+				LK_TRACE_TAG("Body", "Polygon: Size={} Rotation={} Radius={}", ShapeRef.Size, ShapeRef.Rotation, ShapeRef.Radius);
 				break;
 			}
 			case EShape::Line:
