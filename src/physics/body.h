@@ -5,10 +5,11 @@
 
 #include "core/core.h"
 #include "core/math/shapes.h"
+#include "serialization/serializable.h"
 
 namespace platformer2d {
 
-	enum EMotionLock
+	enum EMotionLock : uint32_t
 	{
 		EMotionLock_None = 0,
 		EMotionLock_X    = LK_BIT(1),
@@ -17,7 +18,7 @@ namespace platformer2d {
 		EMotionLock_All  = (EMotionLock_X | EMotionLock_Y | EMotionLock_Z)
 	};
 
-	enum EBodyFlag
+	enum EBodyFlag : uint32_t
 	{
 		EBodyFlag_None = 0,
 		EBodyFlag_PreSolveEvents = LK_BIT(1),
@@ -49,7 +50,7 @@ namespace platformer2d {
 		void* UserData = nullptr;
 	};
 
-	class CBody
+	class CBody : public ISerializable
 	{
 	public:
 		CBody(const FBodySpecification& Spec);
@@ -112,6 +113,10 @@ namespace platformer2d {
 
 		glm::vec2 GetSize() const;
 
+		virtual void Serialize(YAML::Emitter& Out) override;
+
+		static std::string ToString(const FBodySpecification& Spec);
+
 	public:
 		static constexpr float LINEAR_VELOCITY_X_EPSILON = 0.010f;
 		static constexpr float LINEAR_VELOCITY_Y_EPSILON = 0.050f;
@@ -123,10 +128,12 @@ namespace platformer2d {
 		void ScaleCapsule(const glm::vec2& Factor) const;
 
 	private:
+		const FBodySpecification BodySpec;
 		b2BodyId ID;
 		b2ShapeId ShapeID; /* @todo: Should support multiple shapes */
-		EShape ShapeType;
+		b2ShapeDef ShapeDef;
 		TShape Shape;
+		EShape ShapeType;
 
 		bool bDirty = false;
 		float DeltaTime = 0.0f;

@@ -2,17 +2,19 @@
 
 #include "core/math/math.h"
 #include "physicsworld.h"
+#include "serialization/yaml.h"
 
 namespace platformer2d {
 
 	CBody::CBody(const FBodySpecification& Spec)
+		: BodySpec(Spec)
 	{
 		ShapeType = DetermineShapeType(Spec.Shape);
 
 		b2BodyDef BodyDef = b2DefaultBodyDef();
 		SetBodyDef(BodyDef, Spec);
 
-		b2ShapeDef ShapeDef = b2DefaultShapeDef();
+		ShapeDef = b2DefaultShapeDef();
 		if (Spec.Flags & EBodyFlag_PreSolveEvents)
 		{
 			ShapeDef.enablePreSolveEvents = true;
@@ -30,7 +32,6 @@ namespace platformer2d {
 		ShapeDef.isSensor = Spec.bSensor;
 
 		ID = CPhysicsWorld::CreateBody(BodyDef);
-		LK_DEBUG_TAG("Body", "New body: {}", static_cast<int>(BodyDef.type));
 		Shape = Spec.Shape;
 
 		if (std::holds_alternative<FPolygon>(Spec.Shape))
@@ -58,7 +59,7 @@ namespace platformer2d {
 			ShapeID = b2CreateCapsuleShape(ID, &ShapeDef, &Capsule);
 		}
 
-		SetMass(1.0f);
+		SetMass(1.0f); /* @todo: Use body spec */
 	}
 
 	void CBody::Tick(const float InDeltaTime)
@@ -212,6 +213,80 @@ namespace platformer2d {
 		return { 0.0f, 0.0f };
 	}
 
+	void CBody::Serialize(YAML::Emitter& Out)
+	{
+		Out << YAML::Key << "Body";
+		Out << YAML::BeginMap; /* Body */
+
+		Out << YAML::Key << "Type";
+		Out << YAML::Value << std::to_underlying(BodySpec.Type);
+
+		/* Shape */
+		Out << YAML::Key << "Shape";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "ShapeType";
+		Out << YAML::Value << std::to_underlying(ShapeType);
+		switch (ShapeType)
+		{
+			case EShape::Polygon:
+			{
+				const auto& ShapeRef = std::get<FPolygon>(Shape);
+				Out << YAML::Key << "Size";
+				Out << YAML::Value << ShapeRef.Size;
+				Out << YAML::Key << "Rotation";
+				Out << YAML::Value << GetRotation();
+				Out << YAML::Key << "Radius";
+				Out << YAML::Value << ShapeRef.Radius;
+				LK_DEBUG_TAG("Body", "Polygon: Size={} Rotation={} Radius={}", ShapeRef.Size, ShapeRef.Rotation, ShapeRef.Radius);
+				break;
+			}
+			case EShape::Line:
+			{
+				LK_MARK_NOT_IMPLEMENTED();
+				break;
+			}
+			case EShape::Capsule:
+			{
+				const auto& ShapeRef = std::get<FCapsule>(Shape);
+				Out << YAML::Key << "P0";
+				Out << YAML::Value << ShapeRef.P0;
+				Out << YAML::Key << "P1";
+				Out << YAML::Value << ShapeRef.P1;
+				Out << YAML::Key << "Radius";
+				Out << YAML::Value << ShapeRef.Radius;
+				break;
+			}
+		}
+		Out << YAML::EndMap;
+		/* ~Shape */
+
+		Out << YAML::Key << "Position";
+		Out << YAML::Value << GetPosition();
+
+		Out << YAML::Key << "Flags";
+		Out << YAML::Value << std::to_underlying(BodySpec.Flags);
+
+		Out << YAML::Key << "Mass";
+		Out << YAML::Value << GetMass();
+
+		Out << YAML::Key << "MotionLock";
+		Out << YAML::Value << std::to_underlying(BodySpec.MotionLock);
+
+		Out << YAML::EndMap; /* ~Body */
+	}
+
+	std::string CBody::ToString(const FBodySpecification& Spec)
+	{
+		EShape ShapeType = EShape::None;
+		if (IsShape<EShape::Polygon>(Spec.Shape)) ShapeType = EShape::Polygon;
+		else if (IsShape<EShape::Line>(Spec.Shape)) ShapeType = EShape::Line;
+		else if (IsShape<EShape::Capsule>(Spec.Shape)) ShapeType = EShape::Capsule;
+
+		return LK_FMT("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
+					  Enum::ToString(ShapeType), Spec.Position, std::to_underlying(Spec.Flags),
+					  std::to_underlying(Spec.MotionLock), Spec.Density);
+	}
+
 	void CBody::SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const
 	{
 		switch (Spec.Type)
@@ -243,7 +318,6 @@ namespace platformer2d {
 		{
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			BodyDef.rotation = b2MakeRot(ShapeRef.Rotation);
-			LK_TRACE_TAG("Body", "Rotation: {} rad", ShapeRef.Rotation);
 		}
 		else if (ShapeType == EShape::Line)
 		{
