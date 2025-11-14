@@ -12,20 +12,21 @@ namespace platformer2d::UI::Draw {
 		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 100.0f);
 
 		bool Changed = false;
+		FTransformComponent& TC = Actor.GetTransformComponent();
 
 		/* Transform Component */
 		ImGui::TableNextRow();
-		FTransformComponent& TC = Actor.GetTransformComponent();
-		Changed |= UI::Draw::Vec2Control("Translation", TC.Translation, 0.010f, 0.010f);
+		glm::vec3 Translation = TC.GetTranslation();
+		Changed |= UI::Draw::Vec2Control("Translation", Translation, 0.010f, 0.010f);
 		if (Changed)
 		{
-			Actor.SetPosition({ TC.Translation.x, TC.Translation.y });
+			Actor.SetPosition({ Translation.x, Translation.y });
 		}
 
 		/* Rotation */
 		ImGui::TableNextRow();
 		float Rotation = glm::degrees(TC.GetRotation2D());
-		Changed |= UI::Draw::DragFloat("Rotation", &Rotation, 0.10f, 0.0f, (6 * 360.0f), "%.2f");
+		Changed |= UI::Draw::DragFloat("Rotation", &Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f");
 		if (Changed)
 		{
 			Actor.SetRotation(glm::radians(Rotation));
@@ -53,7 +54,7 @@ namespace platformer2d::UI::Draw {
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursor(0.0f, 4.0f);
 
-		ImGui::Text("%s", Actor.GetTickEnabled() ? "Enabled" : "Disabled");
+		ImGui::Text("%s", Actor.IsTickEnabled() ? "Enabled" : "Disabled");
 
 		ImGui::EndTable();
 	}
