@@ -10,6 +10,8 @@ namespace platformer2d {
 	{
 		enum { VALUE_UNSET = -1 };
 
+		std::filesystem::path LevelFilepath;
+
 		std::string Name;
 		glm::vec2 Gravity = { 0.0f, -9.82f };
 		uint16_t ViewportWidth = SCREEN_WIDTH;
@@ -32,6 +34,12 @@ namespace platformer2d {
 
 		virtual void Tick(float DeltaTime) override = 0;
 		virtual CCamera* GetActiveCamera() const = 0;
+
+		/* @todo: Move to CScene once it is added */
+		virtual std::shared_ptr<CActor> FindActor(FActorHandle Handle) = 0;
+		virtual std::shared_ptr<CActor> FindActor(std::string_view Name) = 0;
+		virtual bool DoesActorExist(FActorHandle Handle) = 0;
+		virtual bool DoesActorExist(std::string_view Name) = 0;
 
 		virtual bool Serialize(const std::filesystem::path& Filepath) = 0;
 		virtual bool Deserialize(const std::filesystem::path& Filepath) = 0;
