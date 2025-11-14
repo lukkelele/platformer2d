@@ -38,7 +38,7 @@ namespace platformer2d::Serialization {
 				const glm::vec2 Size = ShapeNode["Size"].as<glm::vec2>();
 				const float Rotation = ShapeNode["Rotation"].as<float>();
 				const float Radius = ShapeNode["Radius"].as<float>();
-				LK_DEBUG("Deserialize: Polygon: Size={} Rotation={} Radius={}", Size, Rotation, Radius);
+				LK_TRACE("Deserialize: Polygon: Size={} Rotation={} Radius={}", Size, Rotation, Radius);
 
 				FPolygon Polygon = {
 					.Size = Size,
