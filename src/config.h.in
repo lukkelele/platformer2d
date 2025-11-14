@@ -4,6 +4,7 @@
 
 #define ASSETS_DIR     "@LK_ASSETS_DIR@"
 #define FONTS_DIR      ASSETS_DIR "/fonts"
+#define LEVELS_DIR     ASSETS_DIR "/levels"
 #define TEXTURES_DIR   ASSETS_DIR "/textures"
 #define SHADERS_DIR    ASSETS_DIR "/shaders"
 
