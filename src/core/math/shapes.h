@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
-#include "core/macros.h"
+#include "core/core.h"
 #include "physics/bodytype.h"
 
 namespace platformer2d {
@@ -116,6 +116,28 @@ namespace platformer2d {
 		const glm::vec2 Segment = S.P1 - S.P0;
 		const glm::vec2 AbsSeg = glm::abs(Segment);
 		return AbsSeg + glm::vec2(2.0f * S.Radius, 2.0f * S.Radius);
+	}
+
+	namespace Enum
+	{
+		inline const char* ToString(const EShape Shape)
+		{
+			const char* S = "";
+		#define _(EnumValue) case EShape::EnumValue: S = #EnumValue; break
+			switch (Shape)
+			{
+				_(None);
+				_(Polygon);
+				_(Line);
+				_(Capsule);
+				default:
+					LK_THROW_ENUM_ERR(Shape);
+					break;
+			}
+		#undef _
+			return S;
+		}
+
 	}
 
 }
