@@ -49,3 +49,5 @@ logs
 # Generated files
 modules/glad/include
 modules/glad/src
+
+assets/levels/backup
