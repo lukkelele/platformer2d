@@ -22,6 +22,11 @@ namespace platformer2d::Level {
 		virtual CCamera* GetActiveCamera() const override;
 		virtual void RenderUI() override;
 
+		virtual std::shared_ptr<CActor> FindActor(FActorHandle Handle) override;
+		virtual std::shared_ptr<CActor> FindActor(std::string_view Name) override;
+		virtual bool DoesActorExist(FActorHandle Handle) override;
+		virtual bool DoesActorExist(std::string_view Name) override;
+
 		virtual bool Serialize(const std::filesystem::path& Filepath) override;
 		virtual bool Deserialize(const std::filesystem::path& Filepath) override;
 
@@ -40,6 +45,8 @@ namespace platformer2d::Level {
 		void DrawClouds() const;
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
+
+		void DeserializeActors(const YAML::Node& ActorsNode);
 
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;

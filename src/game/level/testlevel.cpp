@@ -18,6 +18,7 @@
 #include "renderer/ui/widgets.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
+#include "serialization/serialization.h"
 
 #define PLAYER_SHAPE_CAPSULE 0
 
@@ -28,7 +29,8 @@ namespace platformer2d::Level {
 		/*************************************
 		 *        GAME SPECIFICATION
 		/*************************************/
-		FGameSpecification GameSpec = {
+		const FGameSpecification GameSpec = {
+			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
 			.Name = "TestLevel",
 			.Gravity = { 0.0f, -5.0f },
 			.Zoom = 0.32f,
@@ -81,16 +83,6 @@ namespace platformer2d::Level {
 		};
 	}
 
-	static std::shared_ptr<CActor> FindActorByName(std::string_view Name)
-	{
-		auto IsNameEqual = [Name](const std::shared_ptr<CActor>& Actor)
-		{
-			return (Name == Actor->GetName());
-		};
-		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsNameEqual);
-		return (Iter != Actors.end()) ? *Iter : nullptr;
-	}
-
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 	static void GenerateClouds(const std::size_t CloudCount = 7);
 
@@ -113,7 +105,7 @@ namespace platformer2d::Level {
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
-				LK_DEBUG_TAG("TestLevel", "Actor created: {} ({})", Actor->GetName(), Handle);
+				LK_DEBUG_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				Actors.emplace_back(Actor);
 			}
 		});
@@ -123,9 +115,8 @@ namespace platformer2d::Level {
 
 		CreatePlayer();
 		LK_VERIFY(Player);
-		CreatePlatform();
 
-		CreateTerrain();
+		Deserialize(GameSpec.LevelFilepath);
 
 		CCamera* Camera = GetActiveCamera();
 		LK_VERIFY(Camera);
@@ -150,7 +141,9 @@ namespace platformer2d::Level {
 	void CTestLevel::Destroy()
 	{
 		LK_TRACE_TAG("TestLevel", "Destroy");
-		Player.reset();
+		Serialize(GameSpec.LevelFilepath);
+
+		Player.release();
 
 		LK_DEBUG_TAG("TestLevel", "Releasing level resources");
 		Actors.clear();
@@ -212,8 +205,8 @@ namespace platformer2d::Level {
 		/* Draw dark overlay whenever the pause menu is open. */
 		if (UI::IsGameMenuOpen())
 		{
-			static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.80f };
-			CRenderer::DrawQuad({ 0.0f, 0.0f }, { ViewportWidth, ViewportHeight }, OverlayColor);
+			static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.85f };
+			CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 2.0f), { ViewportWidth, ViewportHeight }, OverlayColor);
 		}
 	}
 
@@ -228,14 +221,52 @@ namespace platformer2d::Level {
 		UI_Player();
 	}
 
+	std::shared_ptr<CActor> CTestLevel::FindActor(const FActorHandle Handle)
+	{
+		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
+		{
+			return (Handle == Actor->GetHandle());
+		};
+		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsHandleEqual);
+		return (Iter != Actors.end()) ? *Iter : nullptr;
+	}
+
+	std::shared_ptr<CActor> CTestLevel::FindActor(std::string_view Name)
+	{
+		auto IsNameEqual = [Name](const std::shared_ptr<CActor>& Actor)
+		{
+			return (Name == Actor->GetName());
+		};
+		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsNameEqual);
+		return (Iter != Actors.end()) ? *Iter : nullptr;
+	}
+
+	bool CTestLevel::DoesActorExist(const FActorHandle Handle)
+	{
+		return FindActor(Handle) == nullptr;
+	}
+
+	bool CTestLevel::DoesActorExist(std::string_view Name)
+	{
+		return FindActor(Name) == nullptr;
+	}
+
 	bool CTestLevel::Serialize(const std::filesystem::path& Filepath)
 	{
 		LK_INFO_TAG("TestLevel", "Serializing: {}", Filepath);
 		YAML::Emitter Out;
+		Out << YAML::BeginMap; /* Level */
+		Out << YAML::Key << "Level" << YAML::Value << GetName();
+
+		Out << YAML::Key << "Actors";
+		Out << YAML::Value << YAML::BeginSeq;
 		for (const auto& Actor : Actors)
 		{
 			Actor->Serialize(Out);
 		}
+		Out << YAML::EndSeq;
+
+		Out << YAML::EndMap; /* ~Level */
 
 		std::ofstream OutFile(Filepath);
 		OutFile << Out.c_str();
@@ -257,9 +288,14 @@ namespace platformer2d::Level {
 		std::stringstream StringStream;
 		StringStream << InputStream.rdbuf();
 		const std::string YamlString = StringStream.str();
-		LK_DEBUG("YAML:\n{}\n", YamlString);
 
-		YAML::Node Data = YAML::Load(YamlString);
+		const YAML::Node Data = YAML::Load(YamlString);
+		const YAML::Node LevelNode = Data["Level"];
+		LK_VERIFY(LevelNode, "Missing 'Level' node in YAML");
+
+		const YAML::Node ActorsNode = Data["Actors"];
+		LK_VERIFY(ActorsNode, "Missing 'Actors' node in YAML");
+		DeserializeActors(ActorsNode);
 
 		return true;
 	}
@@ -315,8 +351,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White);
-			Actor->SetColor(FColor::LightGreen);
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::LightGreen);
 		}
 
 		/* Object 2. */
@@ -350,8 +385,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
-			Actor->SetColor(FColor::Convert(RGBA32::Magenta));
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::Magenta));
 		}
 
 		/* Object 4. */
@@ -368,8 +402,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec);
-			Actor->SetColor(FColor::Convert(RGBA32::DarkCyan));
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::DarkCyan));
 			RotatingPlatform = Actor;
 		}
 
@@ -386,11 +419,15 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White);
-			Actor->SetColor(FColor::Gray);
+			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::Gray);
 		}
 
-		CSpawner::CreateStaticPolygon("R_Wall-1", { 4.830f, -0.90f }, { 0.10f, 1.20f }, FColor::Convert(RGBA32::Magenta));
+		CSpawner::CreateStaticPolygon(
+			"R_Wall-1",
+			{ 4.830f, -0.90f }, /* Pos */
+			{ 0.10f, 1.20f },   /* Size */
+			FColor::Convert(RGBA32::Magenta)
+		);
 	}
 
 	void CTestLevel::Tick_Objects(const float DeltaTime)
@@ -439,9 +476,17 @@ namespace platformer2d::Level {
 		}
 
 		ImGui::Dummy(ImVec2(0, 8));
-		if (ImGui::Button("Serialize"))
 		{
-			Serialize(BINARY_DIR "/testlevel.yaml");
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+			if (ImGui::Button("Serialize"))
+			{
+				Serialize(GameSpec.LevelFilepath);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Deserialize"))
+			{
+				Deserialize(GameSpec.LevelFilepath);
+			}
 		}
 		ImGui::Dummy(ImVec2(0, 8));
 
@@ -450,16 +495,6 @@ namespace platformer2d::Level {
 		for (auto& Actor : Actors)
 		{
 			UI::Draw::ActorNode(*Actor);
-		}
-
-		ImGui::Dummy(ImVec2(0, 10));
-		if (ImGui::Button("Log actors"))
-		{
-			for (auto& Actor : Actors)
-			{
-				LK_PRINTLN("{}\nPosition: {}\nRotation: {}\n",
-						   Actor->GetName(), Actor->GetPosition(), Actor->GetRotation());
-			}
 		}
 
 		ImGui::Dummy(ImVec2(0, 10));
@@ -552,7 +587,7 @@ namespace platformer2d::Level {
 		if (ImGui::Button("Rotate Platform"))
 		{
 			static constexpr const char* PlatformName = "SpawnPlatform";
-			if (std::shared_ptr<CActor> Platform = FindActorByName(PlatformName); Platform != nullptr)
+			if (std::shared_ptr<CActor> Platform = FindActor(PlatformName); Platform != nullptr)
 			{
 				Platform->SetRotation(Platform->GetRotation() + glm::radians(45.0f));
 			}
@@ -728,10 +763,45 @@ namespace platformer2d::Level {
 		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 	}
 
+	void CTestLevel::DeserializeActors(const YAML::Node& ActorsNode)
+	{
+		static_assert(std::is_same_v<uint32_t, FActorHandle>);
+		LK_INFO_TAG("TestLevel", "Deserializing actors");
+		for (const YAML::Node& Node : ActorsNode)
+		{
+			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Texture"] && Node["Color"] && Node["TransformComponent"]);
+			const uint32_t ActorHandle = Node["ID"].as<uint32_t>();
+			const std::string ActorName = Node["Name"].as<std::string>();
+			const ETexture ActorTexture = static_cast<ETexture>(Node["Texture"].as<int>());
+			const glm::vec4 ActorColor = Node["Color"].as<glm::vec4>();
+			LK_TRACE_TAG("TestLevel", "Handle={} Name={}", ActorHandle, ActorName);
+
+			const YAML::Node TCNode = Node["TransformComponent"];
+			FTransformComponent TC;
+			Serialization::Deserialize(TC, TCNode);
+
+			FBodySpecification BodySpec;
+			BodySpec.Name = ActorName;
+			if (const YAML::Node BodyNode = Node["Body"]; !BodyNode.IsNull())
+			{
+				Serialization::Deserialize(BodySpec, BodyNode);
+				LK_TRACE("{}", CBody::ToString(BodySpec));
+			}
+
+			if (DoesActorExist(ActorHandle))
+			{
+				std::shared_ptr<CActor> Actor = CActor::Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
+			}
+			else
+			{
+				LK_ERROR_TAG("TestLevel", "Duplicate actors found during deserialization with handle {}", ActorHandle);
+			}
+		}
+	}
+
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
 	{
-		LK_ASSERT(b2Shape_IsValid(ShapeA));
-		LK_ASSERT(b2Shape_IsValid(ShapeB));
+		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
 		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
 		const b2ShapeId PlayerShapeID = Player.GetBody().GetShapeID();
 
