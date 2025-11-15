@@ -32,6 +32,28 @@ namespace YAML {
 	};
 
 	template<>
+	struct convert<std::filesystem::path>
+	{
+		static Node encode(const std::filesystem::path& Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(Rhs.generic_string());
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, std::filesystem::path& Rhs)
+		{
+			if (YamlNode.IsNull())
+			{
+				return false;
+			}
+
+			Rhs = std::filesystem::path(YamlNode.as<std::string>());
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<glm::vec2>
 	{
 		static Node encode(const glm::vec2& Rhs)
@@ -193,6 +215,11 @@ namespace YAML {
 }
 
 namespace platformer2d {
+
+	inline YAML::Emitter& operator<<(YAML::Emitter& Out, const std::filesystem::path& Filepath)
+	{
+		return Out.Write(Filepath.generic_string().data(), Filepath.generic_string().size());
+	}
 
 	inline YAML::Emitter& operator<<(YAML::Emitter& Out, const glm::vec2& InVec2)
 	{
