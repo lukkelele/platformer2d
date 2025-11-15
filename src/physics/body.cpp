@@ -66,7 +66,7 @@ namespace platformer2d {
 	{
 		if (b2Body_IsValid(ID))
 		{
-			LK_DEBUG_TAG("Body", "Destroy: {}", ID.index1);
+			LK_TRACE_TAG("Body", "Destroy: {}", ID.index1);
 			b2DestroyBody(ID);
 		}
 	}
