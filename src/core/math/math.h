@@ -3,6 +3,11 @@
 #include <random>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext/matrix_common.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 #include <box2d/math_functions.h>
 
 #include "core/assert.h"
@@ -25,7 +30,16 @@ namespace platformer2d::Math {
 		return glm::vec2(-V.y, V.x);
 	}
 
+	/**
+	 * @brief Scale a vector.
+	 */
+	inline glm::vec3 Scale(glm::vec3& Vector, const float Factor)
+	{
+		return (Vector * Factor) / glm::length(Vector);
+	}
+
 	float Randomize(float Min, float Max);
+	bool DecomposeTransform(const glm::mat4& Transform, glm::vec3& Translation, glm::quat& Rotation, glm::vec3& Scale);
 
 	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
 								   float Width, float Height, float Zoom);
