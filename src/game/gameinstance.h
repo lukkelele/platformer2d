@@ -6,6 +6,15 @@
 
 namespace platformer2d {
 
+	class CScene;
+
+	struct FSceneSelectionEntry
+	{
+		LUUID Handle;
+		CActor* Ref = nullptr;
+		float Distance = 0.0f;
+	};
+
 	struct FGameSpecification
 	{
 		enum { VALUE_UNSET = -1 };
@@ -22,10 +31,10 @@ namespace platformer2d {
 		FBodySpecification PlayerBody{};
 	};
 
-	class IGameInstance : public CLayer
+	class IGameInstance : public CLayer, public ISerializable<ESerializable::File>
 	{
 	public:
-		IGameInstance(const FGameSpecification& InSpec);
+		IGameInstance(IGameInstance* InstanceRef, const FGameSpecification& InSpec);
 		IGameInstance() = delete;
 		virtual ~IGameInstance() = default;
 
@@ -34,15 +43,14 @@ namespace platformer2d {
 
 		virtual void Tick(float DeltaTime) override = 0;
 		virtual CCamera* GetActiveCamera() const = 0;
+		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const = 0;
+		virtual std::shared_ptr<CScene> GetScene() const = 0;
 
-		/* @todo: Move to CScene once it is added */
-		virtual std::shared_ptr<CActor> FindActor(LUUID Handle) = 0;
-		virtual std::shared_ptr<CActor> FindActor(std::string_view Name) = 0;
-		virtual bool DoesActorExist(LUUID Handle) = 0;
-		virtual bool DoesActorExist(std::string_view Name) = 0;
+		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) = 0;
+		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) = 0;
 
-		virtual bool Serialize(const std::filesystem::path& Filepath) = 0;
-		virtual bool Deserialize(const std::filesystem::path& Filepath) = 0;
+		virtual bool Serialize(const std::filesystem::path& OutFile) const override = 0;
+		virtual bool Deserialize(const std::filesystem::path& InFile) override = 0;
 
 		static IGameInstance* Get() { return Instance; }
 
@@ -52,10 +60,10 @@ namespace platformer2d {
 	protected:
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
-
-		static inline IGameInstance* Instance = nullptr;
 	private:
 		FGameSpecification Spec{};
+
+		static inline IGameInstance* Instance = nullptr;
 	};
 
 }
