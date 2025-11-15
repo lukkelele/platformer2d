@@ -7,12 +7,14 @@ namespace platformer2d::UI::Draw {
 
 	void ActorNode_VectorControl(CActor& Actor)
 	{
+		static constexpr float LabelColumnWidth = 180.0f;
 		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, 100.0f);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 100.0f);
+		ImGui::TableSetupColumn("LabelColumn", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
 		bool Changed = false;
 		FTransformComponent& TC = Actor.GetTransformComponent();
+		const CBody& Body = Actor.GetBody();
 
 		/* Transform Component */
 		ImGui::TableNextRow();
@@ -37,8 +39,8 @@ namespace platformer2d::UI::Draw {
 		Changed |= UI::Draw::Vec2Control("Scale", TC.Scale, 0.10f, 0.010f, 0.010f);
 #if 0
 		glm::vec2 Scale = TC.Scale;
-		constexpr float ColumnWidth = 100.0f;
-		Changed |= UI::Draw::Vec2Control("Scale", Scale, 0.10f, 0.010f, 0.010f, 0.0f, ColumnWidth);
+		constexpr float LabelColumnWidth = 100.0f;
+		Changed |= UI::Draw::Vec2Control("Scale", Scale, 0.10f, 0.010f, 0.010f, 0.0f, LabelColumnWidth);
 		if (Changed)
 		{
 			Actor.GetBody().SetScale(TC.Scale);
@@ -54,6 +56,34 @@ namespace platformer2d::UI::Draw {
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursor(0.0f, 4.0f);
 		ImGui::Text("%s", Actor.IsTickEnabled() ? "Enabled" : "Disabled");
+
+		/* Body Size. */
+		ImGui::TableNextRow();
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text("Body Size");
+
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+			const glm::vec2 Size = Body.GetSize();
+			ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
+		}
+
+		/* AABB. */
+		ImGui::TableNextRow();
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text("AABB");
+
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+			const FAABB AABB = Body.GetAABB();
+			ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
+			ImGui::SameLine(0.0f, 16.0f);
+			ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
+		}
 
 		ImGui::EndTable();
 
@@ -101,7 +131,7 @@ namespace platformer2d::UI::Draw {
 
 		std::string_view Name = Actor.GetName();
 		char NodeName[84];
-		std::snprintf(NodeName, sizeof(NodeName), "%s (%u)", Name.data(), Handle);
+		std::snprintf(NodeName, sizeof(NodeName), "%s (%lld)", Name.data(), static_cast<LUUID::SizeType>(Handle));
 
 		const bool bWasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
 		const bool bNodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
