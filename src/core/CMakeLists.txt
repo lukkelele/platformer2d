@@ -20,6 +20,8 @@ project_library_sources(
 	selectioncontext.cpp
 	template.h
 	timer.h
+	uuid.h
+	uuid.cpp
 	window.h
 	window.cpp
 )
