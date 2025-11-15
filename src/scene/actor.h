@@ -56,6 +56,8 @@ namespace platformer2d {
 
 		inline bool IsTickEnabled() const { return bTickEnabled; }
 		void SetTickEnabled(bool Enabled);
+		inline bool IsDeletable() const { return bDeletable; }
+		void SetDeletable(bool Deletable);
 
 		inline ETexture GetTexture() const { return Texture; }
 		inline const glm::vec4& GetColor() const { return Color; }
@@ -81,6 +83,7 @@ namespace platformer2d {
 	private:
 		FActorHandle Handle;
 		bool bTickEnabled = true;
+		bool bDeletable = true;
 
 		static inline uint32_t Instances = 0;
 		static_assert(std::is_same_v<FActorHandle, decltype(Instances)>);

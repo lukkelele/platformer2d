@@ -99,6 +99,11 @@ namespace platformer2d {
 		bTickEnabled = Enabled;
 	}
 
+	void CActor::SetDeletable(const bool Deletable)
+	{
+		bDeletable = Deletable;
+	}
+
 	void CActor::SetColor(const glm::vec4& InColor)
 	{
 		Color = InColor;
@@ -132,6 +137,9 @@ namespace platformer2d {
 		{
 			Body->Serialize(Out);
 		}
+
+		Out << YAML::Key << "Deletable";
+		Out << YAML::Value << bDeletable;
 
 		Out << YAML::EndMap; /* ~Actor */
 	}
