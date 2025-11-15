@@ -18,6 +18,7 @@ project_library_sources(
 	platform.h
 	selectioncontext.h
 	selectioncontext.cpp
+	string.h
 	template.h
 	timer.h
 	uuid.h
