@@ -26,11 +26,11 @@ namespace std
 	struct hash;
 
 	template<>
-	struct hash<::platformer2d::LUUID>
+	struct hash<platformer2d::LUUID>
 	{
-		std::size_t operator()(const ::platformer2d::LUUID& uuid) const
+		std::size_t operator()(const platformer2d::LUUID& UUID) const
 		{
-			return (uint64_t)uuid;
+			return static_cast<platformer2d::LUUID::SizeType>(UUID);
 		}
 	};
 }
