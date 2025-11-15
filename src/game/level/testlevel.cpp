@@ -90,6 +90,8 @@ namespace platformer2d::Level {
 			Enum::ToString(ETexture::Bricks),
 			Enum::ToString(ETexture::Wood),
 		};
+
+		char ActorNameBuf[128] = { 0 };
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -116,20 +118,30 @@ namespace platformer2d::Level {
 			{
 				LK_TRACE_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				Actors.emplace_back(Actor);
+				std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Actors.size() + 2);
+
+				std::string_view ActorName = Actor->GetName();
+				if (ActorName.find("Rotating") != std::string::npos)
+				{
+					/* @fixme: Temporary fix until serialization can take effect parameters. */
+					RotatingPlatform = Actor;
+				}
 			}
 		});
 
+		/**
+		 * Bind to lambda because the delegate expects a void return type,
+		 * which DeleteActor isn't.
+		 */
 		CActor::OnActorMarkedForDeletion.Add([&](const FActorHandle Handle)
 		{
-			/**
-			 * Bind to lambda because the delegate expects a void return type,
-			 * which DeleteActor isn't.
-			 */
 			/* Move the player a little bit to cause physics to pass through. */
 			if (CTestLevel::DeleteActor(Handle))
 			{
 				Player->GetBody().ApplyForce({ 0.0f, 0.010f });
 			}
+
+			std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Actors.size() + 2);
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
@@ -241,6 +253,15 @@ namespace platformer2d::Level {
 	{
 		UI_Level();
 		UI_Player();
+
+		if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
+		{
+			//UI::DrawGizmo(ImGuizmo::TRANSLATE, *Player, Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
+			if (std::shared_ptr<CActor> RotPlatform = RotatingPlatform.lock())
+			{
+				UI::DrawGizmo(ImGuizmo::TRANSLATE, *RotPlatform, Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
+			}
+		}
 	}
 
 	std::shared_ptr<CActor> CTestLevel::FindActor(const FActorHandle Handle)
@@ -287,7 +308,7 @@ namespace platformer2d::Level {
 
 	bool CTestLevel::Serialize(const std::filesystem::path& Filepath)
 	{
-		LK_INFO_TAG("TestLevel", "Serializing: {}", Filepath);
+		LK_INFO_TAG("TestLevel", "Serialize: {}", Filepath);
 		YAML::Emitter Out;
 		Out << YAML::BeginMap; /* Level */
 		Out << YAML::Key << "Level" << YAML::Value << GetName();
@@ -310,7 +331,7 @@ namespace platformer2d::Level {
 
 	bool CTestLevel::Deserialize(const std::filesystem::path& Filepath)
 	{
-		LK_INFO_TAG("TestLevel", "Deserializing: {}", Filepath);
+		LK_INFO_TAG("TestLevel", "Deserialize: {}", Filepath);
 		LK_ASSERT(std::filesystem::exists(Filepath), "Filepath does not exist: {}", Filepath);
 		if (!std::filesystem::exists(Filepath))
 		{
@@ -535,8 +556,12 @@ namespace platformer2d::Level {
 		ImGui::Separator();
 		ImGui::PushID("CreatorMenu");
 		{
-			UI::Font::Push(EFont::SourceSansPro, EFontSize::Larger);
-			UI::ShiftCursorX(32.0f);
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+
+			UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
+			static constexpr const char* CreatorMenuLabel = "Creator";
+			static const ImVec2 LabelSize = ImGui::CalcTextSize(CreatorMenuLabel);
+			UI::ShiftCursorX((0.50f * Avail.x) - LabelSize.x);
 			ImGui::Text("Creator Menu");
 			UI::Font::Pop();
 
@@ -553,7 +578,6 @@ namespace platformer2d::Level {
 			/* Column 1 */
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursor(7.0f, 0.0f);
-			static char ActorNameBuf[128] = { "Unnamed" };
 			ImGui::SetNextItemWidth(160.0f);
 			ImGui::InputText("##ActorName", ActorNameBuf, LK_ARRAYSIZE(ActorNameBuf));
 
@@ -571,15 +595,26 @@ namespace platformer2d::Level {
 			UI_TextureDropDown(SelectedTextureIdx);
 
 			UI::ShiftCursorX(32.0f);
-			if (ImGui::Button("Create"))
 			{
-				if (!DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
+				static constexpr ImVec2 ButtonSize = ImVec2(82, 42);
+				UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
+				UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+				UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+					ImGuiCol_ButtonActive, RGBA32::NiceGreen
+				);
+
+				if (ImGui::Button("Create", ButtonSize))
 				{
-					CSpawner::CreateStaticPolygon(ActorNameBuf, Pos, Size, FColor::Convert(RGBA32::Magenta));
-				}
-				else
-				{
-					LK_ERROR_TAG("TestLevel", "Actor already exists with name: \"{}\"", ActorNameBuf);
+					if (!DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
+					{
+						CSpawner::CreateStaticPolygon(ActorNameBuf, Pos, Size, FColor::Convert(RGBA32::Magenta));
+					}
+					else
+					{
+						LK_ERROR_TAG("TestLevel", "Actor already exists with name: \"{}\"", ActorNameBuf);
+					}
 				}
 			}
 		}
