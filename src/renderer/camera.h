@@ -21,9 +21,10 @@ namespace platformer2d {
 		void Update();
 		void SetViewportSize(uint16_t InWidth, uint16_t InHeight);
 
-		inline const glm::mat4& GetViewMatrix() const { return ViewMatrix; }
-		inline const glm::mat4& GetProjectionMatrix() const { return ProjectionMatrix; }
-		inline glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * ViewMatrix; }
+		FORCEINLINE const glm::mat4& GetViewMatrix() const { return ViewMatrix; }
+		FORCEINLINE const glm::mat4& GetProjectionMatrix() const { return ProjectionMatrix; }
+		FORCEINLINE glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * ViewMatrix; }
+		inline glm::vec2 GetPosition() const { return Center; }
 		inline float GetRotation() const { return glm::radians(Rotation); }
 		inline float GetRotationSpeed() const { return RotationSpeed; }
 
