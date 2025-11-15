@@ -41,6 +41,9 @@ namespace platformer2d::Math {
 	float Randomize(float Min, float Max);
 	bool DecomposeTransform(const glm::mat4& Transform, glm::vec3& Translation, glm::quat& Rotation, glm::vec3& Scale);
 
+	glm::vec2 RotatePoint(const glm::vec2& V, float AngleRad);
+	bool IsPointInPolygon(const glm::vec2& PointWorld, const glm::vec2& Center, const glm::vec2& Size, float RotationRad);
+
 	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
 								   float Width, float Height, float Zoom);
 	glm::vec3 ConvertWorldToScreen(const glm::vec3& Point, const glm::vec3& Center,

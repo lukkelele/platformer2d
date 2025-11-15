@@ -86,6 +86,26 @@ namespace platformer2d::Math {
 		return true;
 	}
 
+	glm::vec2 RotatePoint(const glm::vec2& V, const float AngleRad)
+	{
+		const float C = std::cos(AngleRad);
+		const float S = std::sin(AngleRad);
+		return glm::vec2(
+			(C * V.x) - (S * V.y),
+			(S * V.x) + (C * V.y)
+		);
+	}
+
+	bool IsPointInPolygon(const glm::vec2& PointWorld, const glm::vec2& Center, const glm::vec2& Size, const float RotationRad)
+	{
+		const glm::vec2 Local = Math::RotatePoint(PointWorld - Center, -RotationRad); /* @todo: Don't rotate if angle is 0 */
+		const glm::vec2 Half = Size * 0.50f;
+		const bool Inside = (Local.x >= -Half.x) && (Local.x <= Half.x)
+			&& (Local.y >= -Half.y) && (Local.y <= Half.y);
+
+		return Inside;
+	}
+
 	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
 								   const float Width, const float Height, const float Zoom)
 	{
