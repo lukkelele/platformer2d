@@ -45,6 +45,9 @@ namespace platformer2d {
 		void BeginFrame();
 		void EndFrame();
 
+		inline uint16_t GetWidth() const { return Data.Width; }
+		inline uint16_t GetHeight() const { return Data.Height; }
+		inline glm::vec2 GetSize() const { return { Data.Width, Data.Height }; }
 		void SetSize(uint16_t InWidth, uint16_t InHeight);
 		void SetTitle(std::string_view NewTitle);
 		void SetVSync(bool Enabled);

@@ -40,7 +40,7 @@ namespace platformer2d {
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
-		LK_DEBUG_TAG("Window", "Create ({}, {})", Data.Width, Data.Height);
+		LK_DEBUG_TAG("Window", "Create: ({}, {})", Data.Width, Data.Height);
 		Data.WindowRef = this;
 		GlfwWindow = glfwCreateWindow(Data.Width, Data.Height, Data.Title.c_str(), nullptr, nullptr);
 		LK_VERIFY(GlfwWindow);
@@ -117,7 +117,7 @@ namespace platformer2d {
 
 		glfwSetWindowMaximizeCallback(GlfwWindow, [](GLFWwindow* Window, int Maximized)
 		{
-			LK_DEBUG_TAG("Window", "Maximize callback");
+			LK_TRACE_TAG("Window", "Maximize callback");
 			FWindowData& WindowData = *static_cast<FWindowData*>(glfwGetWindowUserPointer(Window));
 			LK_UNUSED(WindowData);
 		});
@@ -166,7 +166,7 @@ namespace platformer2d {
 
 	void CWindow::SetVSync(const bool Enabled)
 	{
-		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "enabled" : "disabled");
+		LK_DEBUG_TAG("Window", "VSync: {}", Enabled ? "Enabled" : "Disabled");
 		glfwSwapInterval(Enabled);
 		Data.bVSync = Enabled;
 	}
