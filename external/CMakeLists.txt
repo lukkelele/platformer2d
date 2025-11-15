@@ -25,6 +25,8 @@ add_subdirectory(glfw)
 # Library: ImGui
 ##############################
 add_library(imgui STATIC
+	imgui/imgui_internal.h
+	imgui/imgui.h
 	imgui/imgui.cpp
 	imgui/imgui_demo.cpp
 	imgui/imgui_draw.cpp
@@ -36,6 +38,23 @@ add_library(imgui STATIC
 )
 target_include_directories(imgui PUBLIC imgui imgui/backends)
 target_include_directories(imgui PRIVATE glfw/include)
+
+##############################
+# Library: ImGuizmo
+##############################
+add_library(ImGuizmo STATIC
+	ImGuizmo/ImGuizmo.h
+	ImGuizmo/ImGuizmo.cpp
+	ImGuizmo/ImGradient.h
+	ImGuizmo/ImGradient.cpp
+	ImGuizmo/ImCurveEdit.h
+	ImGuizmo/ImCurveEdit.cpp
+	ImGuizmo/ImSequencer.h
+	ImGuizmo/ImSequencer.cpp
+	ImGuizmo/GraphEditor.h
+	ImGuizmo/GraphEditor.cpp
+)
+target_include_directories(ImGuizmo PRIVATE imgui)
 
 ##############################
 # Library: spdlog
