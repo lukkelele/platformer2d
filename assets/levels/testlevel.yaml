@@ -19,25 +19,27 @@ Actors:
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
   - ID: 3
     Name: Right-Platform
     Texture: 0
     Color: [0, 0.75, 0, 1]
     TransformComponent:
       Position: [3.29, -0.33, 0]
-      Rotation: 0.38971338
+      Rotation: 0.43959647
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.38971335
+        Rotation: 0.4395965
         Radius: 0.5
       Position: [3.29, -0.33]
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
   - ID: 4
     Name: Spawn-Wall-Left
     Texture: 4
@@ -57,44 +59,47 @@ Actors:
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
   - ID: 5
     Name: FlyingPlatform-1
     Texture: 0
     Color: [1, 0, 1, 1]
     TransformComponent:
-      Position: [-0.52, 0.12, 0]
-      Rotation: -0.73281187
+      Position: [-0.53, 0.04, 0]
+      Rotation: -0.4114443
       Scale: [0.4, 0.06, 1]
     Body:
       Type: 0
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -0.7328118
+        Rotation: -0.41144434
         Radius: 0.5
-      Position: [-0.52, 0.12]
+      Position: [-0.53, 0.04]
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
   - ID: 6
     Name: Rotating-Platform
     Texture: 0
     Color: [0, 0.54509807, 0.54509807, 1]
     TransformComponent:
-      Position: [0.43, 0.02, 0]
-      Rotation: 0
+      Position: [0.58077353, 0.06862685, 0]
+      Rotation: 2.8715749
       Scale: [0.4, 0.06, 1]
     Body:
       Type: 0
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: 0
+        Rotation: 2.869995
         Radius: 0.5
-      Position: [0.43, 0.02]
+      Position: [0.58077353, 0.06862685]
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
   - ID: 7
     Name: Bottom-Platform2
     Texture: 0
@@ -114,6 +119,7 @@ Actors:
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
   - ID: 8
     Name: R_Wall-1
     Texture: 0
@@ -133,3 +139,4 @@ Actors:
       Flags: 2
       Mass: 1
       MotionLock: 0
+    Deletable: true
