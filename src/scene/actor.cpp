@@ -18,7 +18,7 @@ namespace platformer2d {
 		, Texture(InTexture)
 		, Color(InColor)
 	{
-		LK_DEBUG_TAG("Actor", "Create: {} ({})", Handle, (!Name.empty() ? Name : "NULL"));
+		LK_TRACE_TAG("Actor", "Create: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
 		Body = std::make_unique<CBody>(BodySpec);
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
@@ -39,7 +39,7 @@ namespace platformer2d {
 
 	CActor::~CActor()
 	{
-		LK_DEBUG_TAG("Actor", "Delete: {}", Handle);
+		LK_DEBUG_TAG("Actor", "Release: {} ({})", Name, Handle);
 	}
 
 	void CActor::Tick(const float DeltaTime)
@@ -109,7 +109,7 @@ namespace platformer2d {
 		Color = InColor;
 	}
 
-	void CActor::Serialize(YAML::Emitter& Out)
+	bool CActor::Serialize(YAML::Emitter& Out) const
 	{
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
 		Out << YAML::BeginMap; /* Actor */
@@ -142,6 +142,8 @@ namespace platformer2d {
 		Out << YAML::Value << bDeletable;
 
 		Out << YAML::EndMap; /* ~Actor */
+
+		return true;
 	}
 
 	LUUID CActor::GenerateHandle()

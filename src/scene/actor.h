@@ -12,7 +12,7 @@
 
 namespace platformer2d {
 
-	class CActor : public ISerializable
+	class CActor : public ISerializable<ESerializable::Yaml>
 	{
 	public:
 		LK_DECLARE_EVENT(FOnActorCreated, CActor, LUUID, std::weak_ptr<CActor>);
@@ -63,7 +63,7 @@ namespace platformer2d {
 
 		inline std::string_view GetName() const { return Name; }
 
-		virtual void Serialize(YAML::Emitter& Out) override;
+		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 	private:
 		static LUUID GenerateHandle();
