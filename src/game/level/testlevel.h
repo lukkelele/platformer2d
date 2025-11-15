@@ -3,6 +3,7 @@
 #include "core/layer.h"
 #include "game/gameinstance.h"
 #include "renderer/texture.h"
+#include "scene/scene.h"
 
 namespace platformer2d::Level {
 
@@ -20,16 +21,16 @@ namespace platformer2d::Level {
 
 		virtual void Tick(float DeltaTime) override;
 		virtual CCamera* GetActiveCamera() const override;
+		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const override;
+		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
+
+		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) override;
+		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) override;
+
 		virtual void RenderUI() override;
 
-		virtual std::shared_ptr<CActor> FindActor(LUUID Handle) override;
-		virtual std::shared_ptr<CActor> FindActor(std::string_view Name) override;
-		virtual bool DoesActorExist(LUUID Handle) override;
-		virtual bool DoesActorExist(std::string_view Name) override;
-		bool DeleteActor(LUUID Handle);
-
-		virtual bool Serialize(const std::filesystem::path& Filepath) override;
-		virtual bool Deserialize(const std::filesystem::path& Filepath) override;
+		virtual bool Serialize(const std::filesystem::path& OutFile) const override;
+		virtual bool Deserialize(const std::filesystem::path& InFile) override;
 
 	private:
 		void CreatePlayer();
@@ -52,6 +53,9 @@ namespace platformer2d::Level {
 
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;
+		std::shared_ptr<CScene> Scene = nullptr;
+
+		std::vector<FSceneSelectionEntry> SelectionData;
 	};
 
 }

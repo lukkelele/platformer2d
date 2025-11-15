@@ -7,6 +7,7 @@
 #include "core/window.h"
 #include "core/timer.h"
 #include "core/selectioncontext.h"
+#include "core/string.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
@@ -16,8 +17,9 @@
 #include "renderer/debugrenderer.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
-#include "physics/physicsworld.h"
 #include "physics/body.h"
+#include "physics/physicsworld.h"
+#include "physics/ray.h"
 #include "serialization/serialization.h"
 
 #define PLAYER_SHAPE_CAPSULE 0
@@ -36,19 +38,11 @@ namespace platformer2d::Level {
 			.Zoom = 0.32f,
 			.PlayerBody = {
 				.Type = EBodyType::Dynamic,
-#if PLAYER_SHAPE_CAPSULE
-				.Shape = FCapsule{
-					.P0 = { 0.0f, 0.0f },
-					.P1 = { 0.0f, 0.15f },
-					.Radius = 0.10f,
-				},
-#else
 				.Shape = FPolygon{
 					.Size = { 0.20f, 0.24f },
 					.Radius = 0.12f,
 					.Rotation = glm::radians(0.0f),
 				},
-#endif
 				.Position = { 0.0f, 0.50f },
 				.Friction = 0.750f,
 				.Density = 0.60f,
@@ -61,7 +55,6 @@ namespace platformer2d::Level {
 		constexpr const char* UI_ID_LEVEL = "Level";
 		constexpr const char* UI_ID_PLAYER = "Player";
 
-		std::vector<std::shared_ptr<CActor>> Actors;
 		std::weak_ptr<CActor> RotatingPlatform;
 
 		struct FCloud
@@ -92,32 +85,32 @@ namespace platformer2d::Level {
 		};
 
 		char ActorNameBuf[128] = { 0 };
+		std::array<glm::vec2, 2> ViewportBounds;
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 	static void GenerateClouds(const std::size_t CloudCount = 7);
 
 	CTestLevel::CTestLevel()
-		: IGameInstance(GameSpec)
+		: IGameInstance(this, GameSpec)
 	{
-		Instance = this;
-		Actors.clear();
-
 		CRenderer::SetClearColor(FColor::SkyBlue);
 	}
 
 	void CTestLevel::Initialize()
 	{
-		LK_VERIFY(Instance);
 		LK_DEBUG_TAG("TestLevel", "Initialize");
 		LK_ASSERT(Player == nullptr);
 
-		CActor::OnActorCreated.Add([](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
+		Scene = std::make_shared<CScene>("TestLevel");
+
+		CActor::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
 				LK_TRACE_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
-				Actors.emplace_back(Actor);
+				LK_ASSERT(Scene);
+				const auto& Actors = Scene->GetActors(); /* @fixme */
 				std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Actors.size() + 2);
 
 				std::string_view ActorName = Actor->GetName();
@@ -135,13 +128,7 @@ namespace platformer2d::Level {
 		 */
 		CActor::OnActorMarkedForDeletion.Add([&](const LUUID Handle)
 		{
-			/* Move the player a little bit to cause physics to pass through. */
-			if (CTestLevel::DeleteActor(Handle))
-			{
-				Player->GetBody().ApplyForce({ 0.0f, 0.010f });
-			}
-
-			std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Actors.size() + 2);
+			std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Scene->GetActors().size() + 2);
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
@@ -150,7 +137,12 @@ namespace platformer2d::Level {
 		CreatePlayer();
 		LK_VERIFY(Player);
 
+#if 1
 		Deserialize(GameSpec.LevelFilepath);
+#else
+		CreateTerrain();
+		CreatePlatform();
+#endif
 
 		CCamera* Camera = GetActiveCamera();
 		LK_VERIFY(Camera);
@@ -169,7 +161,10 @@ namespace platformer2d::Level {
 		});
 
 		CWindow::OnResized.Add(this, &CTestLevel::OnWindowResized);
-		CWindow::Get()->Maximize();
+		CWindow* Window = CWindow::Get();
+		Window->Maximize();
+		ViewportBounds[0] = { 0.0f, 0.0f };
+		ViewportBounds[1] = Window->GetSize();
 	}
 
 	void CTestLevel::Destroy()
@@ -177,10 +172,9 @@ namespace platformer2d::Level {
 		LK_TRACE_TAG("TestLevel", "Destroy");
 		Serialize(GameSpec.LevelFilepath);
 
-		Player.release();
-
-		LK_DEBUG_TAG("TestLevel", "Releasing level resources");
-		Actors.clear();
+		LK_DEBUG_TAG("TestLevel", "Release level resources");
+		Player.reset();
+		Scene.reset();
 	}
 
 	void CTestLevel::OnAttach()
@@ -202,7 +196,30 @@ namespace platformer2d::Level {
 		CRenderer::BeginScene(Camera);
 
 		Player->Tick(DeltaTime);
+		Scene->Tick(DeltaTime);
 		Tick_Objects(DeltaTime);
+
+#if 1
+		const uint16_t Picked = PickSceneAtMouse(Scene, SelectionData);
+		if (Picked > 0)
+		{
+			const FSceneSelectionEntry& Selected = SelectionData.at(0);
+			if (Selected.Ref)
+			{
+				UI::DrawGizmo(ImGuizmo::TRANSLATE, *Selected.Ref, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
+			}
+		}
+#else
+		const uint16_t Hits = RaycastScene(Scene, SelectionData);
+		if (Hits > 0)
+		{
+			const FSceneSelectionEntry& Selected = SelectionData.at(0);
+			if (Selected.Ref)
+			{
+				UI::DrawGizmo(ImGuizmo::TRANSLATE, *Selected.Ref, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
+			}
+		}
+#endif
 
 		DrawClouds();
 
@@ -210,12 +227,9 @@ namespace platformer2d::Level {
 		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
 		if (Polygon)
 		{
-			static CTimer PlayerTimer;
-			const glm::vec2 PlayerSize = Player->GetSize();
-
 			CRenderer::DrawQuad(
 				glm::vec3(Player->GetPosition(), 0.030f),
-				PlayerSize,
+				Player->GetSize(),
 				*CRenderer::GetTexture(Player->GetTexture()),
 				Player->GetSprite().GetUV(),
 				FColor::White,
@@ -224,7 +238,7 @@ namespace platformer2d::Level {
 		}
 
 		/* Render level. */
-		for (const std::shared_ptr<CActor>& Actor : Actors)
+		for (const std::shared_ptr<CActor>& Actor : Scene->GetActors())
 		{
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
@@ -249,89 +263,167 @@ namespace platformer2d::Level {
 		return (Player ? &Player->GetCamera() : nullptr);
 	}
 
+	CPlayer* CTestLevel::GetPlayer(std::size_t Idx) const
+	{
+		LK_ASSERT(Idx == 0, "TestLevel only supports 1 player");
+		return Player.get();
+	}
+
+	static inline glm::vec2 GetMouseViewportSpace()
+	{
+		auto [MouseX, MouseY] = CMouse::GetPos();
+		MouseX -= ViewportBounds[0].x;
+		MouseY -= ViewportBounds[0].y;
+		const float ViewportWidth = ViewportBounds[1].x - ViewportBounds[0].x;
+		const float ViewportHeight = ViewportBounds[1].y - ViewportBounds[0].y;
+
+		return glm::vec2(
+			(MouseX / ViewportWidth) * 2.0f - 1.0f,
+			((MouseY / ViewportHeight) * 2.0f - 1.0f) * -1.0f
+		);
+	}
+
+	static inline glm::vec2 GetMouseWorldSpace(const CCamera& Camera)
+	{
+		const glm::vec2 MousePos = GetMouseViewportSpace();
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
+		{
+			return glm::vec2(std::numeric_limits<float>::quiet_NaN());
+		}
+
+		const glm::vec4 ClipPos = glm::vec4(MousePos.x, MousePos.y, 0.0f, 1.0f);
+		const glm::mat4 InvViewProj = glm::inverse(Camera.GetProjectionMatrix() * Camera.GetViewMatrix());
+		glm::vec4 WorldPos = InvViewProj * ClipPos;
+		if (WorldPos.w != 0.0f)
+		{
+			WorldPos /= WorldPos.w;
+		}
+
+		return WorldPos;
+	}
+
+	uint16_t CTestLevel::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected)
+	{
+		static FRayCast RayData;
+		Selected.clear();
+
+		const glm::vec2 MousePos = GetMouseViewportSpace();
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
+		{
+			return 0;
+		}
+
+		const CCamera& Camera = *GetActiveCamera();
+		Physics::CastRay(
+			RayData,
+			Camera.GetPosition(),
+			Camera.GetViewMatrix(),
+			Camera.GetProjectionMatrix(),
+			MousePos.x,
+			MousePos.y
+		);
+
+		for (const auto& Actor : TargetScene->GetActors())
+		{
+			const glm::vec2 Pos = Actor->GetPosition();
+			const glm::vec2 Size = Actor->GetBody().GetSize();
+			const glm::vec2 HalfSize = Size * 0.50f;
+			const glm::vec2 BoxMin = Pos - HalfSize;
+			const glm::vec2 BoxMax = Pos + HalfSize;
+
+			float T = 0.0f;
+			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T))
+			{
+				Selected.push_back(FSceneSelectionEntry{ Actor->GetHandle(), Actor.get(), T });
+				CDebugRenderer::DrawRayHit(RayData, T); /* @todo: Toggle for this */
+			}
+		}
+
+		if (Selected.empty())
+		{
+			return 0;
+		}
+
+		std::sort(Selected.begin(), Selected.end(), [](auto& Lhs, auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		return static_cast<uint16_t>(Selected.size());
+	}
+
+	uint16_t CTestLevel::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected)
+	{
+		Selected.clear();
+		const CCamera& Camera = *GetActiveCamera();
+		const glm::vec2 MouseWorld = GetMouseWorldSpace(Camera);
+		if (!std::isfinite(MouseWorld.x) || !std::isfinite(MouseWorld.y))
+		{
+			return 0;
+		}
+
+		for (const auto& Actor : TargetScene->GetActors())
+		{
+			const glm::vec2 Pos = Actor->GetPosition();
+			const glm::vec2 Size = Actor->GetBody().GetSize();
+			const float Rotation = Actor->GetRotation();
+			if (Math::IsPointInPolygon(MouseWorld, Pos, Size, Rotation))
+			{
+				FSceneSelectionEntry Entry{};
+				Entry.Handle = Actor->GetHandle();
+				Entry.Ref = Actor.get();
+
+				const glm::vec2 Delta = MouseWorld - Pos;
+				Entry.Distance = glm::length(Delta);
+
+				Selected.push_back(Entry);
+			}
+		}
+
+		if (Selected.empty())
+		{
+			return 0;
+		}
+
+		std::sort(Selected.begin(), Selected.end(), [](const auto& Lhs, const auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		return static_cast<uint16_t>(Selected.size());
+	}
+
 	void CTestLevel::RenderUI()
 	{
 		UI_Level();
 		UI_Player();
-
-		if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
-		{
-			//UI::DrawGizmo(ImGuizmo::TRANSLATE, *Player, Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
-			if (std::shared_ptr<CActor> RotPlatform = RotatingPlatform.lock())
-			{
-				UI::DrawGizmo(ImGuizmo::TRANSLATE, *RotPlatform, Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
-			}
-		}
 	}
 
-	std::shared_ptr<CActor> CTestLevel::FindActor(const LUUID Handle)
+	bool CTestLevel::Serialize(const std::filesystem::path& OutFile) const
 	{
-		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
-		{
-			return (Handle == Actor->GetHandle());
-		};
-		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsHandleEqual);
-		return (Iter != Actors.end()) ? *Iter : nullptr;
-	}
-
-	std::shared_ptr<CActor> CTestLevel::FindActor(std::string_view Name)
-	{
-		auto IsNameEqual = [Name](const std::shared_ptr<CActor>& Actor)
-		{
-			return (Name == Actor->GetName());
-		};
-		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsNameEqual);
-		return (Iter != Actors.end()) ? *Iter : nullptr;
-	}
-
-	bool CTestLevel::DoesActorExist(const LUUID Handle)
-	{
-		return FindActor(Handle) != nullptr;
-	}
-
-	bool CTestLevel::DoesActorExist(std::string_view Name)
-	{
-		return FindActor(Name) != nullptr;
-	}
-
-	bool CTestLevel::DeleteActor(const LUUID Handle)
-	{
-		LK_INFO_TAG("TestLevel", "Delete: {}", Handle);
-		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
-		{
-			return (Handle == Actor->GetHandle());
-		};
-		const std::size_t Erased = std::erase_if(Actors, IsHandleEqual);
-		LK_ASSERT(Erased == 1, "Erased={}", Erased);
-		return (Erased == 1);
-	}
-
-	bool CTestLevel::Serialize(const std::filesystem::path& Filepath)
-	{
-		LK_INFO_TAG("TestLevel", "Serialize: {}", Filepath);
+		LK_INFO_TAG("TestLevel", "Serialize: {}", OutFile);
 		YAML::Emitter Out;
-		Out << YAML::BeginMap; /* Level */
-		Out << YAML::Key << "Level" << YAML::Value << GetName();
 
-		Out << YAML::Key << "Actors";
-		Out << YAML::Value << YAML::BeginSeq;
-		for (const auto& Actor : Actors)
-		{
-			Actor->Serialize(Out);
-		}
-		Out << YAML::EndSeq;
+		Out << YAML::BeginMap; /* Level */
+		Out << YAML::Key << "Level" << YAML::Value << Name;
+
+		const std::filesystem::path ScenePath = Scene->GetFilepath();
+		Out << YAML::Key << "Scene" << YAML::Value << ScenePath;
+
+		/* Physics */
+		Out << YAML::Key << "Physics";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "Gravity" << YAML::Value << CPhysicsWorld::GetGravity();
+		Out << YAML::EndMap;
+		/* ~ Physics */
 
 		Out << YAML::EndMap; /* ~Level */
 
-		std::ofstream OutFile(Filepath);
-		OutFile << Out.c_str();
+		std::ofstream File(OutFile);
+		File << Out.c_str();
+
+		/* Save scene to its own file. */
+		LK_ASSERT(Scene);
+		Scene->Serialize(ScenePath);
 
 		return true;
 	}
 
 	bool CTestLevel::Deserialize(const std::filesystem::path& Filepath)
 	{
-		LK_INFO_TAG("TestLevel", "Deserialize: {}", Filepath);
+		LK_INFO_TAG("TestLevel", "Deserialize: {}", StringUtils::GetPathRelativeToProject(Filepath));
 		LK_ASSERT(std::filesystem::exists(Filepath), "Filepath does not exist: {}", Filepath);
 		if (!std::filesystem::exists(Filepath))
 		{
@@ -345,12 +437,24 @@ namespace platformer2d::Level {
 		const std::string YamlString = StringStream.str();
 
 		const YAML::Node Data = YAML::Load(YamlString);
-		const YAML::Node LevelNode = Data["Level"];
-		LK_VERIFY(LevelNode, "Missing 'Level' node in YAML");
 
-		const YAML::Node ActorsNode = Data["Actors"];
-		LK_VERIFY(ActorsNode, "Missing 'Actors' node in YAML");
-		DeserializeActors(ActorsNode);
+		/* Load the scene. */
+		const YAML::Node SceneNode = Data["Scene"];
+		LK_ASSERT(!SceneNode.IsNull());
+		if (SceneNode.IsNull())
+		{
+			LK_ERROR_TAG("TestLevel", "Scene node is missing in YAML");
+			return false;
+		}
+
+		const std::filesystem::path SceneFilepath = SceneNode.as<std::filesystem::path>();
+		LK_INFO_TAG("TestLevel", "Loading scene: {}", StringUtils::GetPathRelativeToProject(SceneFilepath));
+		const bool SceneDeserialized = Scene->Deserialize(SceneFilepath);
+		if (!SceneDeserialized)
+		{
+			LK_FATAL_TAG("TestLevel", "Failed to deserialize scene");
+			return false;
+		}
 
 		return true;
 	}
@@ -487,11 +591,6 @@ namespace platformer2d::Level {
 
 	void CTestLevel::Tick_Objects(const float DeltaTime)
 	{
-		for (const auto& Object : Actors)
-		{
-			Object->Tick(DeltaTime);
-		}
-
 		if (std::shared_ptr<CActor> Actor = RotatingPlatform.lock(); Actor != nullptr)
 		{
 			Actor->SetRotation(Actor->GetRotation() + glm::radians(0.75f));
@@ -524,11 +623,28 @@ namespace platformer2d::Level {
 		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
 		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
 
+		ImGui::Dummy(ImVec2(0, 8));
+
 		glm::vec4 ClearColor = CRenderer::GetClearColor();
 		if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f"))
 		{
 			CRenderer::SetClearColor(ClearColor);
 		}
+
+		ImGui::Dummy(ImVec2(0, 8));
+
+		const glm::vec2 MousePos = GetMouseViewportSpace();
+		ImGui::Text("Mouse: (%.2f, %.2f)", MousePos.x, MousePos.y);
+
+		std::string Selected = "None";
+		if (!SelectionData.empty())
+		{
+			if (CActor* Ref = SelectionData[0].Ref; Ref != nullptr)
+			{
+				Selected = Ref->GetName();
+			}
+		}
+		ImGui::Text("Selected: %s", Selected.c_str());
 
 		ImGui::Dummy(ImVec2(0, 8));
 		{
@@ -545,6 +661,7 @@ namespace platformer2d::Level {
 		}
 		ImGui::Dummy(ImVec2(0, 8));
 
+		const auto& Actors = Scene->GetActors();
 		ImGui::Text("Actors: %d", Actors.size() + 1);
 		UI::Draw::ActorNode(*Player);
 		for (auto& Actor : Actors)
@@ -607,7 +724,7 @@ namespace platformer2d::Level {
 
 				if (ImGui::Button("Create", ButtonSize))
 				{
-					if (!DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
+					if (!Scene->DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
 					{
 						CSpawner::CreateStaticPolygon(ActorNameBuf, Pos, Size, FColor::Convert(RGBA32::Magenta));
 					}
@@ -711,7 +828,7 @@ namespace platformer2d::Level {
 		if (ImGui::Button("Rotate Platform"))
 		{
 			static constexpr const char* PlatformName = "SpawnPlatform";
-			if (std::shared_ptr<CActor> Platform = FindActor(PlatformName); Platform != nullptr)
+			if (std::shared_ptr<CActor> Platform = Scene->FindActor(PlatformName); Platform != nullptr)
 			{
 				Platform->SetRotation(Platform->GetRotation() + glm::radians(45.0f));
 			}
@@ -914,7 +1031,7 @@ namespace platformer2d::Level {
 				LK_TRACE("{}", CBody::ToString(BodySpec));
 			}
 
-			if (!DoesActorExist(ActorHandle))
+			if (!Scene->DoesActorExist(ActorHandle))
 			{
 				std::shared_ptr<CActor> Actor = CActor::Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
 			}
