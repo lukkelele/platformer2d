@@ -17,7 +17,7 @@ namespace platformer2d {
 	{
 		std::string Logfile;
 		std::filesystem::path LogDirectory = LOGS_DIR;
-		constexpr const char* FileName = "platformer2d";
+		constexpr const char* FileName = PROJECT_NAME;
 	}
 
 	namespace LogUtility
@@ -60,16 +60,16 @@ namespace platformer2d {
 		Get(); /* Make sure instance exists. */
 		if (!InLogfile.empty())
 		{
-			Logfile = InLogfile;	
+			Logfile = LK_FMT("{}/{}-{}.log", LogDirectory, InLogfile, CurrentTimestamp());
 		}
 		else
 		{
-			Logfile = LK_FMT("{}-{}.log", FileName, CurrentTimestamp());
+			Logfile = LK_FMT("{}/{}-{}.log", LogDirectory, FileName, CurrentTimestamp());
 		}
 		LK_LOG_PRINTLN("Log file: {}", Logfile);
 
 		std::vector<spdlog::sink_ptr> CoreSinks = {
-			std::make_shared<spdlog::sinks::basic_file_sink_mt>(LogDirectory.string() + Logfile, true),
+			std::make_shared<spdlog::sinks::basic_file_sink_mt>(Logfile, true),
 			std::make_shared<spdlog::sinks::stdout_color_sink_mt>()
 		};
 
