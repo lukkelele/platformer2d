@@ -1,86 +1,46 @@
 #include "ray.h"
 
-namespace platformer2d {
+namespace platformer2d::Physics {
 
-	CRay::CRay(const glm::vec3& InOrigin, const glm::vec3& InDirection)
-		: Origin(InOrigin)
-		, Direction(InDirection)
+	void CastRay(FRayCast& RayCast, const glm::vec2& Pos, const glm::mat4& ViewMat,
+				 const glm::mat4& ProjMat, float const MousePosX, const float MousePosY)
 	{
+		const glm::vec4 MouseClipPos = { MousePosX, MousePosY, -1.0f, 1.0f };
+		const glm::mat4 InverseProj = glm::inverse(ProjMat);
+		const glm::vec4 Ray = InverseProj * MouseClipPos;
+		const glm::mat3 InverseView = glm::inverse(glm::mat3(ViewMat));
+
+		RayCast.Pos = glm::vec3(Pos, 0.0f);
+		RayCast.Dir = InverseView * glm::vec3(Ray);
 	}
 
-	bool CRay::IntersectsAABB(const FAABB& AABB, float& T) const
+	bool RaycastAABB(const FRayCast& RayCast, const glm::vec2& BoxMin, const glm::vec2& BoxMax, float& OutT)
 	{
-		/* The direction vector is inverted to calculate the intersection points. */
-		glm::vec3 DirFraction{};
-		DirFraction.x = (1.0f / Direction.x);
-		DirFraction.y = (1.0f / Direction.y);
-		DirFraction.z = (1.0f / Direction.z);
-
-		const glm::vec3& LeftBottom = AABB.Min;
-		const glm::vec3& RightTop = AABB.Max;
-
-		const float T1 = (LeftBottom.x - Origin.x) * DirFraction.x;
-		const float T2 = (RightTop.x - Origin.x) * DirFraction.x;
-
-		const float T3 = (LeftBottom.y - Origin.y) * DirFraction.y;
-		const float T4 = (RightTop.y - Origin.y) * DirFraction.y;
-
-		const float T5 = (LeftBottom.z - Origin.z) * DirFraction.z;
-		const float T6 = (RightTop.z - Origin.z) * DirFraction.z;
-
-		/* Point where the ray first enters the AABB. */
-		const float TMin = glm::max(
-			glm::max(glm::min(T1, T2), glm::min(T3, T4)), 
-			glm::min(T5, T6)
-		);
-
-		/* Point where the ray exits the AABB. */
-		const float TMax = glm::min(
-			glm::min(glm::max(T1, T2), glm::max(T3, T4)), 
-			glm::max(T5, T6)
-		);
-
-		/* Ray is intersecting with the AABB behind us. */
-		if (TMax < 0)
+		const glm::vec2 Origin = glm::vec2(RayCast.Pos.x, RayCast.Pos.y);
+		const glm::vec2 Dir = glm::vec2(RayCast.Dir.x, RayCast.Dir.y);
+		if ((Dir.x == 0.0f) && (Dir.y == 0.0f))
 		{
-			T = TMax;
 			return false;
 		}
 
-		/* Ray does not intersect the AABB. */
+		const glm::vec2 InvDir = glm::vec2(1.0f / Dir.x, 1.0f / Dir.y);
+		const glm::vec2 T1 = (BoxMin - Origin) * InvDir;
+		const glm::vec2 T2 = (BoxMax - Origin) * InvDir;
+
+		const float TMin = glm::max(glm::min(T1.x, T2.x), glm::min(T1.y, T2.y));
+		const float TMax = glm::min(glm::max(T1.x, T2.x), glm::max(T1.y, T2.y));
+
+		if (TMax < 0.0f)
+		{
+			return false;
+		}
 		if (TMin > TMax)
 		{
-			T = TMax;
 			return false;
 		}
 
-		/* When T == 0, T is at the ray's origin. */
-		T = TMin;
+		OutT = TMin;
 		return true;
-	}
-
-	bool CRay::IntersectsTriangle(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C, float& T) const
-	{
-		const glm::vec3 E1 = B - A;
-		const glm::vec3 E2 = C - A;
-
-		const glm::vec3 N = glm::cross(E1, E2);
-		const float Det = -glm::dot(Direction, N);
-
-		const float InvDet = 1.0f / Det;
-
-		const glm::vec3 AO = Origin - glm::vec3(A);
-		const glm::vec3 DAO = glm::cross(AO, Direction);
-		const float U = glm::dot(E2, DAO) * InvDet;
-		const float V = -glm::dot(E1, DAO) * InvDet;
-
-		T = glm::dot(AO, N) * InvDet;
-
-		return ((Det >= 1e-6f) 
-				&& (T >= 0.0f) 
-				&& (U >= 0.0f) 
-				&& (V >= 0.0f) 
-				&& ((U + V) <= 1.0f));
 	}
 
 }

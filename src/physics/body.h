@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "core/core.h"
+#include "core/math/aabb.h"
 #include "core/math/shapes.h"
 #include "serialization/serializable.h"
 
@@ -50,7 +51,7 @@ namespace platformer2d {
 		void* UserData = nullptr;
 	};
 
-	class CBody : public ISerializable
+	class CBody : public ISerializable<ESerializable::Yaml>
 	{
 	public:
 		CBody(const FBodySpecification& Spec);
@@ -112,8 +113,9 @@ namespace platformer2d {
 		}
 
 		glm::vec2 GetSize() const;
+		FAABB GetAABB() const;
 
-		virtual void Serialize(YAML::Emitter& Out) override;
+		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 		static std::string ToString(const FBodySpecification& Spec);
 

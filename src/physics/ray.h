@@ -1,24 +1,22 @@
 #pragma once
 
 #include "core/core.h"
-#include "core/math/math.h"
 #include "core/math/aabb.h"
+#include "core/math/math.h"
 
 namespace platformer2d {
 
-	class CRay
+	struct FRayCast
 	{
-	public:
-		CRay() = default;
-		CRay(const glm::vec3& InOrigin, const glm::vec3& InDirection);
-		~CRay() = default;
-
-		bool IntersectsAABB(const FAABB& AABB, float& T) const;
-		bool IntersectsTriangle(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C, float& T) const;
-
-	public:
-		glm::vec3 Origin;
-		glm::vec3 Direction;
+		glm::vec3 Pos = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Dir = { 1.0f, 1.0f, 1.0f };
 	};
+
+	namespace Physics
+	{
+		void CastRay(FRayCast& RayCast, const glm::vec2& Pos, const glm::mat4& ViewMat,
+					 const glm::mat4& ProjMat, float MousePosX, float MousePosY);
+		bool RaycastAABB(const FRayCast& RayCast, const glm::vec2& BoxMin, const glm::vec2& BoxMax, float& OutT);
+	}
 
 }

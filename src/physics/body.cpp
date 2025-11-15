@@ -39,6 +39,7 @@ namespace platformer2d {
 			LK_ASSERT(ShapeType == EShape::Polygon);
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			LK_ASSERT((ShapeRef.Size.x > 0.0f) && (ShapeRef.Size.y > 0.0f), "Invalid size");
+			/* Body-local space. */
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
 			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
 		}
@@ -51,6 +52,7 @@ namespace platformer2d {
 		{
 			LK_ASSERT(ShapeType == EShape::Capsule);
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
+			/* Body-local space. */
 			const b2Capsule Capsule = {
 				{ ShapeRef.P0.x, ShapeRef.P0.y },
 				{ ShapeRef.P1.x, ShapeRef.P1.y },
@@ -206,10 +208,11 @@ namespace platformer2d {
 		if (ShapeType == EShape::Polygon)
 		{
 			auto& Ref = std::get<FPolygon>(Shape);
-			return GetBoundingBox(Ref);
+			return Ref.Size;
 		}
 		else if (ShapeType == EShape::Line)
 		{
+			LK_MARK_NOT_IMPLEMENTED();
 			auto& Ref = std::get<FLine>(Shape);
 			return GetBoundingBox(Ref);
 		}
@@ -222,7 +225,15 @@ namespace platformer2d {
 		return { 0.0f, 0.0f };
 	}
 
-	void CBody::Serialize(YAML::Emitter& Out)
+	FAABB CBody::GetAABB() const
+	{
+		const b2AABB AABB = b2Shape_GetAABB(ShapeID);
+		const glm::vec2 Min = glm::vec2(AABB.lowerBound.x, AABB.lowerBound.y);
+		const glm::vec2 Max = glm::vec2(AABB.upperBound.x, AABB.upperBound.y);
+		return FAABB{Min, Max};
+	}
+
+	bool CBody::Serialize(YAML::Emitter& Out) const
 	{
 		Out << YAML::Key << "Body";
 		Out << YAML::BeginMap; /* Body */
@@ -282,6 +293,8 @@ namespace platformer2d {
 		Out << YAML::Value << std::to_underlying(BodySpec.MotionLock);
 
 		Out << YAML::EndMap; /* ~Body */
+
+		return true;
 	}
 
 	std::string CBody::ToString(const FBodySpecification& Spec)

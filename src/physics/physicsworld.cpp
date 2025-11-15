@@ -1,7 +1,4 @@
 #include "physicsworld.h"
-#include "physicsworld.h"
-#include "physicsworld.h"
-#include "physicsworld.h"
 
 #include "core/math/math.h"
 #include "game/player.h"
@@ -65,6 +62,11 @@ namespace platformer2d {
 	{
 		LK_DEBUG_TAG("PhysicsWorld", "Delete: {}", Body.ID.index1);
 		b2DestroyBody(Body.ID);
+	}
+
+	glm::vec2 CPhysicsWorld::GetGravity()
+	{
+		return Math::Convert<glm::vec2>(b2World_GetGravity(WorldID));
 	}
 
 	void CPhysicsWorld::SetGravity(const glm::vec2& Gravity)
