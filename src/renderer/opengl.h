@@ -202,7 +202,7 @@ namespace platformer2d::OpenGL {
 			LK_OpenGL_Verify(glGenBuffers(1, &VBO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, DataSize, nullptr, BufferType));
-			LK_DEBUG_TAG("VertexBuffer", "VBO={} Size={}", VBO, DataSize);
+			LK_TRACE_TAG("VertexBuffer", "VBO={} Size={}", VBO, DataSize);
 			ApplyVertexBufferLayout(Layout);
 			return VBO;
 		}
@@ -214,7 +214,7 @@ namespace platformer2d::OpenGL {
 			LK_OpenGL_Verify(glGenBuffers(1, &VBO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, sizeof(Data), Data, BufferType));
-			LK_DEBUG_TAG("VertexBuffer", "VBO={} Size={}", VBO, sizeof(Data));
+			LK_TRACE_TAG("VertexBuffer", "VBO={} Size={}", VBO, sizeof(Data));
 			ApplyVertexBufferLayout(Layout);
 			return VBO;
 		}
