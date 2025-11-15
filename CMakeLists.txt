@@ -75,9 +75,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	project_add_compile_definitions(LK_BUILD_DEBUG)
 endif()
 
+set(LK_PROJECT_DIR "${CMAKE_SOURCE_DIR}")
 set(LK_BINARY_DIR "${CMAKE_BINARY_DIR}")
-set(LK_ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
-set(LK_LOGS_DIR "${CMAKE_SOURCE_DIR}/logs")
 make_directory(${CMAKE_BINARY_DIR}/intermediate)
 configure_file(
     ${CMAKE_SOURCE_DIR}/src/config.h.in

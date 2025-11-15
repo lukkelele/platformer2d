@@ -1,11 +1,13 @@
 #pragma once
 
+#define PROJECT_NAME   "@PROJECT_NAME@"
+#define PROJECT_DIR    "@LK_PROJECT_DIR@"
+#define LOGS_DIR       PROJECT_DIR "/logs"
 #define BINARY_DIR     "@LK_BINARY_DIR@"
 
-#define ASSETS_DIR     "@LK_ASSETS_DIR@"
+#define ASSETS_DIR     PROJECT_DIR "/assets"
 #define FONTS_DIR      ASSETS_DIR "/fonts"
 #define LEVELS_DIR     ASSETS_DIR "/levels"
+#define SCENES_DIR     ASSETS_DIR "/scenes"
 #define TEXTURES_DIR   ASSETS_DIR "/textures"
 #define SHADERS_DIR    ASSETS_DIR "/shaders"
-
-#define LOGS_DIR       "@LK_LOGS_DIR@/"
