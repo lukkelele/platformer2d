@@ -266,6 +266,16 @@ namespace platformer2d {
 		QuadShader->Unbind();
 	}
 
+	void CDebugRenderer::DrawRayHit(const FRayCast& RayCast, const float T, const uint16_t LineWidth, const glm::vec4& LineColor,
+									const float Radius, const glm::vec4& CircleColor)
+	{
+		const glm::vec3 Origin = RayCast.Pos;
+		const glm::vec3 Dir = RayCast.Dir;
+		const glm::vec3 HitPos = Origin + Dir * T;
+		CRenderer::DrawLine(Origin, HitPos, LineColor, LineWidth);
+		CRenderer::DrawCircleFilled(HitPos, Radius, CircleColor);
+	}
+
 	std::vector<glm::vec3> GenerateCircleVertices(const float Radius, const std::size_t Count)
 	{
 		const float Angle = 360.0f / Count;
