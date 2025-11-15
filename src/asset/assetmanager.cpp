@@ -15,7 +15,7 @@ namespace platformer2d {
 	void CAssetManager::Initialize()
 	{
 		LK_VERIFY(bInitialized == false, "Initialize called multiple times");
-		LK_DEBUG_TAG("AssetManager", "Initialize");
+		LK_TRACE_TAG("AssetManager", "Initialize");
 
 		bInitialized = true;
 	}

@@ -18,7 +18,7 @@ namespace platformer2d {
 	void CEffectManager::Initialize()
 	{
 		LK_VERIFY(bInitialized == false, "Initialize called multiple times");
-		LK_DEBUG_TAG("EffectManager", "Initialize");
+		LK_TRACE_TAG("EffectManager", "Initialize");
 
 		{
 			FSpriteAnimation SwooshAnim;
