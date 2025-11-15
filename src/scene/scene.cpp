@@ -14,7 +14,7 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Scene", "Release: {}", ID);
 	}
 
-	std::shared_ptr<CActor> CScene::FindActor(const FActorHandle Handle)
+	std::shared_ptr<CActor> CScene::FindActor(const LUUID Handle)
 	{
 		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
 		{
@@ -34,7 +34,7 @@ namespace platformer2d {
 		return (Iter != Actors.end()) ? *Iter : nullptr;
 	}
 
-	bool CScene::DoesActorExist(const FActorHandle Handle)
+	bool CScene::DoesActorExist(const LUUID Handle)
 	{
 		return FindActor(Handle) != nullptr;
 	}

@@ -20,9 +20,9 @@ namespace platformer2d {
 		CScene() = delete;
 		~CScene();
 
-		std::shared_ptr<CActor> FindActor(FActorHandle Handle);
+		std::shared_ptr<CActor> FindActor(LUUID Handle);
 		std::shared_ptr<CActor> FindActor(std::string_view Name);
-		bool DoesActorExist(FActorHandle Handle);
+		bool DoesActorExist(LUUID Handle);
 		bool DoesActorExist(std::string_view Name);
 
 	private:

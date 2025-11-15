@@ -12,16 +12,14 @@
 
 namespace platformer2d {
 
-	using FActorHandle = LUUID;
-
 	class CActor : public ISerializable
 	{
 	public:
-		LK_DECLARE_EVENT(FOnActorCreated, CActor, FActorHandle, std::weak_ptr<CActor>);
-		LK_DECLARE_MULTICAST_DELEGATE(FOnActorMarkedForDeletion, FActorHandle);
+		LK_DECLARE_EVENT(FOnActorCreated, CActor, LUUID, std::weak_ptr<CActor>);
+		LK_DECLARE_MULTICAST_DELEGATE(FOnActorMarkedForDeletion, LUUID);
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
-		CActor(FActorHandle InHandle, const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
+		CActor(LUUID InHandle, const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
 		CActor(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
 		virtual ~CActor();
 
@@ -36,7 +34,7 @@ namespace platformer2d {
 		}
 
 		virtual void Tick(float DeltaTime);
-		inline FActorHandle GetHandle() const { return Handle; }
+		inline LUUID GetHandle() const { return Handle; }
 
 		glm::vec2 GetPosition() const;
 		void SetPosition(float X, float Y);
@@ -68,7 +66,7 @@ namespace platformer2d {
 		virtual void Serialize(YAML::Emitter& Out) override;
 
 	private:
-		static FActorHandle GenerateHandle();
+		static LUUID GenerateHandle();
 
 	public:
 		static inline FOnActorCreated OnActorCreated;
@@ -81,7 +79,7 @@ namespace platformer2d {
 		std::string Name;
 
 	private:
-		FActorHandle Handle;
+		LUUID Handle;
 		bool bTickEnabled = true;
 		bool bDeletable = true;
 

@@ -36,9 +36,9 @@ namespace platformer2d {
 		virtual CCamera* GetActiveCamera() const = 0;
 
 		/* @todo: Move to CScene once it is added */
-		virtual std::shared_ptr<CActor> FindActor(FActorHandle Handle) = 0;
+		virtual std::shared_ptr<CActor> FindActor(LUUID Handle) = 0;
 		virtual std::shared_ptr<CActor> FindActor(std::string_view Name) = 0;
-		virtual bool DoesActorExist(FActorHandle Handle) = 0;
+		virtual bool DoesActorExist(LUUID Handle) = 0;
 		virtual bool DoesActorExist(std::string_view Name) = 0;
 
 		virtual bool Serialize(const std::filesystem::path& Filepath) = 0;

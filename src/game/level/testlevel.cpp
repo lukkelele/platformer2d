@@ -112,7 +112,7 @@ namespace platformer2d::Level {
 		LK_DEBUG_TAG("TestLevel", "Initialize");
 		LK_ASSERT(Player == nullptr);
 
-		CActor::OnActorCreated.Add([](const FActorHandle Handle, std::weak_ptr<CActor> ActorRef)
+		CActor::OnActorCreated.Add([](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
@@ -133,7 +133,7 @@ namespace platformer2d::Level {
 		 * Bind to lambda because the delegate expects a void return type,
 		 * which DeleteActor isn't.
 		 */
-		CActor::OnActorMarkedForDeletion.Add([&](const FActorHandle Handle)
+		CActor::OnActorMarkedForDeletion.Add([&](const LUUID Handle)
 		{
 			/* Move the player a little bit to cause physics to pass through. */
 			if (CTestLevel::DeleteActor(Handle))
@@ -264,7 +264,7 @@ namespace platformer2d::Level {
 		}
 	}
 
-	std::shared_ptr<CActor> CTestLevel::FindActor(const FActorHandle Handle)
+	std::shared_ptr<CActor> CTestLevel::FindActor(const LUUID Handle)
 	{
 		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
 		{
@@ -284,7 +284,7 @@ namespace platformer2d::Level {
 		return (Iter != Actors.end()) ? *Iter : nullptr;
 	}
 
-	bool CTestLevel::DoesActorExist(const FActorHandle Handle)
+	bool CTestLevel::DoesActorExist(const LUUID Handle)
 	{
 		return FindActor(Handle) != nullptr;
 	}
@@ -294,7 +294,7 @@ namespace platformer2d::Level {
 		return FindActor(Name) != nullptr;
 	}
 
-	bool CTestLevel::DeleteActor(const FActorHandle Handle)
+	bool CTestLevel::DeleteActor(const LUUID Handle)
 	{
 		LK_INFO_TAG("TestLevel", "Delete: {}", Handle);
 		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)

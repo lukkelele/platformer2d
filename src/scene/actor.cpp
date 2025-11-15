@@ -12,7 +12,7 @@ namespace platformer2d {
 	{
 	}
 
-	CActor::CActor(const FActorHandle InHandle, const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
+	CActor::CActor(const LUUID InHandle, const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
 		: Handle(InHandle)
 		, Name(BodySpec.Name)
 		, Texture(InTexture)
@@ -144,7 +144,7 @@ namespace platformer2d {
 		Out << YAML::EndMap; /* ~Actor */
 	}
 
-	FActorHandle CActor::GenerateHandle()
+	LUUID CActor::GenerateHandle()
 	{
 		Instances++;
 		return Instances;

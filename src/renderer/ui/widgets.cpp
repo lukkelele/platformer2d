@@ -89,7 +89,7 @@ namespace platformer2d::UI::Draw {
 
 	void ActorNode(CActor& Actor)
 	{
-		const FActorHandle Handle = Actor.GetHandle();
+		const LUUID Handle = Actor.GetHandle();
 		ImGui::PushID(Handle);
 
 		const bool bIsSelected = CSelectionContext::IsSelected(Handle);
