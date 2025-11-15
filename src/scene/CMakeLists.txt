@@ -6,6 +6,8 @@ project_library_sources(
 	components.h
 	effectmanager.h
 	effectmanager.cpp
+	scene.h
+	scene.cpp
 )
 
 target_link_libraries(scene PUBLIC 
