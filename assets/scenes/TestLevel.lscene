@@ -1,0 +1,142 @@
+Name: TestLevel
+Actors:
+  - ID: 2
+    Name: Right-Platform
+    Texture: 0
+    Color: [0, 0.75, 0, 1]
+    TransformComponent:
+      Position: [3.29, -0.33, 0]
+      Rotation: 0.4377699
+      Scale: [3.04, 0.12, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [3.04, 0.12]
+        Rotation: 0.4377699
+        Radius: 0.5
+      Position: [3.29, -0.33]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
+  - ID: 4
+    Name: Spawn-Wall-Left
+    Texture: 4
+    Color: [1, 1, 1, 1]
+    TransformComponent:
+      Position: [-1.48, -0.68727523, 0]
+      Rotation: 1.5707964
+      Scale: [1.45, 0.95, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [1.45, 0.95]
+        Rotation: 1.5707964
+        Radius: 0.5
+      Position: [-1.48, -0.68727523]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
+  - ID: 6
+    Name: FlyingPlatform-1
+    Texture: 0
+    Color: [1, 0, 1, 1]
+    TransformComponent:
+      Position: [-0.43701252, -0.1, 0]
+      Rotation: 0
+      Scale: [0.4, 0.06, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [0.4, 0.06]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-0.43701252, -0.1]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
+  - ID: 8
+    Name: Rotating-Platform
+    Texture: 0
+    Color: [0, 0.54509807, 0.54509807, 1]
+    TransformComponent:
+      Position: [0.86213875, 0.07366255, 0]
+      Rotation: -2.6923761
+      Scale: [0.4, 0.06, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [0.4, 0.06]
+        Rotation: -2.6915119
+        Radius: 0.5
+      Position: [0.86213875, 0.07366255]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
+  - ID: 10
+    Name: Bottom-Platform2
+    Texture: 0
+    Color: [0.45, 0.45, 0.45, 1]
+    TransformComponent:
+      Position: [0.1, -1.6, 0]
+      Rotation: -3.1415925
+      Scale: [9.6, 0.22, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [9.6, 0.22]
+        Rotation: 3.1415927
+        Radius: 0.5
+      Position: [0.1, -1.6]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
+  - ID: 12
+    Name: R_Wall-1
+    Texture: 0
+    Color: [1, 0, 1, 1]
+    TransformComponent:
+      Position: [4.83, -0.9, 0]
+      Rotation: -3.1415925
+      Scale: [0.1, 1.2, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [0.1, 1.2]
+        Rotation: 3.1415927
+        Radius: 0.5
+      Position: [4.83, -0.9]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
+  - ID: 14
+    Name: SpawnPlatform
+    Texture: 3
+    Color: [1, 1, 1, 1]
+    TransformComponent:
+      Position: [0, -0.7223375, 0]
+      Rotation: -3.1415925
+      Scale: [2, 0.08, 1]
+    Body:
+      Type: 0
+      Shape:
+        ShapeType: 2
+        Size: [2, 0.08]
+        Rotation: 3.1415927
+        Radius: 0.5
+      Position: [0, -0.7223375]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+    Deletable: true
