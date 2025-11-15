@@ -97,6 +97,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/external/glfw/include
 	${CMAKE_SOURCE_DIR}/external/glm
 	${CMAKE_SOURCE_DIR}/external/imgui
+	${CMAKE_SOURCE_DIR}/external/ImGuizmo
 	${CMAKE_SOURCE_DIR}/external/spdlog/include
 	${CMAKE_SOURCE_DIR}/external/yaml-cpp/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
@@ -109,6 +110,7 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	glfw
 	glm
 	imgui
+	ImGuizmo
 	spdlog
 	stb_image
 	yaml-cpp
