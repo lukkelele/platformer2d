@@ -10,6 +10,28 @@
 namespace YAML {
 
 	template<>
+	struct convert<platformer2d::LUUID>
+	{
+		static Node encode(const platformer2d::LUUID& Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(static_cast<platformer2d::LUUID::SizeType>(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, platformer2d::LUUID& Rhs)
+		{
+			if (!YamlNode.IsScalar())
+			{
+				return false;
+			}
+
+			Rhs = YamlNode.as<platformer2d::LUUID::SizeType>();
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<glm::vec2>
 	{
 		static Node encode(const glm::vec2& Rhs)
