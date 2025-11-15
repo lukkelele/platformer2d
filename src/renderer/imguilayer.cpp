@@ -5,7 +5,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
-#include <spdlog/spdlog.h>
+#include <ImGuizmo/ImGuizmo.h>
 
 #include "core/core.h"
 #include "core/log.h"
@@ -74,8 +74,9 @@ namespace platformer2d {
 	void CImGuiLayer::BeginFrame()
 	{
 		ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(Viewport->Pos);

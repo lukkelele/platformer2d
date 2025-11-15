@@ -45,18 +45,46 @@ namespace platformer2d::UI::Draw {
 		}
 #endif
 
+		/* Tick info. */
 		ImGui::TableNextRow();
-
 		ImGui::TableSetColumnIndex(0);
 		UI::ShiftCursor(17.0f, 4.0f);
 		ImGui::Text("Tick");
 
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursor(0.0f, 4.0f);
-
 		ImGui::Text("%s", Actor.IsTickEnabled() ? "Enabled" : "Disabled");
 
 		ImGui::EndTable();
+
+		/* Delete actor. */
+		UI::ShiftCursor(0.0f, 4.0f);
+		{
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
+			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+			UI::FScopedColorStack ButtonColours(
+				ImGuiCol_ButtonHovered, RGBA32::DarkRed,
+				ImGuiCol_ButtonActive, RGBA32::Red
+			);
+
+			static constexpr ImVec2 ButtonSize = ImVec2(82, 42);
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			UI::ShiftCursorX(Avail.x - ButtonSize.x);
+			const bool IsDeletable = Actor.IsDeletable();
+			if (!IsDeletable)
+			{
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::Button("Delete", ButtonSize))
+			{
+				CActor::OnActorMarkedForDeletion.Broadcast(Actor.GetHandle());
+			}
+			if (!IsDeletable)
+			{
+				ImGui::EndDisabled();
+			}
+		}
 	}
 
 	void ActorNode(CActor& Actor)

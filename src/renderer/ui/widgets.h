@@ -32,17 +32,24 @@ namespace platformer2d::UI {
 			std::array<char, LABEL_BUFSIZE> LabelBuf{};
 			std::snprintf(LabelBuf.data(), LabelBuf.size(), "##%s", Label);
 
+			static constexpr float SpacingX = 8.0f;
+			static constexpr float FramePadding = 4.0f;
+			static constexpr float OutlineSpacing = 1.0f;
+			const float LineHeight = GImGui->Font->LegacySize + FramePadding * 2.0f;
+			const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
+			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);
+
 			if (ImGui::GetCurrentTable() != nullptr)
 			{
 				if ((LabelSize > 0) && (Label[0] != '#'))
 				{
 					ImGui::TableSetColumnIndex(0);
-					UI::ShiftCursor(17.0f, 4.0f);
+					UI::ShiftCursor(17.0f, 7.0f);
 					ImGui::Text(Label);
 				}
 
 				ImGui::TableSetColumnIndex(1);
-				UI::ShiftCursor(0.0f, 4.0f);
+				UI::ShiftCursor(7.0f, 0.0f);
 			}
 			else
 			{
@@ -53,6 +60,8 @@ namespace platformer2d::UI {
 				}
 			}
 
+			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
+			ImGui::SetNextItemWidth(InputItemWidth);
 			const bool Dragged = ImGui::DragScalar(
 				LabelBuf.data(), 
 				ImGuiDataType_Float, 

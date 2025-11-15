@@ -429,6 +429,38 @@ namespace platformer2d::UI {
 		return bSetBlendFunc;
 	}
 
+	void DrawGizmo(const int Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
+	{
+		static_assert(std::is_same_v<std::decay_t<decltype(Operation)>, std::underlying_type_t<ImGuizmo::OPERATION>>);
+		ImGuizmo::SetOrthographic(true);
+		ImGuizmo::SetDrawlist();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+
+		FTransformComponent& TC = Actor.GetTransformComponent();
+		glm::mat4 TransformMatrix = TC.GetTransform();
+
+		ImGuizmo::Manipulate(
+			glm::value_ptr(ViewMatrix),
+			glm::value_ptr(ProjectionMatrix),
+			static_cast<ImGuizmo::OPERATION>(Operation),
+			ImGuizmo::WORLD, //ImGuizmo::LOCAL,
+			glm::value_ptr(TransformMatrix),
+			nullptr,
+			nullptr
+		);
+
+		if (ImGuizmo::IsUsing())
+		{
+			glm::vec3 Translation;
+			glm::vec3 Scale;
+			glm::quat Rotation;
+			Math::DecomposeTransform(TransformMatrix, Translation, Rotation, Scale);
+			LK_UNUSED(Scale, Rotation);
+
+			Actor.SetPosition(Translation);
+		}
+	}
+
 	void ColdTextGradient(const char* Text, const float Speed)
 	{
 		const float Time = ImGui::GetTime() * Speed;

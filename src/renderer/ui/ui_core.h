@@ -2,6 +2,7 @@
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include <ImGuizmo/ImGuizmo.h>
 
 #include "core/core.h"
 #include "renderer/color.h"
@@ -130,5 +131,25 @@ namespace platformer2d::UI {
 			}
 		}
 	}
-
 }
+
+template<>
+struct LK_FMT_LIB::formatter<ImVec2> : LK_FMT_LIB::formatter<std::string>
+{
+	template<typename FormatContext>
+    auto format(const ImVec2& Vec, FormatContext& Context) const
+    {
+        return LK_FMT_LIB::format_to(Context.out(), "({.2f}, {.2f})", Vec.x, Vec.y);
+    }
+};
+
+template<>
+struct LK_FMT_LIB::formatter<ImVec4> : LK_FMT_LIB::formatter<std::string>
+{
+	template<typename FormatContext>
+    auto format(const ImVec4& Vec, FormatContext& Context) const
+    {
+        return LK_FMT_LIB::format_to(Context.out(), "({.2f}, {.2f}, {.2f}, {.2f})", Vec.x, Vec.y, Vec.z, Vec.w);
+    }
+};
+

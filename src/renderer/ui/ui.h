@@ -5,8 +5,10 @@
 
 #include "core/core.h"
 #include "core/delegate.h"
+#include "core/math/math.h"
 #include "renderer/font.h"
 #include "renderer/ui/scoped.h"
+#include "scene/actor.h"
 
 namespace platformer2d::UI {
 
@@ -25,5 +27,8 @@ namespace platformer2d::UI {
 	 * @brief Combo dropdown.
 	 */
 	bool BlendFunction();
+
+	void DrawGizmo(int Operation, CActor& Actor, const glm::mat4& ViewMatrix,
+				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
 }
