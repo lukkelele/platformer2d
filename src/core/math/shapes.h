@@ -137,7 +137,6 @@ namespace platformer2d {
 		#undef _
 			return S;
 		}
-
 	}
 
 }

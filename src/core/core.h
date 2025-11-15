@@ -13,6 +13,7 @@
 #include "assert.h"
 #include "log.h"
 #include "macros.h"
+#include "uuid.h"
 
 #define LK_MARK_NOT_IMPLEMENTED() \
 	LK_VERIFY(false, "Not implemented: {}::{}", __FILE__, __LINE__)
