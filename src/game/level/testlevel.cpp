@@ -892,12 +892,11 @@ namespace platformer2d::Level {
 
 	void CTestLevel::DeserializeActors(const YAML::Node& ActorsNode)
 	{
-		static_assert(std::is_same_v<uint32_t, FActorHandle>);
 		LK_INFO_TAG("TestLevel", "Deserializing actors");
 		for (const YAML::Node& Node : ActorsNode)
 		{
 			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Texture"] && Node["Color"] && Node["TransformComponent"]);
-			const uint32_t ActorHandle = Node["ID"].as<uint32_t>();
+			const LUUID ActorHandle = Node["ID"].as<LUUID>();
 			const std::string ActorName = Node["Name"].as<std::string>();
 			const ETexture ActorTexture = static_cast<ETexture>(Node["Texture"].as<int>());
 			const glm::vec4 ActorColor = Node["Color"].as<glm::vec4>();

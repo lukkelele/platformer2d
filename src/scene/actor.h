@@ -12,7 +12,7 @@
 
 namespace platformer2d {
 
-	using FActorHandle = uint32_t;
+	using FActorHandle = LUUID;
 
 	class CActor : public ISerializable
 	{
@@ -86,7 +86,6 @@ namespace platformer2d {
 		bool bDeletable = true;
 
 		static inline uint32_t Instances = 0;
-		static_assert(std::is_same_v<FActorHandle, decltype(Instances)>);
 	};
 
 }
