@@ -85,6 +85,7 @@ namespace platformer2d {
 
 	void CRenderer::Initialize()
 	{
+		LK_VERIFY(bInitialized == false, "Initialize called multiple times");
 		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
 		SetBlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -124,6 +125,7 @@ namespace platformer2d {
 #endif
 
 		UI::Initialize();
+		bInitialized = true;
 	}
 
 	void CRenderer::Destroy()
@@ -288,6 +290,7 @@ namespace platformer2d {
 			TextureRef->SetSlot(Idx);
 		}
 
+		Data.WhiteTexture = Data.Textures[ETexture::White];
 		CAssetManager::Get().Initialize();
 		CEffectManager::Get().Initialize();
 	}
@@ -639,7 +642,7 @@ namespace platformer2d {
 
 	void CRenderer::SetDepthTest(const bool Enabled)
 	{
-		LK_DEBUG_TAG("Renderer", "Depth test: {}", Enabled ? "Enabled" : "Disabled");
+		LK_TRACE_TAG("Renderer", "Depth test: {}", Enabled ? "Enabled" : "Disabled");
 		Data.GL.bDepthTest = Enabled;
 		if (Enabled)
 		{
@@ -658,7 +661,7 @@ namespace platformer2d {
 
 	void CRenderer::SetDepthFunction(const uint32_t DepthFunc)
 	{
-		LK_DEBUG_TAG("Renderer", "Depth function: {}", DepthFunc);
+		LK_TRACE_TAG("Renderer", "Depth function: {}", DepthFunc);
 		Data.GL.DepthFunc = DepthFunc;
 		LK_OpenGL_Verify(glDepthFunc(Data.GL.DepthFunc));
 	}
@@ -728,7 +731,7 @@ namespace platformer2d {
 	{
 		Data.GL.BlendSource = Source;
 		Data.GL.BlendDestination = Destination;
-		LK_DEBUG_TAG("Renderer", "Source={} Dst={}", Data.GL.BlendSource, Data.GL.BlendDestination);
+		LK_TRACE_TAG("Renderer", "Source={} Dst={}", Data.GL.BlendSource, Data.GL.BlendDestination);
 		LK_OpenGL_Verify(glBlendFunc(Data.GL.BlendSource, Data.GL.BlendDestination));
 	}
 
