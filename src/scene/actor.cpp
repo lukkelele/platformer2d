@@ -55,6 +55,11 @@ namespace platformer2d {
 		}
 	}
 
+	glm::vec2 CActor::GetSize() const
+	{
+		return Body ? Body->GetSize() : glm::vec2(0.0f, 0.0f);
+	}
+
 	glm::vec2 CActor::GetPosition() const
 	{
 		return glm::vec2(TransformComp.Translation.x, TransformComp.Translation.y);

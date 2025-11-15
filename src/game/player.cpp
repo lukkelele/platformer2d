@@ -165,13 +165,6 @@ namespace platformer2d {
 		bCameraLock = Locked;
 	}
 
-	glm::vec2 CPlayer::GetSize() const
-	{
-		glm::vec2 Size = Body->GetSize();
-		Size *= glm::vec2(TransformComp.Scale.x, TransformComp.Scale.y);
-		return Size;
-	}
-
 	void CPlayer::HandleInput()
 	{
 		if (CKeyboard::IsKeyDown(EKey::W))

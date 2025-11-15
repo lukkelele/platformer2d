@@ -60,11 +60,6 @@ namespace platformer2d {
 		bool IsCameraLocked() const { return bCameraLock; }
 		void SetCameraLock(bool Locked);
 
-		/**
-		 * @brief Get scaled size.
-		 */
-		glm::vec2 GetSize() const;
-
 		std::pair<uint16_t, uint16_t> GetCurrentAndNextSpriteFrame() const { return std::make_pair(CurrentSpriteFrame, NextSpriteFrame); }
 
 	private:

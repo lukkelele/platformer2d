@@ -36,6 +36,7 @@ namespace platformer2d {
 		virtual void Tick(float DeltaTime);
 		inline LUUID GetHandle() const { return Handle; }
 
+		glm::vec2 GetSize() const;
 		glm::vec2 GetPosition() const;
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
