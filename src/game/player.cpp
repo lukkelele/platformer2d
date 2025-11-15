@@ -72,6 +72,8 @@ namespace platformer2d {
 			Name = "Player";
 		}
 
+		SetDeletable(false);
+
 		constexpr glm::vec2 TilePos = { ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y };
 		WalkAnim.StartTileX = TilePos.x;
 		WalkAnim.StartTileY = TilePos.y;
@@ -96,6 +98,8 @@ namespace platformer2d {
 		{
 			Name = "Player";
 		}
+
+		SetDeletable(false);
 
 		constexpr glm::vec2 TilePos = { ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y };
 		WalkAnim.StartTileX = TilePos.x;
