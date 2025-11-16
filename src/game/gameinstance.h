@@ -8,10 +8,14 @@ namespace platformer2d {
 
 	class CScene;
 
-	struct FSceneSelectionEntry
+	/**
+	 * @struct FHitResult
+	 * @brief Single hit result.
+	 */
+	struct FHitResult
 	{
 		LUUID Handle;
-		CActor* Ref = nullptr;
+		std::weak_ptr<CActor> Ref;
 		float Distance = 0.0f;
 	};
 
@@ -46,8 +50,19 @@ namespace platformer2d {
 		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const = 0;
 		virtual std::shared_ptr<CScene> GetScene() const = 0;
 
-		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) = 0;
-		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) = 0;
+		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
+		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
+
+		/**
+		 * @brief Get mouse position in viewport space.
+		 * Range: (-1, 1)
+		 */
+		glm::vec2 GetMouseInViewportSpace();
+
+		/**
+		 * @brief Get mouse position in world space.
+		 */
+		glm::vec2 GetMouseInWorldSpace(const CCamera& Camera);
 
 		virtual bool Serialize(const std::filesystem::path& OutFile) const override = 0;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override = 0;
@@ -57,11 +72,15 @@ namespace platformer2d {
 	protected:
 		const FGameSpecification& GetSpecification() const { return Spec; }
 
+		void UpdateViewportBounds();
+		const std::array<glm::vec2, 2>& GetViewportBounds() { return ViewportBounds; }
+
 	protected:
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
 	private:
 		FGameSpecification Spec{};
+		std::array<glm::vec2, 2> ViewportBounds;
 
 		static inline CGameInstance* Instance = nullptr;
 	};
