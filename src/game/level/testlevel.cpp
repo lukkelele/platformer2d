@@ -22,8 +22,6 @@
 #include "physics/ray.h"
 #include "serialization/serialization.h"
 
-#define PLAYER_SHAPE_CAPSULE 0
-
 namespace platformer2d::Level {
 
 	namespace
@@ -59,7 +57,7 @@ namespace platformer2d::Level {
 
 		struct FCloud
 		{
-			glm::vec3 Position = { 0.0f, 0.0f, 0.60f };
+			glm::vec3 Position = { 0.0f, 0.0f, 0.10f };
 			glm::vec2 Size{};
 		};
 		std::vector<FCloud> Clouds = {
@@ -85,7 +83,8 @@ namespace platformer2d::Level {
 		};
 
 		char ActorNameBuf[128] = { 0 };
-		std::array<glm::vec2, 2> ViewportBounds;
+		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
+		std::weak_ptr<CActor> SelectedActor;
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -118,6 +117,15 @@ namespace platformer2d::Level {
 				{
 					/* @fixme: Temporary fix until serialization can take effect parameters. */
 					RotatingPlatform = Actor;
+#if 0 /* @fixme: Remove once the creator menu can add new components */
+					auto& EC = Actor->AddComponent<FEffectComponent>();
+					FEffectInstance Effect;
+					Effect.Type = EEffectType::Rotate;
+					FRotateEffect Rotate;
+					Rotate.AngularSpeedDegPerSecond = 5.0f;
+					Effect.Data = Rotate;
+					EC.Effects.push_back(Effect);
+#endif
 				}
 			}
 		});
@@ -163,8 +171,9 @@ namespace platformer2d::Level {
 		CWindow::OnResized.Add(this, &CTestLevel::OnWindowResized);
 		CWindow* Window = CWindow::Get();
 		Window->Maximize();
-		ViewportBounds[0] = { 0.0f, 0.0f };
-		ViewportBounds[1] = Window->GetSize();
+		UpdateViewportBounds();
+
+		CMouse::OnButtonPressed.Add(this, &CTestLevel::OnMouseButtonPressed);
 	}
 
 	void CTestLevel::Destroy()
@@ -199,24 +208,14 @@ namespace platformer2d::Level {
 		Scene->Tick(DeltaTime);
 		Tick_Objects(DeltaTime);
 
-#if 1
-		const uint16_t Picked = PickSceneAtMouse(Scene, SelectionData);
-		if (Picked > 0)
-		{
-			const FSceneSelectionEntry& Selected = SelectionData.at(0);
-			if (Selected.Ref)
-			{
-				UI::DrawGizmo(ImGuizmo::TRANSLATE, *Selected.Ref, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
-			}
-		}
-#else
+#if 0
 		const uint16_t Hits = RaycastScene(Scene, SelectionData);
 		if (Hits > 0)
 		{
-			const FSceneSelectionEntry& Selected = SelectionData.at(0);
-			if (Selected.Ref)
+			const FHitResult& HitResults = SelectionData.at(0);
+			if (HitResults.Ref)
 			{
-				UI::DrawGizmo(ImGuizmo::TRANSLATE, *Selected.Ref, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
+				UI::DrawGizmo(Gizmo, *HitResults.Ref, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
 			}
 		}
 #endif
@@ -224,18 +223,14 @@ namespace platformer2d::Level {
 		DrawClouds();
 
 		/* Render player. */
-		const FPolygon* Polygon = Player->GetBody().TryGetShape<EShape::Polygon>();
-		if (Polygon)
-		{
-			CRenderer::DrawQuad(
-				glm::vec3(Player->GetPosition(), 0.030f),
-				Player->GetSize(),
-				*CRenderer::GetTexture(Player->GetTexture()),
-				Player->GetSprite().GetUV(),
-				FColor::White,
-				glm::degrees(Player->GetRotation())
-			);
-		}
+		CRenderer::DrawQuad(
+			glm::vec3(Player->GetPosition(), 0.030f),
+			Player->GetSize(),
+			*CRenderer::GetTexture(Player->GetTexture()),
+			Player->GetSprite().GetUV(),
+			FColor::White,
+			glm::degrees(Player->GetRotation())
+		);
 
 		/* Render level. */
 		for (const std::shared_ptr<CActor>& Actor : Scene->GetActors())
@@ -248,13 +243,6 @@ namespace platformer2d::Level {
 				Actor->GetColor(),
 				glm::degrees(TC.GetRotation2D())
 			);
-		}
-
-		/* Draw dark overlay whenever the pause menu is open. */
-		if (UI::IsGameMenuOpen())
-		{
-			static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.85f };
-			CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 2.0f), { ViewportWidth, ViewportHeight }, OverlayColor);
 		}
 	}
 
@@ -269,45 +257,12 @@ namespace platformer2d::Level {
 		return Player.get();
 	}
 
-	static inline glm::vec2 GetMouseViewportSpace()
-	{
-		auto [MouseX, MouseY] = CMouse::GetPos();
-		MouseX -= ViewportBounds[0].x;
-		MouseY -= ViewportBounds[0].y;
-		const float ViewportWidth = ViewportBounds[1].x - ViewportBounds[0].x;
-		const float ViewportHeight = ViewportBounds[1].y - ViewportBounds[0].y;
-
-		return glm::vec2(
-			(MouseX / ViewportWidth) * 2.0f - 1.0f,
-			((MouseY / ViewportHeight) * 2.0f - 1.0f) * -1.0f
-		);
-	}
-
-	static inline glm::vec2 GetMouseWorldSpace(const CCamera& Camera)
-	{
-		const glm::vec2 MousePos = GetMouseViewportSpace();
-		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
-		{
-			return glm::vec2(std::numeric_limits<float>::quiet_NaN());
-		}
-
-		const glm::vec4 ClipPos = glm::vec4(MousePos.x, MousePos.y, 0.0f, 1.0f);
-		const glm::mat4 InvViewProj = glm::inverse(Camera.GetProjectionMatrix() * Camera.GetViewMatrix());
-		glm::vec4 WorldPos = InvViewProj * ClipPos;
-		if (WorldPos.w != 0.0f)
-		{
-			WorldPos /= WorldPos.w;
-		}
-
-		return WorldPos;
-	}
-
-	uint16_t CTestLevel::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected)
+	uint16_t CTestLevel::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
 		static FRayCast RayData;
-		Selected.clear();
+		HitResults.clear();
 
-		const glm::vec2 MousePos = GetMouseViewportSpace();
+		const glm::vec2 MousePos = GetMouseInViewportSpace();
 		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
 		{
 			return 0;
@@ -334,25 +289,25 @@ namespace platformer2d::Level {
 			float T = 0.0f;
 			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T))
 			{
-				Selected.push_back(FSceneSelectionEntry{ Actor->GetHandle(), Actor.get(), T });
+				HitResults.push_back(FHitResult{ Actor->GetHandle(), Actor, T });
 				CDebugRenderer::DrawRayHit(RayData, T); /* @todo: Toggle for this */
 			}
 		}
 
-		if (Selected.empty())
+		if (HitResults.empty())
 		{
 			return 0;
 		}
 
-		std::sort(Selected.begin(), Selected.end(), [](auto& Lhs, auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
-		return static_cast<uint16_t>(Selected.size());
+		std::sort(HitResults.begin(), HitResults.end(), [](auto& Lhs, auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		return static_cast<uint16_t>(HitResults.size());
 	}
 
-	uint16_t CTestLevel::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected)
+	uint16_t CTestLevel::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
-		Selected.clear();
+		HitResults.clear();
 		const CCamera& Camera = *GetActiveCamera();
-		const glm::vec2 MouseWorld = GetMouseWorldSpace(Camera);
+		const glm::vec2 MouseWorld = GetMouseInWorldSpace(Camera);
 		if (!std::isfinite(MouseWorld.x) || !std::isfinite(MouseWorld.y))
 		{
 			return 0;
@@ -365,30 +320,36 @@ namespace platformer2d::Level {
 			const float Rotation = Actor->GetRotation();
 			if (Math::IsPointInPolygon(MouseWorld, Pos, Size, Rotation))
 			{
-				FSceneSelectionEntry Entry{};
+				FHitResult Entry{};
 				Entry.Handle = Actor->GetHandle();
-				Entry.Ref = Actor.get();
+				Entry.Ref = Actor;
 
 				const glm::vec2 Delta = MouseWorld - Pos;
 				Entry.Distance = glm::length(Delta);
 
-				Selected.push_back(Entry);
+				HitResults.push_back(Entry);
 			}
 		}
 
-		if (Selected.empty())
+		if (HitResults.empty())
 		{
 			return 0;
 		}
 
-		std::sort(Selected.begin(), Selected.end(), [](const auto& Lhs, const auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
-		return static_cast<uint16_t>(Selected.size());
+		std::sort(HitResults.begin(), HitResults.end(), [](const auto& Lhs, const auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		return static_cast<uint16_t>(HitResults.size());
 	}
 
 	void CTestLevel::RenderUI()
 	{
 		UI_Level();
 		UI_Player();
+
+		if (std::shared_ptr<CActor> SelectedRef = SelectedActor.lock(); SelectedRef != nullptr)
+		{
+			CCamera& Camera = Player->GetCamera();
+			UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
+		}
 	}
 
 	bool CTestLevel::Serialize(const std::filesystem::path& OutFile) const
@@ -632,21 +593,34 @@ namespace platformer2d::Level {
 		}
 
 		ImGui::Dummy(ImVec2(0, 8));
-
-		const glm::vec2 MousePos = GetMouseViewportSpace();
-		ImGui::Text("Mouse: (%.2f, %.2f)", MousePos.x, MousePos.y);
-
-		std::string Selected = "None";
-		if (!SelectionData.empty())
 		{
-			if (CActor* Ref = SelectionData[0].Ref; Ref != nullptr)
+			ImGui::SeparatorText("Mouse");
+			const glm::vec2 MouseViewportPos = GetMouseInViewportSpace();
+			ImGui::Text("Viewport Space: (%.2f, %.2f)", MouseViewportPos.x, MouseViewportPos.y);
+			if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
 			{
-				Selected = Ref->GetName();
+				const glm::vec2 MouseWorldPos = GetMouseInWorldSpace(*Camera);
+				ImGui::Text("World Space: (%.2f, %.2f)", MouseWorldPos.x, MouseWorldPos.y);
+			}
+			else
+			{
+				ImGui::Text("World Space: UNKNOWN");
 			}
 		}
-		ImGui::Text("Selected: %s", Selected.c_str());
 
-		ImGui::Dummy(ImVec2(0, 8));
+		ImGui::Dummy(ImVec2(0, 12));
+		ImGui::SeparatorText("Selection");
+		{
+			std::string Selected = "None";
+			if (std::shared_ptr<CActor> Actor = SelectedActor.lock(); Actor != nullptr)
+			{
+				Selected = Actor->GetName();
+			}
+			ImGui::Text("Selected: %s", Selected.c_str());
+		}
+
+		ImGui::Dummy(ImVec2(0, 12));
+		ImGui::SeparatorText("Serialization");
 		{
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
 			if (ImGui::Button("Serialize"))
@@ -1005,6 +979,56 @@ namespace platformer2d::Level {
 		ViewportWidth = InWidth;
 		ViewportHeight = InHeight;
 		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
+	}
+
+	void CTestLevel::OnMouseButtonPressed(const FMouseButtonData& Data)
+	{
+		const EMouseButton Button = Data.Button;
+		switch (Data.State)
+		{
+			case EMouseButtonState::Pressed:
+			{
+				/* Left button. */
+				if (Button == EMouseButton::Button0)
+				{
+					MousePickScene();
+				}
+				/* Right button. */
+				else if (Button == EMouseButton::Button1)
+				{
+				}
+
+				break;
+			}
+			case EMouseButtonState::Released:
+			{
+				break;
+			}
+			case EMouseButtonState::Held:
+			{
+				break;
+			}
+		}
+	}
+
+	void CTestLevel::MousePickScene()
+	{
+		CCamera* Camera = GetActiveCamera();
+		if (!Scene || !Camera)
+		{
+			return;
+		}
+
+		static std::vector<FHitResult> HitResults;
+		const uint16_t Picked = PickSceneAtMouse(Scene, HitResults);
+		if (Picked > 0)
+		{
+			const FHitResult& Hit = HitResults.at(0);
+			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr)
+			{
+				SelectedActor = Ref;
+			}
+		}
 	}
 
 	void CTestLevel::DeserializeActors(const YAML::Node& ActorsNode)

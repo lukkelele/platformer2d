@@ -24,8 +24,8 @@ namespace platformer2d::Level {
 		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const override;
 		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
 
-		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) override;
-		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FSceneSelectionEntry>& Selected) override;
+		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
+		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
 		virtual void RenderUI() override;
 
@@ -48,14 +48,14 @@ namespace platformer2d::Level {
 		void DrawClouds() const;
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
+		void OnMouseButtonPressed(const FMouseButtonData& Data);
+		void MousePickScene();
 
 		void DeserializeActors(const YAML::Node& ActorsNode);
 
 	private:
 		std::unique_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
-
-		std::vector<FSceneSelectionEntry> SelectionData;
 	};
 
 }
