@@ -15,9 +15,6 @@ namespace platformer2d::UI {
 	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
 	extern FOnGameMenuOpened OnGameMenuOpened;
 
-	void Initialize();
-	void Render();
-
 	void OpenGameMenu();
 	void CloseGameMenu();
 	void ToggleGameMenu();
@@ -35,5 +32,10 @@ namespace platformer2d::UI {
 
 	void DrawGizmo(int Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
+
+	void ColdTextGradient(const char* Text, float Speed = 2.0f);
+	void RainbowTextGradient(const char* Text, float Speed = 0.15f);
+	void RainbowTextSynced(const char* Text, float WaveLengthPx = 180.0f, float SpeedPxPerSec = 30.0f,
+						   float Saturation = 1.0f, float Value = 1.0f);
 
 }

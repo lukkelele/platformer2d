@@ -1,4 +1,5 @@
 project_library_sources(
+	gamemenu.h
 	scoped.h
 	ui.h
 	ui.cpp

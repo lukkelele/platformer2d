@@ -2,6 +2,7 @@
 
 #include "core/core.h"
 #include "core/layer.h"
+#include "core/input/keyboard.h"
 #include "renderer/imguilayer.h"
 
 namespace platformer2d {
@@ -20,6 +21,11 @@ namespace platformer2d {
 
 		void BeginFrame();
 		void EndFrame();
+
+	private:
+		void UI_GameMenu();
+
+		void OnKeyPressed(const FKeyData& KeyData);
 
 	private:
 		std::unique_ptr<CImGuiLayer> ImGuiLayer = nullptr;
