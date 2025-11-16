@@ -85,6 +85,26 @@ namespace platformer2d::UI::Draw {
 			ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
 		}
 
+		/* Components. */
+		/* @todo: Make treenode */
+		ImGui::TableNextRow();
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text("Effect Component");
+
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+			if (Actor.HasComponent<FEffectComponent>())
+			{
+				ImGui::Text("Yes");
+			}
+			else
+			{
+				ImGui::Text("No");
+			}
+		}
+
 		ImGui::EndTable();
 
 		/* Delete actor. */

@@ -65,7 +65,7 @@ namespace platformer2d {
 
 	void CImGuiLayer::Destroy()
 	{
-		LK_DEBUG_TAG("ImGuiLayer", "Destroy");
+		LK_TRACE_TAG("ImGuiLayer", "Destroy");
 		ImGui_ImplGlfw_Shutdown();
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui::DestroyContext();

@@ -28,6 +28,11 @@ namespace platformer2d::UI {
 	 */
 	bool BlendFunction();
 
+	/**
+	 * @brief Combo dropdown.
+	 */
+	bool DepthFunction();
+
 	void DrawGizmo(int Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
