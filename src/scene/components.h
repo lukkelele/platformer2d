@@ -121,7 +121,7 @@ namespace platformer2d {
 
 	struct FEffectInstance
 	{
-		EEffectType Type;
+		EEffectType Type = EEffectType::None;
 		TEffectData Data;
 	};
 

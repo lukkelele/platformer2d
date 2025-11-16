@@ -22,16 +22,6 @@ namespace platformer2d {
 			{
 				LK_TRACE_TAG("Scene", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				Actors.emplace_back(Actor);
-
-				/* @fixme */
-#if 0
-				std::string_view ActorName = Actor->GetName();
-				if (ActorName.find("Rotating") != std::string::npos)
-				{
-					/* @fixme: Temporary fix until serialization can take effect parameters. */
-					RotatingPlatform = Actor;
-				}
-#endif
 			}
 		});
 
@@ -264,6 +254,7 @@ namespace platformer2d {
 			{
 				HasEffectComponent = true;
 				Serialization::Deserialize(EC, EffectCompNode);
+				LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
 			}
 
 			if (!DoesActorExist(ActorHandle))
