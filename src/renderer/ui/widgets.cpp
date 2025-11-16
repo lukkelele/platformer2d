@@ -47,38 +47,67 @@ namespace platformer2d::UI::Draw {
 		}
 #endif
 
+		auto Label = [](std::string_view Str) -> void
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text(Str.data());
+		};
+
+		auto NextColumn = []() -> void
+		{
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+		};
+
 		/* Tick info. */
 		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(17.0f, 4.0f);
-		ImGui::Text("Tick");
+		{
+			Label("Tick");
+			NextColumn();
+			ImGui::Text("%s", Actor.IsTickEnabled() ? "Enabled" : "Disabled");
+		}
 
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::Text("%s", Actor.IsTickEnabled() ? "Enabled" : "Disabled");
+		/* Body Type. */
+		ImGui::TableNextRow();
+		{
+			Label("Body Type");
+			NextColumn();
+			ImGui::Text("%s", Enum::ToString(Body.GetType()));
+		}
 
 		/* Body Size. */
 		ImGui::TableNextRow();
 		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text("Body Size");
-
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
+			Label("Body Size");
+			NextColumn();
 			const glm::vec2 Size = Body.GetSize();
 			ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
+		}
+
+		/* Linear Velocity. */
+		ImGui::TableNextRow();
+		{
+			Label("Linear Velocity");
+			NextColumn();
+			const glm::vec2 V = Body.GetLinearVelocity();
+			ImGui::Text("(%.2f, %.2f)", V.x, V.y);
+		}
+
+		/* Angular Velocity. */
+		ImGui::TableNextRow();
+		{
+			Label("Angular Velocity");
+			NextColumn();
+			const float V = Body.GetAngularVelocity();
+			ImGui::Text("%.2f", V);
 		}
 
 		/* AABB. */
 		ImGui::TableNextRow();
 		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text("AABB");
-
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
+			Label("AABB");
+			NextColumn();
 			const FAABB AABB = Body.GetAABB();
 			ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
 			ImGui::SameLine(0.0f, 16.0f);
@@ -89,12 +118,8 @@ namespace platformer2d::UI::Draw {
 		/* @todo: Make treenode */
 		ImGui::TableNextRow();
 		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text("Effect Component");
-
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
+			Label("EffectComponent");
+			NextColumn();
 			if (Actor.HasComponent<FEffectComponent>())
 			{
 				ImGui::Text("Yes");
