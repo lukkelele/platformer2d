@@ -12,7 +12,10 @@
 #include "core/input/keyboard.h"
 #include "renderer/opengl.h"
 
+#define LOAD_TEST_LEVEL_ON_STARTUP 0
+#if LOAD_TEST_LEVEL_ON_STARTUP
 #include "game/level/testlevel.h"
+#endif
 
 namespace platformer2d::test {
 
@@ -33,11 +36,15 @@ namespace platformer2d::test {
 		Application->Initialize();
 
 		bRunning = true;
+#ifdef RUN_CATCH_TESTS
 		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
+#endif
 
+#if LOAD_TEST_LEVEL_ON_STARTUP
 		std::shared_ptr<Level::CTestLevel> TestLevel = std::make_shared<Level::CTestLevel>();
 		const bool LayerAdded = Application->PushLayer(TestLevel);
 		LK_VERIFY(LayerAdded, "Failed to add layer");
+#endif
 
 		Application->Run();
 	}
