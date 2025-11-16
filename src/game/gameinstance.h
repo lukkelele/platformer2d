@@ -19,6 +19,14 @@ namespace platformer2d {
 		float Distance = 0.0f;
 	};
 
+	struct FConfig
+	{
+		struct
+		{
+			bool bDrawRayHits = false;
+		} Debug;
+	};
+
 	struct FGameSpecification
 	{
 		enum { VALUE_UNSET = -1 };
@@ -76,6 +84,7 @@ namespace platformer2d {
 		const std::array<glm::vec2, 2>& GetViewportBounds() { return ViewportBounds; }
 
 	protected:
+		FConfig Config;
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
 	private:
