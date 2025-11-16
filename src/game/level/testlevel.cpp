@@ -92,7 +92,7 @@ namespace platformer2d::Level {
 	static void GenerateClouds(const std::size_t CloudCount = 7);
 
 	CTestLevel::CTestLevel()
-		: IGameInstance(this, GameSpec)
+		: CGameInstance(this, GameSpec)
 	{
 		CRenderer::SetClearColor(FColor::SkyBlue);
 	}

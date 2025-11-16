@@ -132,7 +132,7 @@ namespace platformer2d::UI {
 		ImGui::Checkbox("Debug", &GameMenu.Settings.bDebug);
 
 		ImGui::SeparatorText("Camera");
-		IGameInstance* GameInstance = IGameInstance::Get();
+		CGameInstance* GameInstance = CGameInstance::Get();
 		if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr)
 		{
 			Font::Push(EFont::Roboto, EFontSize::Large, EFontModifier::Italic);

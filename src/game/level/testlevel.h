@@ -7,7 +7,7 @@
 
 namespace platformer2d::Level {
 
-	class CTestLevel : public IGameInstance
+	class CTestLevel : public CGameInstance
 	{
 	public:
 		CTestLevel();

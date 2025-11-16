@@ -31,12 +31,12 @@ namespace platformer2d {
 		FBodySpecification PlayerBody{};
 	};
 
-	class IGameInstance : public CLayer, public ISerializable<ESerializable::File>
+	class CGameInstance : public CLayer, public ISerializable<ESerializable::File>
 	{
 	public:
-		IGameInstance(IGameInstance* InstanceRef, const FGameSpecification& InSpec);
-		IGameInstance() = delete;
-		virtual ~IGameInstance() = default;
+		CGameInstance(CGameInstance* InstanceRef, const FGameSpecification& InSpec);
+		CGameInstance() = delete;
+		virtual ~CGameInstance() = default;
 
 		virtual void Initialize() = 0;
 		virtual void Destroy() = 0;
@@ -52,7 +52,7 @@ namespace platformer2d {
 		virtual bool Serialize(const std::filesystem::path& OutFile) const override = 0;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override = 0;
 
-		static IGameInstance* Get() { return Instance; }
+		static CGameInstance* Get() { return Instance; }
 
 	protected:
 		const FGameSpecification& GetSpecification() const { return Spec; }
@@ -63,7 +63,7 @@ namespace platformer2d {
 	private:
 		FGameSpecification Spec{};
 
-		static inline IGameInstance* Instance = nullptr;
+		static inline CGameInstance* Instance = nullptr;
 	};
 
 }

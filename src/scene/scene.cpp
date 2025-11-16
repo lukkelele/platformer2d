@@ -44,7 +44,7 @@ namespace platformer2d {
 			/* Move the player a little bit to cause physics to pass through. */
 			if (DeleteActor(Handle))
 			{
-				if (IGameInstance* GameInstance = IGameInstance::Get(); GameInstance != nullptr)
+				if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr)
 				{
 					CPlayer* Player = GameInstance->GetPlayer(0);
 					/* @todo: Instead of applied force, try to just send wake-up event */

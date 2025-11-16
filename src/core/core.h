@@ -27,14 +27,14 @@ namespace platformer2d {
 
 	namespace Core
 	{
-		int ParseSvgPath(std::string_view, const glm::vec2& Offset,
-						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
-
 		struct FGlobal
 		{
 			bool bShouldShutdown = false;
 		};
 		extern FGlobal Global;
+
+		int ParseSvgPath(std::string_view, const glm::vec2& Offset,
+						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
 	}
 
 	namespace Enum
