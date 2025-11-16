@@ -3,6 +3,8 @@ project_library_sources(
 	ui.h
 	ui.cpp
 	ui_core.h
+	uilayer.h
+	uilayer.cpp
 	widgets.h
 	widgets.cpp
 )
