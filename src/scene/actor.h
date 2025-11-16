@@ -10,6 +10,13 @@
 #include "physics/body.h"
 #include "serialization/serializable.h"
 
+#define LK_ASSERT_COMPONENT_RETRIEVAL 1
+#if LK_ASSERT_COMPONENT_RETRIEVAL
+#	define LK_ASSERT_GET_COMP(...) LK_ASSERT(__VA_ARGS__)
+#else
+#	define LK_ASSERT_GET_COMP(...)
+#endif
+
 namespace platformer2d {
 
 	class CActor : public ISerializable<ESerializable::Yaml>
@@ -49,8 +56,8 @@ namespace platformer2d {
 
 		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
-		inline CBody& GetBody() { return *Body; }
-		inline const CBody& GetBody() const { return *Body; }
+		FORCEINLINE CBody& GetBody() { return *Body; }
+		FORCEINLINE const CBody& GetBody() const { return *Body; }
 		bool IsMoving() const;
 
 		inline bool IsTickEnabled() const { return bTickEnabled; }
@@ -64,6 +71,40 @@ namespace platformer2d {
 
 		inline std::string_view GetName() const { return Name; }
 
+		template<typename T>
+		T& GetComponent()
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
+		}
+
+		template<typename T>
+		const T& GetComponent() const
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
+		}
+
+		template<typename T>
+		T& AddComponent()
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "AddComponent not specialized for this type");
+		}
+
+		template<typename T>
+		T& AddComponent(const T& Value)
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(!std::is_same_v<T, T>, "AddComponent not specialized for this type");
+		}
+
+		template<typename T>
+		bool HasComponent() const
+		{
+			return false;
+		}
+
 		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 	private:
@@ -73,18 +114,87 @@ namespace platformer2d {
 		static inline FOnActorCreated OnActorCreated;
 		static inline FOnActorMarkedForDeletion OnActorMarkedForDeletion;
 	protected:
-		FTransformComponent TransformComp{};
 		std::unique_ptr<CBody> Body;
+		FTransformComponent TransformComp{};
+		std::optional<FEffectComponent> EffectComp;
+
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
 		std::string Name;
-
 	private:
 		LUUID Handle;
 		bool bTickEnabled = true;
 		bool bDeletable = true;
 
 		static inline uint32_t Instances = 0;
+
+		friend class CScene;
 	};
 
+	template<>
+	inline FTransformComponent& CActor::GetComponent<FTransformComponent>()
+	{
+		return TransformComp;
+	}
+
+	template<>
+	inline const FTransformComponent& CActor::GetComponent<FTransformComponent>() const
+	{
+		return TransformComp;
+	}
+
+	template<>
+	inline FEffectComponent& CActor::GetComponent<FEffectComponent>()
+	{
+		LK_ASSERT_GET_COMP(EffectComp.has_value());
+		return EffectComp.value();
+	}
+
+	template<>
+	inline const FEffectComponent& CActor::GetComponent<FEffectComponent>() const
+	{
+		LK_ASSERT_GET_COMP(EffectComp.has_value());
+		return EffectComp.value();
+	}
+
+	template<>
+	inline FEffectComponent& CActor::AddComponent<FEffectComponent>()
+	{
+		if (!EffectComp.has_value())
+		{
+			EffectComp.emplace();
+		}
+
+		return EffectComp.value();
+	}
+
+	template<>
+	inline FEffectComponent& CActor::AddComponent<FEffectComponent>(const FEffectComponent& Value)
+	{
+		if (!EffectComp.has_value())
+		{
+			EffectComp = Value;
+		}
+		else
+		{
+			EffectComp.value() = Value;
+		}
+
+		return EffectComp.value();
+	}
+
+	template<>
+	inline bool CActor::HasComponent<FTransformComponent>() const
+	{
+		return true;
+	}
+
+	template<>
+	inline bool CActor::HasComponent<FEffectComponent>() const
+	{
+		return EffectComp.has_value();
+	}
+
 }
+
+#undef LK_ASSERT_GET_COMP

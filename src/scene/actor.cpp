@@ -1,6 +1,7 @@
 #include "actor.h"
 
 #include "core/log.h"
+#include "serialization/serialization.h"
 
 namespace platformer2d {
 
@@ -130,13 +131,16 @@ namespace platformer2d {
 
 		/* TransformComponent */
 		const FTransformComponent& TC = GetTransformComponent();
-		Out << YAML::Key << "TransformComponent";
-		Out << YAML::BeginMap;
-		Out << YAML::Key << "Position" << YAML::Value << TC.Translation;
-		Out << YAML::Key << "Rotation" << YAML::Value << TC.GetRotation2D();
-		Out << YAML::Key << "Scale" << YAML::Value << TC.Scale;
-		Out << YAML::EndMap;
+		Serialization::Serialize(TC, Out);
 		/* ~TransformComponent */
+
+		/* EffectComponent */
+		if (HasComponent<FEffectComponent>())
+		{
+			const FEffectComponent& EC = GetComponent<FEffectComponent>();
+			Serialization::Serialize(EC, Out);
+		}
+		/* ~EffectComponent */
 
 		if (Body)
 		{
