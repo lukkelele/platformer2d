@@ -5,17 +5,18 @@ Actors:
     Texture: 0
     Color: [0, 0.75, 0, 1]
     TransformComponent:
-      Position: [3.29, -0.33, 0]
-      Rotation: 0.4377699
+      Position: [3.168577, -0.31357962, 0]
+      Rotation: 0.52230364
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
+      GravityScale: 1
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.4377699
+        Rotation: 0.52230364
         Radius: 0.5
-      Position: [3.29, -0.33]
+      Position: [3.168577, -0.31357962]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -25,17 +26,18 @@ Actors:
     Texture: 4
     Color: [1, 1, 1, 1]
     TransformComponent:
-      Position: [-1.48, -0.68727523, 0]
+      Position: [-1.4762326, -0.045966715, 0]
       Rotation: 1.5707964
       Scale: [1.45, 0.95, 1]
     Body:
       Type: 0
+      GravityScale: 1
       Shape:
         ShapeType: 2
         Size: [1.45, 0.95]
         Rotation: 1.5707964
         Radius: 0.5
-      Position: [-1.48, -0.68727523]
+      Position: [-1.4762326, -0.045966715]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -45,17 +47,18 @@ Actors:
     Texture: 0
     Color: [1, 0, 1, 1]
     TransformComponent:
-      Position: [-0.43701252, -0.1, 0]
+      Position: [-0.5492327, -0.17013736, 0]
       Rotation: 0
       Scale: [0.4, 0.06, 1]
     Body:
       Type: 0
+      GravityScale: 1
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
         Rotation: 0
         Radius: 0.5
-      Position: [-0.43701252, -0.1]
+      Position: [-0.5492327, -0.17013736]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -65,17 +68,21 @@ Actors:
     Texture: 0
     Color: [0, 0.54509807, 0.54509807, 1]
     TransformComponent:
-      Position: [0.86213875, 0.07366255, 0]
-      Rotation: -2.6923761
+      Position: [0.5969546, 0.04383281, 0]
+      Rotation: 1.758294
       Scale: [0.4, 0.06, 1]
+    EffectComponent:
+      - Type: Rotate
+        AngularSpeedDegPerSecond: 60
     Body:
-      Type: 0
+      Type: 2
+      GravityScale: 0
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -2.6915119
+        Rotation: 1.7582941
         Radius: 0.5
-      Position: [0.86213875, 0.07366255]
+      Position: [0.5969546, 0.04383281]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -85,17 +92,18 @@ Actors:
     Texture: 0
     Color: [0.45, 0.45, 0.45, 1]
     TransformComponent:
-      Position: [0.1, -1.6, 0]
+      Position: [0.23335987, -1.6262673, 0]
       Rotation: -3.1415925
       Scale: [9.6, 0.22, 1]
     Body:
       Type: 0
+      GravityScale: 1
       Shape:
         ShapeType: 2
         Size: [9.6, 0.22]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [0.1, -1.6]
+      Position: [0.23335987, -1.6262673]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -110,6 +118,7 @@ Actors:
       Scale: [0.1, 1.2, 1]
     Body:
       Type: 0
+      GravityScale: 1
       Shape:
         ShapeType: 2
         Size: [0.1, 1.2]
@@ -130,6 +139,7 @@ Actors:
       Scale: [2, 0.08, 1]
     Body:
       Type: 0
+      GravityScale: 1
       Shape:
         ShapeType: 2
         Size: [2, 0.08]
