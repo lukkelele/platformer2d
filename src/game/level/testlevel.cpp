@@ -53,8 +53,10 @@ namespace platformer2d::Level {
 		constexpr const char* UI_ID_LEVEL = "Level";
 		constexpr const char* UI_ID_PLAYER = "Player";
 
+		std::weak_ptr<CActor> SelectedActor;
 		std::weak_ptr<CActor> RotatingPlatform;
 
+		/** @deprecated To be replaced with actual static actors */
 		struct FCloud
 		{
 			glm::vec3 Position = { 0.0f, 0.0f, 0.10f };
@@ -84,7 +86,7 @@ namespace platformer2d::Level {
 
 		char ActorNameBuf[128] = { 0 };
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
-		std::weak_ptr<CActor> SelectedActor;
+		bool bRaycastScene = false;
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -112,21 +114,21 @@ namespace platformer2d::Level {
 				const auto& Actors = Scene->GetActors(); /* @fixme */
 				std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Actors.size() + 2);
 
+#if 0 /* @fixme: Remove once the creator menu can add new components */
 				std::string_view ActorName = Actor->GetName();
 				if (ActorName.find("Rotating") != std::string::npos)
 				{
 					/* @fixme: Temporary fix until serialization can take effect parameters. */
 					RotatingPlatform = Actor;
-#if 0 /* @fixme: Remove once the creator menu can add new components */
 					auto& EC = Actor->AddComponent<FEffectComponent>();
 					FEffectInstance Effect;
 					Effect.Type = EEffectType::Rotate;
 					FRotateEffect Rotate;
-					Rotate.AngularSpeedDegPerSecond = 5.0f;
+					Rotate.AngularSpeedDegPerSecond = 10.0f;
 					Effect.Data = Rotate;
 					EC.Effects.push_back(Effect);
-#endif
 				}
+#endif
 			}
 		});
 
@@ -206,19 +208,11 @@ namespace platformer2d::Level {
 
 		Player->Tick(DeltaTime);
 		Scene->Tick(DeltaTime);
-		Tick_Objects(DeltaTime);
 
-#if 0
-		const uint16_t Hits = RaycastScene(Scene, SelectionData);
-		if (Hits > 0)
+		if (bRaycastScene)
 		{
-			const FHitResult& HitResults = SelectionData.at(0);
-			if (HitResults.Ref)
-			{
-				UI::DrawGizmo(Gizmo, *HitResults.Ref, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
-			}
+			RaycastScene();
 		}
-#endif
 
 		DrawClouds();
 
@@ -290,7 +284,11 @@ namespace platformer2d::Level {
 			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T))
 			{
 				HitResults.push_back(FHitResult{ Actor->GetHandle(), Actor, T });
-				CDebugRenderer::DrawRayHit(RayData, T); /* @todo: Toggle for this */
+
+				if (Config.Debug.bDrawRayHits)
+				{
+					CDebugRenderer::DrawRayHit(RayData, T);
+				}
 			}
 		}
 
@@ -550,14 +548,6 @@ namespace platformer2d::Level {
 		);
 	}
 
-	void CTestLevel::Tick_Objects(const float DeltaTime)
-	{
-		if (std::shared_ptr<CActor> Actor = RotatingPlatform.lock(); Actor != nullptr)
-		{
-			Actor->SetRotation(Actor->GetRotation() + glm::radians(0.75f));
-		}
-	}
-
 	void CTestLevel::UI_Level()
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
@@ -605,6 +595,20 @@ namespace platformer2d::Level {
 			else
 			{
 				ImGui::Text("World Space: UNKNOWN");
+			}
+		}
+
+		ImGui::Dummy(ImVec2(0, 8));
+		{
+			ImGui::Checkbox("Raycast Scene", &bRaycastScene);
+			if (!bRaycastScene)
+			{
+				ImGui::BeginDisabled();
+			}
+			ImGui::Checkbox("Draw Debug Ray", &Config.Debug.bDrawRayHits);
+			if (!bRaycastScene)
+			{
+				ImGui::EndDisabled();
 			}
 		}
 
@@ -1029,6 +1033,28 @@ namespace platformer2d::Level {
 				SelectedActor = Ref;
 			}
 		}
+	}
+
+	void CTestLevel::RaycastScene()
+	{
+		CCamera* Camera = GetActiveCamera();
+		if (!Scene || !Camera)
+		{
+			return;
+		}
+
+		static std::vector<FHitResult> HitResults;
+		const uint16_t Hits = RaycastScene(Scene, HitResults);
+#if 0 /* Disable for now since selection is overkill for raycasts */
+		if (Hits > 0)
+		{
+			const FHitResult& Hit = HitResults.at(0);
+			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr)
+			{
+				SelectedActor = Ref;
+			}
+		}
+#endif
 	}
 
 	void CTestLevel::DeserializeActors(const YAML::Node& ActorsNode)

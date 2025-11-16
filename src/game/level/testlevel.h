@@ -37,8 +37,6 @@ namespace platformer2d::Level {
 		void CreatePlatform();
 		void CreateTerrain();
 
-		void Tick_Objects(float DeltaTime);
-
 		void UI_Level();
 		void UI_Player();
 		void UI_TextureModifier();
@@ -50,6 +48,7 @@ namespace platformer2d::Level {
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnMouseButtonPressed(const FMouseButtonData& Data);
 		void MousePickScene();
+		void RaycastScene();
 
 		void DeserializeActors(const YAML::Node& ActorsNode);
 
