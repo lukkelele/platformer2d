@@ -7,6 +7,33 @@
 
 namespace platformer2d::Serialization {
 
+	/**
+	 * @def LK_DESERIALIZE_PROPERTY
+	 * @brief Get a value from a node with a fallback value incase it doesn't exist.
+	 * Cannot be used with strings as of yet.
+	 */
+	#define LK_DESERIALIZE_PROPERTY(PropertyName, Destination, DefaultValue, Node) \
+		if (Node.IsDefined()) \
+		{ \
+			if (auto NodeRef = Node[#PropertyName]) \
+			{ \
+				try \
+				{ \
+					Destination = NodeRef.as<decltype(DefaultValue)>(); \
+				} \
+				catch (const std::exception& Exception) \
+				{ \
+					LK_ERROR_TAG("Deserializer", "Failed to get \"{}\": {}", #PropertyName, Exception.what()); \
+					Destination = DefaultValue; \
+				} \
+			} \
+		} \
+		else \
+		{ \
+			LK_ERROR_TAG("Deserializer", "Default value used for: {}", #PropertyName); \
+			Destination = DefaultValue; \
+		}
+
 	template<typename T>
 	static void Serialize(const T& Target, YAML::Emitter& Out)
 	{
@@ -29,6 +56,7 @@ namespace platformer2d::Serialization {
 	{
 		if (EC.Effects.empty())
 		{
+			LK_DEBUG_TAG("Serializer", "EffectComponent has no effects");
 			return;
 		}
 
@@ -84,7 +112,6 @@ namespace platformer2d::Serialization {
 	static void Deserialize(FEffectComponent& EC, const YAML::Node& NodeSeq)
 	{
 		LK_ASSERT(NodeSeq && NodeSeq.IsSequence());
-		FEffectComponent Component;
 		for (std::size_t Idx = 0; Idx < NodeSeq.size(); Idx++)
 		{
 			const YAML::Node& EffectNode = NodeSeq[Idx];
@@ -99,6 +126,7 @@ namespace platformer2d::Serialization {
 
 			const std::string TypeString = EffectNode["Type"].as<std::string>();
 			const EEffectType Type = Enum::FromString(TypeString);
+			LK_TRACE("Type={} TypeString={}", std::to_underlying(Type), TypeString);
 
 			if (TypeString == "Rotate")
 			{
@@ -110,7 +138,8 @@ namespace platformer2d::Serialization {
 
 			if (Instance.Type != EEffectType::None)
 			{
-				Component.Effects.push_back(Instance);
+				LK_TRACE("Push effect: {}", TypeString);
+				EC.Effects.push_back(Instance);
 			}
 		}
 	}
@@ -120,6 +149,8 @@ namespace platformer2d::Serialization {
 	{
 		LK_ASSERT(Node["Type"] && Node["Shape"]);
 		BodySpec.Type = static_cast<EBodyType>(Node["Type"].as<int>());
+
+		LK_DESERIALIZE_PROPERTY(GravityScale, BodySpec.GravityScale, 1.0f, Node);
 
 		const YAML::Node ShapeNode = Node["Shape"];
 		LK_VERIFY(ShapeNode["ShapeType"], "ShapeType missing in yaml");
