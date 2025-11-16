@@ -4,6 +4,7 @@
 #include <format>
 #include <utility>
 #include <string>
+#include <variant>
 
 #include <glm/glm.hpp>
 #include <glm/ext/matrix_common.hpp>
@@ -104,5 +105,63 @@ namespace platformer2d {
 			return std::format("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
 		}
 	};
+
+	enum class EEffectType
+	{
+		None,
+		Rotate
+	};
+
+	struct FRotateEffect
+	{
+		float AngularSpeedDegPerSecond = 0.0f;
+	};
+
+	using TEffectData = std::variant<std::monostate, FRotateEffect>;
+
+	struct FEffectInstance
+	{
+		EEffectType Type;
+		TEffectData Data;
+	};
+
+	struct FEffectComponent
+	{
+		std::vector<FEffectInstance> Effects;
+
+		bool HasAny() const
+		{
+			return !Effects.empty();
+		}
+	};
+
+	namespace Enum
+	{
+		inline const char* ToString(const EEffectType Type)
+		{
+			const char* S = "";
+		#define _(EnumValue) case EEffectType::EnumValue: S = #EnumValue; break
+			switch (Type)
+			{
+				_(None);
+				_(Rotate);
+				default:
+					LK_THROW_ENUM_ERR(Type);
+					break;
+			}
+		#undef _
+			return S;
+		}
+
+		inline EEffectType FromString(std::string_view String)
+		{
+		#define _(EnumValue) if (String == #EnumValue) { return EEffectType::EnumValue; }
+			_(None);
+			_(Rotate);
+		#undef _
+			LK_ASSERT(false);
+			return EEffectType::None;
+		}
+	}
 
 }
