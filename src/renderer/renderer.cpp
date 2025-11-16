@@ -114,8 +114,6 @@ namespace platformer2d {
 		QuadShader->Bind();
 		BindTextures();
 
-		/* @todo Move the ImGui layer to CWindow, or keep here? */
-		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
 		Data.RefreshRate = CWindow::Get()->GetRefreshRate();
 		LK_VERIFY(Data.RefreshRate > 0, "Failed to get window refresh rate");
 
@@ -124,7 +122,22 @@ namespace platformer2d {
 		bDebugRender = true;
 #endif
 
-		UI::Initialize();
+		/**
+		 * Disable depth testing when game menu is opened.
+		 * Done to make sure the dark overlay is drawn on top the scene.
+		 */
+		UI::OnGameMenuOpened.Add([](const bool Open)
+		{
+			if (Open)
+			{
+				SetDepthTest(false);
+			}
+			else
+			{
+				SetDepthTest(true);
+			}
+		});
+
 		bInitialized = true;
 	}
 
@@ -140,9 +153,6 @@ namespace platformer2d {
 				TextureRef.reset();
 			}
 		}
-
-		ImGuiLayer->Destroy();
-		ImGuiLayer.release();
 	}
 
 	void CRenderer::SetupQuadRenderer()
@@ -301,18 +311,13 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
 
-		ImGuiLayer->BeginFrame();
-
 		QuadShader->Bind();
 		BindTextures();
 	}
 
 	void CRenderer::EndFrame()
 	{
-		UI::Render();
 		Flush();
-
-		ImGuiLayer->EndFrame();
 	}
 
 	void CRenderer::BeginScene(const CCamera& Camera)

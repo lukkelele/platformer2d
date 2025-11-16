@@ -129,7 +129,6 @@ namespace platformer2d {
 		static inline bool bInitialized = false;
 		static inline FBackendInfo BackendInfo;
 		static inline glm::vec4 ClearColor{ 0.20f, 0.20f, 0.20f, 1.0f };
-		static inline std::unique_ptr<CImGuiLayer> ImGuiLayer = nullptr;
 
 		static inline GLuint QuadVAO = 0;
 		static inline GLuint QuadVBO = 0;
