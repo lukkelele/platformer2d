@@ -1,14 +1,21 @@
 #include "application.h"
 
-#include "game/player.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
+#include "game/player.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/vertexbufferlayout.h"
 #include "renderer/ui/ui.h"
+#include "renderer/ui/uilayer.h"
 #include "scene/effectmanager.h"
+
+/** @todo: Level loading from a main menu */
+#define LOAD_TEST_LEVEL_ON_STARTUP 1
+#if LOAD_TEST_LEVEL_ON_STARTUP
+#include "game/level/testlevel.h"
+#endif
 
 namespace platformer2d {
 
@@ -33,6 +40,16 @@ namespace platformer2d {
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
 		CMouse::Initialize();
+
+		LK_TRACE_TAG("Application", "Adding UI layer to layerstack");
+		UILayer = std::make_shared<CUILayer>();
+		LayerStack.PushOverlay(UILayer);
+
+#ifdef LOAD_TEST_LEVEL_ON_STARTUP
+		LK_TRACE_TAG("Application", "Adding testlevel to layerstack");
+		std::shared_ptr<Level::CTestLevel> TestLevel = std::make_shared<Level::CTestLevel>();
+		LayerStack.PushLayer(TestLevel);
+#endif
 	}
 
 	void CApplication::Shutdown()
@@ -42,11 +59,12 @@ namespace platformer2d {
 			LK_INFO_TAG("Application", "Shutting down");
 			bRunning = false;
 
-			Window->Destroy();
-			Window.release();
-
+			UILayer.reset();
 			LK_TRACE_TAG("Application", "Release layerstack");
 			LayerStack.Destroy();
+
+			Window->Destroy();
+			Window.reset();
 		}
 	}
 
@@ -58,7 +76,7 @@ namespace platformer2d {
 		const FWindowData& WindowData = Window->GetData();
 		GLFWwindow* GlfwWindow = Window->GetGlfwWindow();
 
-		CEffectManager& EffectManager = CEffectManager::Get();
+		CEffectManager& EffectManager = CEffectManager::Get(); /* @todo Integrate in layerstack somehow (?) */
 
 		bRunning = true;
 		Timer.Reset();
@@ -74,6 +92,7 @@ namespace platformer2d {
 
 			Window->BeginFrame();
 			CKeyboard::Update();
+			UILayer->BeginFrame();
 			CRenderer::BeginFrame();
 
 			for (auto& Layer : LayerStack)
@@ -90,6 +109,7 @@ namespace platformer2d {
 			}
 
 			CRenderer::EndFrame();
+			UILayer->EndFrame();
 			CKeyboard::TransitionPressedKeys();
 			Window->EndFrame();
 		}

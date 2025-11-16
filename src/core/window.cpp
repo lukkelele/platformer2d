@@ -131,6 +131,7 @@ namespace platformer2d {
 
 	void CWindow::Destroy()
 	{
+		LK_TRACE_TAG("Window", "Destroy");
 		glfwTerminate();
 		GlfwWindow = nullptr;
 	}

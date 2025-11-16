@@ -34,6 +34,7 @@ namespace platformer2d {
 
 	bool CLayerStack::PushLayer(std::shared_ptr<CLayer> Layer)
 	{
+		LK_ASSERT(Layer);
 		if (auto Iter = Layers.emplace((Layers.begin() + InsertIndex), Layer); Iter != Layers.end())
 		{
 			InsertIndex++;
@@ -41,22 +42,26 @@ namespace platformer2d {
 			return true;
 		}
 
+		LK_ASSERT(false, "Failed to emplace \"{}\" on layerstack", Layer->GetName());
 		return false;
 	}
 
 	bool CLayerStack::PushOverlay(std::shared_ptr<CLayer> Overlay)
 	{
+		LK_ASSERT(Overlay);
 		if (Layers.emplace_back(Overlay))
 		{
 			Overlay->OnAttach();
 			return true;
 		}
 
+		LK_ASSERT(false, "Failed to emplace \"{}\" as an overlay on layerstack", Overlay->GetName());
 		return false;
 	}
 
 	bool CLayerStack::PopLayer(std::shared_ptr<CLayer> Layer)
 	{
+		LK_ASSERT(Layer);
 		auto Iter = std::find(Layers.begin(), Layers.begin() + InsertIndex, Layer);
 		if (Iter != (Layers.begin() + InsertIndex))
 		{
@@ -72,6 +77,7 @@ namespace platformer2d {
 
 	bool CLayerStack::PopOverlay(std::shared_ptr<CLayer> Overlay)
 	{
+		LK_ASSERT(Overlay);
 		auto Iter = std::find(Layers.begin() + InsertIndex, Layers.end(), Overlay);
 		if (Iter != Layers.end())
 		{

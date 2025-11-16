@@ -4,6 +4,7 @@
 #include "core/layerstack.h"
 #include "core/timer.h"
 #include "renderer/renderer.h"
+#include "renderer/ui/uilayer.h"
 
 namespace platformer2d {
 
@@ -24,6 +25,7 @@ namespace platformer2d {
 	protected:
 		bool bRunning = false;
 		std::unique_ptr<CWindow> Window;
+		std::shared_ptr<CUILayer> UILayer;
 		CLayerStack LayerStack;
 		CTimer Timer;
 	};
