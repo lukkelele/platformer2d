@@ -8,6 +8,60 @@
 namespace platformer2d::Serialization {
 
 	template<typename T>
+	static void Serialize(const T& Target, YAML::Emitter& Out)
+	{
+		LK_UNUSED(Target, Out);
+	}
+
+	template<>
+	static void Serialize(const FTransformComponent& TC, YAML::Emitter& Out)
+	{
+		Out << YAML::Key << "TransformComponent";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "Position" << YAML::Value << TC.Translation;
+		Out << YAML::Key << "Rotation" << YAML::Value << TC.GetRotation2D();
+		Out << YAML::Key << "Scale" << YAML::Value << TC.Scale;
+		Out << YAML::EndMap;
+	}
+
+	template<>
+	static void Serialize(const FEffectComponent& EC, YAML::Emitter& Out)
+	{
+		if (EC.Effects.empty())
+		{
+			return;
+		}
+
+		Out << YAML::Key << "EffectComponent";
+		Out << YAML::Value << YAML::BeginSeq;
+		for (std::size_t Index = 0; Index < EC.Effects.size(); Index++)
+		{
+			const FEffectInstance& Instance = EC.Effects[Index];
+			YAML::Node EffectNode;
+
+			Out << YAML::BeginMap;
+			Out << YAML::Key << "Type" << YAML::Value << Enum::ToString(Instance.Type);
+
+			switch (Instance.Type)
+			{
+				case EEffectType::Rotate:
+				{
+					const FRotateEffect& Rotate = std::get<FRotateEffect>(Instance.Data);
+					Out << YAML::Key << "AngularSpeedDegPerSecond";
+					Out << YAML::Value << Rotate.AngularSpeedDegPerSecond;
+					break;
+				}
+
+				default: break;
+			}
+
+			Out << YAML::EndMap;
+		}
+
+		Out << YAML::EndSeq;
+	}
+
+	template<typename T>
 	static void Deserialize(T& Target, const YAML::Node& Node)
 	{
 		LK_UNUSED(Target, Node);
@@ -20,6 +74,45 @@ namespace platformer2d::Serialization {
 		const float RotRad = Node["Rotation"].as<float>();
 		TC.SetRotation2D(RotRad);
 		TC.Scale = Node["Scale"].as<decltype(TC.Scale)>();
+	}
+
+	/**
+	 * @brief Deserialize an effect component.
+	 * The YAML node should be a sequence of effects, if any.
+	 */
+	template<>
+	static void Deserialize(FEffectComponent& EC, const YAML::Node& NodeSeq)
+	{
+		LK_ASSERT(NodeSeq && NodeSeq.IsSequence());
+		FEffectComponent Component;
+		for (std::size_t Idx = 0; Idx < NodeSeq.size(); Idx++)
+		{
+			const YAML::Node& EffectNode = NodeSeq[Idx];
+			if (!EffectNode)
+			{
+				continue;
+			}
+
+			FEffectInstance Instance;
+			Instance.Type = EEffectType::None;
+			Instance.Data = std::monostate{};
+
+			const std::string TypeString = EffectNode["Type"].as<std::string>();
+			const EEffectType Type = Enum::FromString(TypeString);
+
+			if (TypeString == "Rotate")
+			{
+				Instance.Type = EEffectType::Rotate;
+				FRotateEffect Rotate;
+				Rotate.AngularSpeedDegPerSecond = EffectNode["AngularSpeedDegPerSecond"].as<float>();
+				Instance.Data = Rotate;
+			}
+
+			if (Instance.Type != EEffectType::None)
+			{
+				Component.Effects.push_back(Instance);
+			}
+		}
 	}
 
 	template<>
