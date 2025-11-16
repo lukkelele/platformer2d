@@ -86,6 +86,20 @@ namespace platformer2d {
 		}
 
 		template<typename T>
+		T* TryGetComponent()
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
+		}
+
+		template<typename T>
+		const T* TryGetComponent() const
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
+		}
+
+		template<typename T>
 		T& AddComponent()
 		{
 			/* Force generic template to be ill-formed, no return needed. */
@@ -110,6 +124,8 @@ namespace platformer2d {
 	private:
 		static LUUID GenerateHandle();
 
+		void UpdateEffectComponent(FEffectComponent* EC);
+
 	public:
 		static inline FOnActorCreated OnActorCreated;
 		static inline FOnActorMarkedForDeletion OnActorMarkedForDeletion;
@@ -127,8 +143,6 @@ namespace platformer2d {
 		bool bDeletable = true;
 
 		static inline uint32_t Instances = 0;
-
-		friend class CScene;
 	};
 
 	template<>
@@ -158,6 +172,40 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FTransformComponent* CActor::TryGetComponent<FTransformComponent>()
+	{
+		return &TransformComp;
+	}
+
+	template<>
+	inline const FTransformComponent* CActor::TryGetComponent<FTransformComponent>() const
+	{
+		return &TransformComp;
+	}
+
+	template<>
+	inline FEffectComponent* CActor::TryGetComponent<FEffectComponent>()
+	{
+		if (!EffectComp.has_value())
+		{
+			return nullptr;
+		}
+
+		return std::addressof(EffectComp.value());
+	}
+
+	template<>
+	inline const FEffectComponent* CActor::TryGetComponent<FEffectComponent>() const
+	{
+		if (!EffectComp.has_value())
+		{
+			return nullptr;
+		}
+
+		return std::addressof(EffectComp.value());
+	}
+
+	template<>
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>()
 	{
 		if (!EffectComp.has_value())
@@ -171,6 +219,7 @@ namespace platformer2d {
 	template<>
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>(const FEffectComponent& Value)
 	{
+		LK_ASSERT(Value.HasAny(), "Added component has no effects");
 		if (!EffectComp.has_value())
 		{
 			EffectComp = Value;

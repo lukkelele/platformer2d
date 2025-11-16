@@ -45,7 +45,12 @@ namespace platformer2d {
 
 	void CActor::Tick(const float DeltaTime)
 	{
-		if (bTickEnabled)
+		if (!bTickEnabled)
+		{
+			return;
+		}
+
+		if (Body)
 		{
 			Body->Tick(DeltaTime);
 
@@ -53,6 +58,11 @@ namespace platformer2d {
 			TransformComp.Translation.x = BodyPos.x;
 			TransformComp.Translation.y = BodyPos.y;
 			TransformComp.SetRotation2D(Body->GetRotation());
+		}
+
+		if (FEffectComponent* EC = TryGetComponent<FEffectComponent>(); EC != nullptr)
+		{
+			UpdateEffectComponent(EC);
 		}
 	}
 
@@ -85,7 +95,10 @@ namespace platformer2d {
 
 	void CActor::SetRotation(const float AngleRad)
 	{
-		Body->SetRotation(AngleRad);
+		if (Body)
+		{
+			Body->SetRotation(AngleRad);
+		}
 		TransformComp.SetRotation2D(AngleRad);
 	}
 
@@ -101,7 +114,6 @@ namespace platformer2d {
 
 	void CActor::SetTickEnabled(const bool Enabled)
 	{
-		LK_TRACE_TAG("Actor", "[{}] Tick {}", Name, Enabled ? "enabled" : "disabled");
 		bTickEnabled = Enabled;
 	}
 
@@ -159,6 +171,28 @@ namespace platformer2d {
 	{
 		Instances++;
 		return Instances;
+	}
+
+	void CActor::UpdateEffectComponent(FEffectComponent* EC)
+	{
+		for (auto& Effect : EC->Effects)
+		{
+			switch (Effect.Type)
+			{
+				case EEffectType::Rotate:
+				{
+					if (Body)
+					{
+						const FRotateEffect& Rotate = std::get<FRotateEffect>(Effect.Data);
+						Body->SetAngularVelocity(glm::radians(Rotate.AngularSpeedDegPerSecond));
+					}
+					break;
+				}
+
+				default:
+					break;
+			}
+		}
 	}
 
 }
