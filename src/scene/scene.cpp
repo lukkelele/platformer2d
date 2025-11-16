@@ -201,13 +201,13 @@ namespace platformer2d {
 			return false;
 		}
 
+		/* Read YAML file to a string. */
 		std::ifstream InputStream(Filepath);
 		std::stringstream StringStream;
 		StringStream << InputStream.rdbuf();
 		const std::string YamlString = StringStream.str();
 
 		const YAML::Node Data = YAML::Load(YamlString);
-
 		const std::string SceneName = Data["Name"].as<std::string>();
 		Name = SceneName;
 		LK_DEBUG_TAG("Scene", "Deserialized name: {}", Name);
@@ -238,7 +238,7 @@ namespace platformer2d {
 			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorName, ActorHandle);
 
 			FTransformComponent TC;
-			if (const YAML::Node TCNode = Node["TransformComponent"]; !TCNode.IsNull())
+			if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined())
 			{
 				Serialization::Deserialize(TC, TCNode);
 			}
@@ -249,7 +249,7 @@ namespace platformer2d {
 
 			FBodySpecification BodySpec;
 			BodySpec.Name = ActorName;
-			if (const YAML::Node BodyNode = Node["Body"]; !BodyNode.IsNull())
+			if (const YAML::Node BodyNode = Node["Body"]; BodyNode.IsDefined())
 			{
 				Serialization::Deserialize(BodySpec, BodyNode);
 			}
@@ -258,9 +258,22 @@ namespace platformer2d {
 				LK_WARN_TAG("Scene", "Body missing in YAML");
 			}
 
+			bool HasEffectComponent = false;
+			FEffectComponent EC;
+			if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined())
+			{
+				HasEffectComponent = true;
+				Serialization::Deserialize(EC, EffectCompNode);
+			}
+
 			if (!DoesActorExist(ActorHandle))
 			{
 				std::shared_ptr<CActor> Actor = CActor::Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
+
+				if (HasEffectComponent)
+				{
+					Actor->AddComponent<FEffectComponent>(EC);
+				}
 			}
 			else
 			{
