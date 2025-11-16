@@ -3,6 +3,7 @@
 #include <box2d/box2d.h>
 #include <glm/glm.hpp>
 
+#include "bodytype.h"
 #include "core/core.h"
 #include "core/math/aabb.h"
 #include "core/math/shapes.h"
@@ -21,7 +22,7 @@ namespace platformer2d {
 
 	enum EBodyFlag : uint32_t
 	{
-		EBodyFlag_None = 0,
+		EBodyFlag_None           = 0,
 		EBodyFlag_PreSolveEvents = LK_BIT(1),
 		EBodyFlag_ContactEvents  = LK_BIT(2),
 		EBodyFlag_SensorEvents   = LK_BIT(3),
@@ -62,6 +63,7 @@ namespace platformer2d {
 
 		inline const b2BodyId& GetID() const { return ID; }
 		inline const b2ShapeId& GetShapeID() const { return ShapeID; }
+		EBodyType GetType() const;
 
 		inline bool IsDirty() const { return bDirty; }
 		void SetDirty(bool Dirty);
@@ -76,6 +78,7 @@ namespace platformer2d {
 		glm::vec2 GetLinearVelocity() const;
 		void SetLinearVelocity(const glm::vec2& InVelocity) const;
 		float GetAngularVelocity() const;
+		void SetAngularVelocity(float InVelocity) const;
 
 		void ApplyForce(const glm::vec2& InForce, bool bWakeUp = true) const;
 		void ApplyImpulse(const glm::vec2& InImpulse, bool bWakeUp = true) const;
@@ -129,7 +132,14 @@ namespace platformer2d {
 		void ScaleLine(const glm::vec2& Factor) const;
 		void ScaleCapsule(const glm::vec2& Factor) const;
 
+		static EBodyType DetermineBodyType(b2BodyType Type);
+
 	private:
+		/**
+		 * @todo: Need to figure out how the spec should be used.
+		 * I don't want to duplicate values but I also do not
+		 * want to use it as mutable during the lifetime of the body.
+		 */
 		const FBodySpecification BodySpec;
 		b2BodyId ID;
 		b2ShapeId ShapeID; /* @todo: Should support multiple shapes */
@@ -137,8 +147,10 @@ namespace platformer2d {
 		TShape Shape;
 		EShape ShapeType;
 
-		bool bDirty = false;
 		float DeltaTime = 0.0f;
+		bool bDirty = false;
+
+		float GravityScale = 1.0f;
 
 		friend class CPhysicsWorld;
 	};

@@ -36,7 +36,7 @@ namespace platformer2d {
 
 	private:
 		static inline b2WorldId WorldID;
-		static inline int Substep = 4;
+		static inline int Substep = 6;
 
 		static inline std::unique_ptr<b2DebugDraw> DebugDraw = nullptr;
 	};

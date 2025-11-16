@@ -8,6 +8,7 @@ namespace platformer2d {
 
 	CBody::CBody(const FBodySpecification& Spec)
 		: BodySpec(Spec)
+		, GravityScale(Spec.GravityScale)
 	{
 		ShapeType = DetermineShapeType(Spec.Shape);
 
@@ -78,6 +79,11 @@ namespace platformer2d {
 		DeltaTime = InDeltaTime;
 	}
 
+	EBodyType CBody::GetType() const
+	{
+		return DetermineBodyType(b2Body_GetType(ID));
+	}
+
 	void CBody::SetDirty(const bool Dirty)
 	{
 		bDirty = Dirty;
@@ -131,6 +137,11 @@ namespace platformer2d {
 	float CBody::GetAngularVelocity() const
 	{
 		return b2Body_GetAngularVelocity(ID);
+	}
+
+	void CBody::SetAngularVelocity(const float InVelocity) const
+	{
+		b2Body_SetAngularVelocity(ID, InVelocity);
 	}
 
 	void CBody::ApplyForce(const glm::vec2& InForce, const bool bWakeUp) const
@@ -203,6 +214,26 @@ namespace platformer2d {
 		}
 	}
 
+	float CBody::GetRestitution() const
+	{
+		return b2Shape_GetRestitution(ShapeID);
+	}
+
+	void CBody::SetRestitution(const float Restitution) const
+	{
+		b2Shape_SetRestitution(ShapeID, Restitution);
+	}
+
+	float CBody::GetFriction() const
+	{
+		return b2Shape_GetFriction(ShapeID);
+	}
+
+	void CBody::SetFriction(const float Friction) const
+	{
+		b2Shape_SetFriction(ShapeID, Friction);
+	}
+
 	glm::vec2 CBody::GetSize() const
 	{
 		if (ShapeType == EShape::Polygon)
@@ -240,6 +271,8 @@ namespace platformer2d {
 
 		Out << YAML::Key << "Type";
 		Out << YAML::Value << std::to_underlying(BodySpec.Type);
+
+		Out << YAML::Key << "GravityScale" << YAML::Value << GravityScale;
 
 		/* Shape */
 		Out << YAML::Key << "Shape";
@@ -408,24 +441,19 @@ namespace platformer2d {
 		b2Shape_SetCapsule(ShapeID, &Shape);
 	}
 
-	float CBody::GetRestitution() const
+	EBodyType CBody::DetermineBodyType(const b2BodyType Type)
 	{
-		return b2Shape_GetRestitution(ShapeID);
-	}
-
-	void CBody::SetRestitution(const float Restitution) const
-	{
-		b2Shape_SetRestitution(ShapeID, Restitution);
-	}
-
-	float CBody::GetFriction() const
-	{
-		return b2Shape_GetFriction(ShapeID);
-	}
-
-	void CBody::SetFriction(const float Friction) const
-	{
-		b2Shape_SetFriction(ShapeID, Friction);
+		switch (Type)
+		{
+			case b2BodyType::b2_staticBody:
+				return EBodyType::Static;
+			case b2BodyType::b2_dynamicBody:
+				return EBodyType::Dynamic;
+			case b2BodyType::b2_kinematicBody:
+				return EBodyType::Kinematic;
+			default:
+				LK_VERIFY(false);
+		}
 	}
 
 }
