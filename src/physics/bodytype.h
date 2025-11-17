@@ -9,6 +9,7 @@ namespace platformer2d {
 		Static,
 		Dynamic,
 		Kinematic,
+		COUNT
 	};
 
 	namespace Enum
@@ -22,6 +23,7 @@ namespace platformer2d {
 				_(Static);
 				_(Dynamic);
 				_(Kinematic);
+				_(COUNT);
 				default:
 					LK_THROW_ENUM_ERR(Type);
 					break;

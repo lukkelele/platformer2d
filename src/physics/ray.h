@@ -6,6 +6,19 @@
 
 namespace platformer2d {
 
+	class CActor;
+
+	/**
+	 * @struct FHitResult
+	 * @brief Single hit result.
+	 */
+	struct FHitResult
+	{
+		LUUID Handle;
+		std::weak_ptr<CActor> Ref;
+		float Distance = 0.0f;
+	};
+
 	struct FRayCast
 	{
 		glm::vec3 Pos = { 0.0f, 0.0f, 0.0f };

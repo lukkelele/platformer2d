@@ -3,21 +3,11 @@
 #include "core/core.h"
 #include "core/layer.h"
 #include "player.h"
+#include "physics/ray.h"
 
 namespace platformer2d {
 
 	class CScene;
-
-	/**
-	 * @struct FHitResult
-	 * @brief Single hit result.
-	 */
-	struct FHitResult
-	{
-		LUUID Handle;
-		std::weak_ptr<CActor> Ref;
-		float Distance = 0.0f;
-	};
 
 	struct FConfig
 	{
