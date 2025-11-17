@@ -46,7 +46,9 @@ namespace platformer2d::Level {
 		void DrawClouds() const;
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
+		void OnKeyPressed(const FKeyData& Data);
 		void OnMouseButtonPressed(const FMouseButtonData& Data);
+
 		void MousePickScene();
 		void RaycastScene();
 

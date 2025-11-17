@@ -175,6 +175,7 @@ namespace platformer2d::Level {
 		Window->Maximize();
 		UpdateViewportBounds();
 
+		CKeyboard::OnKeyPressed.Add(this, &CTestLevel::OnKeyPressed);
 		CMouse::OnButtonPressed.Add(this, &CTestLevel::OnMouseButtonPressed);
 	}
 
@@ -550,8 +551,9 @@ namespace platformer2d::Level {
 
 	void CTestLevel::UI_Level()
 	{
+		UI::PrepareRightSidebar();
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
-		if (!ImGui::Begin(UI_ID_LEVEL))
+		if (!ImGui::Begin(UI::PanelID::Sidebar2))
 		{
 			ImGui::End();
 			return;
@@ -648,76 +650,14 @@ namespace platformer2d::Level {
 		}
 
 		ImGui::Dummy(ImVec2(0, 10));
-		ImGui::Separator();
-		ImGui::PushID("CreatorMenu");
+		UI::CreatorMenu(Scene);
+
+		ImGui::Dummy(ImVec2(0, 30));
+		if (ImGui::TreeNodeEx("Texture Modifier"))
 		{
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-
-			UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
-			static constexpr const char* CreatorMenuLabel = "Creator";
-			static const ImVec2 LabelSize = ImGui::CalcTextSize(CreatorMenuLabel);
-			UI::ShiftCursorX((0.50f * Avail.x) - LabelSize.x);
-			ImGui::Text("Creator Menu");
-			UI::Font::Pop();
-
-			ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("LabelColumn", 0, 140.0f);
-			ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 140.0f);
-
-			ImGui::TableNextRow();
-			/* Column 0 */
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 7.0f);
-			ImGui::Text("Name");
-
-			/* Column 1 */
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
-			ImGui::SetNextItemWidth(160.0f);
-			ImGui::InputText("##ActorName", ActorNameBuf, LK_ARRAYSIZE(ActorNameBuf));
-
-			ImGui::TableNextRow();
-			static glm::vec2 Pos = { 0.0f, 0.0f };
-			UI::Draw::Vec2Control("Position", Pos, 0.0f, 0.010f, -100.0f, 100.0f);
-
-			ImGui::TableNextRow();
-			static glm::vec2 Size = { 0.20f, 0.20f };
-			UI::Draw::Vec2Control("Size", Size, 1.0f, 0.010f, 0.010f, 2.0f);
-
-			ImGui::EndTable();
-
-			static std::size_t SelectedTextureIdx = 0;
-			UI_TextureDropDown(SelectedTextureIdx);
-
-			UI::ShiftCursorX(32.0f);
-			{
-				static constexpr ImVec2 ButtonSize = ImVec2(82, 42);
-				UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
-				UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-				UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
-				UI::FScopedColorStack ButtonColours(
-					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-					ImGuiCol_ButtonActive, RGBA32::NiceGreen
-				);
-
-				if (ImGui::Button("Create", ButtonSize))
-				{
-					if (!Scene->DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
-					{
-						CSpawner::CreateStaticPolygon(ActorNameBuf, Pos, Size, FColor::Convert(RGBA32::Magenta));
-					}
-					else
-					{
-						LK_ERROR_TAG("TestLevel", "Actor already exists with name: \"{}\"", ActorNameBuf);
-					}
-				}
-			}
+			UI::TextureModifier();
+			ImGui::TreePop();
 		}
-		ImGui::PopID();
-		ImGui::Separator();
-		ImGui::Dummy(ImVec2(0, 10));
-
-		UI_TextureModifier();
 
 		UI::Font::Pop();
 		ImGui::End();
@@ -729,8 +669,9 @@ namespace platformer2d::Level {
 		const FPlayerData& PlayerData = Player->GetData();
 		FTransformComponent& TC = Player->GetTransformComponent();
 
-		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
-		if (!ImGui::Begin("Player"))
+		UI::PrepareLeftSidebar();
+		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA); /* @todo Dock node alpha. */
+		if (!ImGui::Begin(UI::PanelID::Sidebar1))
 		{
 			ImGui::End();
 			return;
@@ -985,20 +926,41 @@ namespace platformer2d::Level {
 		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 	}
 
+	void CTestLevel::OnKeyPressed(const FKeyData& Data)
+	{
+		switch (Data.Key)
+		{
+			case EKey::Q:
+				Gizmo = -1;
+				break;
+
+			case EKey::W:
+				Gizmo = ImGuizmo::OPERATION::TRANSLATE;
+				break;
+
+			case EKey::E:
+				Gizmo = ImGuizmo::OPERATION::ROTATE;
+				break;
+
+			case EKey::R:
+				Gizmo = ImGuizmo::OPERATION::SCALE;
+				break;
+		}
+	}
+
 	void CTestLevel::OnMouseButtonPressed(const FMouseButtonData& Data)
 	{
-		const EMouseButton Button = Data.Button;
 		switch (Data.State)
 		{
 			case EMouseButtonState::Pressed:
 			{
 				/* Left button. */
-				if (Button == EMouseButton::Button0)
+				if (Data.Button == EMouseButton::Button0)
 				{
 					MousePickScene();
 				}
 				/* Right button. */
-				else if (Button == EMouseButton::Button1)
+				else if (Data.Button == EMouseButton::Button1)
 				{
 				}
 
