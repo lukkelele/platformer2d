@@ -1,5 +1,7 @@
 project_library_sources(
 	gamemenu.h
+	imguilayer.h
+	imguilayer.cpp
 	scoped.h
 	ui.h
 	ui.cpp

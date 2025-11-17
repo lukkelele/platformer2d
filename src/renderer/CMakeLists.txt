@@ -9,8 +9,6 @@ project_library_sources(
 	font.cpp
 	fontawesome.h
 	imgui.h
-	imguilayer.h
-	imguilayer.cpp
 	opengl.h
 	opengl.cpp
 	shader.h

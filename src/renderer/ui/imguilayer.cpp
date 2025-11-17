@@ -10,16 +10,11 @@
 #include "core/core.h"
 #include "core/log.h"
 #include "core/window.h"
-#include "font.h"
+#include "renderer/font.h"
+#include "scoped.h"
+#include "ui_core.h"
 
 namespace platformer2d {
-
-	namespace PanelID 
-	{
-		const char* const Dockspace = "##Dockspace";
-		const char* const HostWindow = "##HostWindow";
-		const char* const Viewport  = "##Viewport";
-	}
 
 	namespace
 	{
@@ -53,8 +48,14 @@ namespace platformer2d {
 		IO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		IO.ConfigDockingAlwaysTabBar = false;
 
+		/** @fixme: Need to sort out the initial dock node placements */
+#define NO_IMGUI_CONFIG
+#ifdef NO_IMGUI_CONFIG
+		IO.IniFilename = nullptr; /* No config. */
+#endif
+
 		ImGui_ImplGlfw_InitForOpenGL(InContext, true);
-		ImGui_ImplOpenGL3_Init("#version 450");
+		ImGui_ImplOpenGL3_Init("#version 460");
 		LK_INFO("ImGui: {}", ImGui::GetVersion());
 
 		AddFonts();
@@ -78,17 +79,22 @@ namespace platformer2d {
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
 
+		using namespace UI;
+		FScopedStyle WindowRounding(ImGuiStyleVar_WindowRounding, 0.0f);
+		FScopedStyle WindowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		FScopedColor MenuBarBg(ImGuiCol_MenuBarBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(Viewport->Pos);
         ImGui::SetNextWindowSize(Viewport->Size);
         ImGui::SetNextWindowViewport(Viewport->ID);
 
-		ImGui::Begin(PanelID::HostWindow, NULL, HostWindowFlags);
+		ImGui::Begin(PanelID::HostWindow, nullptr, HostWindowFlags);
 		ImGuiID DockspaceID = ImGui::GetID(PanelID::Dockspace);
 		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr)
 		{
 			/* Remove existing layout. */
-			LK_TRACE_TAG("ImGuiLayer", "Removing existing dock layout");
+			LK_WARN_TAG("ImGuiLayer", "Removing existing dock layout");
 			ImGui::DockBuilderRemoveNode(DockspaceID);
 			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace 
 				| ImGuiDockNodeFlags_NoWindowMenuButton;
@@ -96,6 +102,11 @@ namespace platformer2d {
 			ImGui::DockBuilderSetNodeSize(DockspaceID, Viewport->Size);
 
 			ImGuiID DockID_Main = DockspaceID;
+			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, 0.18f, nullptr, &DockID_Main);
+			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, 0.22f, nullptr, &DockID_Main);
+
+			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
+			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
 			
 			ImGui::DockBuilderFinish(DockspaceID);
 		}
