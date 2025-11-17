@@ -10,6 +10,15 @@
 
 namespace platformer2d::UI {
 
+	namespace PanelID
+	{
+		inline constexpr const char* const Dockspace = "##Dockspace";
+		inline constexpr const char* const Viewport = "##Viewport";
+		inline constexpr const char* const HostWindow = "##HostWindow";
+		inline constexpr const char* const Sidebar1 = "##Sidebar1";
+		inline constexpr const char* const Sidebar2 = "##Sidebar2";
+	}
+
 	inline void ShiftCursorX(const float Distance)
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + Distance);
