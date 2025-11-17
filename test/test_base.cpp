@@ -18,7 +18,7 @@
 
 #include "core/log.h"
 #include "renderer/opengl.h"
-#include "renderer/imguilayer.h"
+#include "renderer/ui/imguilayer.h"
 
 #ifndef LK_TEST_SUITE
 #error "LK_TEST_SUITE not defined"

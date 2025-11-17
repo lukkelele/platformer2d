@@ -18,7 +18,6 @@
 #include "core/window.h"
 #include "backendinfo.h"
 #include "debugrenderer.h"
-#include "imguilayer.h"
 #include "opengl.h"
 #include "rendercommandqueue.h"
 #include "ui/ui.h"
