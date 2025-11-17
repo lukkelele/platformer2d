@@ -124,7 +124,7 @@ namespace platformer2d {
 	private:
 		static LUUID GenerateHandle();
 
-		void UpdateEffectComponent(FEffectComponent* EC);
+		void UpdateEffectComponent(FEffectComponent& EC);
 
 	public:
 		static inline FOnActorCreated OnActorCreated;

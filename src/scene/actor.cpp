@@ -62,7 +62,7 @@ namespace platformer2d {
 
 		if (FEffectComponent* EC = TryGetComponent<FEffectComponent>(); EC != nullptr)
 		{
-			UpdateEffectComponent(EC);
+			UpdateEffectComponent(*EC);
 		}
 	}
 
@@ -173,9 +173,9 @@ namespace platformer2d {
 		return Instances;
 	}
 
-	void CActor::UpdateEffectComponent(FEffectComponent* EC)
+	void CActor::UpdateEffectComponent(FEffectComponent& EC)
 	{
-		for (auto& Effect : EC->Effects)
+		for (auto& Effect : EC.Effects)
 		{
 			switch (Effect.Type)
 			{
