@@ -138,4 +138,19 @@ namespace platformer2d::Math {
 		return glm::vec3(U * Width, (1.0f - V) * Height, 0.0f);
 	}
 
+	float GetAngleRad(const glm::quat& Q)
+	{
+		const float AngleRad = std::atan2(
+			2.0f * (Q.w * Q.z + Q.x * Q.y),
+			1.0f - (2.0f * (Q.y * Q.y + Q.z * Q.z))
+		);
+
+		return AngleRad;
+	}
+
+	float GetAngleDeg(const glm::quat& Q)
+	{
+		return glm::degrees(GetAngleRad(Q));
+	}
+
 }

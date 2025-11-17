@@ -75,6 +75,16 @@ namespace platformer2d::Math {
 		);
 	}
 
+	/**
+	 * @brief Extract rotation around Z axis.
+	 */
+	float GetAngleRad(const glm::quat& Q);
+
+	/**
+	 * @brief Extract rotation around Z axis.
+	 */
+	float GetAngleDeg(const glm::quat& Q);
+
 	template<typename TVector>
 	requires _Internal::IsGlmVec<TVector>
 	TVector Convert(const b2Vec2& V)
