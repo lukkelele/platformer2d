@@ -19,10 +19,7 @@ namespace platformer2d::UI {
 		void ActorNode_VectorControl(CActor& Actor);
 		void ActorNode(CActor& Actor);
 
-		namespace _Internal
-		{
-		}
-
+		/** @todo Pass 'Value' as reference instead. */
 		inline bool DragFloat(const char* Label, float* Value, float ValueSpeed = 1.0f, float ValueMin = 0.0f, float ValueMax = 0.0f,
 							  const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
 		{
@@ -37,8 +34,8 @@ namespace platformer2d::UI {
 			static constexpr float OutlineSpacing = 1.0f;
 			const float LineHeight = GImGui->Font->LegacySize + FramePadding * 2.0f;
 			const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
-			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);
 
+			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
 			if (ImGui::GetCurrentTable() != nullptr)
 			{
 				if ((LabelSize > 0) && (Label[0] != '#'))
@@ -60,7 +57,7 @@ namespace platformer2d::UI {
 				}
 			}
 
-			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
+			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);
 			ImGui::SetNextItemWidth(InputItemWidth);
 			const bool Dragged = ImGui::DragScalar(
 				LabelBuf.data(), 
@@ -84,16 +81,25 @@ namespace platformer2d::UI {
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
 
+			UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
+
 			bool Modified = false;
 
-			/* Column 0 */
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 7.0f);
-			ImGui::Text(Label.c_str());
+			if (ImGui::GetCurrentTable() != nullptr)
+			{
+				ImGui::TableSetColumnIndex(0);
+				UI::ShiftCursor(17.0f, 7.0f);
+				ImGui::Text(Label.c_str());
 
-			/* Column 1 */
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
+				ImGui::TableSetColumnIndex(1);
+				UI::ShiftCursor(7.0f, 0.0f);
+			}
+			else
+			{
+				ImGui::Text(Label.c_str());
+				ImGui::SameLine();
+			}
+
 			{
 				static constexpr float SpacingX = 8.0f;
 				UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
@@ -103,7 +109,7 @@ namespace platformer2d::UI {
 					UI::FScopedColor Frame(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
 					ImGui::BeginChild(
 						ImGui::GetID((Label + "Subwindow").c_str()),
-						ImVec2((ImGui::GetContentRegionAvail().x - SpacingX), ImGui::GetFrameHeightWithSpacing() + 8.0f),
+						ImVec2(ImGui::GetContentRegionAvail().x - SpacingX, ImGui::GetFrameHeightWithSpacing()),
 						ImGuiChildFlags_None,
 						ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse /* Window Flags. */
 					);
@@ -115,8 +121,7 @@ namespace platformer2d::UI {
 				const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
 				const float InputItemWidth = (ImGui::GetContentRegionAvail().x - SpacingX) / 3.0f - ButtonSize.x;
 
-				UI::ShiftCursor(0.0f, FramePadding);
-
+				UI::ShiftCursor(0.0f, FramePadding); /* @todo Investigate */
 				auto DrawControl = [&](const std::string& InLabel,
 									   float& InValue,
 									   const ImVec4& InColorNormal,
@@ -142,6 +147,8 @@ namespace platformer2d::UI {
 					ImGui::SameLine(0.0f, OutlineSpacing);
 					ImGui::SetNextItemWidth(InputItemWidth);
 
+					/* @fixme: Annoying pixel difference */
+					UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(FramePadding, FramePadding - 1));
 					const ImGuiID InputID = ImGui::GetID(("##" + InLabel).c_str());
 					const bool WasTempInputActive = ImGui::TempInputIsActive(InputID);
 					Modified |= ImGui::DragFloat(("##" + InLabel).c_str(), &InValue, ValueSpeed, ValueMin, ValueMax, Format, 0);
@@ -156,7 +163,7 @@ namespace platformer2d::UI {
 
 				/* Draw: V1 (first vector). */
 				static constexpr float Diff = 0.08f;
-				const ImVec4 ColorX = FColor::Convert<ImVec4>(RGBA32::DarkCyan);
+				static const ImVec4 ColorX = FColor::Convert<ImVec4>(RGBA32::DarkCyan);
 				DrawControl(
 					V1,
 					Values.x,
@@ -167,7 +174,7 @@ namespace platformer2d::UI {
 
 				/* Draw: V2 (second vector). */
 				ImGui::SameLine(0.0f, OutlineSpacing);
-				const ImVec4 ColorY = FColor::Convert<ImVec4>(RGBA32::BrightGreen);
+				static const ImVec4 ColorY = FColor::Convert<ImVec4>(RGBA32::BrightGreen);
 				DrawControl(
 					V2,
 					Values.y,
@@ -197,14 +204,21 @@ namespace platformer2d::UI {
 
 			bool Modified = false;
 
-			/* Column 0 */
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 7.0f);
-			ImGui::Text(Label.c_str());
+			if (ImGui::GetCurrentTable() != nullptr)
+			{
+				ImGui::TableSetColumnIndex(0);
+				UI::ShiftCursor(17.0f, 7.0f);
+				ImGui::Text(Label.c_str());
 
-			/* Column 1 */
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
+				ImGui::TableSetColumnIndex(1);
+				UI::ShiftCursor(7.0f, 0.0f);
+			}
+			else
+			{
+				ImGui::Text(Label.c_str());
+				ImGui::SameLine();
+			}
+
 			{
 				static constexpr float SpacingX = 8.0f;
 				UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
@@ -227,8 +241,7 @@ namespace platformer2d::UI {
 				const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
 				const float InputItemWidth = (ImGui::GetContentRegionAvail().x - SpacingX) / 3.0f - ButtonSize.x;
 
-				UI::ShiftCursor(0.0f, FramePadding);
-
+				UI::ShiftCursor(0.0f, FramePadding); /* @todo Investigate */
 				auto DrawControl = [&](const std::string& InLabel,
 									   float& InValue,
 									   const ImVec4& InColorNormal,
