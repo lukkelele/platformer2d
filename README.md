@@ -15,9 +15,10 @@ and thus this project was born.
 :warning: Barely any progress has been made yet, lots to come :warning:
 
 ![testlevel-1](doc/img/2025-11-09/testlevel-1.png)
+![testlevel-gif](doc/gif/2025-11-17/raycast.gif)
 ![testlevel-gif](doc/gif/2025-11-11/jump-swoosh.gif)
 
-###
+### Source
 
  * application ([header](src/core/application.h)/[source](src/core/application.cpp))
  * renderer ([header](src/renderer/renderer.h)/[source](src/renderer/renderer.cpp))
@@ -32,11 +33,14 @@ The game instance test is used for now.
  * [test/game/instance/test.cpp](test/game/instance/test.cpp)
  * [test/game/instance/main.cpp](test/game/instance/main.cpp)
 
+## Completed
+:white_check_mark: Physics  
+:white_check_mark: Input  
+:white_check_mark: Serialization  
+
 ## Todo
-:black_square_button: GCC/clang support<br>
 :black_square_button: Documented setup steps<br>
 :black_square_button: Project description about design choices made in regards to assets and level data<br>
-:black_square_button: Player texture sprite<br>
 :black_square_button: github actions pipeline<br>
 :black_square_button: I do NOT LIKE!!!!! the vcpkg dependency, might remove that<br>
 :black_square_button: Projectile collision (for player weapon :boom:)<br>

@@ -4,6 +4,10 @@ Screenshots and gifs from during development.
 
 ---
 
+## 2025-11-17
+
+![raycast-gif](doc/gif/2025-11-17/raycast.gif)
+
 ## 2025-11-11
 
 ![testlevel-gif](doc/gif/2025-11-11/jump-swoosh.gif)
