@@ -27,16 +27,19 @@ namespace platformer2d::UI {
 	};
 	const FViewportData& GetViewportData();
 
-	void OpenGameMenu();
-	void CloseGameMenu();
-	void ToggleGameMenu();
-	bool IsGameMenuOpen();
-
-	void CreatorMenu(std::shared_ptr<CScene> Scene);
-
 	struct FPhysicsBodyData
 	{
 		EBodyType BodyType = EBodyType::Static;
+
+		float Friction = 0.60f;
+		float Density = 1.0f;
+		glm::vec2 LinearVelocity = { 0.0f, 0.0f };
+		float AngularVelocity = 0.0f;
+		float GravityScale = 1.0f;
+		float LinearDamping = 0.0f;
+		float AngularDamping = 0.0f;
+		float DirForce = 5.630f;
+		float JumpImpulse = 0.530f;
 
 		struct
 		{
@@ -54,6 +57,13 @@ namespace platformer2d::UI {
 			bool All = false;
 		} MotionLock;
 	};
+
+	void OpenGameMenu();
+	void CloseGameMenu();
+	void ToggleGameMenu();
+	bool IsGameMenuOpen();
+
+	void CreatorMenu(std::shared_ptr<CScene> Scene);
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
 	void TextureModifier();

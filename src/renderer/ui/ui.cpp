@@ -64,9 +64,9 @@ namespace platformer2d::UI {
 		ImGui::Text("Creator Menu");
 		UI::Font::Pop();
 
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, 140.0f);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 140.0f);
+		ImGui::BeginTable("##CreatorMenuTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("L", 0, 140.0f);
+		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 140.0f);
 
 		/* Actor Name. */
 		ImGui::TableNextRow();
@@ -91,7 +91,7 @@ namespace platformer2d::UI {
 		static glm::vec2 Size = { 0.20f, 0.20f };
 		UI::Draw::Vec2Control("Size", Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
-		ImGui::EndTable();
+		ImGui::EndTable(); /* ~CreatorMenu */
 
 		UI::ShiftCursorY(40);
 		PhysicsBodyMenu(PhysicsBodyData);
@@ -146,12 +146,9 @@ namespace platformer2d::UI {
 		static std::size_t SelectedIdx = 0;
 		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < BodyTypes.size()));
 
+		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
+		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		static const char* ComboName = "Body Type";
-		const ImVec2 ComboNameLen = ImGui::CalcTextSize(ComboName);
-
-		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 8.0f);
 
 		ImGui::PushID("PhysicsBodyMenu");
 
@@ -159,18 +156,18 @@ namespace platformer2d::UI {
 		 * Body Type.
 		 ************************/
 		{
-			ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("LabelColumn", 0, ColWidth);
-			ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
+			ImGui::BeginTable("##BodyTypeTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("L", 0, ColWidth);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
 			UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-			ImGui::Text(ComboName);
+			ImGui::Text("Body Type");
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursorY(-2.0f);
-			ImGui::SetNextItemWidth(ItemWidth);
+			ImGui::SetNextItemWidth(120.0f);
 			const char* Selected = Enum::ToString(BodyTypes[SelectedIdx]);
 			if (ImGui::BeginCombo("##PhysicsBodyMenu", Selected))
 			{
@@ -191,6 +188,59 @@ namespace platformer2d::UI {
 
 				ImGui::EndCombo();
 			}
+
+			ImGui::EndTable();
+		}
+
+		/************************
+		 * Attributes.
+		 ************************/
+		{
+			ImGui::BeginTable("##AttributesTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("L", 0, ColWidth);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
+
+			ImGui::TableNextRow();
+			static float GravityScale = 1.0f;
+			UI::Draw::DragFloat("Gravity Scale", &GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			static float Friction = 1.0f;
+			UI::Draw::DragFloat("Friction", &Friction, 0.01f, 0.0f, 2.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			static float Density = 1.0f;
+			UI::Draw::DragFloat("Density", &Density, 0.01f, 0.0f, 1.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			static glm::vec2 LinearVelocity = { 0.0f, 0.0f };
+			UI::Draw::Vec2Control("Linear Velocity", LinearVelocity, 0.10f, 0.010f, 0.010f);
+
+			ImGui::TableNextRow();
+			static float AngularVelocity = 0.0f;
+			UI::Draw::DragFloat("Angular Velocity", &AngularVelocity, 0.01f, 0.0f, 1.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			static float LinearDamping = 0.0f;
+			UI::Draw::DragFloat("Linear Damping", &LinearDamping, 0.01f, 0.0f, 1.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			static float DirForce = 0.0f;
+			UI::Draw::DragFloat("Directional Force", &DirForce, 0.01f, 0.0f, 1.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			static float JumpImpulse = 0.0f;
+			UI::Draw::DragFloat("Jump Impulse", &JumpImpulse, 0.01f, 0.0f, 1.0f, "%.2f");
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text("Sensor");
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursorX(6);
+			static bool bSensor = false;
+			ImGui::Checkbox("##Sensor", &bSensor);
+
 			ImGui::EndTable();
 		}
 
@@ -206,9 +256,9 @@ namespace platformer2d::UI {
 			ImGui::PopFont();
 			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
 
-			ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("LabelColumn", 0, ColWidth);
-			ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
+			ImGui::BeginTable("##BodyFlagsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("L", 0, ColWidth);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
 
 			auto Label = [](std::string_view Str) -> void
 			{
