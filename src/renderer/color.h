@@ -1,7 +1,61 @@
 #pragma once
 
+#include <unordered_map>
+
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
+
+#include "core/core.h"
+
+namespace platformer2d {
+
+	enum class EColor
+	{
+		White,
+		Black,
+		Red,
+		Green,
+		Blue,
+		COUNT
+	};
+
+	namespace Enum
+	{
+		inline constexpr const char* ToString(const EColor Color)
+		{
+			const char* S = "";
+		#define _(EnumValue) case EColor::EnumValue: S = #EnumValue; break
+			switch (Color)
+			{
+				_(White);
+				_(Black);
+				_(Red);
+				_(Green);
+				_(Blue);
+				default:
+					S = "Unknown";
+					break;
+			}
+		#undef _
+			return S;
+		}
+	}
+}
+
+namespace std
+{
+	template<typename T>
+	struct hash;
+
+	template<>
+	struct hash<platformer2d::EColor>
+	{
+		std::size_t operator()(const platformer2d::EColor Color) const
+		{
+			return std::to_underlying(Color);
+		}
+	};
+}
 
 namespace platformer2d {
 
@@ -25,9 +79,15 @@ namespace platformer2d {
 		}
 	};
 
+	/**
+	 * @class TColor
+	 */
 	template<typename TVector = glm::vec4, EColorRange Range = EColorRange::Normalized>
 	struct TColor;
 
+	/**
+	 * @class TColor3
+	 */
 	template<EColorRange Range>
 	struct TColor<glm::vec3, Range> : TColorInternal<Range>
 	{
@@ -41,8 +101,13 @@ namespace platformer2d {
 		static constexpr glm::vec3 Green       = { B::Scale(0.0f), B::Scale(1.0f), B::Scale(1.0f) };
 		static constexpr glm::vec3 Blue        = { B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f) };
 		static constexpr glm::vec3 Transparent = { B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f) };
+
+		static constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& GetArray();
 	};
 
+	/**
+	 * @class TColor4
+	 */
 	template<EColorRange Range>
 	struct TColor<glm::vec4, Range> : TColorInternal<Range>
 	{
@@ -65,7 +130,13 @@ namespace platformer2d {
 		static constexpr glm::vec4 Transparent = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f) };
 
 		template<typename To = VecType, typename From>
-		static inline constexpr To Convert(const From InColor);
+		static constexpr To Convert(const From InColor);
+
+		template<typename T = VecType>
+		static const T& Get(const EColor Color);
+
+		static constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& GetArray();
+		static const std::unordered_map<EColor, glm::vec4>& GetMap();
 	};
 
 	template<EColorRange Range = EColorRange::Normalized>
@@ -149,6 +220,8 @@ namespace platformer2d {
 		inline constexpr uint32_t BrightGreen    = IM_COL32(18, 140, 40, 255);
 		inline constexpr uint32_t NiceBlue       = IM_COL32(83, 232, 254, 255);
 		inline constexpr uint32_t NiceGreen      = IM_COL32(0, 205, 15, 192);
+		inline constexpr uint32_t LightGreen     = IM_COL32(14, 156, 54, 255);
+		inline constexpr uint32_t WineRed        = IM_COL32(166, 13, 23, 255);
 
 		inline constexpr uint32_t Accent         = IM_COL32(236, 158, 36, 255);
 		inline constexpr uint32_t Highlight      = IM_COL32(39, 185, 242, 255);
@@ -179,6 +252,54 @@ namespace platformer2d {
 			inline constexpr uint32_t Green   = IM_COL32(22, 84, 29, 255);
 			inline constexpr uint32_t Red     = IM_COL32(190, 32, 30, 255);
 		}
+	}
+
+	namespace _Internal
+	{
+		static constexpr std::array<EColor, std::to_underlying(EColor::COUNT)> ColorArray = {
+			EColor::White,
+			EColor::Black,
+			EColor::Red,
+			EColor::Green,
+			EColor::Blue,
+		};
+
+		static const std::unordered_map<EColor, glm::vec4> TColor4Map = {
+			{ EColor::White, FColor::White },
+			{ EColor::Black, FColor::Black },
+			{ EColor::Red,   FColor::Red   },
+			{ EColor::Green, FColor::Green },
+			{ EColor::Blue,  FColor::Blue  },
+		};
+	}
+
+	template<EColorRange Range>
+	inline constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& TColor<glm::vec3, Range>::GetArray()
+	{
+		return _Internal::ColorArray;
+	}
+
+	template<EColorRange Range>
+	inline constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& TColor<glm::vec4, Range>::GetArray()
+	{
+		return _Internal::ColorArray;
+	}
+
+	template<EColorRange Range>
+	const std::unordered_map<EColor, glm::vec4>& TColor<glm::vec4, Range>::GetMap()
+	{
+		return _Internal::TColor4Map;
+	}
+
+	/*************************************
+	 * TColor::Get(EColor)
+	 *************************************/
+	template<EColorRange Range>
+	template<typename T>
+	inline const T& TColor<glm::vec4, Range>::Get(const EColor Color)
+	{
+		LK_ASSERT(_Internal::TColor4Map.contains(Color), "Color not in map: {}", Enum::ToString(Color));
+		return _Internal::TColor4Map.at(Color);
 	}
 
 }
