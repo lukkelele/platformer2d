@@ -55,7 +55,7 @@ namespace platformer2d::Level {
 		void DeserializeActors(const YAML::Node& ActorsNode);
 
 	private:
-		std::unique_ptr<CPlayer> Player = nullptr;
+		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
 	};
 

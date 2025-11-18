@@ -84,7 +84,6 @@ namespace platformer2d::Level {
 			Enum::ToString(ETexture::Wood),
 		};
 
-		char ActorNameBuf[128] = { 0 };
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
 	}
@@ -112,7 +111,7 @@ namespace platformer2d::Level {
 				LK_TRACE_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				LK_ASSERT(Scene);
 				const auto& Actors = Scene->GetActors(); /* @fixme */
-				std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Actors.size() + 2);
+				std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Actors.size() + 2);
 
 #if 0 /* @fixme: Remove once the creator menu can add new components */
 				std::string_view ActorName = Actor->GetName();
@@ -138,7 +137,7 @@ namespace platformer2d::Level {
 		 */
 		CActor::OnActorMarkedForDeletion.Add([&](const LUUID Handle)
 		{
-			std::snprintf(ActorNameBuf, sizeof(ActorNameBuf), "Actor-%lld", Scene->GetActors().size() + 2);
+			std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Scene->GetActors().size() + 2);
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
@@ -561,103 +560,113 @@ namespace platformer2d::Level {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
-		ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
+		if (ImGui::TreeNodeEx("Info", ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			ImGuiViewport* Viewport = ImGui::GetMainViewport();
-			ImGui::Text("Main Viewport: (%.1f, %.1f)", Viewport->Size.x, Viewport->Size.y);
+			ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
+			{
+				ImGuiViewport* Viewport = ImGui::GetMainViewport();
+				ImGui::Text("Main Viewport: (%.1f, %.1f)", Viewport->Size.x, Viewport->Size.y);
+			}
+
+			const int Gcd = std::gcd(ViewportWidth, ViewportHeight);
+			ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
+
+			const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
+			ImGui::Text("Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
+
+			const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
+			ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
+
+			ImGui::Dummy(ImVec2(0, 8));
+
+			glm::vec4 ClearColor = CRenderer::GetClearColor();
+			if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f"))
+			{
+				CRenderer::SetClearColor(ClearColor);
+			}
+
+			ImGui::Dummy(ImVec2(0, 8));
+			{
+				ImGui::SeparatorText("Mouse");
+				const glm::vec2 MouseViewportPos = GetMouseInViewportSpace();
+				ImGui::Text("Viewport Space: (%.2f, %.2f)", MouseViewportPos.x, MouseViewportPos.y);
+				if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
+				{
+					const glm::vec2 MouseWorldPos = GetMouseInWorldSpace(*Camera);
+					ImGui::Text("World Space: (%.2f, %.2f)", MouseWorldPos.x, MouseWorldPos.y);
+				}
+				else
+				{
+					ImGui::Text("World Space: UNKNOWN");
+				}
+			}
+
+			ImGui::Dummy(ImVec2(0, 8));
+			{
+				ImGui::Checkbox("Raycast Scene", &bRaycastScene);
+				if (!bRaycastScene)
+				{
+					ImGui::BeginDisabled();
+				}
+				ImGui::Checkbox("Draw Debug Ray", &Config.Debug.bDrawRayHits);
+				if (!bRaycastScene)
+				{
+					ImGui::EndDisabled();
+				}
+			}
+
+			ImGui::Dummy(ImVec2(0, 12));
+			ImGui::SeparatorText("Selection");
+			{
+				std::string Selected = "None";
+				if (std::shared_ptr<CActor> Actor = SelectedActor.lock(); Actor != nullptr)
+				{
+					Selected = Actor->GetName();
+				}
+				ImGui::Text("Selected: %s", Selected.c_str());
+			}
+
+			ImGui::Dummy(ImVec2(0, 12));
+			ImGui::SeparatorText("Serialization");
+			{
+				UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+				if (ImGui::Button("Serialize"))
+				{
+					Serialize(GameSpec.LevelFilepath);
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Deserialize"))
+				{
+					Deserialize(GameSpec.LevelFilepath);
+				}
+			}
+
+			ImGui::TreePop();
 		}
 
-		const int Gcd = std::gcd(ViewportWidth, ViewportHeight);
-		ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
-
-		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
-		ImGui::Text("Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
-
-		const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
-		ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
-
-		ImGui::Dummy(ImVec2(0, 8));
-
-		glm::vec4 ClearColor = CRenderer::GetClearColor();
-		if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f"))
-		{
-			CRenderer::SetClearColor(ClearColor);
-		}
-
-		ImGui::Dummy(ImVec2(0, 8));
-		{
-			ImGui::SeparatorText("Mouse");
-			const glm::vec2 MouseViewportPos = GetMouseInViewportSpace();
-			ImGui::Text("Viewport Space: (%.2f, %.2f)", MouseViewportPos.x, MouseViewportPos.y);
-			if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
-			{
-				const glm::vec2 MouseWorldPos = GetMouseInWorldSpace(*Camera);
-				ImGui::Text("World Space: (%.2f, %.2f)", MouseWorldPos.x, MouseWorldPos.y);
-			}
-			else
-			{
-				ImGui::Text("World Space: UNKNOWN");
-			}
-		}
-
-		ImGui::Dummy(ImVec2(0, 8));
-		{
-			ImGui::Checkbox("Raycast Scene", &bRaycastScene);
-			if (!bRaycastScene)
-			{
-				ImGui::BeginDisabled();
-			}
-			ImGui::Checkbox("Draw Debug Ray", &Config.Debug.bDrawRayHits);
-			if (!bRaycastScene)
-			{
-				ImGui::EndDisabled();
-			}
-		}
-
-		ImGui::Dummy(ImVec2(0, 12));
-		ImGui::SeparatorText("Selection");
-		{
-			std::string Selected = "None";
-			if (std::shared_ptr<CActor> Actor = SelectedActor.lock(); Actor != nullptr)
-			{
-				Selected = Actor->GetName();
-			}
-			ImGui::Text("Selected: %s", Selected.c_str());
-		}
-
-		ImGui::Dummy(ImVec2(0, 12));
-		ImGui::SeparatorText("Serialization");
-		{
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-			if (ImGui::Button("Serialize"))
-			{
-				Serialize(GameSpec.LevelFilepath);
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Deserialize"))
-			{
-				Deserialize(GameSpec.LevelFilepath);
-			}
-		}
 		ImGui::Dummy(ImVec2(0, 8));
 
 		const auto& Actors = Scene->GetActors();
 		ImGui::Text("Actors: %d", Actors.size() + 1);
-		UI::Draw::ActorNode(*Player);
+		UI::Draw::ActorNode(Player, Scene);
 		for (auto& Actor : Actors)
 		{
-			UI::Draw::ActorNode(*Actor);
+			UI::Draw::ActorNode(Actor, Scene);
 		}
 
 		ImGui::Dummy(ImVec2(0, 10));
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0, 10));
 		UI::CreatorMenu(Scene);
 
-		ImGui::Dummy(ImVec2(0, 30));
+		ImGui::Dummy(ImVec2(0, 12));
+#if 0
 		if (ImGui::TreeNodeEx("Texture Modifier"))
 		{
 			UI::TextureModifier();
 			ImGui::TreePop();
 		}
+#endif
 
 		UI::Font::Pop();
 		ImGui::End();
@@ -992,6 +1001,7 @@ namespace platformer2d::Level {
 			const FHitResult& Hit = HitResults.at(0);
 			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr)
 			{
+				CSelectionContext::Select(Ref->GetHandle());
 				SelectedActor = Ref;
 			}
 		}
