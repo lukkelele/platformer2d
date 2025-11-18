@@ -317,13 +317,13 @@ namespace platformer2d {
 		Out << YAML::Value << GetPosition();
 
 		Out << YAML::Key << "Flags";
-		Out << YAML::Value << std::to_underlying(BodySpec.Flags);
+		Out << YAML::Value << static_cast<uint32_t>(BodySpec.Flags);
 
 		Out << YAML::Key << "Mass";
 		Out << YAML::Value << GetMass();
 
 		Out << YAML::Key << "MotionLock";
-		Out << YAML::Value << std::to_underlying(BodySpec.MotionLock);
+		Out << YAML::Value << static_cast<uint32_t>(BodySpec.MotionLock);
 
 		Out << YAML::EndMap; /* ~Body */
 
@@ -338,8 +338,7 @@ namespace platformer2d {
 		else if (IsShape<EShape::Capsule>(Spec.Shape)) ShapeType = EShape::Capsule;
 
 		return LK_FMT("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
-					  Enum::ToString(ShapeType), Spec.Position, std::to_underlying(Spec.Flags),
-					  std::to_underlying(Spec.MotionLock), Spec.Density);
+					  Enum::ToString(ShapeType), Spec.Position, Spec.Flags, Spec.MotionLock, Spec.Density);
 	}
 
 	void CBody::SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const
