@@ -6,6 +6,7 @@
 #include "core/core.h"
 #include "core/delegate.h"
 #include "core/math/math.h"
+#include "renderer/color.h"
 #include "renderer/font.h"
 #include "renderer/ui/scoped.h"
 #include "scene/actor.h"
@@ -25,12 +26,13 @@ namespace platformer2d::UI {
 		glm::vec2 LeftSidebarSize = { 340.0f, 0.0f };
 		glm::vec2 RightSidebarSize = { 340.0f, 0.0f };
 	};
+	extern FViewportData ViewportData;
 	const FViewportData& GetViewportData();
 
 	struct FPhysicsBodyData
 	{
 		EBodyType BodyType = EBodyType::Static;
-
+		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
 		float Friction = 0.60f;
 		float Density = 1.0f;
 		glm::vec2 LinearVelocity = { 0.0f, 0.0f };
@@ -57,17 +59,34 @@ namespace platformer2d::UI {
 			bool All = false;
 		} MotionLock;
 	};
+	extern FPhysicsBodyData PhysicsBodyData;
+	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec);
 
 	void OpenGameMenu();
 	void CloseGameMenu();
 	void ToggleGameMenu();
 	bool IsGameMenuOpen();
 
+	bool ColorDropdown(EColor& Selected);
+
+	struct FActorAttributes
+	{
+		glm::vec2 Position = { 0.0f, 0.0f };
+		glm::vec2 Size = { 0.20f, 0.20f };
+		ETexture Texture = ETexture::White;
+		EColor Color = EColor::White;
+		std::array<char, 128> NameBuf = { 0 };
+	};
+	extern FActorAttributes ActorAttr;
+
+	bool ActorAttributes(FActorAttributes& Attr);
+
 	void CreatorMenu(std::shared_ptr<CScene> Scene);
+	void CreatorMenuButtons(std::shared_ptr<CScene> Scene);
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
 	void TextureModifier();
-	void TextureDropDown(std::size_t& SelectedIdx);
+	bool TextureDropDown(ETexture& Selected);
 
 	/**
 	 * @brief Combo dropdown.

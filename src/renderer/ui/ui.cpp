@@ -14,19 +14,18 @@
 namespace platformer2d::UI {
 
 	FOnGameMenuOpened OnGameMenuOpened;
+	FActorAttributes ActorAttr;
+	FPhysicsBodyData PhysicsBodyData;
+	FViewportData ViewportData;
 
 	namespace 
 	{
-		FViewportData ViewportData;
-		FPhysicsBodyData PhysicsBodyData;
-
 		/* @todo: Use global config */
 		constexpr float GAME_MENU_LABEL_COLUMN_WIDTH = 190.0f;
 		constexpr float GAME_MENU_LABEL_INDENT_WIDTH = 24.0f;
 		constexpr float GAME_MENU_COLUMN_ITEM_WIDTH = 410.0f;
 
-		char ActorNameBuf[128] = { 0 };
-
+		constexpr auto& ColorArray = FColor::GetArray();
 		const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
 			Enum::ToString(ETexture::White),
 			Enum::ToString(ETexture::Background),
@@ -41,32 +40,110 @@ namespace platformer2d::UI {
 
 	const FViewportData& GetViewportData() { return ViewportData; }
 
-	void CreatorMenu(std::shared_ptr<CScene> Scene)
+	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec)
 	{
-#define SEPERATE_WINDOW 0
-#if SEPERATE_WINDOW
-		if (!Scene || !ImGui::Begin("##CreatorMenu"))
-#else
-		if (!Scene)
-#endif
+		BodySpec.Position = { Data.Position.x, Data.Position.y };
+		BodySpec.Friction = Data.Friction;
+		BodySpec.Density = Data.Density;
+		BodySpec.GravityScale = Data.GravityScale;
+		BodySpec.LinearVelocity = Data.LinearVelocity;
+		BodySpec.LinearDamping = Data.LinearDamping;
+		BodySpec.AngularVelocity = Data.AngularVelocity;
+		BodySpec.AngularDamping = Data.AngularDamping;
+		BodySpec.DirForce = Data.DirForce;
+		BodySpec.JumpImpulse = Data.JumpImpulse;
+		BodySpec.bSensor = Data.BodyFlag.bSensorEvents;
+
+		/* Body flags. */
+		int BodyFlags = EBodyFlag::EBodyFlag_None;
+		if (Data.BodyFlag.bPreSolveEvents) BodyFlags |= EBodyFlag::EBodyFlag_PreSolveEvents;
+		if (Data.BodyFlag.bContactEvents) BodyFlags |= EBodyFlag::EBodyFlag_ContactEvents;
+		if (Data.BodyFlag.bSensorEvents) BodyFlags |= EBodyFlag::EBodyFlag_SensorEvents;
+		if (Data.BodyFlag.bBullet) BodyFlags |= EBodyFlag::EBodyFlag_IsBullet;
+		BodySpec.Flags = static_cast<EBodyFlag>(BodyFlags);
+
+		/* Motion lock flags. */
+		int MotionLockFlags = EMotionLock::EMotionLock_None;
+		if (Data.MotionLock.All)
 		{
-			return;
+			MotionLockFlags = EMotionLock::EMotionLock_All;
+		}
+		else
+		{
+			if (Data.MotionLock.X) MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_X);
+			if (Data.MotionLock.Y) MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_Y);
+			if (Data.MotionLock.Z) MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_Z);
+		}
+		BodySpec.MotionLock = static_cast<EMotionLock>(MotionLockFlags);
+	}
+
+	bool ColorDropdown(EColor& Selected)
+	{
+		bool Updated = false;
+		std::size_t SelectedIdx = std::to_underlying(Selected);
+
+		static const std::string Label = "Color";
+		if (ImGui::GetCurrentTable() != nullptr)
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 7.0f);
+			ImGui::Text(Label.c_str());
+
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(7.0f, 0.0f);
+		}
+		else
+		{
+			ImGui::Text(Label.c_str());
+			ImGui::SameLine();
 		}
 
-		const std::string FuncID = LK_FUNCSIG;
-		ImGui::PushID(FuncID.c_str());
+		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
+		ImGui::SetNextItemWidth(ComboItemWidth);
+		if (ImGui::BeginCombo("##Color", Enum::ToString(Selected)))
+		{
+			for (int Idx = 0; Idx < ColorArray.size(); Idx++)
+			{
+				const char* Option = Enum::ToString(ColorArray[Idx]);
+				if (Option == nullptr)
+				{
+					continue;
+				}
 
-		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+				const bool IsSelected = (SelectedIdx == Idx);
+				if (ImGui::Selectable(Option, IsSelected))
+				{
+					SelectedIdx = Idx;
+				}
+			}
+
+			ImGui::EndCombo();
+			if (SelectedIdx != std::to_underlying(Selected))
+			{
+				Selected = static_cast<EColor>(SelectedIdx);
+				Updated = true;
+			}
+		}
+
+		return Updated;
+	}
+
+	bool ActorAttributes(FActorAttributes& Attr)
+	{
+		bool Updated = false;
+#if 0 /* NO LABEL */
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
 		static constexpr const char* CreatorMenuLabel = "Creator";
 		static const ImVec2 LabelSize = ImGui::CalcTextSize(CreatorMenuLabel);
 		UI::ShiftCursorX((0.50f * Avail.x) - LabelSize.x);
 		ImGui::Text("Creator Menu");
 		UI::Font::Pop();
+#endif
+		static constexpr float ColWidth = 180.0f;
 
-		ImGui::BeginTable("##CreatorMenuTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("L", 0, 140.0f);
-		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - 140.0f);
+		ImGui::BeginTable("##ActorAttributes", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("L", 0, ColWidth);
+		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
 
 		/* Actor Name. */
 		ImGui::TableNextRow();
@@ -77,57 +154,133 @@ namespace platformer2d::UI {
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursor(7.0f, 0.0f);
-			ImGui::SetNextItemWidth(170.0f);
-			ImGui::InputText("##ActorName", ActorNameBuf, LK_ARRAYSIZE(ActorNameBuf));
+			ImGui::SetNextItemWidth((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
+			ImGui::InputText("##ActorName", Attr.NameBuf.data(), Attr.NameBuf.size());
 		}
 
-		/* Position. */
 		ImGui::TableNextRow();
-		static glm::vec2 Pos = { 0.0f, 0.0f };
-		UI::Draw::Vec2Control("Position", Pos, 0.0f, 0.010f, -100.0f, 100.0f);
+		Updated |= UI::Draw::Vec2Control("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
 
-		/* Size. */
 		ImGui::TableNextRow();
-		static glm::vec2 Size = { 0.20f, 0.20f };
-		UI::Draw::Vec2Control("Size", Size, 1.0f, 0.010f, 0.010f, 2.0f);
+		Updated |= UI::Draw::Vec2Control("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
-		ImGui::EndTable(); /* ~CreatorMenu */
+		ImGui::TableNextRow();
+		Updated |= TextureDropDown(Attr.Texture);
 
-		UI::ShiftCursorY(40);
-		PhysicsBodyMenu(PhysicsBodyData);
-		UI::ShiftCursorY(40);
+		ImGui::TableNextRow();
+		Updated |= ColorDropdown(Attr.Color);
 
-		static std::size_t SelectedTextureIdx = 0;
-		TextureDropDown(SelectedTextureIdx);
+		ImGui::EndTable();
 
-		UI::ShiftCursorX(32.0f);
+		return Updated;
+	}
+
+	void CreatorMenu(std::shared_ptr<CScene> Scene)
+	{
+		if (!Scene)
 		{
-			static constexpr ImVec2 ButtonSize = ImVec2(82, 42);
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
-			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
-			UI::FScopedColorStack ButtonColours(
-				ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-				ImGuiCol_ButtonActive, RGBA32::NiceGreen
-			);
+			return;
+		}
 
-			if (ImGui::Button("Create", ButtonSize))
-			{
-				if (!Scene->DoesActorExist(ActorNameBuf) && ((Size.x > 0.0f) && (Size.y > 0.0f)))
-				{
-					CSpawner::CreateStaticPolygon(ActorNameBuf, Pos, Size, FColor::Convert(RGBA32::Magenta));
-				}
-				else
-				{
-					LK_ERROR_TAG("TestLevel", "Actor already exists with name: \"{}\"", ActorNameBuf);
-				}
-			}
+		static const std::string FuncID = LK_FUNCSIG;
+		ImGui::PushID(FuncID.c_str());
+
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
+		const bool CreateMenuOpened = ImGui::TreeNodeEx("Creator", ImGuiTreeNodeFlags_SpanAvailWidth);
+		if (CreateMenuOpened)
+		{
+			UI::Font::Pop();
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
+			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+
+			ActorAttributes(ActorAttr);
+
+			UI::ShiftCursorY(30);
+			PhysicsBodyMenu(PhysicsBodyData);
+			UI::ShiftCursorY(30);
+
+			CreatorMenuButtons(Scene);
+
+			ImGui::TreePop();
+		}
+		else
+		{
+			UI::Font::Pop();
 		}
 
 		ImGui::PopID();
-#if SEPERATE_WINDOW
-		ImGui::End();
-#endif
+	}
+
+	void CreatorMenuButtons(std::shared_ptr<CScene> Scene)
+	{
+		LK_ASSERT(Scene);
+		/* Button: Create */
+		{
+			static const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
+
+			ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(1);
+
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+			{
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_Button, RGBA32::LightGreen,
+					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+					ImGuiCol_ButtonActive, RGBA32::NiceGreen
+				);
+
+				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
+				if (ActorExists)
+				{
+					ImGui::BeginDisabled();
+				}
+
+				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+				if (ImGui::Button("Create", ButtonSize))
+				{
+					FBodySpecification NewBodySpec;
+					Aggregate(PhysicsBodyData, NewBodySpec);
+					LK_INFO("{}", CBody::ToString(NewBodySpec));
+					CSpawner::CreatePolygon(
+						ActorAttr.NameBuf.data(),
+						NewBodySpec,
+						ActorAttr.Size,
+						FColor::Get(ActorAttr.Color)
+					);
+				}
+				if (ActorExists)
+				{
+					ImGui::EndDisabled();
+				}
+			}
+
+			/* Button: Delete */
+			{
+				ImGui::SameLine();
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_Button, RGBA32::WineRed,
+					ImGuiCol_ButtonHovered, RGBA32::DarkRed,
+					ImGuiCol_ButtonActive, RGBA32::Red
+				);
+
+				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+				if (ImGui::Button("Delete", ButtonSize))
+				{
+					LK_WARN("PLACEHOLDER");
+				}
+			}
+
+			ImGui::EndTable();
+		}
 	}
 
 	void PhysicsBodyMenu(FPhysicsBodyData& Data)
@@ -143,14 +296,11 @@ namespace platformer2d::UI {
 			EBodyType::Kinematic,
 		};
 
+		ImGui::PushID("PhysicsBodyMenu");
 		static std::size_t SelectedIdx = 0;
 		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < BodyTypes.size()));
 
-		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
-		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-
-		ImGui::PushID("PhysicsBodyMenu");
 
 		/************************
 		 * Body Type.
@@ -162,14 +312,15 @@ namespace platformer2d::UI {
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
+			UI::ShiftCursor(17.0f, 7.0f);
 			ImGui::Text("Body Type");
 
 			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursorY(-2.0f);
-			ImGui::SetNextItemWidth(120.0f);
+			UI::ShiftCursor(7.0f, 0.0f);
+			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
+			ImGui::SetNextItemWidth(ComboItemWidth);
 			const char* Selected = Enum::ToString(BodyTypes[SelectedIdx]);
-			if (ImGui::BeginCombo("##PhysicsBodyMenu", Selected))
+			if (ImGui::BeginCombo("##BodyType", Selected))
 			{
 				for (int Idx = 0; Idx < BodyTypes.size(); Idx++)
 				{
@@ -391,12 +542,14 @@ namespace platformer2d::UI {
 		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
 
 		ImGui::Dummy(ImVec2(0, 12));
-		static std::size_t SelectedTextureIdx = 0;
-		TextureDropDown(SelectedTextureIdx);
+		static ETexture SelectedTexture = ETexture::White;
+		if (TextureDropDown(SelectedTexture))
+		{
+			LK_DEBUG("Selected: {}", Enum::ToString(SelectedTexture));
+		}
 
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		const ETexture Texture = static_cast<ETexture>(SelectedTextureIdx);
-		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(Texture); TextureRef != nullptr)
+		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(SelectedTexture); TextureRef != nullptr)
 		{
 			/* Texture preview. */
 			ImGui::SameLine(0.0f, 12.0f);
@@ -448,13 +601,13 @@ namespace platformer2d::UI {
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Clamp", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture)->SetWrap(ETextureWrap::Clamp);
+				CRenderer::GetTexture(SelectedTexture)->SetWrap(ETextureWrap::Clamp);
 			}
 			ImGui::SameLine(0.0f, ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Repeat", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture)->SetWrap(ETextureWrap::Repeat);
+				CRenderer::GetTexture(SelectedTexture)->SetWrap(ETextureWrap::Repeat);
 			}
 
 			ImGui::Dummy(ImVec2(0, 6));
@@ -466,46 +619,49 @@ namespace platformer2d::UI {
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Linear", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture)->SetFilter(ETextureFilter::Linear);
+				CRenderer::GetTexture(SelectedTexture)->SetFilter(ETextureFilter::Linear);
 			}
 
 			ImGui::SameLine(0.0f, ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
 			if (ImGui::Button("Nearest", ButtonSize))
 			{
-				CRenderer::GetTexture(Texture)->SetFilter(ETextureFilter::Nearest);
+				CRenderer::GetTexture(SelectedTexture)->SetFilter(ETextureFilter::Nearest);
 			}
 		}
 	}
 
-	void TextureDropDown(std::size_t& SelectedIdx)
+	bool TextureDropDown(ETexture& Selected)
 	{
 		static constexpr float ButtonPaddingY = 7.0f;
 		static constexpr ImVec2 ButtonSize(84, 42);
 		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
 
+		bool Updated = false;
+		std::size_t SelectedIdx = std::to_underlying(Selected);
 		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < TextureNames.size()));
 		static const char* SelectedTexture = TextureNames[SelectedIdx];
 
-		ImGui::Dummy(ImVec2(0, 6));
-		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		static const std::string Label = "Texture";
+		if (ImGui::GetCurrentTable() != nullptr)
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 7.0f);
+			ImGui::Text(Label.c_str());
 
-		static const char* ComboName = "Texture";
-		const ImVec2 ComboNameLen = ImGui::CalcTextSize(ComboName);
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(7.0f, 0.0f);
+		}
+		else
+		{
+			ImGui::Text(Label.c_str());
+			ImGui::SameLine();
+		}
 
-		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-
-		UI::ShiftCursorX(20.0f);
-		ImGui::Text(ComboName);
-
-		ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
-		UI::ShiftCursorY(-4.0f);
-
-		ImGui::SetNextItemWidth(ItemWidth);
+		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
+		ImGui::SetNextItemWidth(ComboItemWidth);
 		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedIdx]))
 		{
-			SelectedTexture = TextureNames[SelectedIdx];
 			for (int Idx = 0; Idx < TextureNames.size(); Idx++)
 			{
 				const char* Option = TextureNames[Idx];
@@ -514,15 +670,23 @@ namespace platformer2d::UI {
 					continue;
 				}
 
-				const bool IsSelected = (Option == SelectedTexture);
+				const bool IsSelected = (SelectedIdx == Idx);
 				if (ImGui::Selectable(Option, IsSelected))
 				{
 					SelectedIdx = Idx;
 				}
 			}
 
+			if (SelectedIdx != std::to_underlying(Selected))
+			{
+				Selected = static_cast<ETexture>(SelectedIdx);
+				Updated = true;
+			}
+
 			ImGui::EndCombo();
 		}
+
+		return Updated;
 	}
 
 	bool BlendFunction()

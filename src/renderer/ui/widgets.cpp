@@ -1,7 +1,13 @@
 #include "widgets.h"
 
+#include "core/window.h"
+#include "core/input/keyboard.h"
+#include "game/gameinstance.h"
 #include "core/selectioncontext.h"
+#include "game/spawner.h"
 #include "renderer/imgui.h"
+#include "ui.h"
+#include "scene/scene.h"
 
 namespace platformer2d::UI::Draw {
 
@@ -132,6 +138,7 @@ namespace platformer2d::UI::Draw {
 
 		ImGui::EndTable();
 
+#if 0
 		/* Delete actor. */
 		UI::ShiftCursor(0.0f, 4.0f);
 		{
@@ -160,29 +167,111 @@ namespace platformer2d::UI::Draw {
 				ImGui::EndDisabled();
 			}
 		}
+#endif
 	}
 
-	void ActorNode(CActor& Actor)
+	void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene)
 	{
-		const LUUID Handle = Actor.GetHandle();
+		LK_ASSERT(Scene);
+		/* Button: Create */
+		{
+			static const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
+
+			ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(1);
+
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+			{
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_Button, RGBA32::LightGreen,
+					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+					ImGuiCol_ButtonActive, RGBA32::NiceGreen
+				);
+
+				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
+				if (ActorExists)
+				{
+					ImGui::BeginDisabled();
+				}
+
+				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+				if (ImGui::Button("Create", ButtonSize))
+				{
+					FBodySpecification NewBodySpec;
+					Aggregate(PhysicsBodyData, NewBodySpec);
+					LK_INFO("{}", CBody::ToString(NewBodySpec));
+					CSpawner::CreatePolygon(
+						ActorAttr.NameBuf.data(),
+						NewBodySpec,
+						ActorAttr.Size,
+						FColor::Get(ActorAttr.Color)
+					);
+				}
+				if (ActorExists)
+				{
+					ImGui::EndDisabled();
+				}
+			}
+
+			/* Button: Delete */
+			{
+				ImGui::SameLine();
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_Button, RGBA32::WineRed,
+					ImGuiCol_ButtonHovered, RGBA32::DarkRed,
+					ImGuiCol_ButtonActive, RGBA32::Red
+				);
+
+				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+				const bool IsDeletable = Actor.IsDeletable();
+				if (!IsDeletable)
+				{
+					ImGui::BeginDisabled();
+				}
+				if (ImGui::Button("Delete", ButtonSize))
+				{
+					LK_INFO("Delete: {} ({})", Actor.GetHandle(), Actor.GetName());
+					Scene->DeleteActor(Actor.GetHandle());
+				}
+				if (!IsDeletable)
+				{
+					ImGui::EndDisabled();
+				}
+			}
+
+			ImGui::EndTable();
+		}
+	}
+
+	void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	{
+		LK_ASSERT(Actor && Scene);
+		const LUUID Handle = Actor->GetHandle();
 		ImGui::PushID(Handle);
 
-		const bool bIsSelected = CSelectionContext::IsSelected(Handle);
+		const bool IsSelected = CSelectionContext::IsSelected(Handle);
 
-		ImGuiTreeNodeFlags TreeNodeFlags = (bIsSelected ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None);
+		ImGuiTreeNodeFlags TreeNodeFlags = (IsSelected ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None);
 		TreeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
 		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(uint64_t)(uint32_t)Handle);
-
-		std::string_view Name = Actor.GetName();
+		std::string_view Name = Actor->GetName();
 		char NodeName[84];
 		std::snprintf(NodeName, sizeof(NodeName), "%s (%lld)", Name.data(), static_cast<LUUID::SizeType>(Handle));
 
-		const bool bWasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
-		const bool bNodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
-		if (bNodeOpened)
+		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
+		const bool NodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
+		if (NodeOpened)
 		{
-			ActorNode_VectorControl(Actor);
+			ActorNode_VectorControl(*Actor);
+			ActorNode_Buttons(*Actor, Scene);
 			ImGui::TreePop();
 		}
 

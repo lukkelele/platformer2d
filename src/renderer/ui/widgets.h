@@ -6,6 +6,10 @@
 #include "scoped.h"
 #include "scene/actor.h"
 
+namespace platformer2d {
+	class CScene;
+}
+
 namespace platformer2d::UI {
 
 	enum class EVectorSemantic
@@ -17,7 +21,8 @@ namespace platformer2d::UI {
 	namespace Draw
 	{
 		void ActorNode_VectorControl(CActor& Actor);
-		void ActorNode(CActor& Actor);
+		void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene);
+		void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 
 		/** @todo Pass 'Value' as reference instead. */
 		inline bool DragFloat(const char* Label, float* Value, float ValueSpeed = 1.0f, float ValueMin = 0.0f, float ValueMax = 0.0f,
@@ -80,7 +85,6 @@ namespace platformer2d::UI {
 		{
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
-
 			UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
 
 			bool Modified = false;
@@ -201,6 +205,7 @@ namespace platformer2d::UI {
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
 			static constexpr const char* V3 = (VecSemantic == EVectorSemantic::XYZ) ? "Z" : "B";
+			UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
 
 			bool Modified = false;
 
