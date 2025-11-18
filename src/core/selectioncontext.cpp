@@ -2,7 +2,7 @@
 
 namespace platformer2d {
 
-	void CSelectionContext::Select(const THandle Handle)
+	void CSelectionContext::Select(const LUUID Handle)
 	{
 		Selected = Handle;
 	}

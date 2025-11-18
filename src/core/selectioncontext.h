@@ -7,21 +7,20 @@ namespace platformer2d {
 	class CSelectionContext
 	{
 	public:
-		using THandle = uint32_t;
-	public:
 		CSelectionContext() = default;
 		~CSelectionContext() = default;
 
-		static void Select(THandle Handle);
-		static inline THandle GetSelected() { return Selected; }
-		static bool IsSelected(const THandle Handle) { return (Handle == Selected); }
+		static void Select(LUUID Handle);
+		static LUUID GetSelected() { return Selected; }
+		static bool IsSelected(const LUUID Handle) { return (Handle == Selected); }
+		static bool AnySelected() { return (Selected != 0); }
 
 	private:
 		CSelectionContext(const CSelectionContext&) = delete;
 		CSelectionContext(CSelectionContext&&) = delete;
 
 	private:
-		static inline THandle Selected = 0;
+		static inline LUUID Selected = 0;
 	};
 
 }
