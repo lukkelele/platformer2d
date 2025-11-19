@@ -41,7 +41,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	static void Serialize(const FTransformComponent& TC, YAML::Emitter& Out)
+	void Serialize(const FTransformComponent& TC, YAML::Emitter& Out)
 	{
 		Out << YAML::Key << "TransformComponent";
 		Out << YAML::BeginMap;
@@ -52,7 +52,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	static void Serialize(const FEffectComponent& EC, YAML::Emitter& Out)
+	void Serialize(const FEffectComponent& EC, YAML::Emitter& Out)
 	{
 		if (EC.Effects.empty())
 		{
@@ -96,7 +96,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	static void Deserialize(FTransformComponent& TC, const YAML::Node& Node)
+	void Deserialize(FTransformComponent& TC, const YAML::Node& Node)
 	{
 		TC.Translation = Node["Position"].as<decltype(TC.Translation)>();
 		const float RotRad = Node["Rotation"].as<float>();
@@ -109,7 +109,7 @@ namespace platformer2d::Serialization {
 	 * The YAML node should be a sequence of effects, if any.
 	 */
 	template<>
-	static void Deserialize(FEffectComponent& EC, const YAML::Node& NodeSeq)
+	void Deserialize(FEffectComponent& EC, const YAML::Node& NodeSeq)
 	{
 		LK_ASSERT(NodeSeq && NodeSeq.IsSequence());
 		for (std::size_t Idx = 0; Idx < NodeSeq.size(); Idx++)
@@ -145,7 +145,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	static void Deserialize(FBodySpecification& BodySpec, const YAML::Node& Node)
+	void Deserialize(FBodySpecification& BodySpec, const YAML::Node& Node)
 	{
 		LK_ASSERT(Node["Type"] && Node["Shape"]);
 		BodySpec.Type = static_cast<EBodyType>(Node["Type"].as<int>());
