@@ -9,9 +9,11 @@ namespace platformer2d {
 	class CUniformBuffer
 	{
 	public:
-		CUniformBuffer(uint64_t Size);
+		CUniformBuffer(uint64_t Size, std::string_view InName);
 		CUniformBuffer() = delete;
 		~CUniformBuffer();
+
+		void Destroy();
 
 		void Bind() const;
 		void Unbind() const;
@@ -21,6 +23,7 @@ namespace platformer2d {
 
 	private:
 		LRendererID ID;
+		std::string Name;
 	};
 
 }

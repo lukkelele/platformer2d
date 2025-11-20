@@ -5,8 +5,10 @@
 
 namespace platformer2d {
 
-	CUniformBuffer::CUniformBuffer(const uint64_t Size)
+	CUniformBuffer::CUniformBuffer(const uint64_t Size, std::string_view InName)
+		: Name(InName)
 	{
+		LK_ASSERT(!Name.empty());
 		LK_OpenGL_Verify(glCreateBuffers(1, &ID));
 		LK_OpenGL_Verify(glNamedBufferData(ID, Size, nullptr, GL_DYNAMIC_DRAW)); 
 		LK_OpenGL_Verify(glBindBufferBase(GL_UNIFORM_BUFFER, 0, ID));
@@ -14,7 +16,14 @@ namespace platformer2d {
 
 	CUniformBuffer::~CUniformBuffer()
 	{
+		LK_ASSERT(ID == 0, "UniformBuffer", "Released without buffer deletion: {} ({})", Name, ID);
+	}
+
+	void CUniformBuffer::Destroy()
+	{
+		LK_DEBUG_TAG("UniformBuffer", "Destroy: {} ({})", Name, ID);
 		LK_OpenGL_Verify(glDeleteBuffers(1, &ID));
+		ID = 0;
 	}
 
 	void CUniformBuffer::Bind() const
