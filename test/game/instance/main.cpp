@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <filesystem>
 
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
@@ -24,6 +23,6 @@ int main(int Argc, char* Argv[])
 		Test.Destroy();
 	}
 
-	LK_INFO_TAG("Main", "Exit: {}", errno);
+	LK_INFO_TAG("Main", "Exit: {}", LK_TEST_NAME);
 	return 0;
 }
