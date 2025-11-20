@@ -7,6 +7,12 @@ namespace platformer2d::Core {
 
 	FGlobal Global{};
 
+	std::filesystem::path GetRelativeFromProject(const std::filesystem::path& Input)
+	{
+		const std::filesystem::path AbsInput = std::filesystem::weakly_canonical(Input);
+		return std::filesystem::relative(AbsInput, ProjectDir);
+	}
+
 	static void SkipWhitespaceAndCommas(const char*& Ptr, const char* End)
 	{
 		while ((Ptr < End) 

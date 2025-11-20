@@ -29,11 +29,18 @@ namespace platformer2d {
 
 	namespace Core
 	{
+		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
+
 		struct FGlobal
 		{
 			bool bShouldShutdown = false;
 		};
 		extern FGlobal Global;
+
+		/**
+		 * @brief Get relative path from the project directory.
+		 */
+		std::filesystem::path GetRelativeFromProject(const std::filesystem::path& Input);
 
 		int ParseSvgPath(std::string_view, const glm::vec2& Offset,
 						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
