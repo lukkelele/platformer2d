@@ -1,4 +1,4 @@
 Level: TestLevel
-Scene: C:/Users/lukas/source/repos/platformer2d/assets/scenes/TestLevel.lscene
+Scene: assets/scenes/TestLevel.lscene
 Physics:
   Gravity: [0, -5]
