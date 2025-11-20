@@ -88,6 +88,8 @@ project_add_compile_definitions(
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	project_add_compile_definitions(LK_BUILD_DEBUG)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3" CACHE STRING "" FORCE)
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g3" CACHE STRING "" FORCE)
 endif()
 
 set(LK_PROJECT_DIR "${CMAKE_SOURCE_DIR}")
