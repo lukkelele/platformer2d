@@ -185,13 +185,8 @@ namespace platformer2d {
 	bool CScene::Deserialize(const std::filesystem::path& InFilepath)
 	{
 		LK_INFO_TAG("Scene", "Deserialize: {}", InFilepath);
-		std::filesystem::path AbsFilepath = InFilepath;
-		if (AbsFilepath.string().starts_with(PROJECT_NAME "/"))
-		{
-			AbsFilepath = std::filesystem::path(PROJECT_DIR) / InFilepath.lexically_relative(PROJECT_NAME);
-			LK_TRACE_TAG("Scene", "Absolute filepath: {}", AbsFilepath);
-		}
-
+		std::filesystem::path AbsFilepath = Core::ProjectDir / InFilepath;
+		LK_TRACE_TAG("Scene", "Absolute filepath: {}", AbsFilepath);
 		LK_ASSERT(std::filesystem::exists(AbsFilepath), "Filepath does not exist: {}", AbsFilepath);
 		if (!std::filesystem::exists(AbsFilepath))
 		{
