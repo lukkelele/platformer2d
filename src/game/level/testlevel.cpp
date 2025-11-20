@@ -28,7 +28,7 @@ namespace platformer2d::Level {
 	{
 		/*************************************
 		 *        GAME SPECIFICATION
-		/*************************************/
+		 *************************************/
 		const FGameSpecification GameSpec = {
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
 			.Name = "TestLevel",
@@ -358,7 +358,8 @@ namespace platformer2d::Level {
 		Out << YAML::BeginMap; /* Level */
 		Out << YAML::Key << "Level" << YAML::Value << Name;
 
-		const std::filesystem::path ScenePath = Scene->GetFilepath();
+		std::filesystem::path ScenePath = Scene->GetFilepath();
+		LK_DEBUG("Scene path: {}", ScenePath);
 		Out << YAML::Key << "Scene" << YAML::Value << ScenePath;
 
 		/* Physics */
