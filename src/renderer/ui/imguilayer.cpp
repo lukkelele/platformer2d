@@ -49,8 +49,8 @@ namespace platformer2d {
 		IO.ConfigDockingAlwaysTabBar = false;
 
 		/** @fixme: Need to sort out the initial dock node placements */
-#define NO_IMGUI_CONFIG
-#ifdef NO_IMGUI_CONFIG
+#define NO_IMGUI_CONFIG 0
+#if NO_IMGUI_CONFIG
 		IO.IniFilename = nullptr; /* No config. */
 #endif
 
