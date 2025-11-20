@@ -1,5 +1,6 @@
 #include "scene.h"
 
+#include <filesystem>
 #include <fstream>
 #include <istream>
 
@@ -13,8 +14,8 @@ namespace platformer2d {
 		: Name(InName)
 	{
 		LK_VERIFY(!Name.empty(), "Scene name is empty");
-		Filepath = LK_FMT("{}/{}.{}", SCENES_DIR, Name, FILE_EXTENSION).c_str();
-		LK_DEBUG_TAG("Scene", "Created: {} ({})", Name, StringUtils::GetPathRelativeToProject(Filepath));
+		Path = LK_FMT("{}/{}.{}", SCENES_DIR, Name, FILE_EXTENSION).c_str();
+		LK_DEBUG_TAG("Scene", "Created: {} ({})", Name, StringUtils::GetPathRelativeToProject(Path));
 
 		CActor::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
@@ -142,7 +143,7 @@ namespace platformer2d {
 		std::filesystem::path SceneFile = OutFile;
 		if (SceneFile.empty())
 		{
-			SceneFile = Filepath;
+			SceneFile = Path;
 		}
 		LK_DEBUG_TAG("Scene", "Serialize: {}", StringUtils::GetPathRelativeToProject(SceneFile));
 
@@ -181,18 +182,27 @@ namespace platformer2d {
 		return true;
 	}
 
-	bool CScene::Deserialize(const std::filesystem::path& Filepath)
+	bool CScene::Deserialize(const std::filesystem::path& InFilepath)
 	{
-		LK_INFO_TAG("Scene", "Deserialize: {}", Filepath);
-		LK_ASSERT(std::filesystem::exists(Filepath), "Filepath does not exist: {}", Filepath);
-		if (!std::filesystem::exists(Filepath))
+		LK_INFO_TAG("Scene", "Deserialize: {}", InFilepath);
+		std::filesystem::path AbsFilepath = InFilepath;
+		if (AbsFilepath.string().starts_with(PROJECT_NAME "/"))
 		{
-			LK_ERROR_TAG("Scene", "Filepath does not exist: {}", Filepath);
+			AbsFilepath = std::filesystem::path(PROJECT_DIR) / InFilepath.lexically_relative(PROJECT_NAME);
+			LK_TRACE_TAG("Scene", "Absolute filepath: {}", AbsFilepath);
+		}
+
+		LK_ASSERT(std::filesystem::exists(AbsFilepath), "Filepath does not exist: {}", AbsFilepath);
+		if (!std::filesystem::exists(AbsFilepath))
+		{
+			LK_ERROR_TAG("Scene", "Filepath does not exist: {}", AbsFilepath);
 			return false;
 		}
 
+		Path = AbsFilepath;
+
 		/* Read YAML file to a string. */
-		std::ifstream InputStream(Filepath);
+		std::ifstream InputStream(AbsFilepath);
 		std::stringstream StringStream;
 		StringStream << InputStream.rdbuf();
 		const std::string YamlString = StringStream.str();

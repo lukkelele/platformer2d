@@ -36,7 +36,7 @@ namespace platformer2d {
 
 		std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
-		const std::filesystem::path& GetFilepath() const { return Filepath; }
+		const std::filesystem::path& GetFilepath() const { return Path; }
 
 		virtual bool Serialize(const std::filesystem::path& OutFile = {}) const override;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override;
@@ -49,7 +49,7 @@ namespace platformer2d {
 	private:
 		LUUID ID;
 		std::string Name;
-		std::filesystem::path Filepath;
+		std::filesystem::path Path;
 		std::vector<std::shared_ptr<CActor>> Actors{};
 
 		bool bPaused = false;
