@@ -922,7 +922,6 @@ namespace platformer2d::UI {
 
 	void DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
 	{
-		static_assert(std::is_same_v<std::decay_t<decltype(Operation)>, std::underlying_type_t<ImGuizmo::OPERATION>>);
 		ImGuizmo::SetOrthographic(true);
 		ImGuizmo::SetDrawlist();
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
