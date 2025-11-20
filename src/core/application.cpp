@@ -63,6 +63,8 @@ namespace platformer2d {
 			LK_TRACE_TAG("Application", "Release layerstack");
 			LayerStack.Destroy();
 
+			CRenderer::Destroy();
+
 			Window->Destroy();
 			Window.reset();
 		}
