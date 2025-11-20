@@ -146,6 +146,7 @@ namespace platformer2d {
 	void CRenderer::Destroy()
 	{
 		Data.WhiteTexture = nullptr;
+		LK_DEBUG_TAG("Renderer", "Releasing textures");
 		for (auto& [Texture, TextureRef] : Data.Textures)
 		{
 			if (TextureRef != nullptr)
@@ -154,6 +155,13 @@ namespace platformer2d {
 				TextureRef->Unbind();
 				TextureRef.reset();
 			}
+		}
+
+		if (CameraUniformBuffer)
+		{
+			LK_DEBUG_TAG("Renderer", "Releasing uniform buffers");
+			CameraUniformBuffer->Destroy();
+			CameraUniformBuffer.reset();
 		}
 	}
 
@@ -198,7 +206,7 @@ namespace platformer2d {
 		QuadShader = std::make_shared<CShader>(SHADERS_DIR "/quad.shader");
 
 		CameraData.ViewProjection = glm::mat4(1.0f);
-		CameraUniformBuffer = std::make_unique<CUniformBuffer>(sizeof(FCameraData));
+		CameraUniformBuffer = std::make_unique<CUniformBuffer>(sizeof(FCameraData), "CameraUB");
 		CameraUniformBuffer->SetBinding(QuadShader, "ub_camera", 0);
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 	}
