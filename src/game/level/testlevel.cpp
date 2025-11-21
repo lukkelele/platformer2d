@@ -360,7 +360,7 @@ namespace platformer2d::Level {
 
 		std::filesystem::path ScenePath = Scene->GetFilepath();
 		LK_DEBUG("Scene path: {}", ScenePath);
-		Out << YAML::Key << "Scene" << YAML::Value << ScenePath;
+		Out << YAML::Key << "Scene" << YAML::Value << Core::GetRelativeFromProject(ScenePath);
 
 		/* Physics */
 		Out << YAML::Key << "Physics";
