@@ -53,6 +53,7 @@ namespace platformer2d {
 		void SetTickEnabled(bool Enabled);
 		inline bool IsDeletable() const { return bDeletable; }
 		void SetDeletable(bool Deletable);
+		virtual bool IsPlayer() const { return false; }
 
 		inline ETexture GetTexture() const { return Texture; }
 		inline const glm::vec4& GetColor() const { return Color; }
@@ -153,8 +154,6 @@ namespace platformer2d {
 		LUUID Handle;
 		bool bTickEnabled = true;
 		bool bDeletable = true;
-
-		static inline uint32_t Instances = 0;
 	};
 
 	template<>

@@ -6,7 +6,7 @@
 namespace platformer2d {
 
 	CActor::CActor(const FActorSpecification& Spec)
-		: Handle(GenerateHandle())
+		: Handle(LUUID())
 		, Name("")
 		, Texture(Spec.Texture)
 		, Color(Spec.Color)
@@ -34,7 +34,7 @@ namespace platformer2d {
 	}
 
 	CActor::CActor(const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
-		: CActor(GenerateHandle(), BodySpec, InTexture, InColor)
+		: CActor(LUUID(), BodySpec, InTexture, InColor)
 	{
 	}
 
@@ -174,12 +174,6 @@ namespace platformer2d {
 		Out << YAML::EndMap; /* ~Actor */
 
 		return true;
-	}
-
-	LUUID CActor::GenerateHandle()
-	{
-		Instances++;
-		return Instances;
 	}
 
 	void CActor::UpdateEffectComponent(FEffectComponent& EC)
