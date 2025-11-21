@@ -6,7 +6,7 @@
 
 namespace platformer2d {
 
-	CBody::CBody(const FBodySpecification& Spec)
+	CBody::CBody(const FBodySpecification& Spec, CActor* Owner)
 		: BodySpec(Spec)
 		, GravityScale(Spec.GravityScale)
 	{
@@ -31,6 +31,7 @@ namespace platformer2d {
 
 		ShapeDef.material.friction = Spec.Friction;
 		ShapeDef.isSensor = Spec.bSensor;
+		ShapeDef.userData = Owner;
 
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		Shape = Spec.Shape;
@@ -87,6 +88,21 @@ namespace platformer2d {
 	void CBody::SetDirty(const bool Dirty)
 	{
 		bDirty = Dirty;
+	}
+
+	bool CBody::IsAwake() const
+	{
+		return b2Body_IsAwake(ID);
+	}
+
+	void CBody::SetAwake(const bool Awake) const
+	{
+		b2Body_SetAwake(ID, Awake);
+	}
+
+	bool CBody::IsSensor() const
+	{
+		return BodySpec.bSensor;
 	}
 
 	glm::vec2 CBody::GetPosition() const
@@ -269,27 +285,21 @@ namespace platformer2d {
 		Out << YAML::Key << "Body";
 		Out << YAML::BeginMap; /* Body */
 
-		Out << YAML::Key << "Type";
-		Out << YAML::Value << std::to_underlying(BodySpec.Type);
-
+		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(BodySpec.Type);
 		Out << YAML::Key << "GravityScale" << YAML::Value << GravityScale;
 
 		/* Shape */
 		Out << YAML::Key << "Shape";
 		Out << YAML::BeginMap;
-		Out << YAML::Key << "ShapeType";
-		Out << YAML::Value << std::to_underlying(ShapeType);
+		Out << YAML::Key << "ShapeType" << YAML::Value << std::to_underlying(ShapeType);
 		switch (ShapeType)
 		{
 			case EShape::Polygon:
 			{
 				const auto& ShapeRef = std::get<FPolygon>(Shape);
-				Out << YAML::Key << "Size";
-				Out << YAML::Value << ShapeRef.Size;
-				Out << YAML::Key << "Rotation";
-				Out << YAML::Value << GetRotation();
-				Out << YAML::Key << "Radius";
-				Out << YAML::Value << ShapeRef.Radius;
+				Out << YAML::Key << "Size" << YAML::Value << ShapeRef.Size;
+				Out << YAML::Key << "Rotation" << YAML::Value << GetRotation();
+				Out << YAML::Key << "Radius" << YAML::Value << ShapeRef.Radius;
 				LK_TRACE_TAG("Body", "Polygon: Size={} Rotation={} Radius={}", ShapeRef.Size, ShapeRef.Rotation, ShapeRef.Radius);
 				break;
 			}
@@ -301,29 +311,19 @@ namespace platformer2d {
 			case EShape::Capsule:
 			{
 				const auto& ShapeRef = std::get<FCapsule>(Shape);
-				Out << YAML::Key << "P0";
-				Out << YAML::Value << ShapeRef.P0;
-				Out << YAML::Key << "P1";
-				Out << YAML::Value << ShapeRef.P1;
-				Out << YAML::Key << "Radius";
-				Out << YAML::Value << ShapeRef.Radius;
+				Out << YAML::Key << "P0" << YAML::Value << ShapeRef.P0;
+				Out << YAML::Key << "P1" << YAML::Value << ShapeRef.P1;
+				Out << YAML::Key << "Radius" << YAML::Value << ShapeRef.Radius;
 				break;
 			}
 		}
 		Out << YAML::EndMap;
 		/* ~Shape */
 
-		Out << YAML::Key << "Position";
-		Out << YAML::Value << GetPosition();
-
-		Out << YAML::Key << "Flags";
-		Out << YAML::Value << static_cast<uint32_t>(BodySpec.Flags);
-
-		Out << YAML::Key << "Mass";
-		Out << YAML::Value << GetMass();
-
-		Out << YAML::Key << "MotionLock";
-		Out << YAML::Value << static_cast<uint32_t>(BodySpec.MotionLock);
+		Out << YAML::Key << "Position" << YAML::Value << GetPosition();
+		Out << YAML::Key << "Flags" << YAML::Value << static_cast<uint32_t>(BodySpec.Flags);
+		Out << YAML::Key << "Mass" << YAML::Value << GetMass();
+		Out << YAML::Key << "MotionLock" << YAML::Value << static_cast<uint32_t>(BodySpec.MotionLock);
 
 		Out << YAML::EndMap; /* ~Body */
 

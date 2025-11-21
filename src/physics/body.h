@@ -11,6 +11,8 @@
 
 namespace platformer2d {
 
+	class CActor;
+
 	enum EMotionLock : uint32_t
 	{
 		EMotionLock_None = 0,
@@ -55,7 +57,7 @@ namespace platformer2d {
 	class CBody : public ISerializable<ESerializable::Yaml>
 	{
 	public:
-		CBody(const FBodySpecification& Spec);
+		CBody(const FBodySpecification& Spec, CActor* Owner);
 		CBody() = delete;
 		~CBody();
 
@@ -67,6 +69,9 @@ namespace platformer2d {
 
 		inline bool IsDirty() const { return bDirty; }
 		void SetDirty(bool Dirty);
+		bool IsAwake() const;
+		void SetAwake(bool Awake) const;
+		bool IsSensor() const;
 
 		glm::vec2 GetPosition() const;
 		void SetPosition(const glm::vec2& Pos) const;
