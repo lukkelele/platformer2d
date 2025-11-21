@@ -24,6 +24,11 @@ namespace platformer2d::UI {
 		void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene);
 		void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 
+		/**
+		 * @brief Update the actor cache.
+		 */
+		void OnActorDeleted(LUUID ActorHandle);
+
 		/** @todo Pass 'Value' as reference instead. */
 		inline bool DragFloat(const char* Label, float* Value, float ValueSpeed = 1.0f, float ValueMin = 0.0f, float ValueMax = 0.0f,
 							  const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)

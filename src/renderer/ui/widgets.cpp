@@ -11,14 +11,53 @@
 
 namespace platformer2d::UI::Draw {
 
+	struct FActorDataEntry
+	{
+		std::array<char, 64> NameBuf;
+	};
+
+	namespace {
+		std::unordered_map<LUUID, FActorDataEntry> ActorDataMap;
+	}
+
 	void ActorNode_Data(CActor& Actor)
 	{
+		const LUUID Handle = Actor.GetHandle();
+		ImGui::PushID(Handle);
+
 		static constexpr float LabelColumnWidth = 180.0f;
 		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
 		ImGui::TableSetupColumn("LabelColumn", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
 		bool Changed = false;
+
+		auto Label = [](std::string_view Str) -> void
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text(Str.data());
+		};
+
+		auto NextColumn = []() -> void
+		{
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+		};
+
+		/* Cache the actor. */
+		if (!ActorDataMap.contains(Handle))
+		{
+			LK_TRACE_TAG("UI", "Caching handle {}", Handle);
+			auto [Iter, Inserted] = ActorDataMap.emplace(Handle, FActorDataEntry{});
+			if (Inserted)
+			{
+				/* Populate the buffer with the actor name. */
+				FActorDataEntry& Data = Iter->second;
+				std::snprintf(Data.NameBuf.data(), Data.NameBuf.size(), "%s", Actor.GetName().data());
+			}
+		}
+
 		FTransformComponent& TC = Actor.GetTransformComponent();
 		const CBody& Body = Actor.GetBody();
 
@@ -53,18 +92,28 @@ namespace platformer2d::UI::Draw {
 		}
 #endif
 
-		auto Label = [](std::string_view Str) -> void
+		/* Actor Name */
+		auto Iter = ActorDataMap.find(Handle);
+		if (Iter != ActorDataMap.end())
 		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text(Str.data());
-		};
+			ImGui::TableNextRow();
+			FActorDataEntry& Data = Iter->second;
+			Label("Name");
+			NextColumn();
+			UI::ShiftCursor(7.0f, 0.0f);
 
-		auto NextColumn = []() -> void
-		{
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
-		};
+			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+			ImGui::InputText("##Name", Data.NameBuf.data(), Data.NameBuf.size());
+			ImGui::SameLine();
+
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 2);
+			if (ImGui::Button(LK_ICON_CHECK_CIRCLE))
+			{
+				LK_DEBUG_TAG("UI", "Rename {} to: {}", Handle, Data.NameBuf.data());
+				Actor.SetName(Data.NameBuf.data());
+			}
+		}
 
 		/* Tick info. */
 		ImGui::TableNextRow();
@@ -158,6 +207,8 @@ namespace platformer2d::UI::Draw {
 				ImGui::TreePop();
 			}
 		}
+
+		ImGui::PopID();
 	}
 
 	void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene)
@@ -255,7 +306,15 @@ namespace platformer2d::UI::Draw {
 		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(uint64_t)(uint32_t)Handle);
 		std::string_view Name = Actor->GetName();
 		char NodeName[84];
-		std::snprintf(NodeName, sizeof(NodeName), "%s (%lld)", Name.data(), static_cast<LUUID::SizeType>(Handle));
+		if (Actor->IsPlayer())
+		{
+			/* @fixme: Skip UUID for player until spawning and serialization for player is handled. */
+			std::snprintf(NodeName, sizeof(NodeName), "%s", Name.data());
+		}
+		else
+		{
+			std::snprintf(NodeName, sizeof(NodeName), "%s (%lld)", Name.data(), static_cast<LUUID::SizeType>(Handle));
+		}
 
 		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
 		const bool NodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
@@ -267,6 +326,12 @@ namespace platformer2d::UI::Draw {
 		}
 
 		ImGui::PopID();
+	}
+
+	void OnActorDeleted(const LUUID ActorHandle)
+	{
+		LK_DEBUG_TAG("UI", "Removing handle {} from actor cache", ActorHandle);
+		ActorDataMap.erase(ActorHandle);
 	}
 
 }
