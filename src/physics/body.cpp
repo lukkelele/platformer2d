@@ -336,6 +336,7 @@ namespace platformer2d {
 		if (IsShape<EShape::Polygon>(Spec.Shape)) ShapeType = EShape::Polygon;
 		else if (IsShape<EShape::Line>(Spec.Shape)) ShapeType = EShape::Line;
 		else if (IsShape<EShape::Capsule>(Spec.Shape)) ShapeType = EShape::Capsule;
+		else ShapeType = EShape::None;
 
 		return LK_FMT("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
 					  Enum::ToString(ShapeType), Spec.Position, Spec.Flags, Spec.MotionLock, Spec.Density);

@@ -70,7 +70,6 @@ namespace platformer2d {
 	template<EShape T>
 	inline bool IsShape(const TShape& S)
 	{
-		LK_ASSERT(std::get_if<TShapeType<T>>(&S) != nullptr);
 		return std::holds_alternative<TShapeType<T>>(S);
 	}
 
