@@ -11,7 +11,7 @@
 
 namespace platformer2d::UI::Draw {
 
-	void ActorNode_VectorControl(CActor& Actor)
+	void ActorNode_Data(CActor& Actor)
 	{
 		static constexpr float LabelColumnWidth = 180.0f;
 		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
@@ -261,7 +261,7 @@ namespace platformer2d::UI::Draw {
 		const bool NodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
 		if (NodeOpened)
 		{
-			ActorNode_VectorControl(*Actor);
+			ActorNode_Data(*Actor);
 			ActorNode_Buttons(*Actor, Scene);
 			ImGui::TreePop();
 		}

@@ -759,7 +759,7 @@ namespace platformer2d::Level {
 		ImGui::PopItemWidth();
 
 		ImGui::Dummy(ImVec2(0, 6));
-		UI::Draw::ActorNode_VectorControl(*Player);
+		UI::Draw::ActorNode_Data(*Player);
 		ImGui::Dummy(ImVec2(0, 6));
 
 		if (ImGui::Button("Rotate Platform"))

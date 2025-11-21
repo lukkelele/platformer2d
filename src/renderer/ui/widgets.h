@@ -20,7 +20,7 @@ namespace platformer2d::UI {
 
 	namespace Draw
 	{
-		void ActorNode_VectorControl(CActor& Actor);
+		void ActorNode_Data(CActor& Actor);
 		void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene);
 		void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 
