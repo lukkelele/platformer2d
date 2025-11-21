@@ -91,6 +91,11 @@ namespace platformer2d::Level {
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 	static void GenerateClouds(const std::size_t CloudCount = 7);
 
+	static void UpdateInputBuffer(std::size_t Count)
+	{
+		std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Count + 2);
+	}
+
 	CTestLevel::CTestLevel()
 		: CGameInstance(this, GameSpec)
 	{
@@ -104,14 +109,13 @@ namespace platformer2d::Level {
 
 		Scene = std::make_shared<CScene>("TestLevel");
 
-		CActor::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
+		CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
 				LK_TRACE_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				LK_ASSERT(Scene);
-				const auto& Actors = Scene->GetActors(); /* @fixme */
-				std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Actors.size() + 2);
+				UpdateInputBuffer(Scene->GetActors().size());
 
 #if 0 /* @fixme: Remove once the creator menu can add new components */
 				std::string_view ActorName = Actor->GetName();
@@ -131,13 +135,10 @@ namespace platformer2d::Level {
 			}
 		});
 
-		/**
-		 * Bind to lambda because the delegate expects a void return type,
-		 * which DeleteActor isn't.
-		 */
-		CActor::OnActorMarkedForDeletion.Add([&](const LUUID Handle)
+		CScene::OnActorDeleted.Add([&](const LUUID Handle)
 		{
-			std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Scene->GetActors().size() + 2);
+			LK_DEBUG_TAG("TestLevel", "OnActorDeleted: {}", Handle);
+			UpdateInputBuffer(Scene->GetActors().size());
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
@@ -452,7 +453,7 @@ namespace platformer2d::Level {
 		};
 		Spec.Shape.emplace<FPolygon>(Polygon);
 
-		std::shared_ptr<CActor> Platform = CActor::Create<CActor>(Spec, ETexture::Metal);
+		std::shared_ptr<CActor> Platform = Scene->Create<CActor>(Spec, ETexture::Metal);
 		FTransformComponent& TC = Platform->GetTransformComponent();
 		TC.SetScale(Polygon.Size);
 	}
@@ -473,7 +474,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::LightGreen);
+			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::LightGreen);
 		}
 
 		/* Object 2. */
@@ -490,7 +491,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::Bricks);
+			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::Bricks);
 		}
 
 		/* Object 3. */
@@ -507,7 +508,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::Magenta));
+			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::Magenta));
 		}
 
 		/* Object 4. */
@@ -524,7 +525,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::DarkCyan));
+			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::DarkCyan));
 			RotatingPlatform = Actor;
 		}
 
@@ -541,7 +542,7 @@ namespace platformer2d::Level {
 			};
 			Spec.Shape.emplace<FPolygon>(Polygon);
 
-			std::shared_ptr<CActor> Actor = CActor::Create<CActor>(Spec, ETexture::White, FColor::Gray);
+			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::Gray);
 		}
 
 		CSpawner::CreateStaticPolygon(
@@ -650,7 +651,11 @@ namespace platformer2d::Level {
 
 		ImGui::Dummy(ImVec2(0, 8));
 
-		const auto& Actors = Scene->GetActors();
+		/**
+		 * Get vector copy of all actors to not invalidate the iteration
+		 * if an actor is deleted.
+		 */
+		const auto Actors = Scene->GetActors();
 		ImGui::Text("Actors: %d", Actors.size() + 1);
 		UI::Draw::ActorNode(Player, Scene);
 		for (auto& Actor : Actors)
@@ -1059,7 +1064,7 @@ namespace platformer2d::Level {
 
 			if (!Scene->DoesActorExist(ActorHandle))
 			{
-				std::shared_ptr<CActor> Actor = CActor::Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
+				std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
 			}
 			else
 			{
