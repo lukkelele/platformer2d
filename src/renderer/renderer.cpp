@@ -146,7 +146,7 @@ namespace platformer2d {
 	void CRenderer::Destroy()
 	{
 		Data.WhiteTexture = nullptr;
-		LK_DEBUG_TAG("Renderer", "Releasing textures");
+		LK_DEBUG_TAG("Renderer", "Releasing {} textures", Data.Textures.size());
 		for (auto& [Texture, TextureRef] : Data.Textures)
 		{
 			if (TextureRef != nullptr)
