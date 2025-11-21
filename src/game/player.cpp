@@ -170,6 +170,12 @@ namespace platformer2d {
 		bCameraLock = Locked;
 	}
 
+	bool CPlayer::Serialize(YAML::Emitter& Out) const
+	{
+		LK_DEBUG_TAG("Player", "Serialize");
+		return CActor::Serialize(Out);
+	}
+
 	void CPlayer::HandleInput()
 	{
 		if (CKeyboard::IsKeyDown(EKey::W))

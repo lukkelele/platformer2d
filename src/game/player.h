@@ -47,6 +47,7 @@ namespace platformer2d {
 
 		inline const FPlayerData& GetData() const { return Data; }
 		inline const CSprite& GetSprite() const { return *Sprite; }
+		virtual bool IsPlayer() const override { return true; }
 
 		float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);
@@ -62,6 +63,8 @@ namespace platformer2d {
 		void SetCameraLock(bool Locked);
 
 		std::pair<uint16_t, uint16_t> GetCurrentAndNextSpriteFrame() const { return std::make_pair(CurrentSpriteFrame, NextSpriteFrame); }
+
+		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 	private:
 		void HandleInput();
