@@ -20,7 +20,7 @@ namespace platformer2d {
 		, Color(InColor)
 	{
 		LK_TRACE_TAG("Actor", "Create: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
-		Body = std::make_unique<CBody>(BodySpec);
+		Body = std::make_unique<CBody>(BodySpec, this);
 		const glm::vec2 BodyPos = Body->GetPosition();
 		TransformComp.Translation.x = BodyPos.x;
 		TransformComp.Translation.y = BodyPos.y;
