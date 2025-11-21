@@ -254,7 +254,8 @@ namespace platformer2d::UI {
 						ActorAttr.NameBuf.data(),
 						NewBodySpec,
 						ActorAttr.Size,
-						FColor::Get(ActorAttr.Color)
+						FColor::Get(ActorAttr.Color),
+						ActorAttr.Texture
 					);
 				}
 				if (ActorExists)

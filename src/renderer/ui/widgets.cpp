@@ -140,7 +140,10 @@ namespace platformer2d::UI::Draw {
 
 		/* Components. */
 		{
-			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+			if (Actor.HasAnyExcept<FTransformComponent>())
+			{
+				ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+			}
 			if (ImGui::TreeNodeEx("Components"))
 			{
 				if (FEffectComponent* EC = Actor.TryGetComponent<FEffectComponent>(); EC != nullptr)
@@ -224,8 +227,9 @@ namespace platformer2d::UI::Draw {
 				}
 				if (ImGui::Button("Delete", ButtonSize))
 				{
-					LK_INFO("Delete: {} ({})", Actor.GetHandle(), Actor.GetName());
-					Scene->DeleteActor(Actor.GetHandle());
+					const LUUID ActorHandle = Actor.GetHandle();
+					LK_INFO("Delete: {} ({})", ActorHandle, Actor.GetName());
+					Scene->DeleteActor(ActorHandle);
 				}
 				if (!IsDeletable)
 				{
