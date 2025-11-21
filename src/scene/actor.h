@@ -19,26 +19,15 @@
 
 namespace platformer2d {
 
+	class CScene;
+
 	class CActor : public ISerializable<ESerializable::Yaml>
 	{
-	public:
-		LK_DECLARE_EVENT(FOnActorCreated, CActor, LUUID, std::weak_ptr<CActor>);
-		LK_DECLARE_MULTICAST_DELEGATE(FOnActorMarkedForDeletion, LUUID);
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
 		CActor(LUUID InHandle, const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
 		CActor(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
 		virtual ~CActor();
-
-		template<typename T, typename... TArgs>
-		static std::shared_ptr<T> Create(TArgs&&... Args)
-		{
-			static_assert(std::is_base_of_v<CActor, T>);
-			std::shared_ptr<T> Actor = std::shared_ptr<T>(new T(std::forward<TArgs>(Args)...));
-			Instances++;
-			CActor::OnActorCreated.Broadcast(Actor->GetHandle(), std::weak_ptr<CActor>(Actor));
-			return Actor;
-		}
 
 		virtual void Tick(float DeltaTime);
 		inline LUUID GetHandle() const { return Handle; }
@@ -70,6 +59,7 @@ namespace platformer2d {
 		void SetColor(const glm::vec4& InColor);
 
 		inline std::string_view GetName() const { return Name; }
+		void SetName(std::string_view InName);
 
 		template<typename T>
 		T& GetComponent()
@@ -119,6 +109,28 @@ namespace platformer2d {
 			return false;
 		}
 
+		template<typename... T>
+		bool HasAny() const
+		{
+			return (HasComponent<T>() || ...);
+		}
+
+		template<typename... TExcluded>
+		bool HasAnyExcept() const
+		{
+			bool Ret = false;
+			if constexpr (!IsOneOf<FTransformComponent, TExcluded...>)
+			{
+				Ret = (Ret || HasComponent<FTransformComponent>());
+			}
+			if constexpr (!IsOneOf<FEffectComponent, TExcluded...>)
+			{
+				Ret = (Ret || HasComponent<FEffectComponent>());
+			}
+
+			return Ret;
+		}
+
 		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 	private:
@@ -126,9 +138,9 @@ namespace platformer2d {
 
 		void UpdateEffectComponent(FEffectComponent& EC);
 
-	public:
-		static inline FOnActorCreated OnActorCreated;
-		static inline FOnActorMarkedForDeletion OnActorMarkedForDeletion;
+		template<typename T, typename... Ts>
+		static constexpr bool IsOneOf = (std::is_same_v<T, Ts> || ...);
+
 	protected:
 		std::unique_ptr<CBody> Body;
 		FTransformComponent TransformComp{};

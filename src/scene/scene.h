@@ -16,11 +16,30 @@ namespace platformer2d {
 	class CScene : public ISerializable<ESerializable::File>
 	{
 	public:
+		LK_DECLARE_EVENT(FOnActorCreated, CScene, LUUID, std::weak_ptr<CActor>);
+		LK_DECLARE_EVENT(FOnActorDeleted, CScene, LUUID);
+	public:
 		CScene(std::string_view InName);
 		CScene() = delete;
 		~CScene();
 
 		void Tick(float DeltaTime);
+
+		template<typename T, typename... TArgs>
+		std::shared_ptr<T> Create(TArgs&&... Args)
+		{
+			static_assert(std::is_base_of_v<CActor, T>);
+			std::shared_ptr<T> Actor = std::shared_ptr<T>(new T(std::forward<TArgs>(Args)...));
+			if (Actor != nullptr)
+			{
+				LK_DEBUG_TAG("Scene", "Created: {} ({})", Actor->GetName(), Actor->GetHandle());
+				Actors.emplace_back(Actor);
+
+				OnActorCreated.Broadcast(Actor->GetHandle(), Actor);
+			}
+
+			return Actor;
+		}
 
 		std::shared_ptr<CActor> FindActor(LUUID Handle);
 		std::shared_ptr<CActor> FindActor(std::string_view Name);
@@ -46,6 +65,8 @@ namespace platformer2d {
 
 	public:
 		static constexpr const char* FILE_EXTENSION = "lscene";
+		static inline FOnActorCreated OnActorCreated;
+		static inline FOnActorDeleted OnActorDeleted;
 	private:
 		LUUID ID;
 		std::string Name;

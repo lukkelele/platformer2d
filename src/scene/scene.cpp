@@ -17,30 +17,13 @@ namespace platformer2d {
 		Path = LK_FMT("{}/{}.{}", SCENES_DIR, Name, FILE_EXTENSION).c_str();
 		LK_DEBUG_TAG("Scene", "Created: {} ({})", Name, StringUtils::GetPathRelativeToProject(Path));
 
-		CActor::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
+		OnActorDeleted.Add([&](const LUUID Handle)
 		{
-			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
+			LK_DEBUG_TAG("Scene", "OnActorDeleted: {}", Handle);
+			if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr)
 			{
-				LK_TRACE_TAG("Scene", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
-				Actors.emplace_back(Actor);
-			}
-		});
-
-		/**
-		 * Bind to lambda because the delegate expects a void return type,
-		 * which DeleteActor isn't.
-		 */
-		CActor::OnActorMarkedForDeletion.Add([&](const LUUID Handle)
-		{
-			/* Move the player a little bit to cause physics to pass through. */
-			if (DeleteActor(Handle))
-			{
-				if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr)
-				{
-					CPlayer* Player = GameInstance->GetPlayer(0);
-					/* @todo: Instead of applied force, try to just send wake-up event */
-					Player->GetBody().ApplyForce({ 0.0f, 0.010f });
-				}
+				CPlayer* Player = GameInstance->GetPlayer(0);
+				Player->SetAwake(true);
 			}
 		});
 	}
@@ -57,14 +40,6 @@ namespace platformer2d {
 		{
 			Actor->Tick(DeltaTime);
 		}
-
-		/* @fixme */
-#if 0
-		if (std::shared_ptr<CActor> Actor = RotatingPlatform.lock(); Actor != nullptr)
-		{
-			Actor->SetRotation(Actor->GetRotation() + glm::radians(0.75f));
-		}
-#endif
 	}
 
 	std::shared_ptr<CActor> CScene::FindActor(const LUUID Handle)
@@ -99,13 +74,20 @@ namespace platformer2d {
 
 	bool CScene::DeleteActor(const LUUID Handle)
 	{
-		LK_INFO_TAG("Scene", "[{}] Delete: {}", Name, Handle);
+		LK_INFO_TAG("Scene", "Delete: {} (Actors: {})", Handle, Actors.size());
 		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
 		{
 			return (Handle == Actor->GetHandle());
 		};
 		const std::size_t Erased = std::erase_if(Actors, IsHandleEqual);
-		LK_ASSERT(Erased == 1, "Erased={}", Erased);
+
+		if (Erased > 0)
+		{
+			LK_ASSERT(Erased == 1, "Erased more than one actor");
+			LK_DEBUG_TAG("Scene", "Successfully deleted: {} (Actors: {})", Handle, Actors.size());
+			OnActorDeleted.Broadcast(Handle);
+		}
+
 		return (Erased == 1);
 	}
 
@@ -264,7 +246,7 @@ namespace platformer2d {
 
 			if (!DoesActorExist(ActorHandle))
 			{
-				std::shared_ptr<CActor> Actor = CActor::Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
+				std::shared_ptr<CActor> Actor = Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
 
 				if (HasEffectComponent)
 				{

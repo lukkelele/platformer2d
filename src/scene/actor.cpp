@@ -127,6 +127,15 @@ namespace platformer2d {
 		Color = InColor;
 	}
 
+	void CActor::SetName(std::string_view InName)
+	{
+		if (Name != InName)
+		{
+			LK_DEBUG_TAG("Actor", "Changed name to \"{}\" from \"{}\"", InName, Name);
+			Name = InName;
+		}
+	}
+
 	bool CActor::Serialize(YAML::Emitter& Out) const
 	{
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
