@@ -54,6 +54,7 @@ namespace platformer2d {
 		void SetDirectionForce(float Force);
 		float GetLastDirectionForce() const { return LastDirForce; }
 		EDirection GetLookDirection() const { return LookDir; }
+		void SetAwake(bool Awake) const;
 
 		inline CCamera& GetCamera() { return *Camera; }
 		inline const CCamera& GetCamera() const { return *Camera; }

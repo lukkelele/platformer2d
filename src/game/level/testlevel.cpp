@@ -346,7 +346,10 @@ namespace platformer2d::Level {
 		if (std::shared_ptr<CActor> SelectedRef = SelectedActor.lock(); SelectedRef != nullptr)
 		{
 			CCamera& Camera = Player->GetCamera();
-			UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix());
+			if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix()))
+			{
+				Player->SetAwake(true);
+			}
 		}
 	}
 
@@ -1076,6 +1079,9 @@ namespace platformer2d::Level {
 		{
 			return true; /* Enable normal contacts. */
 		}
+
+		const CActor* ActorA = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
+		const CActor* ActorB = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
 
 		/* Make normal point from platform to player. */
 		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))

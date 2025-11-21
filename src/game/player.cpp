@@ -160,6 +160,11 @@ namespace platformer2d {
 		DirForce = Force;
 	}
 
+	void CPlayer::SetAwake(const bool Awake) const
+	{
+		Body->SetAwake(Awake);
+	}
+
 	void CPlayer::SetCameraLock(const bool Locked)
 	{
 		bCameraLock = Locked;
