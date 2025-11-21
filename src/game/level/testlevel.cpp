@@ -139,6 +139,7 @@ namespace platformer2d::Level {
 		{
 			LK_DEBUG_TAG("TestLevel", "OnActorDeleted: {}", Handle);
 			UpdateInputBuffer(Scene->GetActors().size());
+			UI::Draw::OnActorDeleted(Handle);
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
