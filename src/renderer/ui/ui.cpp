@@ -920,7 +920,7 @@ namespace platformer2d::UI {
 		return ShouldUpdate;
 	}
 
-	void DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
+	bool DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
 	{
 		ImGuizmo::SetOrthographic(true);
 		ImGuizmo::SetDrawlist();
@@ -929,7 +929,7 @@ namespace platformer2d::UI {
 		FTransformComponent& TC = Actor.GetTransformComponent();
 		glm::mat4 TransformMatrix = TC.GetTransform();
 
-		ImGuizmo::Manipulate(
+		const bool Manipulated = ImGuizmo::Manipulate(
 			glm::value_ptr(ViewMatrix),
 			glm::value_ptr(ProjectionMatrix),
 			static_cast<ImGuizmo::OPERATION>(Operation),
@@ -955,6 +955,8 @@ namespace platformer2d::UI {
 				Actor.SetRotation(RotRad);
 			}
 		}
+
+		return Manipulated;
 	}
 
 	void ColdTextGradient(const char* Text, const float Speed)

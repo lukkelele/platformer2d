@@ -98,7 +98,7 @@ namespace platformer2d::UI {
 	 */
 	bool DepthFunction();
 
-	void DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
+	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);

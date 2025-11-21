@@ -120,54 +120,41 @@ namespace platformer2d::UI::Draw {
 			ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
 		}
 
-		/* Components. */
-		/* @todo: Make treenode */
+		/* Awake. */
 		ImGui::TableNextRow();
 		{
-			Label("EffectComponent");
+			Label("Awake");
 			NextColumn();
-			if (Actor.HasComponent<FEffectComponent>())
-			{
-				ImGui::Text("Yes");
-			}
-			else
-			{
-				ImGui::Text("No");
-			}
+			ImGui::Text("%s", Body.IsAwake() ? "Yes" : "No");
+		}
+
+		/* Sensor. */
+		ImGui::TableNextRow();
+		{
+			Label("Sensor");
+			NextColumn();
+			ImGui::Text("%s", Body.IsSensor() ? "Yes" : "No");
 		}
 
 		ImGui::EndTable();
 
-#if 0
-		/* Delete actor. */
-		UI::ShiftCursor(0.0f, 4.0f);
+		/* Components. */
 		{
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
-			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
-			UI::FScopedColorStack ButtonColours(
-				ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-				ImGuiCol_ButtonActive, RGBA32::Red
-			);
+			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+			if (ImGui::TreeNodeEx("Components"))
+			{
+				if (FEffectComponent* EC = Actor.TryGetComponent<FEffectComponent>(); EC != nullptr)
+				{
+					std::size_t Idx = 0;
+					for (const auto& Effect : EC->Effects)
+					{
+						ImGui::Text("Effect %d: %s", ++Idx, Enum::ToString(Effect.Type));
+					}
+				}
 
-			static constexpr ImVec2 ButtonSize = ImVec2(82, 42);
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			UI::ShiftCursorX(Avail.x - ButtonSize.x);
-			const bool IsDeletable = Actor.IsDeletable();
-			if (!IsDeletable)
-			{
-				ImGui::BeginDisabled();
-			}
-			if (ImGui::Button("Delete", ButtonSize))
-			{
-				CActor::OnActorMarkedForDeletion.Broadcast(Actor.GetHandle());
-			}
-			if (!IsDeletable)
-			{
-				ImGui::EndDisabled();
+				ImGui::TreePop();
 			}
 		}
-#endif
 	}
 
 	void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene)
