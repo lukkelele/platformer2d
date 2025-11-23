@@ -97,5 +97,4 @@ namespace platformer2d {
 		}
 	}
 
-
 }
