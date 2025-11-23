@@ -45,6 +45,7 @@ namespace platformer2d::Level {
 				.Friction = 0.750f,
 				.Density = 0.60f,
 				.LinearDamping = 0.50f,
+				.Flags = EBodyFlag::EBodyFlag_SensorEvents,
 				.MotionLock = EMotionLock_Z,
 			},
 		};
@@ -144,6 +145,8 @@ namespace platformer2d::Level {
 
 		const FGameSpecification& Spec = GetSpecification();
 		CPhysicsWorld::SetGravity(Spec.Gravity);
+		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CTestLevel::OnSensorBeginEvent);
+		CPhysicsWorld::OnSensorEndEvent.Add(this, &CTestLevel::OnSensorEndEvent);
 
 		CreatePlayer();
 		LK_VERIFY(Player);
@@ -994,6 +997,18 @@ namespace platformer2d::Level {
 				break;
 			}
 		}
+	}
+
+	void CTestLevel::OnSensorBeginEvent(const CSensorBeginEvent& Event)
+	{
+		LK_ASSERT(Event.Sensor && Event.Visitor);
+		LK_DEBUG_TAG("TestLevel", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+	}
+
+	void CTestLevel::OnSensorEndEvent(const CSensorEndEvent& Event)
+	{
+		LK_ASSERT(Event.Sensor && Event.Visitor);
+		LK_DEBUG_TAG("TestLevel", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
 	}
 
 	void CTestLevel::MousePickScene()

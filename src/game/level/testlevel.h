@@ -3,6 +3,7 @@
 #include "core/layer.h"
 #include "game/gameinstance.h"
 #include "renderer/texture.h"
+#include "physics/events.h"
 #include "scene/scene.h"
 
 namespace platformer2d::Level {
@@ -48,6 +49,8 @@ namespace platformer2d::Level {
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnKeyPressed(const FKeyData& Data);
 		void OnMouseButtonPressed(const FMouseButtonData& Data);
+		void OnSensorBeginEvent(const CSensorBeginEvent& Event);
+		void OnSensorEndEvent(const CSensorEndEvent& Event);
 
 		void MousePickScene();
 		void RaycastScene();
