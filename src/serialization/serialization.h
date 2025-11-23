@@ -197,10 +197,13 @@ namespace platformer2d::Serialization {
 		using PosType = decltype(BodySpec.Position);
 		BodySpec.Position = Node["Position"].as<PosType>();
 
-		BodySpec.Flags = static_cast<EBodyFlag>(Node["Flags"].as<std::underlying_type_t<EBodyFlag>>());
+		using FlagsType = std::underlying_type_t<EBodyFlag>;
+		BodySpec.Flags = Node["Flags"].as<FlagsType>();
 
 		BodySpec.Density = Node["Mass"].as<float>(); /** @todo Density <-> Mass, equivalent in terms of body creation? */
-		BodySpec.MotionLock = static_cast<EMotionLock>(Node["MotionLock"].as<std::underlying_type_t<EMotionLock>>());
+		BodySpec.MotionLock = Node["MotionLock"].as<std::underlying_type_t<EMotionLock>>();
+
+		LK_DESERIALIZE_PROPERTY(Sensor, BodySpec.bSensor, false, Node);
 	}
 
 }
