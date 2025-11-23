@@ -71,9 +71,9 @@ namespace platformer2d {
 		return Body ? Body->GetSize() : glm::vec2(0.0f, 0.0f);
 	}
 
-	glm::vec2 CActor::GetPosition() const
+	glm::vec3 CActor::GetPosition() const
 	{
-		return glm::vec2(TransformComp.Translation.x, TransformComp.Translation.y);
+		return TransformComp.Translation;
 	}
 
 	void CActor::SetPosition(const float X, const float Y)
@@ -85,7 +85,13 @@ namespace platformer2d {
 	{
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
-		Body->SetPosition(NewPos);
+		Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+	}
+
+	void CActor::SetPosition(const glm::vec3& NewPos)
+	{
+		TransformComp.Translation = NewPos;
+		Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
 	}
 
 	float CActor::GetRotation() const
@@ -136,19 +142,27 @@ namespace platformer2d {
 		}
 	}
 
+	void CActor::SetTexture(const ETexture InTexture)
+	{
+		LK_DEBUG_TAG("Actor", "Set texture: {}", Enum::ToString(InTexture));
+		if (Texture == InTexture)
+		{
+			LK_TRACE_TAG("Actor", "Same texture, leave unchanged");
+			return;
+		}
+
+		Texture = InTexture;
+	}
+
 	bool CActor::Serialize(YAML::Emitter& Out) const
 	{
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
 		Out << YAML::BeginMap; /* Actor */
-		Out << YAML::Key << "ID";
-		Out << YAML::Value << Handle;
-		Out << YAML::Key << "Name";
-		Out << YAML::Value << Name;
-
-		Out << YAML::Key << "Texture";
-		Out << YAML::Value << std::to_underlying(Texture);
-		Out << YAML::Key << "Color";
-		Out << YAML::Value << Color;
+		Out << YAML::Key << "ID" << YAML::Value << Handle;
+		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(GetType());
+		Out << YAML::Key << "Name" << YAML::Value << Name;
+		Out << YAML::Key << "Texture" << YAML::Value << std::to_underlying(Texture);
+		Out << YAML::Key << "Color" << YAML::Value << Color;
 
 		/* TransformComponent */
 		const FTransformComponent& TC = GetTransformComponent();

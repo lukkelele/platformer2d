@@ -247,6 +247,7 @@ namespace platformer2d {
 			if (!DoesActorExist(ActorHandle))
 			{
 				std::shared_ptr<CActor> Actor = Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
+				Actor->GetTransformComponent() = TC;
 
 				if (HasEffectComponent)
 				{

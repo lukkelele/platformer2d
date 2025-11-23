@@ -21,6 +21,19 @@ namespace platformer2d {
 
 	class CScene;
 
+	enum class EActorType : uint16_t
+	{
+		Object,
+		Player,
+		Spawnpoint,
+	};
+
+	enum EActorFlag : uint32_t
+	{
+		EActorFlag_None = 0,
+		EActorFlag_Placeholder = LK_BIT(1),
+	};
+
 	class CActor : public ISerializable<ESerializable::Yaml>
 	{
 	public:
@@ -31,11 +44,13 @@ namespace platformer2d {
 
 		virtual void Tick(float DeltaTime);
 		inline LUUID GetHandle() const { return Handle; }
+		virtual EActorType GetType() const { return EActorType::Object; }
 
 		glm::vec2 GetSize() const;
-		glm::vec2 GetPosition() const;
+		glm::vec3 GetPosition() const;
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
+		void SetPosition(const glm::vec3& NewPos);
 
 		/**
 		 * @brief Get rotation in radians.
@@ -53,7 +68,7 @@ namespace platformer2d {
 		void SetTickEnabled(bool Enabled);
 		inline bool IsDeletable() const { return bDeletable; }
 		void SetDeletable(bool Deletable);
-		virtual bool IsPlayer() const { return false; }
+		bool IsPlayer() const { return GetType() == EActorType::Player; }
 
 		inline ETexture GetTexture() const { return Texture; }
 		inline const glm::vec4& GetColor() const { return Color; }
@@ -61,6 +76,7 @@ namespace platformer2d {
 
 		inline std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
+		void SetTexture(ETexture InTexture);
 
 		template<typename T>
 		T& GetComponent()
@@ -135,8 +151,6 @@ namespace platformer2d {
 		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 	private:
-		static LUUID GenerateHandle();
-
 		void UpdateEffectComponent(FEffectComponent& EC);
 
 		template<typename T, typename... Ts>
