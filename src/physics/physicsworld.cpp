@@ -32,6 +32,7 @@ namespace platformer2d {
 		if (!bPaused)
 		{
 			b2World_Step(WorldID, DeltaTime, Substep);
+			HandleSensorEvents();
 		}
 
 		if (DebugDraw)
@@ -82,34 +83,83 @@ namespace platformer2d {
 
 	bool CPhysicsWorld::PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
 	{
+		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
 		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
-		const b2ShapeId PlayerShapeID = Player.GetBody().ShapeID;
+		const b2ShapeId PlayerShapeID = Player.GetBody().GetShapeID();
 
-		LK_ASSERT(b2Shape_IsValid(ShapeA));
-		LK_ASSERT(b2Shape_IsValid(ShapeB));
-		float Sign = 0.0f;
+		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
+		if (!InvolvesPlayer)
+		{
+			return true; /* Enable normal contacts. */
+		}
+
+		const CActor* ActorA = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
+		const CActor* ActorB = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
+
+		/* Make normal point from platform to player. */
 		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))
 		{
-			Sign = -1.0f;
+			Normal.x = -Normal.x;
+			Normal.y = -Normal.y;
 		}
-		else if (B2_ID_EQUALS(ShapeB, PlayerShapeID))
+
+		const b2Vec2 Up = { 0.0f, 1.0f };
+		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
+		if (UpDot <= 0.0f)
 		{
-			Sign = 1.0f;
-		}
-		else
-		{
-			/* Not colliding with the player, enable contact. */
+			/* Side/ceiling/backface -> behave as a solid. */
 			return true;
 		}
 
-		if ((Sign * Normal.y) > 0.95f)
+		const b2BodyId PlayerBody = Player.GetBody().GetID();
+		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
+		const float Vn = V.x * Normal.x + V.y * Normal.y;
+		if (Vn > 0.0f)
 		{
-			return true;
+			/* Moving along the normal (from below toward the platform) -> ignore contact. */
+			return false;
 		}
 
-		/* Normal points down, disable contact. */
-		return false;
+		return true;
 	}
 
+	void CPhysicsWorld::HandleSensorEvents()
+	{
+		b2SensorEvents Events = b2World_GetSensorEvents(WorldID);
+
+		/* Begin */
+		for (int Idx = 0; Idx < Events.beginCount; Idx++)
+		{
+			b2SensorBeginTouchEvent* EventRef = Events.beginEvents + Idx;
+			b2ShapeId SensorShape = EventRef->sensorShapeId;
+			b2ShapeId VisitorShape = EventRef->visitorShapeId;
+			if (!b2Shape_IsValid(SensorShape) || !b2Shape_IsValid(VisitorShape))
+			{
+				continue;
+			}
+
+			CActor* Sensor = static_cast<CActor*>(b2Shape_GetUserData(SensorShape));
+			CActor* Visitor = static_cast<CActor*>(b2Shape_GetUserData(VisitorShape));
+			CSensorBeginEvent Event(Sensor, Visitor);
+			OnSensorBeginEvent.Broadcast(Event);
+		}
+
+		/* End */
+		for (int Idx = 0; Idx < Events.endCount; Idx++)
+		{
+			b2SensorEndTouchEvent* EventRef = Events.endEvents + Idx;
+			b2ShapeId SensorShape = EventRef->sensorShapeId;
+			b2ShapeId VisitorShape = EventRef->visitorShapeId;
+			if (!b2Shape_IsValid(SensorShape) || !b2Shape_IsValid(VisitorShape))
+			{
+				continue;
+			}
+
+			CActor* Sensor = static_cast<CActor*>(b2Shape_GetUserData(SensorShape));
+			CActor* Visitor = static_cast<CActor*>(b2Shape_GetUserData(VisitorShape));
+			CSensorEndEvent Event(Sensor, Visitor);
+			OnSensorEndEvent.Broadcast(Event);
+		}
+	}
 
 }

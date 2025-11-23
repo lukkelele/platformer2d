@@ -4,12 +4,17 @@
 #include <glm/glm.hpp>
 
 #include "core/core.h"
+#include "core/delegate.h"
 #include "body.h"
+#include "events.h"
 
 namespace platformer2d {
 
 	class CPhysicsWorld
 	{
+	public:
+		LK_DECLARE_EVENT(FOnSensorBeginEvent, CPhysicsWorld, const CSensorBeginEvent&);
+		LK_DECLARE_EVENT(FOnSensorEndEvent, CPhysicsWorld, const CSensorEndEvent&);
 	public:
 		CPhysicsWorld() = delete;
 		~CPhysicsWorld() = delete;
@@ -32,8 +37,12 @@ namespace platformer2d {
 		static void InitDebugDraw(b2DebugDraw& DebugDrawRef);
 
 	private:
-		bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+		static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+		static void HandleSensorEvents();
 
+	public:
+		static inline FOnSensorBeginEvent OnSensorBeginEvent;
+		static inline FOnSensorEndEvent OnSensorEndEvent;
 	private:
 		static inline b2WorldId WorldID;
 		static inline int Substep = 6;
