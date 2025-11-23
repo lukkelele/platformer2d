@@ -27,5 +27,6 @@ project_library_sources(
 	window.cpp
 )
 
+add_subdirectory(event)
 add_subdirectory(input)
 add_subdirectory(math)
