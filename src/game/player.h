@@ -43,11 +43,11 @@ namespace platformer2d {
 		~CPlayer() = default;
 
 		virtual void Tick(float DeltaTime) override;
+		virtual EActorType GetType() const override { return EActorType::Player; }
 		void Jump();
 
 		inline const FPlayerData& GetData() const { return Data; }
 		inline const CSprite& GetSprite() const { return *Sprite; }
-		virtual bool IsPlayer() const override { return true; }
 
 		float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);

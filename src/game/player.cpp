@@ -12,6 +12,7 @@ namespace platformer2d {
 	{
 		constexpr int SPRITE_TILEPOS_Y = 2; /* Row in the spritesheet. */
 
+		/* @todo: Should not be hardcoded */
 		enum class ESpriteFrame : uint16_t
 		{
 			/* Cycle: 0->1->2->3 */
@@ -84,6 +85,9 @@ namespace platformer2d {
 
 		Timer.Reset();
 		LK_VERIFY(Body && Sprite);
+
+		/* Set z-index. */
+		TransformComp.Translation.z = 0.030f;
 	}
 
 	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
@@ -112,6 +116,9 @@ namespace platformer2d {
 
 		Timer.Reset();
 		LK_VERIFY(Body && Sprite);
+
+		/* Set z-index. */
+		TransformComp.Translation.z = 0.030f;
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
