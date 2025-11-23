@@ -223,7 +223,7 @@ namespace platformer2d::Level {
 
 		/* Render player. */
 		CRenderer::DrawQuad(
-			glm::vec3(Player->GetPosition(), 0.030f),
+			Player->GetPosition(),
 			Player->GetSize(),
 			*CRenderer::GetTexture(Player->GetTexture()),
 			Player->GetSprite().GetUV(),
@@ -236,7 +236,7 @@ namespace platformer2d::Level {
 		{
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
-				glm::vec3(Actor->GetPosition(), 0.50f),
+				Actor->GetPosition(),
 				TC.Scale,
 				Actor->GetTexture(),
 				Actor->GetColor(),
@@ -250,7 +250,7 @@ namespace platformer2d::Level {
 		return (Player ? &Player->GetCamera() : nullptr);
 	}
 
-	CPlayer* CTestLevel::GetPlayer(std::size_t Idx) const
+	CPlayer* CTestLevel::GetPlayer(const std::size_t Idx) const
 	{
 		LK_ASSERT(Idx == 0, "TestLevel only supports 1 player");
 		return Player.get();
@@ -430,8 +430,8 @@ namespace platformer2d::Level {
 	void CTestLevel::CreatePlayer()
 	{
 		const FGameSpecification& Spec = GetSpecification();
-		Player = std::make_unique<CPlayer>(Spec.PlayerBody, ETexture::Player);
-		b2World_SetPreSolveCallback(CPhysicsWorld::GetID(), PreSolve, Player.get());
+		Player = std::make_shared<CPlayer>(Spec.PlayerBody, ETexture::Player);
+		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)
 		{
