@@ -143,7 +143,7 @@ namespace platformer2d {
 			SetMovementState(EMovementState::Airborne);
 			Body->ApplyImpulse({ 0.0f, JumpImpulse });
 
-			NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::JumpPreparation);
+			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpPreparation);
 			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms);
 
 			OnJumped.Broadcast(Data);
@@ -186,7 +186,7 @@ namespace platformer2d {
 		}
 		if (CKeyboard::IsKeyDown(EKey::A))
 		{
-			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({ -DirForce, 0.0f });
 			LookDir = EDirection::Left;
 			LastDirForce = -DirForce;
@@ -194,7 +194,7 @@ namespace platformer2d {
 		}
 		if (CKeyboard::IsKeyDown(EKey::D))
 		{
-			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({ DirForce, 0.0f });
 			LastDirForce = DirForce;
 			LookDir = EDirection::Right;
@@ -202,7 +202,7 @@ namespace platformer2d {
 		}
 		if (CKeyboard::IsKeyDown(EKey::Space))
 		{
-			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::JumpPreparation);
+			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::JumpPreparation);
 			Jump();
 			LastDirForce = 0.0f;
 			OnInputReceived();
@@ -271,12 +271,12 @@ namespace platformer2d {
 			if (MovingByInput)
 			{
 				SetMovementState(EMovementState::Running);
-				WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+				WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			}
 			else
 			{
 				/* Player is moving because of external forces. */
-				NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::Hit1);
+				NextSpriteFrame = std::to_underlying(ESpriteFrame::Hit1);
 			}
 		}
 		else
@@ -286,7 +286,7 @@ namespace platformer2d {
 			if (TimeNow - LastInputTime > 150ms)
 			{
 				/* Always turn the player character frontward after a brief delay. */
-				WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+				WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 				NextSpriteFrame = WalkAnim.StartTileX;
 			}
 		}
@@ -307,7 +307,7 @@ namespace platformer2d {
 		{
 			/* Player is idle. */
 			SetMovementState(EMovementState::Idle);
-			WalkAnim.StartTileX = Enum::AsUnderlying(ESpriteFrame::WalkStart);
+			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			NextSpriteFrame = WalkAnim.StartTileX;
 		}
 	}
@@ -319,11 +319,11 @@ namespace platformer2d {
 		/* Check if ascending or descending. */
 		if (LinearVelocity.y > VelocityThresholdY)
 		{
-			NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::JumpAscend);
+			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpAscend);
 		}
 		else if (LinearVelocity.y < -VelocityThresholdY)
 		{
-			NextSpriteFrame = Enum::AsUnderlying(ESpriteFrame::JumpDescend);
+			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpDescend);
 		}
 	}
 
