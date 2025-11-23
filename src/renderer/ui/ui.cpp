@@ -59,7 +59,7 @@ namespace platformer2d::UI {
 		if (Data.BodyFlag.bPreSolveEvents) BodyFlags |= EBodyFlag::EBodyFlag_PreSolveEvents;
 		if (Data.BodyFlag.bContactEvents) BodyFlags |= EBodyFlag::EBodyFlag_ContactEvents;
 		if (Data.BodyFlag.bSensorEvents) BodyFlags |= EBodyFlag::EBodyFlag_SensorEvents;
-		if (Data.BodyFlag.bBullet) BodyFlags |= EBodyFlag::EBodyFlag_IsBullet;
+		if (Data.BodyFlag.bBullet) BodyFlags |= EBodyFlag::EBodyFlag_Bullet;
 		BodySpec.Flags = static_cast<EBodyFlag>(BodyFlags);
 
 		/* Motion lock flags. */
@@ -927,6 +927,10 @@ namespace platformer2d::UI {
 		ImGuizmo::SetDrawlist();
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
+		static constexpr float SnapValue = 1.0f;
+		static constexpr float SnapValues[3] = { SnapValue, SnapValue, SnapValue };
+		const bool ShouldNotSnapValues = CKeyboard::IsKeyDown(EKey::LeftControl);
+
 		FTransformComponent& TC = Actor.GetTransformComponent();
 		glm::mat4 TransformMatrix = TC.GetTransform();
 
@@ -937,7 +941,7 @@ namespace platformer2d::UI {
 			ImGuizmo::WORLD,
 			glm::value_ptr(TransformMatrix),
 			nullptr,
-			nullptr
+			ShouldNotSnapValues ? SnapValues : nullptr
 		);
 
 		if (ImGuizmo::IsUsing())
