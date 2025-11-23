@@ -10,6 +10,8 @@
 
 namespace platformer2d {
 
+	using TPreSolveFunc = bool(*)(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+
 	class CPhysicsWorld
 	{
 	public:
@@ -27,6 +29,7 @@ namespace platformer2d {
 		static void Unpause();
 
 		static inline const b2WorldId& GetID() { return WorldID; }
+		static void SetPreSolve(TPreSolveFunc InPreSolve, void* Context);
 
 		static b2BodyId CreateBody(const b2BodyDef& BodyDef);
 		static void Destroy(CBody& Body);

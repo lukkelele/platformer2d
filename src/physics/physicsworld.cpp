@@ -17,7 +17,7 @@ namespace platformer2d {
 		b2WorldDef WorldDef = b2DefaultWorldDef();
 		WorldDef.gravity = b2Vec2(Gravity.x, Gravity.y);
 		WorldID = b2CreateWorld(&WorldDef);
-		LK_DEBUG_TAG("PhysicsWorld", "WorldID={} Substep={}", WorldID.index1, Substep);
+		LK_TRACE_TAG("PhysicsWorld", "WorldID={} Substep={}", WorldID.index1, Substep);
 
 		bInitialized = true;
 	}
@@ -51,6 +51,12 @@ namespace platformer2d {
 	{
 		LK_DEBUG_TAG("PhysicsWorld", "Unpause");
 		bPaused = false;
+	}
+
+	void CPhysicsWorld::SetPreSolve(const TPreSolveFunc InPreSolve, void* Context)
+	{
+		LK_ASSERT(InPreSolve != nullptr);
+		b2World_SetPreSolveCallback(WorldID, InPreSolve, Context);
 	}
 
 	b2BodyId CPhysicsWorld::CreateBody(const b2BodyDef& BodyDef)
