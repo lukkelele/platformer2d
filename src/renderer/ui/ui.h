@@ -17,6 +17,11 @@ namespace platformer2d {
 
 namespace platformer2d::UI {
 
+	/* @todo: Use global config */
+	constexpr float GAME_MENU_LABEL_COLUMN_WIDTH = 190.0f;
+	constexpr float GAME_MENU_LABEL_INDENT_WIDTH = 24.0f;
+	constexpr float GAME_MENU_COLUMN_ITEM_WIDTH = 410.0f;
+
 	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
 	extern FOnGameMenuOpened OnGameMenuOpened;
 

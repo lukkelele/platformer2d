@@ -69,7 +69,8 @@ namespace platformer2d::UI {
 
 			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);
 			ImGui::SetNextItemWidth(InputItemWidth);
-			const bool Dragged = ImGui::DragScalar(
+			const ImGuiID InputID = ImGui::GetID(LabelBuf.data());
+			bool Modified = ImGui::DragScalar(
 				LabelBuf.data(), 
 				ImGuiDataType_Float, 
 				Value, 
@@ -80,7 +81,12 @@ namespace platformer2d::UI {
 				Flags
 			);
 
-			return Dragged;
+			if (ImGui::TempInputIsActive(InputID))
+			{
+				Modified = false;
+			}
+
+			return Modified;
 		}
 
 		template<EVectorSemantic VecSemantic = EVectorSemantic::XYZ, typename VectorType = glm::vec2>
@@ -277,6 +283,8 @@ namespace platformer2d::UI {
 					ImGui::SameLine(0.0f, OutlineSpacing);
 					ImGui::SetNextItemWidth(InputItemWidth);
 
+					/* @fixme: Annoying pixel difference */
+					UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(FramePadding, FramePadding - 1));
 					const ImGuiID InputID = ImGui::GetID(("##" + InLabel).c_str());
 					const bool WasTempInputActive = ImGui::TempInputIsActive(InputID);
 					Modified |= ImGui::DragFloat(("##" + InLabel).c_str(), &InValue, ValueSpeed, ValueMin, ValueMax, Format, 0);

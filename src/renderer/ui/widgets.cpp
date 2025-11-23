@@ -64,10 +64,10 @@ namespace platformer2d::UI::Draw {
 		/* Transform Component */
 		ImGui::TableNextRow();
 		glm::vec3 Translation = TC.GetTranslation();
-		Changed |= UI::Draw::Vec2Control("Translation", Translation, 0.010f, 0.010f);
+		Changed |= UI::Draw::Vec3Control("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
 		if (Changed)
 		{
-			Actor.SetPosition({ Translation.x, Translation.y });
+			Actor.SetPosition(Translation);
 		}
 
 		/* Rotation */
@@ -112,6 +112,38 @@ namespace platformer2d::UI::Draw {
 			{
 				LK_DEBUG_TAG("UI", "Rename {} to: {}", Handle, Data.NameBuf.data());
 				Actor.SetName(Data.NameBuf.data());
+			}
+		}
+
+		/* Texture. */
+		ImGui::TableNextRow();
+		{
+			ETexture Texture = Actor.GetTexture();
+			if (TextureDropDown(Texture))
+			{
+				LK_INFO_TAG("UI", "Update {} texture: {}", Actor.GetName(), Enum::ToString(Texture));
+				Actor.SetTexture(Texture);
+			}
+		}
+
+		/* Color. */
+		ImGui::TableNextRow();
+		{
+			const glm::vec4& ColorRef = Actor.GetColor();
+			EColor Color = EColor::White;
+			const bool ColorDeduced = FColor::DeduceEnum(Color, ColorRef);
+			if (!ColorDeduced)
+			{
+				ImGui::BeginDisabled();
+			}
+			if (ColorDropdown(Color))
+			{
+				LK_INFO_TAG("UI", "Update {} color: {}", Actor.GetName(), Enum::ToString(Color));
+				Actor.SetColor(FColor::Get(Color));
+			}
+			if (!ColorDeduced)
+			{
+				ImGui::EndDisabled();
 			}
 		}
 
@@ -189,9 +221,14 @@ namespace platformer2d::UI::Draw {
 
 		/* Components. */
 		{
-			if (Actor.HasAnyExcept<FTransformComponent>())
+			const bool HasComponents = Actor.HasAnyExcept<FTransformComponent>();
+			if (HasComponents)
 			{
 				ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+			}
+			else
+			{
+				ImGui::BeginDisabled();
 			}
 			if (ImGui::TreeNodeEx("Components"))
 			{
@@ -205,6 +242,11 @@ namespace platformer2d::UI::Draw {
 				}
 
 				ImGui::TreePop();
+			}
+
+			if (!HasComponents)
+			{
+				ImGui::EndDisabled();
 			}
 		}
 
