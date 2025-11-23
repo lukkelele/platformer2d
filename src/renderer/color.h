@@ -13,9 +13,11 @@ namespace platformer2d {
 	{
 		White,
 		Black,
+		Transparent,
 		Red,
 		Green,
 		Blue,
+		Magenta,
 		COUNT
 	};
 
@@ -29,9 +31,11 @@ namespace platformer2d {
 			{
 				_(White);
 				_(Black);
+				_(Transparent);
 				_(Red);
 				_(Green);
 				_(Blue);
+				_(Magenta);
 				default:
 					S = "Unknown";
 					break;
@@ -117,6 +121,7 @@ namespace platformer2d {
 	public:
 		static constexpr glm::vec4 White       = { B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
 		static constexpr glm::vec4 Black       = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f) };
+		static constexpr glm::vec4 Transparent = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f) };
 		static constexpr glm::vec4 Red         = { B::Scale(1.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f) };
 		static constexpr glm::vec4 Green       = { B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(0.0f),   B::Scale(1.0f) };
 		static constexpr glm::vec4 LightGreen  = { B::Scale(0.0f),   B::Scale(0.75f),  B::Scale(0.0f),   B::Scale(1.0f) };
@@ -127,16 +132,19 @@ namespace platformer2d {
 		static constexpr glm::vec4 Gray        = { B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(1.0f) };
 		static constexpr glm::vec4 LightGray   = { B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(1.0f) };
 		static constexpr glm::vec4 Cyan        = { B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f) };
-		static constexpr glm::vec4 Transparent = { B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f) };
+		static constexpr glm::vec4 Magenta     = { B::Scale(0.96f),  B::Scale(0.105f), B::Scale(0.83f),  B::Scale(1.0f) };
 
 		template<typename To = VecType, typename From>
-		static constexpr To Convert(const From InColor);
+		static constexpr To Convert(const From& InColor);
 
 		template<typename T = VecType>
 		static const T& Get(const EColor Color);
 
 		static constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& GetArray();
 		static const std::unordered_map<EColor, glm::vec4>& GetMap();
+
+		/** @todo Reverse lookup map. */
+		static constexpr bool DeduceEnum(EColor& Color, const glm::vec4& V);
 	};
 
 	template<EColorRange Range = EColorRange::Normalized>
@@ -149,7 +157,7 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t InColor)
+	inline glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
 	{
 		const float R = static_cast<float>((InColor >>  0) & 0xFF) / 255.0f;
 		const float G = static_cast<float>((InColor >>  8) & 0xFF) / 255.0f;
@@ -178,14 +186,7 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4 InColor)
-	{
-		return ImVec4(InColor.r, InColor.g, InColor.b, InColor.a);
-	}
-
-	template<>
-	template<>
-	inline ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t InColor)
+	inline ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
 	{
 		const float R = static_cast<float>((InColor >>  0) & 0xFF) / 255.0f;
 		const float G = static_cast<float>((InColor >>  8) & 0xFF) / 255.0f;
@@ -259,18 +260,37 @@ namespace platformer2d {
 		static constexpr std::array<EColor, std::to_underlying(EColor::COUNT)> ColorArray = {
 			EColor::White,
 			EColor::Black,
+			EColor::Transparent,
 			EColor::Red,
 			EColor::Green,
 			EColor::Blue,
+			EColor::Magenta,
 		};
 
 		static const std::unordered_map<EColor, glm::vec4> TColor4Map = {
-			{ EColor::White, FColor::White },
-			{ EColor::Black, FColor::Black },
-			{ EColor::Red,   FColor::Red   },
-			{ EColor::Green, FColor::Green },
-			{ EColor::Blue,  FColor::Blue  },
+			{ EColor::White,       FColor::White },
+			{ EColor::Black,       FColor::Black },
+			{ EColor::Transparent, FColor::Transparent },
+			{ EColor::Red,         FColor::Red   },
+			{ EColor::Green,       FColor::Green },
+			{ EColor::Blue,        FColor::Blue  },
+			{ EColor::Magenta,     FColor::Magenta },
 		};
+	}
+
+	template<EColorRange Range>
+	inline constexpr bool TColor<glm::vec4, Range>::DeduceEnum(EColor& Color, const glm::vec4& V)
+	{
+		for (const auto& [ColorEnum, C] : _Internal::TColor4Map)
+		{
+			if ((C.r == V.r) && (C.g == V.g) && (C.b == V.b) && (C.a == V.a))
+			{
+				Color = ColorEnum;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	template<EColorRange Range>
