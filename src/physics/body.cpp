@@ -16,6 +16,8 @@ namespace platformer2d {
 		SetBodyDef(BodyDef, Spec);
 
 		ShapeDef = b2DefaultShapeDef();
+		ShapeDef.userData = Owner;
+
 		if (Spec.Flags & EBodyFlag_PreSolveEvents)
 		{
 			ShapeDef.enablePreSolveEvents = true;
@@ -31,7 +33,6 @@ namespace platformer2d {
 
 		ShapeDef.material.friction = Spec.Friction;
 		ShapeDef.isSensor = Spec.bSensor;
-		ShapeDef.userData = Owner;
 
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		Shape = Spec.Shape;
@@ -324,6 +325,7 @@ namespace platformer2d {
 		Out << YAML::Key << "Flags" << YAML::Value << static_cast<uint32_t>(BodySpec.Flags);
 		Out << YAML::Key << "Mass" << YAML::Value << GetMass();
 		Out << YAML::Key << "MotionLock" << YAML::Value << static_cast<uint32_t>(BodySpec.MotionLock);
+		Out << YAML::Key << "Sensor" << YAML::Value << IsSensor();
 
 		Out << YAML::EndMap; /* ~Body */
 

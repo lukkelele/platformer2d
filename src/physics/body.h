@@ -28,7 +28,7 @@ namespace platformer2d {
 		EBodyFlag_PreSolveEvents = LK_BIT(1),
 		EBodyFlag_ContactEvents  = LK_BIT(2),
 		EBodyFlag_SensorEvents   = LK_BIT(3),
-		EBodyFlag_IsBullet       = LK_BIT(4),
+		EBodyFlag_Bullet         = LK_BIT(4),
 	};
 
 	struct FBodySpecification
