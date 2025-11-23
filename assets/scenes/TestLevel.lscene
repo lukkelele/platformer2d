@@ -1,12 +1,13 @@
 Name: TestLevel
 Actors:
   - ID: 2
+    Type: 0
     Name: Right-Platform
     Texture: 0
     Color: [0, 0.75, 0, 1]
     TransformComponent:
-      Position: [3.168577, -0.31357962, 0]
-      Rotation: 0.52230364
+      Position: [3.168577, -0.31357962, 0.1]
+      Rotation: 0.6158405
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -14,14 +15,16 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.52230364
+        Rotation: 0.6158405
         Radius: 0.5
       Position: [3.168577, -0.31357962]
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
     Deletable: true
   - ID: 4
+    Type: 0
     Name: Spawn-Wall-Left
     Texture: 4
     Color: [1, 1, 1, 1]
@@ -41,13 +44,15 @@ Actors:
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
     Deletable: true
   - ID: 6
+    Type: 0
     Name: FlyingPlatform-1
     Texture: 0
     Color: [1, 0, 1, 1]
     TransformComponent:
-      Position: [-0.5492327, -0.17013736, 0]
+      Position: [-0.5315029, -0.23425083, 0]
       Rotation: 0
       Scale: [0.4, 0.06, 1]
     Body:
@@ -58,18 +63,20 @@ Actors:
         Size: [0.4, 0.06]
         Rotation: 0
         Radius: 0.5
-      Position: [-0.5492327, -0.17013736]
+      Position: [-0.5315029, -0.23425083]
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
     Deletable: true
   - ID: 8
-    Name: Rotating-Platform
+    Type: 0
+    Name: Rotating-Object1
     Texture: 0
     Color: [0, 0.54509807, 0.54509807, 1]
     TransformComponent:
-      Position: [0.5969546, 0.04383281, 0]
-      Rotation: 1.758294
+      Position: [0.65239644, 0.08914068, 0]
+      Rotation: -1.1206555
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: Rotate
@@ -80,19 +87,21 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: 1.7582941
+        Rotation: -1.1206555
         Radius: 0.5
-      Position: [0.5969546, 0.04383281]
+      Position: [0.65239644, 0.08914068]
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
     Deletable: true
   - ID: 10
-    Name: Bottom-Platform2
+    Type: 0
+    Name: LowerPlatform
     Texture: 0
     Color: [0.45, 0.45, 0.45, 1]
     TransformComponent:
-      Position: [0.23335987, -1.6262673, 0]
+      Position: [0.23569733, -1.6075901, 0]
       Rotation: -3.1415925
       Scale: [9.6, 0.22, 1]
     Body:
@@ -103,17 +112,19 @@ Actors:
         Size: [9.6, 0.22]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [0.23335987, -1.6262673]
+      Position: [0.23569733, -1.6075901]
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
     Deletable: true
   - ID: 12
-    Name: R_Wall-1
+    Type: 0
+    Name: PinkWall
     Texture: 0
     Color: [1, 0, 1, 1]
     TransformComponent:
-      Position: [4.83, -0.9, 0]
+      Position: [4.9293427, -0.900186, 0]
       Rotation: -3.1415925
       Scale: [0.1, 1.2, 1]
     Body:
@@ -124,17 +135,19 @@ Actors:
         Size: [0.1, 1.2]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [4.83, -0.9]
+      Position: [4.9293427, -0.900186]
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
     Deletable: true
   - ID: 14
+    Type: 0
     Name: SpawnPlatform
     Texture: 3
     Color: [1, 1, 1, 1]
     TransformComponent:
-      Position: [0, -0.7223375, 0]
+      Position: [-0.0046748593, -0.7174399, 0]
       Rotation: -3.1415925
       Scale: [2, 0.08, 1]
     Body:
@@ -145,8 +158,32 @@ Actors:
         Size: [2, 0.08]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [0, -0.7223375]
+      Position: [-0.0046748593, -0.7174399]
       Flags: 2
       Mass: 1
       MotionLock: 0
+      Sensor: false
+    Deletable: true
+  - ID: 3228445016720479417
+    Type: 0
+    Name: Actor-9
+    Texture: 0
+    Color: [0, 1, 0, 1]
+    TransformComponent:
+      Position: [0.34088337, -0.47311804, 0.18]
+      Rotation: 0
+      Scale: [0.2, 0.2, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.2, 0.2]
+        Rotation: 0
+        Radius: 0.5
+      Position: [0.34088337, -0.47311804]
+      Flags: 10
+      Mass: 1
+      MotionLock: 0
+      Sensor: true
     Deletable: true
