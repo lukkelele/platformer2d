@@ -61,6 +61,8 @@ namespace platformer2d {
 
 	void CUILayer::RenderUI()
 	{
+		UI::Statistics();
+
 		if (UI::IsGameMenuOpen())
 		{
 			UI_GameMenu();

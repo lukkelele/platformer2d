@@ -8,10 +8,12 @@
 #include "core/math/math.h"
 #include "renderer/color.h"
 #include "renderer/font.h"
+#include "renderer/texture.h"
 #include "renderer/ui/scoped.h"
 #include "scene/actor.h"
 
 namespace platformer2d {
+	class CPlayer;
 	class CScene;
 }
 
@@ -25,14 +27,7 @@ namespace platformer2d::UI {
 	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
 	extern FOnGameMenuOpened OnGameMenuOpened;
 
-	struct FViewportData
-	{
-		glm::vec2 MenuBarSize = { 0.0f, 30.0f };
-		glm::vec2 LeftSidebarSize = { 340.0f, 0.0f };
-		glm::vec2 RightSidebarSize = { 340.0f, 0.0f };
-	};
-	extern FViewportData ViewportData;
-	const FViewportData& GetViewportData();
+	extern const std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames;
 
 	struct FPhysicsBodyData
 	{
@@ -87,11 +82,11 @@ namespace platformer2d::UI {
 	bool ActorAttributes(FActorAttributes& Attr);
 
 	void CreatorMenu(std::shared_ptr<CScene> Scene);
-	void CreatorMenuButtons(std::shared_ptr<CScene> Scene);
+	void ActorCreateButtons(std::shared_ptr<CScene> Scene);
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
 	void TextureModifier();
-	bool TextureDropDown(ETexture& Selected);
+	bool TextureDropdown(ETexture& Selected);
 
 	/**
 	 * @brief Combo dropdown.
@@ -105,6 +100,9 @@ namespace platformer2d::UI {
 
 	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
+
+	void PlayerData(std::shared_ptr<CPlayer> Player);
+	void Statistics();
 
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);
 	void RainbowTextGradient(const char* Text, float Speed = 0.15f);

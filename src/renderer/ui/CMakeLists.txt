@@ -3,7 +3,11 @@ project_library_sources(
 	imguilayer.h
 	imguilayer.cpp
 	physics.cpp
+	selectionpanel.h
+	selectionpanel.cpp
 	scoped.h
+	text.cpp
+	texture.cpp
 	ui.h
 	ui.cpp
 	ui_core.h

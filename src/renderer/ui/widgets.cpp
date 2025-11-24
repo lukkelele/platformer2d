@@ -119,7 +119,7 @@ namespace platformer2d::UI::Draw {
 		ImGui::TableNextRow();
 		{
 			ETexture Texture = Actor.GetTexture();
-			if (TextureDropDown(Texture))
+			if (TextureDropdown(Texture))
 			{
 				LK_INFO_TAG("UI", "Update {} texture: {}", Actor.GetName(), Enum::ToString(Texture));
 				Actor.SetTexture(Texture);

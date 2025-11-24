@@ -18,18 +18,19 @@ namespace platformer2d::UI {
 	FActorAttributes ActorAttr;
 	FPhysicsBodyData PhysicsBodyData;
 
+	const std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
+		Enum::ToString(ETexture::White),
+		Enum::ToString(ETexture::Background),
+		Enum::ToString(ETexture::Player),
+		Enum::ToString(ETexture::Metal),
+		Enum::ToString(ETexture::Bricks),
+		Enum::ToString(ETexture::Wood),
+		Enum::ToString(ETexture::Swoosh),
+		Enum::ToString(ETexture::Cloud),
+	};
+
 	namespace {
 		constexpr auto& ColorArray = FColor::GetArray();
-		const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
-			Enum::ToString(ETexture::White),
-			Enum::ToString(ETexture::Background),
-			Enum::ToString(ETexture::Player),
-			Enum::ToString(ETexture::Metal),
-			Enum::ToString(ETexture::Bricks),
-			Enum::ToString(ETexture::Wood),
-			Enum::ToString(ETexture::Swoosh),
-			Enum::ToString(ETexture::Cloud),
-		};
 	}
 
 	const FViewportData& GetViewportData() { return ViewportData; }
@@ -122,7 +123,7 @@ namespace platformer2d::UI {
 		Updated |= UI::Draw::Vec2Control("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
 		ImGui::TableNextRow();
-		Updated |= TextureDropDown(Attr.Texture);
+		Updated |= TextureDropdown(Attr.Texture);
 
 		ImGui::TableNextRow();
 		Updated |= ColorDropdown(Attr.Color);
@@ -158,7 +159,7 @@ namespace platformer2d::UI {
 			PhysicsBodyMenu(PhysicsBodyData);
 			UI::ShiftCursorY(30);
 
-			CreatorMenuButtons(Scene);
+			ActorCreateButtons(Scene);
 
 			ImGui::TreePop();
 		}
@@ -170,7 +171,7 @@ namespace platformer2d::UI {
 		ImGui::PopID();
 	}
 
-	void CreatorMenuButtons(std::shared_ptr<CScene> Scene)
+	void ActorCreateButtons(std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Scene);
 		/* Button: Create */
@@ -241,391 +242,6 @@ namespace platformer2d::UI {
 		}
 	}
 
-	void TextureModifier()
-	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
-
-		ImGui::Dummy(ImVec2(0, 12));
-		static ETexture SelectedTexture = ETexture::White;
-		if (TextureDropDown(SelectedTexture))
-		{
-			LK_DEBUG("Selected: {}", Enum::ToString(SelectedTexture));
-		}
-
-		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(SelectedTexture); TextureRef != nullptr)
-		{
-			/* Texture preview. */
-			ImGui::SameLine(0.0f, 12.0f);
-			UI::ShiftCursorY(-4.0f);
-			ImGui::Image(
-				static_cast<ImU64>(TextureRef->GetID()),
-				ImVec2(32.0f, 32.0f),
-				ImVec2(0.0f, 1.0f), /* Uv0. */
-				ImVec2(1.0f, 0.0f)  /* Uv1. */
-			);
-
-			static constexpr std::string_view Marker = "assets/textures/";
-			auto StripPrefix = [](const std::filesystem::path& Path) -> std::string
-			{
-				const std::string Str = Path.generic_string();
-				const std::size_t Pos = Str.find(Marker);
-				if (Pos != std::string::npos)
-				{
-					return Str.substr(Pos);
-				}
-				return Str;
-			};
-
-			ImGui::Dummy(ImVec2(0, 6));
-
-			{
-				UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::BoldItalic));
-				ImGui::Indent();
-				ImGui::Text("Size:%-4s%dx%d", " ", TextureRef->GetWidth(), TextureRef->GetHeight());
-				const std::string TrimmedPath = StripPrefix(TextureRef->GetFilePath());
-				ImGui::Text("Path:%-4s%s", " ", TrimmedPath.c_str());
-				ImGui::Unindent();
-			}
-		}
-		ImGui::Dummy(ImVec2(0, 12));
-
-		{
-			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 10);
-			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-			UI::FScopedStyle FrameBorder(ImGuiStyleVar_FrameBorderSize, 2.0f);
-			UI::FScopedColor ButtonCol(ImGuiCol_Button, RGBA32::Titlebar::Default);
-			UI::FScopedColor ButtonActiveCol(ImGuiCol_ButtonActive, RGBA32::LightGray);
-			UI::FScopedColor ButtonHoveredCol(ImGuiCol_ButtonHovered, RGBA32::SelectionMuted);
-
-			UI::ShiftCursorX(35.0f);
-			ImGui::Text("Wrap");
-
-			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Clamp", ButtonSize))
-			{
-				CRenderer::GetTexture(SelectedTexture)->SetWrap(ETextureWrap::Clamp);
-			}
-			ImGui::SameLine(0.0f, ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Repeat", ButtonSize))
-			{
-				CRenderer::GetTexture(SelectedTexture)->SetWrap(ETextureWrap::Repeat);
-			}
-
-			ImGui::Dummy(ImVec2(0, 6));
-
-			UI::ShiftCursorX(35.0f);
-			ImGui::Text("Filter");
-
-			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Linear", ButtonSize))
-			{
-				CRenderer::GetTexture(SelectedTexture)->SetFilter(ETextureFilter::Linear);
-			}
-
-			ImGui::SameLine(0.0f, ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Nearest", ButtonSize))
-			{
-				CRenderer::GetTexture(SelectedTexture)->SetFilter(ETextureFilter::Nearest);
-			}
-		}
-	}
-
-	bool TextureDropDown(ETexture& Selected)
-	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
-
-		bool Updated = false;
-		std::size_t SelectedIdx = std::to_underlying(Selected);
-		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < TextureNames.size()));
-		static const char* SelectedTexture = TextureNames[SelectedIdx];
-
-		static const std::string Label = "Texture";
-		if (ImGui::GetCurrentTable() != nullptr)
-		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 0.0f);
-			ImGui::Text(Label.c_str());
-
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
-		}
-		else
-		{
-			ImGui::Text(Label.c_str());
-			ImGui::SameLine();
-		}
-
-		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
-		ImGui::SetNextItemWidth(ComboItemWidth);
-		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedIdx]))
-		{
-			for (int Idx = 0; Idx < TextureNames.size(); Idx++)
-			{
-				const char* Option = TextureNames[Idx];
-				if (Option == nullptr)
-				{
-					continue;
-				}
-
-				const bool IsSelected = (SelectedIdx == Idx);
-				if (ImGui::Selectable(Option, IsSelected))
-				{
-					SelectedIdx = Idx;
-				}
-			}
-
-			if (SelectedIdx != std::to_underlying(Selected))
-			{
-				Selected = static_cast<ETexture>(SelectedIdx);
-				Updated = true;
-			}
-
-			ImGui::EndCombo();
-		}
-
-		return Updated;
-	}
-
-	bool BlendFunction()
-	{
-		#define UI_COMBO_OPTION(Value) { Value, #Value }
-		static constexpr std::pair<GLenum, const char*> SourceBlendFuncs[] = {
-			UI_COMBO_OPTION(GL_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE),
-			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
-		};
-		static constexpr std::pair<GLenum, const char*> DestBlendFuncs[] = {
-			UI_COMBO_OPTION(GL_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
-		};
-		#undef UI_COMBO_OPTION
-
-		bool bSetBlendFunc = false;
-
-		static int SelectedSourceBlendFunc = -1;
-		if (SelectedSourceBlendFunc == -1)
-		{
-			const int SourceFunc = CRenderer::GetBlendSource();
-			switch (SourceFunc)
-			{
-				case GL_SRC_ALPHA:
-					SelectedSourceBlendFunc = 0;
-					break;
-				case GL_DST_ALPHA:
-					SelectedSourceBlendFunc = 1;
-					break;
-				case GL_ONE:
-					SelectedSourceBlendFunc = 2;
-					break;
-				case GL_ONE_MINUS_SRC_ALPHA:
-					SelectedSourceBlendFunc = 3;
-					break;
-				case GL_ONE_MINUS_DST_ALPHA:
-					SelectedSourceBlendFunc = 4;
-					break;
-				case GL_ONE_MINUS_CONSTANT_ALPHA:
-					SelectedSourceBlendFunc = 5;
-					break;
-			}
-		}
-		LK_ASSERT(SelectedSourceBlendFunc >= 0);
-
-		static int SelectedDestBlendFunc = -1;
-		if (SelectedDestBlendFunc == -1)
-		{
-			const int DestFunc = CRenderer::GetBlendDestination();
-			switch (DestFunc)
-			{
-				case GL_SRC_ALPHA:
-					SelectedDestBlendFunc = 0;
-					break;
-				case GL_DST_ALPHA:
-					SelectedDestBlendFunc = 1;
-					break;
-				case GL_ONE_MINUS_SRC_ALPHA:
-					SelectedDestBlendFunc = 2;
-					break;
-				case GL_ONE_MINUS_DST_ALPHA:
-					SelectedDestBlendFunc = 3;
-					break;
-				case GL_ONE_MINUS_CONSTANT_ALPHA:
-					SelectedDestBlendFunc = 4;
-					break;
-			}
-		}
-		LK_ASSERT(SelectedDestBlendFunc >= 0);
-
-		ImGui::PushID("UI_BlendFunction");
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, GAME_MENU_LABEL_COLUMN_WIDTH);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - GAME_MENU_LABEL_COLUMN_WIDTH);
-
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-		ImGui::Text("Source");
-
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Source", SourceBlendFuncs[SelectedSourceBlendFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
-			{
-				const bool bSelected = (SelectedSourceBlendFunc == N);
-				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected))
-				{
-					SelectedSourceBlendFunc = N;
-					LK_TRACE_TAG("UI", "Source: {}", SourceBlendFuncs[N].second);
-					bSetBlendFunc = true;
-				}
-			}
-			ImGui::EndCombo();
-		}
-
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-		ImGui::Text("Destination");
-
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Destination", DestBlendFuncs[SelectedDestBlendFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
-			{
-				const bool bSelected = (SelectedDestBlendFunc == N);
-				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected))
-				{
-					SelectedDestBlendFunc = N;
-					LK_TRACE_TAG("UI", "Destination: {}", DestBlendFuncs[N].second);
-					bSetBlendFunc = true;
-				}
-			}
-			ImGui::EndCombo();
-		}
-
-		ImGui::EndTable();
-		ImGui::PopID(); /* ~UI_BlendFunction */
-
-		if (bSetBlendFunc)
-		{
-			LK_OpenGL_Verify(glBlendFunc(
-				SourceBlendFuncs[SelectedSourceBlendFunc].first,
-				DestBlendFuncs[SelectedDestBlendFunc].first
-			));
-		}
-
-		return bSetBlendFunc;
-	}
-
-	bool DepthFunction()
-	{
-		#define UI_COMBO_OPTION(Value) { Value, #Value }
-		static constexpr std::pair<GLenum, const char*> Functions[] = {
-			UI_COMBO_OPTION(GL_LESS),
-			UI_COMBO_OPTION(GL_EQUAL),
-			UI_COMBO_OPTION(GL_LEQUAL),
-			UI_COMBO_OPTION(GL_GREATER),
-			UI_COMBO_OPTION(GL_NOTEQUAL),
-			UI_COMBO_OPTION(GL_GEQUAL),
-			UI_COMBO_OPTION(GL_ALWAYS),
-		};
-		#undef UI_COMBO_OPTION
-
-		static constexpr float ItemWidth = 380.0f;
-		bool ShouldUpdate = false;
-
-		static int SelectedDepthFunc = -1;
-		if (SelectedDepthFunc == -1)
-		{
-			const int Func = CRenderer::GetDepthFunction();
-			switch (Func)
-			{
-				case GL_LESS:
-					SelectedDepthFunc = 0;
-					break;
-				case GL_EQUAL:
-					SelectedDepthFunc = 1;
-					break;
-				case GL_LEQUAL:
-					SelectedDepthFunc = 2;
-					break;
-				case GL_GREATER:
-					SelectedDepthFunc = 3;
-					break;
-				case GL_NOTEQUAL:
-					SelectedDepthFunc = 4;
-					break;
-				case GL_GEQUAL:
-					SelectedDepthFunc = 5;
-					break;
-				case GL_ALWAYS:
-					SelectedDepthFunc = 6;
-					break;
-			}
-		}
-
-		if (SelectedDepthFunc == -1)
-		{
-			return false;
-		}
-
-		ImGui::PushID("UI_DepthFunction");
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, GAME_MENU_LABEL_COLUMN_WIDTH);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - GAME_MENU_LABEL_COLUMN_WIDTH);
-
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-		ImGui::Text("Depth");
-
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Depth", Functions[SelectedDepthFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(Functions); N++)
-			{
-				const bool bSelected = (SelectedDepthFunc == N);
-				if (ImGui::Selectable(Functions[N].second, bSelected))
-				{
-					SelectedDepthFunc = N;
-					LK_TRACE_TAG("UI", "Depth: {}", Functions[N].second);
-					ShouldUpdate = true;
-				}
-			}
-			ImGui::EndCombo();
-		}
-
-		ImGui::EndTable();
-		ImGui::PopID();
-
-		if (ShouldUpdate)
-		{
-			LK_OpenGL_Verify(glDepthFunc(Functions[SelectedDepthFunc].first));
-		}
-
-		return ShouldUpdate;
-	}
-
 	bool DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
 	{
 		ImGuizmo::SetOrthographic(true);
@@ -676,115 +292,154 @@ namespace platformer2d::UI {
 		return Manipulated;
 	}
 
-	void ColdTextGradient(const char* Text, const float Speed)
+	void PlayerData(std::shared_ptr<CPlayer> Player)
 	{
-		const float Time = ImGui::GetTime() * Speed;
+		LK_ASSERT(Player);
+		CBody& PlayerBody = Player->GetBody();
+		const FPlayerData& PlayerData = Player->GetData();
+		FTransformComponent& TC = Player->GetTransformComponent();
 
-		const ImVec2 StartPos = ImGui::GetCursorScreenPos();
-		ImFont* Font = ImGui::GetFont();
-		const float FontSize = ImGui::GetFontSize();
+		glm::vec2 PlayerBodyPos = Player->GetBody().GetPosition();
+		ImGui::Text("Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
+		ImGui::Text("Movement State: %s", Enum::ToString(PlayerData.MovementState));
+		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
 
-		ImVec2 Pos = StartPos;
-		ImDrawList* DrawList = ImGui::GetWindowDrawList();
+		auto [CurrentSpriteFrame, NextSpriteFrame] = Player->GetCurrentAndNextSpriteFrame();
+		ImGui::Text("Current Sprite Frame: %d", CurrentSpriteFrame);
+		ImGui::Text("Next Sprite Frame: %d", NextSpriteFrame);
+		ImGui::Dummy(ImVec2(0, 4));
 
-		for (const char* Ptr = Text; *Ptr; Ptr++)
+		const glm::vec2 PlayerSize = Player->GetSize();
+		ImGui::Text("Size: (%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
+		ImGui::Text("TC Scale: (%.2f, %.2f)", TC.Scale.x, TC.Scale.y);
+
+		CCamera& Camera = Player->GetCamera();
+		ImGui::Text("Camera Zoom: %.2f", Camera.GetZoom());
+		const bool CameraLocked = Player->IsCameraLocked();
+		ImGui::Text("Camera Lock: %s", CameraLocked ? "Active" : "Not active");
+		ImGui::SameLine();
+		if (ImGui::Button("Toggle"))
 		{
-			/* Create smooth oscillation between 0.0 and 1.0f */
-			const float T = 0.50f * (std::sin(Time + (*Ptr) * 0.15f) + 1.0f);
-
-			static const ImVec4 Colors[] = {
-				FColor::Convert<ImVec4>(FColor::White),
-				FColor::Convert<ImVec4>(FColor::LightGray),
-				FColor::Convert<ImVec4>(FColor::LightBlue),
-				FColor::Convert<ImVec4>(FColor::Cyan),
-			};
-
-			/* Interpolate between colors. */
-			const int Index1 = static_cast<int>(T * 3.0f);
-			const int Index2 = std::min(Index1 + 1, 3);
-			const float LocalT = (T * 3.0f) - static_cast<float>(Index1);
-
-			ImVec4 Col;
-			Col.x = Colors[Index1].x + (Colors[Index2].x - Colors[Index1].x) * LocalT;
-			Col.y = Colors[Index1].y + (Colors[Index2].y - Colors[Index1].y) * LocalT;
-			Col.z = Colors[Index1].z + (Colors[Index2].z - Colors[Index1].z) * LocalT;
-			Col.w = 1.0f;
-
-			const char Character[2] = { *Ptr, 0 };
-			DrawList->AddText(Font, FontSize, Pos, ImGui::ColorConvertFloat4ToU32(Col), Character);
-			Pos.x += Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Character).x;
+			Player->SetCameraLock(!CameraLocked);
 		}
 
-		ImGui::Dummy(ImVec2(Pos.x - StartPos.x, FontSize));
-	}
+		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
+		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
+		const float AngularVelocity = PlayerBody.GetAngularVelocity();
+		ImGui::Text("Angular Velocity: %.2f", AngularVelocity);
 
-	void RainbowTextGradient(const char* Text, const float Speed)
-	{
-		const float Time = ImGui::GetTime() * 0.5f;
+		ImGui::PushItemWidth(160.0f);
+		float PlayerJumpImpulse = Player->GetJumpImpulse();
+		ImGui::SliderFloat("Jump Impulse", &PlayerJumpImpulse, 0.0f, 10.0f, "%.5f");
+		if (ImGui::IsItemActive()) Player->SetJumpImpulse(PlayerJumpImpulse);
 
-		const ImVec2 StartPos = ImGui::GetCursorScreenPos();
-		ImFont* Font = ImGui::GetFont();
-		const float FontSize = ImGui::GetFontSize();
+		float PlayerDirForce = Player->GetDirectionForce();
+		ImGui::SliderFloat("Direction Force", &PlayerDirForce, 0.0f, 10.0f, "%.5f");
+		if (ImGui::IsItemActive()) Player->SetDirectionForce(PlayerDirForce);
+		ImGui::Text("Last Direction Force: %.5f", Player->GetLastDirectionForce());
 
-		ImVec2 Pos = StartPos;
-		ImDrawList* DrawList = ImGui::GetWindowDrawList();
-		for (const char* Ptr = Text; *Ptr; Ptr++)
+		static float BodyScale = TC.Scale.x;
+		ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
+		ImGui::SameLine();
+		if (ImGui::Button("Apply##Scale"))
 		{
-			float Hue = std::fmod(Time + (*Ptr) * Speed, 1.0f);
-			ImVec4 Col;
-			ImGui::ColorConvertHSVtoRGB(Hue, 1.0f, 1.0f, Col.x, Col.y, Col.z);
-			Col.w = 1.0f;
-
-			const char Character[2] = {*Ptr, 0};
-			DrawList->AddText(Font, FontSize, Pos, ImGui::ColorConvertFloat4ToU32(Col), Character);
-			Pos.x += Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Character).x;
+			PlayerBody.SetScale(BodyScale);
 		}
 
-		ImGui::Dummy(ImVec2(Pos.x - StartPos.x, FontSize));
+		float Mass = PlayerBody.GetMass();
+		ImGui::SliderFloat("Mass", &Mass, 0.0f, 10.0f, "%.2f");
+		if (ImGui::IsItemActive()) PlayerBody.SetMass(Mass);
+
+		float PlayerFriction = PlayerBody.GetFriction();
+		ImGui::SliderFloat("Friction", &PlayerFriction, 0.0f, 2.0f, "%.3f");
+		if (ImGui::IsItemActive()) PlayerBody.SetFriction(PlayerFriction);
+
+		float PlayerRestitution = PlayerBody.GetRestitution();
+		ImGui::SliderFloat("Restitution", &PlayerRestitution, 0.0f, 2.0f, "%.3f");
+		if (ImGui::IsItemActive()) PlayerBody.SetRestitution(PlayerRestitution);
+
+		ImGui::PopItemWidth();
+
+		ImGui::Dummy(ImVec2(0, 4));
+		UI::Draw::ActorNode_Data(*Player);
+		ImGui::Dummy(ImVec2(0, 4));
 	}
 
-	void RainbowTextSynced(const char* Text, const float WaveLengthPx,
-						   const float SpeedPxPerSec, const float Saturation, const float Value)
+	/** @todo: The initial position needs to be placed in an upper-left/right corner. */
+	void Statistics()
 	{
-		LK_ASSERT(Text && *Text && (WaveLengthPx > 0.0f));
-		ImDrawList* DrawList = ImGui::GetWindowDrawList();
-		ImFont* Font = ImGui::GetFont();
-		const float FontSize = ImGui::GetFontSize();
-
-		const ImVec2 StartPos = ImGui::GetCursorScreenPos();
-		ImVec2 Pen = StartPos;
-
-		const float Time = ImGui::GetTime();
-		const float InvWavelength = (1.0f / WaveLengthPx);
-
-		for (const char* Ptr = Text; *Ptr;)
+		CGameInstance* GameInstance = CGameInstance::Get();
+		if (!GameInstance)
 		{
-			if (*Ptr == '\n')
+			return;
+		}
+
+		/** @todo: Remove docknode tab */
+		ImGui::SetNextWindowBgAlpha(0.25f);
+		ImGui::SetNextWindowSize(ImVec2(284, 0), ImGuiCond_Always);
+		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration;
+		if (!ImGui::Begin("##Statistics", nullptr, WindowFlags))
+		{
+			ImGui::End();
+			return;
+		}
+
+		CPlayer* Player = GameInstance->GetPlayer();
+		CCamera& Camera = Player->GetCamera();
+
+		static constexpr float LabelColumnWidth = 150.0f;
+		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+
+		auto Label = [](std::string_view Str) -> void
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text(Str.data());
+		};
+
+		auto NextColumn = []() -> void
+		{
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+		};
+
+		const float FPS = 1.0f / GameInstance->GetDeltaTime();
+		/* FPS */
+		ImGui::TableNextRow();
+		Label("FPS");
+		NextColumn();
+		ImGui::Text("%1.f", FPS);
+
+		/* Camera Zoom */
+		ImGui::TableNextRow();
+		Label("Camera Zoom");
+		NextColumn();
+		ImGui::Text("%.2f", Camera.GetZoom());
+
+		/* Camera lock */
+		ImGui::TableNextRow();
+		Label("Camera Lock");
+		NextColumn();
+		const bool CameraLocked = Player->IsCameraLocked();
+		ImGui::Text("%s", CameraLocked ? "Active" : "Not active");
+		
+		ImGui::EndTable();
+
+		if (ImGui::IsWindowHovered())
+		{
+			const ImVec2 Pos = ImGui::GetWindowPos();
+			const ImVec2 Size = ImGui::GetWindowSize();
+			if (ImGui::BeginTooltip())
 			{
-				Pen.x = StartPos.x;
-				Pen.y += FontSize;
-				++Ptr;
-				continue;
+				ImGui::Text("Position: (%.1f, %.1f)", Pos.x, Pos.y);
+				ImGui::Text("Size: (%.1f, %.1f)", Size.x, Size.y);
+				ImGui::EndTooltip();
 			}
-
-			char Ch[2] = { *Ptr, 0 };
-			Ptr++;
-
-			const float AdvanceX = Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Ch).x;
-			const float Phase = (Pen.x - Time * SpeedPxPerSec) * InvWavelength;
-			const float Hue = Phase - std::floor(Phase);
-
-			ImVec4 Col;
-			ImGui::ColorConvertHSVtoRGB(Hue, Saturation, Value, Col.x, Col.y, Col.z);
-			Col.w = 1.0f;
-
-			DrawList->AddText(Font, FontSize, Pen, ImGui::ColorConvertFloat4ToU32(Col), Ch);
-			Pen.x += AdvanceX;
 		}
 
-		/* Reserve layout space so following widgets align vertically. */
-		const ImVec2 TextSize = ImGui::CalcTextSize(Text, nullptr, false, FLT_MAX);
-		ImGui::Dummy(ImVec2(TextSize.x, TextSize.y));
+		ImGui::End();
 	}
 
 	void PrepareLeftSidebar()

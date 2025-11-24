@@ -10,14 +10,22 @@
 
 namespace platformer2d::UI {
 
-	namespace PanelID
-	{
+	namespace PanelID {
 		inline constexpr const char* const Dockspace = "##Dockspace";
 		inline constexpr const char* const Viewport = "##Viewport";
 		inline constexpr const char* const HostWindow = "##HostWindow";
 		inline constexpr const char* const Sidebar1 = "##Sidebar1";
 		inline constexpr const char* const Sidebar2 = "##Sidebar2";
 	}
+
+	struct FViewportData
+	{
+		glm::vec2 MenuBarSize = { 0.0f, 30.0f };
+		glm::vec2 LeftSidebarSize = { 340.0f, 0.0f };
+		glm::vec2 RightSidebarSize = { 340.0f, 0.0f };
+	};
+	extern FViewportData ViewportData;
+	const FViewportData& GetViewportData();
 
 	inline void ShiftCursorX(const float Distance)
 	{
