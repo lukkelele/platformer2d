@@ -20,7 +20,7 @@ namespace platformer2d::Level {
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 
-		virtual void Tick(float DeltaTime) override;
+		virtual void Tick(float InDeltaTime) override;
 		virtual CCamera* GetActiveCamera() const override;
 		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const override;
 		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
@@ -40,11 +40,8 @@ namespace platformer2d::Level {
 
 		void UI_Level();
 		void UI_Player();
-		void UI_TextureModifier();
-		void UI_TextureDropDown(std::size_t& SelectedIdx);
 
 		void DrawBackground() const;
-		void DrawClouds() const;
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnKeyPressed(const FKeyData& Data);

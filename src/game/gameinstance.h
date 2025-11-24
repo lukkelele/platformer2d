@@ -43,7 +43,7 @@ namespace platformer2d {
 		virtual void Initialize() = 0;
 		virtual void Destroy() = 0;
 
-		virtual void Tick(float DeltaTime) override = 0;
+		virtual void Tick(float InDeltaTime) override = 0;
 		virtual CCamera* GetActiveCamera() const = 0;
 		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const = 0;
 		virtual std::shared_ptr<CScene> GetScene() const = 0;
@@ -62,6 +62,8 @@ namespace platformer2d {
 		 */
 		glm::vec2 GetMouseInWorldSpace(const CCamera& Camera);
 
+		float GetDeltaTime() const { return DeltaTime; }
+
 		virtual bool Serialize(const std::filesystem::path& OutFile) const override = 0;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override = 0;
 
@@ -77,6 +79,7 @@ namespace platformer2d {
 		FConfig Config;
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
+		float DeltaTime = 0.0f;
 	private:
 		FGameSpecification Spec{};
 		std::array<glm::vec2, 2> ViewportBounds;

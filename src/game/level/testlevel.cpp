@@ -17,6 +17,7 @@
 #include "renderer/debugrenderer.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
+#include "renderer/ui/selectionpanel.h"
 #include "physics/body.h"
 #include "physics/physicsworld.h"
 #include "physics/ray.h"
@@ -57,25 +58,6 @@ namespace platformer2d::Level {
 		std::weak_ptr<CActor> SelectedActor;
 		std::weak_ptr<CActor> RotatingPlatform;
 
-		/** @deprecated To be replaced with actual static actors */
-		struct FCloud
-		{
-			glm::vec3 Position = { 0.0f, 0.0f, 0.10f };
-			glm::vec2 Size{};
-		};
-		std::vector<FCloud> Clouds = {
-			FCloud({  1.49, 2.42, 0.0001 }, { 0.93, 0.74 }),
-			FCloud({ -0.70, 2.20, 0.0002 }, { 1.15, 0.92 }),
-			FCloud({  1.50, 1.15, 0.0003 }, { 1.05, 0.84 }),
-			FCloud({  2.80, 0.39, 0.0004 }, { 0.95, 0.76 }),
-			FCloud({ -3.15, 2.30, 0.0005 }, { 1.13, 0.90 }),
-			FCloud({ -2.68, 0.58, 0.0006 }, { 0.99, 0.80 }),
-			FCloud({ -1.75, 1.34, 0.0007 }, { 1.03, 0.90 }),
-			FCloud({ -0.58, 1.63, 0.0008 }, { 0.99, 0.80 }),
-			FCloud({  0.84, 0.38, 0.0009 }, { 0.99, 0.80 }),
-			FCloud({ -0.20, 0.80, 0.0010 }, { 0.99, 0.80 }),
-		};
-
 		const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
 			Enum::ToString(ETexture::White),
 			Enum::ToString(ETexture::Background),
@@ -90,7 +72,6 @@ namespace platformer2d::Level {
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
-	static void GenerateClouds(const std::size_t CloudCount = 7);
 
 	static void UpdateInputBuffer(std::size_t Count)
 	{
@@ -205,8 +186,9 @@ namespace platformer2d::Level {
 		Destroy();
 	}
 
-	void CTestLevel::Tick(const float DeltaTime)
+	void CTestLevel::Tick(const float InDeltaTime)
 	{
+		DeltaTime = InDeltaTime;
 		CCamera& Camera = Player->GetCamera();
 		Camera.SetViewportSize(ViewportWidth, ViewportHeight);
 		CRenderer::BeginScene(Camera);
@@ -218,8 +200,6 @@ namespace platformer2d::Level {
 		{
 			RaycastScene();
 		}
-
-		DrawClouds();
 
 		/* Render player. */
 		CRenderer::DrawQuad(
@@ -347,6 +327,8 @@ namespace platformer2d::Level {
 	{
 		UI_Level();
 		UI_Player();
+
+		UI::SelectionPanel();
 
 		if (std::shared_ptr<CActor> SelectedRef = SelectedActor.lock(); SelectedRef != nullptr)
 		{
@@ -550,7 +532,7 @@ namespace platformer2d::Level {
 		}
 
 		CSpawner::CreateStaticPolygon(
-			"R_Wall-1",
+			"Right-Wall-1",
 			{ 4.830f, -0.90f }, /* Pos */
 			{ 0.10f, 1.20f },   /* Size */
 			FColor::Convert(RGBA32::Magenta)
@@ -559,9 +541,10 @@ namespace platformer2d::Level {
 
 	void CTestLevel::UI_Level()
 	{
-		UI::PrepareRightSidebar();
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
-		if (!ImGui::Begin(UI::PanelID::Sidebar2))
+		//UI::PrepareRightSidebar();
+		//if (!ImGui::Begin(UI::PanelID::Sidebar2))
+		if (!ImGui::Begin("Level"))
 		{
 			ImGui::End();
 			return;
@@ -672,256 +655,24 @@ namespace platformer2d::Level {
 		ImGui::Dummy(ImVec2(0, 10));
 		UI::CreatorMenu(Scene);
 
-		ImGui::Dummy(ImVec2(0, 12));
-#if 0
-		if (ImGui::TreeNodeEx("Texture Modifier"))
-		{
-			UI::TextureModifier();
-			ImGui::TreePop();
-		}
-#endif
-
 		UI::Font::Pop();
 		ImGui::End();
 	}
 
 	void CTestLevel::UI_Player()
 	{
-		CBody& PlayerBody = Player->GetBody();
-		const FPlayerData& PlayerData = Player->GetData();
-		FTransformComponent& TC = Player->GetTransformComponent();
-
-		UI::PrepareLeftSidebar();
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA); /* @todo Dock node alpha. */
-		if (!ImGui::Begin(UI::PanelID::Sidebar1))
+		//UI::PrepareLeftSidebar();
+		//if (!ImGui::Begin(UI::PanelID::Sidebar1))
+		if (!ImGui::Begin("Player"))
 		{
 			ImGui::End();
 			return;
 		}
 
-		glm::vec2 PlayerBodyPos = Player->GetBody().GetPosition();
-		ImGui::Text("Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
-		PlayerBodyPos = Player->GetPosition();
-		ImGui::Text("TC Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
-		ImGui::Text("Movement State: %s", Enum::ToString(PlayerData.MovementState));
-		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
+		UI::PlayerData(Player);
 
-		auto [CurrentSpriteFrame, NextSpriteFrame] = Player->GetCurrentAndNextSpriteFrame();
-		ImGui::Text("Current Sprite Frame: %d", CurrentSpriteFrame);
-		ImGui::Text("Next Sprite Frame: %d", NextSpriteFrame);
-		ImGui::Dummy(ImVec2(0, 4));
-
-		const glm::vec2 PlayerSize = Player->GetSize();
-		ImGui::Text("Size: (%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
-		ImGui::Text("TC Scale: (%.2f, %.2f)", TC.Scale.x, TC.Scale.y);
-
-		CCamera& Camera = Player->GetCamera();
-		ImGui::Text("Camera Zoom: %.2f", Camera.GetZoom());
-		const bool CameraLocked = Player->IsCameraLocked();
-		ImGui::Text("Camera Lock: %s", CameraLocked ? "Active" : "Not active");
-		ImGui::SameLine();
-		if (ImGui::Button("Toggle"))
-		{
-			Player->SetCameraLock(!CameraLocked);
-		}
-
-		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
-		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
-		const float AngularVelocity = PlayerBody.GetAngularVelocity();
-		ImGui::Text("Angular Velocity: %.2f", AngularVelocity);
-
-		ImGui::PushItemWidth(160.0f);
-		float PlayerJumpImpulse = Player->GetJumpImpulse();
-		ImGui::SliderFloat("Jump Impulse", &PlayerJumpImpulse, 0.0f, 10.0f, "%.5f");
-		if (ImGui::IsItemActive()) Player->SetJumpImpulse(PlayerJumpImpulse);
-
-		float PlayerDirForce = Player->GetDirectionForce();
-		ImGui::SliderFloat("Direction Force", &PlayerDirForce, 0.0f, 10.0f, "%.5f");
-		if (ImGui::IsItemActive()) Player->SetDirectionForce(PlayerDirForce);
-		ImGui::Text("Last Direction Force: %.5f", Player->GetLastDirectionForce());
-
-		static float BodyScale = TC.Scale.x;
-		ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
-		ImGui::SameLine();
-		if (ImGui::Button("Apply##Scale"))
-		{
-			PlayerBody.SetScale(BodyScale);
-		}
-
-		float Mass = PlayerBody.GetMass();
-		ImGui::SliderFloat("Mass", &Mass, 0.0f, 10.0f, "%.2f");
-		if (ImGui::IsItemActive()) PlayerBody.SetMass(Mass);
-
-		float PlayerFriction = PlayerBody.GetFriction();
-		ImGui::SliderFloat("Friction", &PlayerFriction, 0.0f, 2.0f, "%.3f");
-		if (ImGui::IsItemActive()) PlayerBody.SetFriction(PlayerFriction);
-
-		float PlayerRestitution = PlayerBody.GetRestitution();
-		ImGui::SliderFloat("Restitution", &PlayerRestitution, 0.0f, 2.0f, "%.3f");
-		if (ImGui::IsItemActive()) PlayerBody.SetRestitution(PlayerRestitution);
-
-		ImGui::PopItemWidth();
-
-		ImGui::Dummy(ImVec2(0, 6));
-		UI::Draw::ActorNode_Data(*Player);
-		ImGui::Dummy(ImVec2(0, 6));
-
-		if (ImGui::Button("Rotate Platform"))
-		{
-			static constexpr const char* PlatformName = "SpawnPlatform";
-			if (std::shared_ptr<CActor> Platform = Scene->FindActor(PlatformName); Platform != nullptr)
-			{
-				Platform->SetRotation(Platform->GetRotation() + glm::radians(45.0f));
-			}
-			else
-			{
-				LK_WARN_TAG("TestLevel", "No actor exists with name: {}", PlatformName);
-			}
-		}
-
-		ImGui::End();
-	}
-
-	void CTestLevel::UI_TextureDropDown(std::size_t& SelectedIdx)
-	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
-
-		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < TextureNames.size()));
-		static const char* SelectedTexture = TextureNames[SelectedIdx];
-
-		ImGui::Dummy(ImVec2(0, 6));
-		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-
-		static const char* ComboName = "Texture";
-		const ImVec2 ComboNameLen = ImGui::CalcTextSize(ComboName);
-
-		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-
-		UI::ShiftCursorX(20.0f);
-		ImGui::Text(ComboName);
-
-		ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
-		UI::ShiftCursorY(-4.0f);
-
-		ImGui::SetNextItemWidth(ItemWidth);
-		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedIdx]))
-		{
-			SelectedTexture = TextureNames[SelectedIdx];
-			for (int Idx = 0; Idx < TextureNames.size(); Idx++)
-			{
-				const char* Option = TextureNames[Idx];
-				if (Option == nullptr)
-				{
-					continue;
-				}
-
-				const bool IsSelected = (Option == SelectedTexture);
-				if (ImGui::Selectable(Option, IsSelected))
-				{
-					SelectedIdx = Idx;
-				}
-			}
-
-			ImGui::EndCombo();
-		}
-	}
-
-	void CTestLevel::UI_TextureModifier()
-	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
-
-		ImGui::Dummy(ImVec2(0, 12));
-		static std::size_t SelectedTextureIdx = 0;
-		UI_TextureDropDown(SelectedTextureIdx);
-
-		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-
-		const ETexture Texture = static_cast<ETexture>(SelectedTextureIdx);
-		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(Texture); TextureRef != nullptr)
-		{
-			/* Texture preview. */
-			ImGui::SameLine(0.0f, 12.0f);
-			UI::ShiftCursorY(-4.0f);
-			ImGui::Image(
-				static_cast<ImU64>(TextureRef->GetID()),
-				ImVec2(32.0f, 32.0f),
-				ImVec2(0.0f, 1.0f), /* Uv0. */
-				ImVec2(1.0f, 0.0f)  /* Uv1. */
-			);
-
-			static constexpr std::string_view Marker = "assets/textures/";
-			auto StripPrefix = [](const std::filesystem::path& Path) -> std::string
-			{
-				const std::string Str = Path.generic_string();
-				const std::size_t Pos = Str.find(Marker);
-				if (Pos != std::string::npos)
-				{
-					return Str.substr(Pos);
-				}
-				return Str;
-			};
-
-			ImGui::Dummy(ImVec2(0, 6));
-
-			{
-				UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::BoldItalic));
-				ImGui::Indent();
-				ImGui::Text("Size:%-4s%dx%d", " ", TextureRef->GetWidth(), TextureRef->GetHeight());
-				const std::string TrimmedPath = StripPrefix(TextureRef->GetFilePath());
-				ImGui::Text("Path:%-4s%s", " ", TrimmedPath.c_str());
-				ImGui::Unindent();
-			}
-		}
-		ImGui::Dummy(ImVec2(0, 12));
-
-		{
-			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 10);
-			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-			UI::FScopedStyle FrameBorder(ImGuiStyleVar_FrameBorderSize, 2.0f);
-			UI::FScopedColor ButtonCol(ImGuiCol_Button, RGBA32::Titlebar::Default);
-			UI::FScopedColor ButtonActiveCol(ImGuiCol_ButtonActive, RGBA32::LightGray);
-			UI::FScopedColor ButtonHoveredCol(ImGuiCol_ButtonHovered, RGBA32::SelectionMuted);
-
-			UI::ShiftCursorX(35.0f);
-			ImGui::Text("Wrap");
-
-			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Clamp", ButtonSize))
-			{
-				CRenderer::GetTexture(Texture)->SetWrap(ETextureWrap::Clamp);
-			}
-			ImGui::SameLine(0.0f, ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Repeat", ButtonSize))
-			{
-				CRenderer::GetTexture(Texture)->SetWrap(ETextureWrap::Repeat);
-			}
-
-			ImGui::Dummy(ImVec2(0, 6));
-
-			UI::ShiftCursorX(35.0f);
-			ImGui::Text("Filter");
-
-			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Linear", ButtonSize))
-			{
-				CRenderer::GetTexture(Texture)->SetFilter(ETextureFilter::Linear);
-			}
-
-			ImGui::SameLine(0.0f, ButtonPaddingY);
-			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Nearest", ButtonSize))
-			{
-				CRenderer::GetTexture(Texture)->SetFilter(ETextureFilter::Nearest);
-			}
-		}
+		ImGui::End(); /* ~Player */
 	}
 
 	void CTestLevel::DrawBackground() const
@@ -930,15 +681,6 @@ namespace platformer2d::Level {
 		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
 		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
 		CRenderer::DrawQuad({ 0.0f, 0.0f, 0.0f }, BgSize, BgTexture, FColor::White);
-	}
-
-	void CTestLevel::DrawClouds() const
-	{
-		const CTexture& Texture = *CRenderer::GetTexture(ETexture::Cloud);
-		for (const FCloud& Cloud : Clouds)
-		{
-			CRenderer::DrawQuad(Cloud.Position, Cloud.Size, Texture, FColor::White);
-		}
 	}
 
 	void CTestLevel::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
@@ -976,12 +718,10 @@ namespace platformer2d::Level {
 		{
 			case EMouseButtonState::Pressed:
 			{
-				/* Left button. */
 				if (Data.Button == EMouseButton::Button0)
 				{
 					MousePickScene();
 				}
-				/* Right button. */
 				else if (Data.Button == EMouseButton::Button1)
 				{
 				}
@@ -1129,40 +869,6 @@ namespace platformer2d::Level {
 		}
 
 		return true;
-	}
-
-	void GenerateClouds(const std::size_t CloudCount)
-	{
-		static constexpr float MinX = -3.0f;
-		static constexpr float MaxX = 3.0f;
-		static constexpr float MinY = 0.20f;
-		static constexpr float MaxY = 1.0f;
-		static constexpr float MinScale = 0.90f;
-		static constexpr float MaxScale = 1.15f;
-
-		Clouds.clear();
-		Clouds.reserve(CloudCount);
-
-		std::random_device RandomDevice;
-		std::mt19937 Engine(RandomDevice());
-
-		std::uniform_real_distribution<float> DistX(MinX, MaxX);
-		std::uniform_real_distribution<float> DistY(MinY, MaxY);
-		std::uniform_real_distribution<float> DistScale(MinScale, MaxScale);
-
-		constexpr glm::vec2 BaseSize = glm::vec2(1.0f, 0.80f);
-		for (int Idx = 0; Idx < CloudCount; Idx++)
-		{
-			const float X = DistX(Engine);
-			const float Y = DistY(Engine);
-			const float Scale = DistScale(Engine);
-
-			FCloud Cloud;
-			Cloud.Position = glm::vec3(X, Y, Math::Randomize(0.0f, 0.25f));
-			Cloud.Size = BaseSize * Scale;
-			Clouds.push_back(Cloud);
-			LK_DEBUG_TAG("TestLevel", "Cloud {}: {}, {}", Idx, Cloud.Position, Cloud.Size);
-		}
 	}
 
 }
