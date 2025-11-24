@@ -16,8 +16,7 @@
 
 namespace platformer2d {
 
-	namespace
-	{
+	namespace {
 		ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
 			| ImGuiWindowFlags_NoCollapse
 			| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
@@ -102,11 +101,13 @@ namespace platformer2d {
 			ImGui::DockBuilderSetNodeSize(DockspaceID, Viewport->Size);
 
 			ImGuiID DockID_Main = DockspaceID;
+#ifdef DOCKSPACE_SPLIT
 			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, 0.18f, nullptr, &DockID_Main);
 			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, 0.22f, nullptr, &DockID_Main);
 
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
+#endif
 			
 			ImGui::DockBuilderFinish(DockspaceID);
 		}
