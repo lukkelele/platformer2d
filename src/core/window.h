@@ -32,6 +32,7 @@ namespace platformer2d {
 	{
 	public:
 		LK_DECLARE_EVENT(FOnResized, CWindow, uint16_t /* Width */, uint16_t /* Height */);
+		LK_DECLARE_EVENT(FOnFramebufferResized, CWindow, uint32_t, uint32_t);
 	public:
 		CWindow(uint16_t InWidth, uint16_t InHeight, std::string_view InTitle = "platformer2d");
 		CWindow() = delete;
@@ -65,6 +66,7 @@ namespace platformer2d {
 
 	public:
 		static inline FOnResized OnResized;
+		static inline FOnFramebufferResized OnFramebufferResized;
 	private:
 		GLFWwindow* GlfwWindow = nullptr;
 		FWindowData Data{};

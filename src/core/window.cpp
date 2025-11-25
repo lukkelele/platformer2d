@@ -47,6 +47,8 @@ namespace platformer2d {
 		glfwMakeContextCurrent(GlfwWindow);
 		glfwSetWindowUserPointer(GlfwWindow, &Data);
 
+		SetVSync(true);
+
 		glfwSetWindowSizeCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow, int NewWidth, int NewHeight) 
 		{
 			FWindowData& Data = *((FWindowData*)glfwGetWindowUserPointer(InGlfwWindow));
@@ -59,8 +61,6 @@ namespace platformer2d {
 			LK_TRACE_TAG("Window", "Set close flag");
 			glfwSetWindowShouldClose(InGlfwWindow, GLFW_TRUE);
 		});
-
-		SetVSync(true);
 
 		glfwSetKeyCallback(GlfwWindow, [](GLFWwindow* Window, int Key, int ScanCode, int Action, int Modifiers)
 		{
@@ -122,6 +122,11 @@ namespace platformer2d {
 			LK_UNUSED(WindowData);
 		});
 
+		glfwSetFramebufferSizeCallback(GlfwWindow, [](GLFWwindow* Window, int Width, int Height)
+		{
+			CWindow::OnFramebufferResized.Broadcast(Width, Height);
+		});
+
 		/* Set window icon. */
 		const std::filesystem::path IconPath = TEXTURES_DIR "/test/test_player.png";
 		SetIcon(IconPath);
@@ -144,16 +149,15 @@ namespace platformer2d {
 	void CWindow::EndFrame()
 	{
 		glfwSwapBuffers(GlfwWindow);
-		glfwPollEvents();
 	}
 
 	void CWindow::SetSize(const uint16_t InWidth, const uint16_t InHeight)
 	{
 		if ((Data.Width != InWidth) || (Data.Height != InHeight))
 		{
+			LK_TRACE_TAG("Window", "Resize: ({}, {})", InWidth, InHeight);
 			Data.Width = InWidth;
 			Data.Height = InHeight;
-			LK_OpenGL_Verify(glViewport(0, 0, Data.Width, Data.Height));
 			OnResized.Broadcast(InWidth, InHeight);
 		}
 	}
