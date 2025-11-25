@@ -295,74 +295,190 @@ namespace platformer2d::UI {
 	void PlayerData(std::shared_ptr<CPlayer> Player)
 	{
 		LK_ASSERT(Player);
-		CBody& PlayerBody = Player->GetBody();
-		const FPlayerData& PlayerData = Player->GetData();
+		CCamera& Camera = Player->GetCamera();
+		CBody& Body = Player->GetBody();
+		const FPlayerData& Data = Player->GetData();
 		FTransformComponent& TC = Player->GetTransformComponent();
 
-		glm::vec2 PlayerBodyPos = Player->GetBody().GetPosition();
-		ImGui::Text("Position: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
-		ImGui::Text("Movement State: %s", Enum::ToString(PlayerData.MovementState));
-		ImGui::Text("Jump State: %s", PlayerData.bJumping ? "Jumping" : "On ground");
+		static constexpr float LabelColumnWidth = 200.0f;
+		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+
+		bool Changed = false;
+
+		auto Label = [](std::string_view Str) -> void
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text(Str.data());
+		};
+
+		auto NextColumn = []() -> void
+		{
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(9.0f, 2.0f);
+		};
+
+		ImGui::TableNextRow();
+		glm::vec2 BodyPos = Body.GetPosition();
+		{
+			Label("Position");
+			NextColumn();
+			ImGui::Text("(%.2f, %.2f)", BodyPos.x, BodyPos.y);
+		}
+
+		/* Movement state. */
+		ImGui::TableNextRow();
+		{
+			Label("Movement State");
+			NextColumn();
+			ImGui::Text("%s", Enum::ToString(Data.MovementState));
+		}
+
+		/* Jump state. */
+		ImGui::TableNextRow();
+		{
+			Label("Jump State");
+			NextColumn();
+			ImGui::Text("%s", Data.bJumping ? "Jumping" : "On ground");
+		}
 
 		auto [CurrentSpriteFrame, NextSpriteFrame] = Player->GetCurrentAndNextSpriteFrame();
-		ImGui::Text("Current Sprite Frame: %d", CurrentSpriteFrame);
-		ImGui::Text("Next Sprite Frame: %d", NextSpriteFrame);
-		ImGui::Dummy(ImVec2(0, 4));
-
-		const glm::vec2 PlayerSize = Player->GetSize();
-		ImGui::Text("Size: (%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
-		ImGui::Text("TC Scale: (%.2f, %.2f)", TC.Scale.x, TC.Scale.y);
-
-		CCamera& Camera = Player->GetCamera();
-		ImGui::Text("Camera Zoom: %.2f", Camera.GetZoom());
-		const bool CameraLocked = Player->IsCameraLocked();
-		ImGui::Text("Camera Lock: %s", CameraLocked ? "Active" : "Not active");
-		ImGui::SameLine();
-		if (ImGui::Button("Toggle"))
+		ImGui::TableNextRow();
 		{
-			Player->SetCameraLock(!CameraLocked);
+			Label("Current Sprite Frame");
+			NextColumn();
+			ImGui::Text("%d", CurrentSpriteFrame);
+		}
+		ImGui::TableNextRow();
+		{
+			Label("Next Sprite Frame");
+			NextColumn();
+			ImGui::Text("%d", NextSpriteFrame);
 		}
 
-		const glm::vec2 LinearVelocity = PlayerBody.GetLinearVelocity();
-		ImGui::Text("Linear Velocity: (%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
-		const float AngularVelocity = PlayerBody.GetAngularVelocity();
-		ImGui::Text("Angular Velocity: %.2f", AngularVelocity);
+		/* Size. */
+		ImGui::TableNextRow();
+		{
+			const glm::vec2 PlayerSize = Player->GetSize();
+			Label("Size");
+			NextColumn();
+			ImGui::Text("(%.2f, %.2f)", PlayerSize.x, PlayerSize.y);
+		}
 
-		ImGui::PushItemWidth(160.0f);
+		/* Scale. */
+		ImGui::TableNextRow();
+		{
+			Label("Scale");
+			NextColumn();
+			ImGui::Text("(%.2f, %.2f)", TC.Scale.x, TC.Scale.y);
+		}
+
+		/* Linear velocity. */
+		ImGui::TableNextRow();
+		{
+			const glm::vec2 LinearVelocity = Body.GetLinearVelocity();
+			Label("Linear Velocity");
+			NextColumn();
+			ImGui::Text("(%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
+		}
+
+		/* Angular velocity. */
+		ImGui::TableNextRow();
+		{
+			const float AngularVelocity = Body.GetAngularVelocity();
+			Label("Angular Velocity");
+			NextColumn();
+			ImGui::Text("%.2f", AngularVelocity);
+		}
+
+		/* Jump impulse. */
+		ImGui::TableNextRow();
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
-		ImGui::SliderFloat("Jump Impulse", &PlayerJumpImpulse, 0.0f, 10.0f, "%.5f");
-		if (ImGui::IsItemActive()) Player->SetJumpImpulse(PlayerJumpImpulse);
-
-		float PlayerDirForce = Player->GetDirectionForce();
-		ImGui::SliderFloat("Direction Force", &PlayerDirForce, 0.0f, 10.0f, "%.5f");
-		if (ImGui::IsItemActive()) Player->SetDirectionForce(PlayerDirForce);
-		ImGui::Text("Last Direction Force: %.5f", Player->GetLastDirectionForce());
-
-		static float BodyScale = TC.Scale.x;
-		ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
-		ImGui::SameLine();
-		if (ImGui::Button("Apply##Scale"))
+		Changed |= UI::Draw::DragFloat("Jump Impulse", &PlayerJumpImpulse, 0.010f, 0.0f, 20.0f, "%.3f");
+		if (Changed)
 		{
-			PlayerBody.SetScale(BodyScale);
+			Player->SetJumpImpulse(PlayerJumpImpulse);
 		}
 
-		float Mass = PlayerBody.GetMass();
-		ImGui::SliderFloat("Mass", &Mass, 0.0f, 10.0f, "%.2f");
-		if (ImGui::IsItemActive()) PlayerBody.SetMass(Mass);
+		/* Direction force. */
+		ImGui::TableNextRow();
+		float DirForce = Player->GetDirectionForce();
+		Changed |= UI::Draw::DragFloat("Direction Force", &DirForce, 0.010f, 0.0f, 10.0f, "%.3f");
+		if (Changed)
+		{
+			Player->SetDirectionForce(DirForce);
+		}
 
-		float PlayerFriction = PlayerBody.GetFriction();
-		ImGui::SliderFloat("Friction", &PlayerFriction, 0.0f, 2.0f, "%.3f");
-		if (ImGui::IsItemActive()) PlayerBody.SetFriction(PlayerFriction);
+		/* Last direction force. */
+		ImGui::TableNextRow();
+		{
+			Label("Last Direction Force");
+			NextColumn();
+			ImGui::Text("%.3f", Player->GetLastDirectionForce());
+		}
 
-		float PlayerRestitution = PlayerBody.GetRestitution();
-		ImGui::SliderFloat("Restitution", &PlayerRestitution, 0.0f, 2.0f, "%.3f");
-		if (ImGui::IsItemActive()) PlayerBody.SetRestitution(PlayerRestitution);
+		/* Body scale. */
+		ImGui::TableNextRow();
+		{
+			static float BodyScale = TC.Scale.x;
+			UI::Draw::DragFloat("Body Scale", &BodyScale, 0.010f, 0.0f, 2.0f, "%.2f");
+			ImGui::SameLine();
+			if (ImGui::Button("Apply##Scale"))
+			{
+				Body.SetScale(BodyScale);
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SameLine();
+				ImGui::BeginTooltip();
+				ImGui::TextColored(FColor::Convert<ImVec4>(RGBA32::Red), "!! NOT WORKING !!");
+				ImGui::EndTooltip();
+			}
+		}
 
-		ImGui::PopItemWidth();
+		/* Mass. */
+		ImGui::TableNextRow();
+		{
+			float Mass = Body.GetMass();
+			Changed |= UI::Draw::DragFloat("Mass", &Mass, 0.010f, 0.0f, 10.0f, "%.2f");
+			if (Changed)
+			{
+				Body.SetMass(Mass);
+			}
+		}
 
-		ImGui::Dummy(ImVec2(0, 4));
-		UI::Draw::ActorNode_Data(*Player);
-		ImGui::Dummy(ImVec2(0, 4));
+		/* Friction. */
+		ImGui::TableNextRow();
+		{
+			float PlayerFriction = Body.GetFriction();
+			Changed |= UI::Draw::DragFloat("Friction", &PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
+			if (Changed)
+			{
+				Body.SetFriction(PlayerFriction);
+			}
+		}
+
+		/* Restitution. */
+		ImGui::TableNextRow();
+		{
+			float Restitution = Body.GetRestitution();
+			Changed |= UI::Draw::DragFloat("Restitution", &Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
+			if (Changed)
+			{
+				Body.SetRestitution(Restitution);
+			}
+		}
+
+		ImGui::EndTable();
+		ImGui::Dummy(ImVec2(0, 8));
+
+		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth))
+		{
+			UI::Draw::ActorNode_Data(*Player);
+			ImGui::TreePop();
+		}
 	}
 
 	/** @todo: The initial position needs to be placed in an upper-left/right corner. */

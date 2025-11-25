@@ -11,6 +11,7 @@ project_library_sources(
 	ui.h
 	ui.cpp
 	ui_core.h
+	ui_core.cpp
 	uilayer.h
 	uilayer.cpp
 	widgets.h

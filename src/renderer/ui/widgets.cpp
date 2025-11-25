@@ -284,7 +284,8 @@ namespace platformer2d::UI::Draw {
 					ImGui::BeginDisabled();
 				}
 
-				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+				const float CursorPosX = 0.50f * ImGui::GetContentRegionAvail().x;
+				UI::ShiftCursorX(CursorPosX - ButtonSize.x);
 				if (ImGui::Button("Create", ButtonSize))
 				{
 					FBodySpecification NewBodySpec;
@@ -312,7 +313,7 @@ namespace platformer2d::UI::Draw {
 					ImGuiCol_ButtonActive, RGBA32::Red
 				);
 
-				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+				UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
 				const bool IsDeletable = Actor.IsDeletable();
 				if (!IsDeletable)
 				{

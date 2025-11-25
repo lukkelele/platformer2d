@@ -5,18 +5,67 @@
 #include <ImGuizmo/ImGuizmo.h>
 
 #include "core/core.h"
+#include "core/window.h"
 #include "renderer/color.h"
 #include "scoped.h"
 
 namespace platformer2d::UI {
 
 	namespace PanelID {
+		inline constexpr const char* const CoreViewport = "##CoreViewport";
+		inline constexpr const char* const EditorViewport = "##EditorViewport";
 		inline constexpr const char* const Dockspace = "##Dockspace";
-		inline constexpr const char* const Viewport = "##Viewport";
 		inline constexpr const char* const HostWindow = "##HostWindow";
+		inline constexpr const char* const TopBar = "##TopBar";
 		inline constexpr const char* const Sidebar1 = "##Sidebar1";
 		inline constexpr const char* const Sidebar2 = "##Sidebar2";
+		inline constexpr const char* const SceneManager = "##SceneManager";
+		inline constexpr const char* const ContentBrowser = "##ContentBrowser";
 	}
+
+	inline ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoScrollbar
+		| ImGuiWindowFlags_NoBringToFrontOnFocus
+		| ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_NoScrollWithMouse
+		| ImGuiWindowFlags_NoInputs
+		| ImGuiWindowFlags_NoBackground
+		| ImGuiWindowFlags_NoDocking;
+		//| ImGuiWindowFlags_NoSavedSettings;
+
+	inline ImGuiWindowFlags ViewportFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoScrollbar
+		| ImGuiWindowFlags_NoScrollWithMouse
+		| ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoBackground
+		| ImGuiWindowFlags_NoBringToFrontOnFocus
+		| ImGuiWindowFlags_NoDocking;
+		//| ImGuiWindowFlags_NoSavedSettings;
+
+	inline constexpr ImGuiWindowFlags EditorViewportFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoScrollbar
+		| ImGuiWindowFlags_NoScrollWithMouse
+		| ImGuiWindowFlags_NoResize;
+
+	inline ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_NoInputs
+		| ImGuiWindowFlags_NoBringToFrontOnFocus
+		| ImGuiWindowFlags_NoBackground
+		| ImGuiWindowFlags_NoSavedSettings;
+
+	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
+		| ImGuiDockNodeFlags_NoDockingInCentralNode;
 
 	struct FViewportData
 	{
@@ -26,6 +75,15 @@ namespace platformer2d::UI {
 	};
 	extern FViewportData ViewportData;
 	const FViewportData& GetViewportData();
+
+	void PushID();
+	void PopID();
+
+	bool Begin(const char* WindowTitle, bool* Open, ImGuiWindowFlags WindowFlags);
+	void End();
+
+	void BeginViewport(CWindow* Window);
+	ImGuiDockNode* FindCentralNode(ImGuiID DockspaceID);
 
 	inline void ShiftCursorX(const float Distance)
 	{
