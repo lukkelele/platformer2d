@@ -27,9 +27,10 @@ namespace platformer2d {
 	{
 	public:
 		CTexture(const FTextureSpecification& Specification);
+		CTexture(const FTextureSpecification& Specification, const FBuffer& InData);
 		CTexture(uint32_t InWidth, uint32_t InHeight, void* InData = nullptr);
 		CTexture() = delete;
-		~CTexture() = default;
+		~CTexture();
 
 		void Bind(uint32_t Slot = 0) const;
 		void Unbind(uint32_t Slot = 0) const;
@@ -50,7 +51,7 @@ namespace platformer2d {
 		void SetSlot(std::size_t InSlot);
 
 		[[nodiscard]] const FBuffer& GetImageBuffer() const { return ImageBuffer; }
-		[[nodiscard]] const std::string& GetDebugName() const { return DebugName; }
+		[[nodiscard]] const std::string& GetName() const { return Name; }
 
 	private:
 		LRendererID ID{};
@@ -62,7 +63,7 @@ namespace platformer2d {
 		uint8_t Channels = 0;
 		uint8_t Mips = 1;
 		std::filesystem::path Path{};
-		std::string DebugName{};
+		std::string Name{};
 
 		GLenum Format{};
 		GLenum InternalFormat{};

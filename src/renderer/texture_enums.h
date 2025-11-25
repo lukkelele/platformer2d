@@ -87,8 +87,6 @@ namespace platformer2d {
 
 		bool bStorage = false;
 		bool bStoreLocally = false;
-
-		std::string DebugName{};
 	};
 
 	namespace Enum
@@ -97,16 +95,17 @@ namespace platformer2d {
 		{
 			switch (Format)
 			{
-				case EImageFormat::RG8:     return "RG8";
-				case EImageFormat::RG16F:   return "RG16F";
-				case EImageFormat::RG32F:   return "RG32F";
-				case EImageFormat::RGB:     return "RGB";
-				case EImageFormat::RGB8:    return "RGB8";
-				case EImageFormat::RGBA:    return "RGBA";
-				case EImageFormat::RGBA8:   return "RGBA8";
-				case EImageFormat::RGBA16F: return "RGBA16F";
-				case EImageFormat::RGBA32F: return "RGBA32F";
-				case EImageFormat::SRGB:    return "SRGB";
+				case EImageFormat::RG8:             return "RG8";
+				case EImageFormat::RG16F:           return "RG16F";
+				case EImageFormat::RG32F:           return "RG32F";
+				case EImageFormat::RGB:             return "RGB";
+				case EImageFormat::RGB8:            return "RGB8";
+				case EImageFormat::RGBA:            return "RGBA";
+				case EImageFormat::RGBA8:           return "RGBA8";
+				case EImageFormat::RGBA16F:         return "RGBA16F";
+				case EImageFormat::RGBA32F:         return "RGBA32F";
+				case EImageFormat::SRGB:            return "SRGB";
+				case EImageFormat::DEPTH24STENCIL8: return "DEPTH24STENCIL8";
 			}
 			LK_VERIFY(false, "Unknown image format: {}", static_cast<int>(Format));
 			return nullptr;
