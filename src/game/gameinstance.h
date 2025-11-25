@@ -55,12 +55,12 @@ namespace platformer2d {
 		 * @brief Get mouse position in viewport space.
 		 * Range: (-1, 1)
 		 */
-		glm::vec2 GetMouseInViewportSpace();
+		virtual glm::vec2 GetMouseInViewportSpace();
 
 		/**
 		 * @brief Get mouse position in world space.
 		 */
-		glm::vec2 GetMouseInWorldSpace(const CCamera& Camera);
+		virtual glm::vec2 GetMouseInWorldSpace(const CCamera& Camera);
 
 		float GetDeltaTime() const { return DeltaTime; }
 
@@ -72,17 +72,17 @@ namespace platformer2d {
 	protected:
 		const FGameSpecification& GetSpecification() const { return Spec; }
 
-		void UpdateViewportBounds();
+		virtual void UpdateViewportBounds();
 		const std::array<glm::vec2, 2>& GetViewportBounds() { return ViewportBounds; }
 
 	protected:
+		float DeltaTime = 0.0f;
 		FConfig Config;
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
-		float DeltaTime = 0.0f;
+		std::array<glm::vec2, 2> ViewportBounds;
 	private:
 		FGameSpecification Spec{};
-		std::array<glm::vec2, 2> ViewportBounds;
 
 		static inline CGameInstance* Instance = nullptr;
 	};
