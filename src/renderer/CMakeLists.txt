@@ -8,6 +8,8 @@ project_library_sources(
 	font.h
 	font.cpp
 	fontawesome.h
+	framebuffer.h
+	framebuffer.cpp
 	imgui.h
 	opengl.h
 	opengl.cpp
