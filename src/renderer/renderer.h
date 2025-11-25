@@ -8,6 +8,8 @@
 #include "backendinfo.h"
 #include "camera.h"
 #include "color.h"
+#include "framebuffer.h"
+#include "rendercommandqueue.h"
 #include "shader.h"
 #include "sprite.h"
 #include "texture.h"
@@ -60,11 +62,26 @@ namespace platformer2d {
 
 		static void BeginScene(const CCamera& Camera);
 		static void BeginScene(const CCamera& Camera, const glm::mat4& Transform);
-		static void EndScene();
 
 		static void StartBatch();
 		static void NextBatch();
 		static void Flush();
+
+		template<typename TRenderFunction>
+		static void Submit(TRenderFunction&& Func)
+		{
+			auto RenderCommand = [](void* Ptr)
+			{
+				auto FunctionPtr = (TRenderFunction*)Ptr;
+				(*FunctionPtr)();
+				FunctionPtr->~TRenderFunction();
+			};
+
+			auto StorageBuffer = GetRenderCommandQueue().Allocate(RenderCommand, sizeof(Func));
+			new (StorageBuffer) TRenderFunction(std::forward<TRenderFunction>(Func));
+		}
+
+		static std::shared_ptr<CFramebuffer> GetViewportFramebuffer();
 		static uint16_t GetFrameIndex();
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
@@ -114,10 +131,16 @@ namespace platformer2d {
 		static void SetDebugRender(bool Enabled);
 
 	private:
+		static void CreateFramebuffer();
 		static void SetupQuadRenderer();
 		static void SetupLineRenderer();
 		static void SetupCircleRenderer();
 		static void LoadTextures();
+
+		static void SwapQueues();
+		static uint8_t GetRenderQueueIndex();
+		static uint8_t GetRenderQueueSubmissionIndex();
+		static CRenderCommandQueue& GetRenderCommandQueue();
 
 		CRenderer& operator=(const CRenderer&) = delete;
 		CRenderer& operator=(CRenderer&&) = delete;

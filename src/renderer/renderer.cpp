@@ -11,9 +11,6 @@
 #include <glm/gtx/norm.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
-#include <spdlog/spdlog.h>
 
 #include "core/window.h"
 #include "backendinfo.h"
@@ -29,8 +26,7 @@ namespace platformer2d {
 	CRenderer::FLineConfig CRenderer::LineConfig;
 	CRenderer::FCameraData CRenderer::CameraData;
 
-	namespace
-	{
+	namespace {
 		constexpr int CIRCLE_SEGMENTS = 32;
 	}
 
@@ -39,6 +35,7 @@ namespace platformer2d {
 		uint16_t FrameIndex = 0;
 		uint16_t RefreshRate = 0;
 		std::shared_ptr<CTexture> WhiteTexture = nullptr;
+		std::shared_ptr<CFramebuffer> ViewportFramebuffer = nullptr;
 		std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
 
 		struct
@@ -51,8 +48,7 @@ namespace platformer2d {
 		} GL;
 	};
 
-	namespace 
-	{
+	namespace {
 		constexpr uint32_t MaxQuads = 10000;
 		constexpr uint32_t MaxLines = 1000;
 		constexpr uint32_t MaxVertices = MaxQuads * 4;
@@ -64,7 +60,8 @@ namespace platformer2d {
 		FDrawStatistics DrawStats;
 
 		std::array<CRenderCommandQueue*, 2> CommandQueue;
-		std::atomic<uint32_t> CommandQueueSubmissionIndex = 0;
+		std::atomic<uint8_t> CommandQueueSubmissionIndex = 0;
+		const std::size_t CommandQueueCount = CommandQueue.size();
 
 		constexpr glm::vec2 QuadTextureCoords[] = {
 			{ 0.0f, 0.0f }, /*  Bottom Left.  */
@@ -106,12 +103,13 @@ namespace platformer2d {
 			CommandQueue[Idx] = new CRenderCommandQueue();
 		}
 
+		LoadTextures();
+		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
+
+		CreateFramebuffer();
 		SetupQuadRenderer();
 		SetupLineRenderer();
 		SetupCircleRenderer();
-
-		LoadTextures();
-		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
 
 		QuadShader->Bind();
 		BindTextures();
@@ -123,6 +121,9 @@ namespace platformer2d {
 #ifdef LK_BUILD_DEBUG
 		bDebugRender = true;
 #endif
+
+		CAssetManager::Get().Initialize();
+		CEffectManager::Get().Initialize();
 
 		/**
 		 * Disable depth testing when game menu is opened.
@@ -165,6 +166,25 @@ namespace platformer2d {
 		}
 	}
 
+	void CRenderer::CreateFramebuffer()
+	{
+		FFramebufferSpecification Spec;
+		Spec.Attachments = { EImageFormat::RGBA32F, EImageFormat::DEPTH24STENCIL8 };
+		Spec.Samples = 1;
+		Spec.ClearColorOnLoad = false;
+		Spec.ClearColor = { 0.10f, 0.50f, 0.50f, 1.0f };
+		Spec.Name = "fb-viewport";
+		Spec.Width = CWindow::Get()->GetWidth();
+		Spec.Height = CWindow::Get()->GetHeight();
+		Data.ViewportFramebuffer = std::make_shared<CFramebuffer>(Spec);
+
+		CWindow::OnFramebufferResized.Add([&](const uint32_t NewWidth, const uint32_t NewHeight)
+		{
+			LK_DEBUG_TAG("Renderer", "OnFramebufferResized: ({}, {})", NewWidth, NewHeight);
+			Data.ViewportFramebuffer->Resize(NewWidth, NewHeight);
+		});
+	}
+
 	void CRenderer::SetupQuadRenderer()
 	{
 		const FVertexBufferLayout QuadLayout = {
@@ -204,6 +224,15 @@ namespace platformer2d {
 		LK_VERIFY(QuadVertexBufferPtr);
 
 		QuadShader = std::make_shared<CShader>(SHADERS_DIR "/quad.shader");
+		/* Set every texture binding. */
+		for (auto& [Texture, TextureRef] : Data.Textures)
+		{
+			LK_VERIFY(TextureRef, "Invalid texture reference: {}", Enum::ToString(Texture));
+			const int Idx = static_cast<int>(Texture);
+			QuadShader->Set(LK_FMT("u_texture{}", Idx), Idx);
+			TextureRef->Bind(Idx);
+			TextureRef->SetSlot(Idx);
+		}
 
 		CameraData.ViewProjection = glm::mat4(1.0f);
 		CameraUniformBuffer = std::make_unique<CUniformBuffer>(sizeof(FCameraData), "CameraUB");
@@ -264,7 +293,6 @@ namespace platformer2d {
 
 	void CRenderer::LoadTextures()
 	{
-		LK_VERIFY(QuadShader, "QuadShader not initialized");
 		Data.Textures.reserve(MAX_TEXTURES);
 
 		auto LoadTexture = [](std::string_view Path, const ETexture Texture,
@@ -299,27 +327,36 @@ namespace platformer2d {
 		LoadTexture(TEXTURES_DIR "/wood.png", ETexture::Wood, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/swoosh.png", ETexture::Swoosh, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/cloud-1.png", ETexture::Cloud, EImageFormat::RGBA8);
-
-		/* Bind every texture. */
-		for (auto& [Texture, TextureRef] : Data.Textures)
-		{
-			LK_VERIFY(TextureRef, "Invalid texture reference: {}", Enum::ToString(Texture));
-			const int Idx = static_cast<int>(Texture);
-			QuadShader->Set(LK_FMT("u_texture{}", Idx), Idx);
-			TextureRef->Bind(Idx);
-			TextureRef->SetSlot(Idx);
-		}
-
 		Data.WhiteTexture = Data.Textures[ETexture::White];
-		CAssetManager::Get().Initialize();
-		CEffectManager::Get().Initialize();
+	}
+
+	void CRenderer::SwapQueues()
+	{
+		CommandQueueSubmissionIndex = (CommandQueueSubmissionIndex + 1) % CommandQueueCount;
+	}
+
+	uint8_t CRenderer::GetRenderQueueIndex()
+	{
+		return (CommandQueueSubmissionIndex + 1) % CommandQueueCount;
+	}
+
+	uint8_t CRenderer::GetRenderQueueSubmissionIndex()
+	{
+		return CommandQueueSubmissionIndex;
+	}
+
+	CRenderCommandQueue& CRenderer::GetRenderCommandQueue()
+	{
+		return *CommandQueue[CommandQueueSubmissionIndex];
 	}
 
 	void CRenderer::BeginFrame()
 	{
-		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
-		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
+		SwapQueues();
+
+		Data.ViewportFramebuffer->Bind();
+		Data.ViewportFramebuffer->Clear();
 
 		QuadShader->Bind();
 		BindTextures();
@@ -327,7 +364,9 @@ namespace platformer2d {
 
 	void CRenderer::EndFrame()
 	{
-		Flush();
+		Submit([&]() { Flush(); });
+
+		CommandQueue[GetRenderQueueIndex()]->Execute();
 	}
 
 	void CRenderer::BeginScene(const CCamera& Camera)
@@ -351,11 +390,6 @@ namespace platformer2d {
 		StartBatch();
 	}
 
-	void CRenderer::EndScene()
-	{
-		Flush();
-	}
-
 	void CRenderer::StartBatch()
 	{
 		QuadIndexCount = 0;
@@ -376,6 +410,8 @@ namespace platformer2d {
 
 	void CRenderer::Flush()
 	{
+		Data.ViewportFramebuffer->Bind();
+
 		if (QuadIndexCount > 0)
 		{
 			/* Compute byte count. */
@@ -424,6 +460,13 @@ namespace platformer2d {
 			CameraUniformBuffer->Unbind();
 			CircleShader->Unbind();
 		}
+
+		Data.ViewportFramebuffer->Unbind();
+	}
+
+	std::shared_ptr<CFramebuffer> CRenderer::GetViewportFramebuffer()
+	{
+		return Data.ViewportFramebuffer;
 	}
 
 	uint16_t CRenderer::GetFrameIndex()
