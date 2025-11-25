@@ -69,6 +69,7 @@ namespace platformer2d::OpenGL {
 	GLenum GetSamplerWrap(ETextureWrap TextureWrap);
 	GLenum GetSamplerFilter(ETextureFilter TextureFilter, bool IsMipmap);
 	GLenum ImageFormatToDataFormat(EImageFormat Format);
+	GLenum GetFramebufferTextureFormat(EImageFormat ImageFormat);
 
 	uint32_t CalculateMipCount(uint32_t Width, uint32_t Height);
 

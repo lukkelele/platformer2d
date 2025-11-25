@@ -212,6 +212,24 @@ namespace platformer2d::OpenGL {
 		return GL_INVALID_VALUE;
 	}
 
+	GLenum GetFramebufferTextureFormat(const EImageFormat ImageFormat)
+	{
+		switch (ImageFormat)
+		{
+			case EImageFormat::RGBA8:			return GL_RGBA8;
+			case EImageFormat::RGBA16F:			return GL_RGBA16F;
+			case EImageFormat::RGBA32F:			return GL_RGBA32F;
+			case EImageFormat::RED8UI:
+			case EImageFormat::RED8UN:
+			case EImageFormat::RED16UI:
+			case EImageFormat::RED32UI:			return GL_RED_INTEGER;
+			case EImageFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
+		}
+
+		LK_ASSERT(false, "Invalid image format: {}", static_cast<int>(ImageFormat));
+		return GL_INVALID_VALUE;
+	}
+
 	uint32_t CalculateMipCount(const uint32_t Width, const uint32_t Height)
 	{
 		return static_cast<uint32_t>(std::floor(std::log2(glm::min(Width, Height))) + 1);
