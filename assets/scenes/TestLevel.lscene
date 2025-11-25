@@ -7,7 +7,7 @@ Actors:
     Color: [0, 0.75, 0, 1]
     TransformComponent:
       Position: [3.168577, -0.31357962, 0.1]
-      Rotation: 0.6158405
+      Rotation: 0.66032434
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -15,7 +15,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.6158405
+        Rotation: 0.66032434
         Radius: 0.5
       Position: [3.168577, -0.31357962]
       Flags: 2
@@ -26,11 +26,11 @@ Actors:
   - ID: 4
     Type: 0
     Name: Spawn-Wall-Left
-    Texture: 4
+    Texture: 5
     Color: [1, 1, 1, 1]
     TransformComponent:
-      Position: [-1.4762326, -0.045966715, 0]
-      Rotation: 1.5707964
+      Position: [-1.4862326, -0.025966717, 0]
+      Rotation: 1.5707963
       Scale: [1.45, 0.95, 1]
     Body:
       Type: 0
@@ -38,9 +38,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [1.45, 0.95]
-        Rotation: 1.5707964
+        Rotation: 1.5707963
         Radius: 0.5
-      Position: [-1.4762326, -0.045966715]
+      Position: [-1.4862326, -0.025966717]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -52,7 +52,7 @@ Actors:
     Texture: 0
     Color: [1, 0, 1, 1]
     TransformComponent:
-      Position: [-0.5315029, -0.23425083, 0]
+      Position: [-0.5315029, -0.21425083, 2]
       Rotation: 0
       Scale: [0.4, 0.06, 1]
     Body:
@@ -63,7 +63,7 @@ Actors:
         Size: [0.4, 0.06]
         Rotation: 0
         Radius: 0.5
-      Position: [-0.5315029, -0.23425083]
+      Position: [-0.5315029, -0.21425083]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -75,8 +75,8 @@ Actors:
     Texture: 0
     Color: [0, 0.54509807, 0.54509807, 1]
     TransformComponent:
-      Position: [0.65239644, 0.08914068, 0]
-      Rotation: -1.1206555
+      Position: [0.70239645, 0.08914068, 0.6]
+      Rotation: -0.71788156
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: Rotate
@@ -87,9 +87,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -1.1206555
+        Rotation: -0.71788156
         Radius: 0.5
-      Position: [0.65239644, 0.08914068]
+      Position: [0.70239645, 0.08914068]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -101,7 +101,7 @@ Actors:
     Texture: 0
     Color: [0.45, 0.45, 0.45, 1]
     TransformComponent:
-      Position: [0.23569733, -1.6075901, 0]
+      Position: [0.21569733, -1.50759, 0]
       Rotation: -3.1415925
       Scale: [9.6, 0.22, 1]
     Body:
@@ -112,7 +112,7 @@ Actors:
         Size: [9.6, 0.22]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [0.23569733, -1.6075901]
+      Position: [0.21569733, -1.50759]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -147,7 +147,7 @@ Actors:
     Texture: 3
     Color: [1, 1, 1, 1]
     TransformComponent:
-      Position: [-0.0046748593, -0.7174399, 0]
+      Position: [-0.0046748593, -0.68743986, 0]
       Rotation: -3.1415925
       Scale: [2, 0.08, 1]
     Body:
@@ -158,7 +158,7 @@ Actors:
         Size: [2, 0.08]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [-0.0046748593, -0.7174399]
+      Position: [-0.0046748593, -0.68743986]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -168,9 +168,9 @@ Actors:
     Type: 0
     Name: Actor-9
     Texture: 0
-    Color: [0, 1, 0, 1]
+    Color: [0.96, 0.105, 0.83, 1]
     TransformComponent:
-      Position: [0.34088337, -0.47311804, 0.18]
+      Position: [0.27088338, -0.49311802, 0.13]
       Rotation: 0
       Scale: [0.2, 0.2, 1]
     Body:
@@ -181,7 +181,7 @@ Actors:
         Size: [0.2, 0.2]
         Rotation: 0
         Radius: 0.5
-      Position: [0.34088337, -0.47311804]
+      Position: [0.27088338, -0.49311802]
       Flags: 10
       Mass: 1
       MotionLock: 0
