@@ -21,6 +21,7 @@ namespace platformer2d {
 		virtual void Run();
 
 		bool PushLayer(std::shared_ptr<CLayer> Layer);
+		void RenderUI();
 
 	protected:
 		bool bRunning = false;

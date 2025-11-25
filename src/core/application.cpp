@@ -94,9 +94,8 @@ namespace platformer2d {
 
 			Window->BeginFrame();
 			CKeyboard::Update();
-			UILayer->BeginFrame();
-			CRenderer::BeginFrame();
 
+			CRenderer::BeginFrame();
 			for (auto& Layer : LayerStack)
 			{
 				Layer->Tick(DeltaTime);
@@ -105,22 +104,39 @@ namespace platformer2d {
 			EffectManager.Tick(DeltaTime);
 
 			/* Render UI. */
-			for (auto& Layer : LayerStack)
 			{
-				Layer->RenderUI();
+#if 0
+				CRenderer::Submit([&]() { RenderUI(); });
+				CRenderer::Submit([&]() { UILayer->EndFrame(); });
+#endif
 			}
 
 			CRenderer::EndFrame();
+			CRenderer::Submit([&]() { Window->EndFrame(); });
+
+#define NO_RENDER_SUBMISSION
+#ifdef NO_RENDER_SUBMISSION
+			RenderUI();
 			UILayer->EndFrame();
+#endif
+
 			CKeyboard::TransitionPressedKeys();
-			Window->EndFrame();
 		}
 	}
 
 	bool CApplication::PushLayer(std::shared_ptr<CLayer> Layer)
 	{
-		LK_VERIFY(Layer);
+		LK_ASSERT(Layer);
 		return LayerStack.PushLayer(Layer);
+	}
+
+	void CApplication::RenderUI()
+	{
+		UILayer->BeginFrame();
+		for (auto& Layer : LayerStack)
+		{
+			Layer->RenderUI();
+		}
 	}
 
 }
