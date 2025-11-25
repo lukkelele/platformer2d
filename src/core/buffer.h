@@ -108,10 +108,9 @@ namespace platformer2d {
 			return Buffer;
 		}
 
-		FORCEINLINE void Allocate(const uint64_t InSize)
+		void Allocate(const uint64_t InSize)
 		{
 			LK_ASSERT(InSize > 0, "Allocate failed, invalid size: {}", InSize);
-
 			delete[](uint8_t*)Data;
 			Data = nullptr;
 
@@ -119,46 +118,30 @@ namespace platformer2d {
 			Size = InSize;
 		}
 
-		FORCEINLINE void Release()
+		void Release()
 		{
 			if (Data)
 			{
+				LK_DEBUG_TAG("Buffer", "Release {} bytes: {}", Size, Data);
 				delete[](uint8_t*)Data;
 				Data = nullptr;
 				Size = 0;
 			}
 		}
 
-		void ZeroInitialize()
-		{
-			if (Size > 0)
-			{
-				std::memset(Data, 0, Size);
-			}
-		}
-
 		template<typename T>
-		FORCEINLINE T& Read(const uint64_t Offset = 0)
+		T& Read(const uint64_t Offset = 0)
 		{
 			return *(T*)(static_cast<uint8_t*>(Data) + Offset);
 		}
 
 		template<typename T>
-		FORCEINLINE const T& Read(uint64_t Offset = 0) const
+		const T& Read(uint64_t Offset = 0) const
 		{
 			return *(T*)(static_cast<uint8_t*>(Data) + Offset);
 		}
 
-		FORCEINLINE uint8_t* ReadBytes(const uint64_t ReadSize, const uint64_t Offset) const
-		{
-			LK_ASSERT(Offset + ReadSize <= ReadSize, "Buffer overflow");
-			uint8_t* Buffer = new uint8_t[ReadSize];
-			std::memcpy(Buffer, (uint8_t*)Data + Offset, ReadSize);
-
-			return Buffer;
-		}
-
-		FORCEINLINE void Write(const void* InData, const uint64_t WriteSize, uint64_t Offset = 0)
+		void Write(const void* InData, const uint64_t WriteSize, uint64_t Offset = 0)
 		{
 			LK_ASSERT(Offset + WriteSize <= Size, "FBuffer overflow");
 			std::memcpy((uint8_t*)Data + Offset, InData, WriteSize);
