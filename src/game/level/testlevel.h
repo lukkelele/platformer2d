@@ -34,12 +34,18 @@ namespace platformer2d::Level {
 		virtual bool Deserialize(const std::filesystem::path& InFile) override;
 
 	private:
+		void UpdateEditorViewportBounds();
+		virtual void UpdateViewportBounds() override;
+		virtual glm::vec2 GetMouseInViewportSpace() override;
+		virtual glm::vec2 GetMouseInWorldSpace(const CCamera& Camera) override;
+
 		void CreatePlayer();
 		void CreatePlatform();
 		void CreateTerrain();
 
 		void UI_Level();
 		void UI_Player();
+		void UI_ViewportTexture();
 
 		void DrawBackground() const;
 
@@ -54,9 +60,14 @@ namespace platformer2d::Level {
 
 		void DeserializeActors(const YAML::Node& ActorsNode);
 
+		void UI_PrepareEditorViewport();
+
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
+
+		uint16_t EditorViewportWidth = 0;
+		uint16_t EditorViewportHeight = 0;
 	};
 
 }

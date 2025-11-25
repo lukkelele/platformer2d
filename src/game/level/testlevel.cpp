@@ -69,9 +69,19 @@ namespace platformer2d::Level {
 
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
+
+		std::array<glm::vec2, 2> EditorViewportBounds;
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+
+	static glm::vec2 GetEditorViewportSize()
+	{
+		return glm::vec2(
+			EditorViewportBounds[1].x - EditorViewportBounds[0].x,
+			EditorViewportBounds[1].y - EditorViewportBounds[0].y
+		);
+	}
 
 	static void UpdateInputBuffer(std::size_t Count)
 	{
@@ -190,7 +200,14 @@ namespace platformer2d::Level {
 	{
 		DeltaTime = InDeltaTime;
 		CCamera& Camera = Player->GetCamera();
+#if 0
+		const glm::vec2 EditorViewport = GetEditorViewportSize();
+		ViewportWidth = EditorViewport.x;
+		ViewportHeight = EditorViewport.y;
 		Camera.SetViewportSize(ViewportWidth, ViewportHeight);
+#else
+		Camera.SetViewportSize(EditorViewportWidth, EditorViewportHeight);
+#endif
 		CRenderer::BeginScene(Camera);
 
 		Player->Tick(DeltaTime);
@@ -325,19 +342,41 @@ namespace platformer2d::Level {
 
 	void CTestLevel::RenderUI()
 	{
-		UI_Level();
-		UI_Player();
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags);
+		ImGui::PopStyleVar(2);
 
-		UI::SelectionPanel();
-
-		if (std::shared_ptr<CActor> SelectedRef = SelectedActor.lock(); SelectedRef != nullptr)
+		UI_PrepareEditorViewport();
+		UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
 		{
-			CCamera& Camera = Player->GetCamera();
-			if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix()))
+			UpdateEditorViewportBounds();
+			UI_ViewportTexture();
+
+			UI_Level();
+			UI_Player();
+
+			UI::SelectionPanel();
+
+			if (std::shared_ptr<CActor> SelectedRef = SelectedActor.lock(); SelectedRef != nullptr)
 			{
-				Player->SetAwake(true);
+				if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport))
+				{
+					ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
+
+					CCamera& Camera = Player->GetCamera();
+					if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix()))
+					{
+						Player->SetAwake(true);
+					}
+
+					ImGui::End();
+				}
 			}
 		}
+		UI::End(); /* ~EditorViewport */
+
+		UI::End(); /* ~Viewport */
 	}
 
 	bool CTestLevel::Serialize(const std::filesystem::path& OutFile) const
@@ -407,6 +446,83 @@ namespace platformer2d::Level {
 		}
 
 		return true;
+	}
+
+	void CTestLevel::UpdateEditorViewportBounds()
+	{
+		ImGuiWindow* Window = ImGui::GetCurrentWindow();
+		const ImVec2 WindowPos = Window->Pos;
+
+		const ImVec2 RegionMin = ImGui::GetWindowContentRegionMin();
+		const ImVec2 RegionMax = ImGui::GetWindowContentRegionMax();
+
+		EditorViewportBounds[0] = {
+			WindowPos.x + RegionMin.x,
+			WindowPos.y + RegionMin.y
+		};
+
+		EditorViewportBounds[1] = {
+			WindowPos.x + RegionMax.x,
+			WindowPos.y + RegionMax.y
+		};
+
+		const float VpWidth = EditorViewportBounds[1].x - EditorViewportBounds[0].x;
+		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
+
+		if ((EditorViewportWidth != static_cast<uint16_t>(VpWidth)) ||
+			(EditorViewportHeight != static_cast<uint16_t>(VpHeight)))
+		{
+			EditorViewportWidth  = static_cast<uint16_t>(VpWidth);
+			EditorViewportHeight = static_cast<uint16_t>(VpHeight);
+			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
+		}
+	}
+
+	void CTestLevel::UpdateViewportBounds()
+	{
+		ViewportBounds[0] = { 0.0f, 0.0f };
+		if (CWindow* Window = CWindow::Get(); Window != nullptr)
+		{
+			ViewportBounds[1] = Window->GetSize();
+		}
+		else
+		{
+			LK_WARN_TAG("TestLevel", "[{}] No window reference", GetSpecification().Name);
+			ViewportBounds[1] = { 0.0f, 0.0f };
+		}
+	}
+
+	glm::vec2 CTestLevel::GetMouseInViewportSpace()
+	{
+		auto [MouseX, MouseY] = CMouse::GetPos();
+		MouseX -= EditorViewportBounds[0].x;
+		MouseY -= EditorViewportBounds[0].y;
+		const float VpWidth = EditorViewportBounds[1].x - EditorViewportBounds[0].x;
+		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
+
+		return glm::vec2(
+			(MouseX / static_cast<float>(VpWidth)) * 2.0f - 1.0f,
+			((MouseY / static_cast<float>(VpHeight)) * 2.0f - 1.0f) * -1.0f
+		);
+	}
+
+	glm::vec2 CTestLevel::GetMouseInWorldSpace(const CCamera& Camera)
+	{
+		const glm::vec2 MousePos = GetMouseInViewportSpace();
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
+		{
+			return glm::vec2(std::numeric_limits<float>::quiet_NaN());
+		}
+
+		const glm::vec4 ClipPos = glm::vec4(MousePos.x, MousePos.y, 0.0f, 1.0f);
+		const glm::mat4 InvViewProj = glm::inverse(Camera.GetProjectionMatrix() * Camera.GetViewMatrix());
+		glm::vec4 WorldPos = InvViewProj * ClipPos;
+		if (WorldPos.w != 0.0f)
+		{
+			WorldPos /= WorldPos.w;
+		}
+
+		return WorldPos;
 	}
 
 	void CTestLevel::CreatePlayer()
@@ -542,9 +658,8 @@ namespace platformer2d::Level {
 	void CTestLevel::UI_Level()
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
-		//UI::PrepareRightSidebar();
-		//if (!ImGui::Begin(UI::PanelID::Sidebar2))
-		if (!ImGui::Begin("Level"))
+		UI::PrepareRightSidebar();
+		if (!ImGui::Begin(UI::PanelID::Sidebar2))
 		{
 			ImGui::End();
 			return;
@@ -555,6 +670,7 @@ namespace platformer2d::Level {
 		if (ImGui::TreeNodeEx("Info", ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
 			ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
+			ImGui::Text("Editor Viewport: (%d, %d)", EditorViewportWidth, EditorViewportHeight);
 			{
 				ImGuiViewport* Viewport = ImGui::GetMainViewport();
 				ImGui::Text("Main Viewport: (%.1f, %.1f)", Viewport->Size.x, Viewport->Size.y);
@@ -662,9 +778,8 @@ namespace platformer2d::Level {
 	void CTestLevel::UI_Player()
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA); /* @todo Dock node alpha. */
-		//UI::PrepareLeftSidebar();
-		//if (!ImGui::Begin(UI::PanelID::Sidebar1))
-		if (!ImGui::Begin("Player"))
+		UI::PrepareLeftSidebar();
+		if (!ImGui::Begin(UI::PanelID::Sidebar1))
 		{
 			ImGui::End();
 			return;
@@ -673,6 +788,26 @@ namespace platformer2d::Level {
 		UI::PlayerData(Player);
 
 		ImGui::End(); /* ~Player */
+	}
+
+	void CTestLevel::UI_ViewportTexture()
+	{
+		const ImVec2 WindowSize = {
+			static_cast<float>(EditorViewportWidth),
+			static_cast<float>(EditorViewportHeight)
+		};
+
+		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
+		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
+
+		ImGui::Image(
+			(ImTextureID)ViewportTexture->GetID(),
+			WindowSize,
+			ImVec2(0, 1),       /* UV0 */
+			ImVec2(1, 0),       /* UV1 */
+			ImVec4(1, 1, 1, 1), /* Tint Color   */
+			ImVec4(1, 1, 0, 1)  /* Border Color */
+		);
 	}
 
 	void CTestLevel::DrawBackground() const
@@ -685,9 +820,9 @@ namespace platformer2d::Level {
 
 	void CTestLevel::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
 	{
+		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 		ViewportWidth = InWidth;
 		ViewportHeight = InHeight;
-		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 	}
 
 	void CTestLevel::OnKeyPressed(const FKeyData& Data)
@@ -827,6 +962,42 @@ namespace platformer2d::Level {
 				LK_ERROR_TAG("TestLevel", "Duplicate actors found during deserialization with handle {}", ActorHandle);
 			}
 		}
+	}
+
+	void CTestLevel::UI_PrepareEditorViewport()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
+		if (!Window)
+		{
+			return;
+		}
+
+		ImGuiDockNode* DockNode = Window->DockNode;
+		if (!DockNode)
+		{
+			return;
+		}
+
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f))
+		{
+			return;
+		}
+
+		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
+		ImGuiStyle& Style = ImGui::GetStyle();
+
+		/* Modify the size on the y-axis to account for the docking separators. */
+		//DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize + TopBar.FramePadding.y));
+		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
+
+#if 0
+		EditorViewportBounds[0] = { DockNode->Pos.x , DockNode->Pos.y };
+		EditorViewportBounds[1] = { DockNode->Pos.x + DockNode->Size.x, DockNode->Pos.y + DockNode->Size.y };
+#endif
+
+		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
+		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
