@@ -201,7 +201,14 @@ namespace platformer2d {
 					const fs::directory_entry& LogFile = LogFiles[Index];
 					if (LogFile.path().extension() == ".log")
 					{
-						std::filesystem::remove(LogFile.path());
+						if (std::filesystem::exists(LogFile))
+						{
+							std::filesystem::remove(LogFile.path());
+						}
+						else
+						{
+							LK_ERROR_TAG("Log", "Logfile does not exist: {}", LogFile.path());
+						}
 					}
 				}
 			}
