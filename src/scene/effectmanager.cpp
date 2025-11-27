@@ -44,6 +44,7 @@ namespace platformer2d {
 	void CEffectManager::Destroy()
 	{
 		LK_DEBUG_TAG("EffectManager", "Destroy");
+		TextureMap.clear();
 	}
 
 	void CEffectManager::Tick(const float DeltaTime)
