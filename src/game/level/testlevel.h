@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/layer.h"
-#include "game/gameinstance.h"
+#include "game/instance.h"
 #include "renderer/texture.h"
 #include "physics/events.h"
 #include "scene/scene.h"

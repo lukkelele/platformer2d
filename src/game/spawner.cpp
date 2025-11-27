@@ -1,6 +1,6 @@
 #include "spawner.h"
 
-#include "game/gameinstance.h"
+#include "game/instance.h"
 #include "scene/scene.h"
 
 namespace platformer2d {

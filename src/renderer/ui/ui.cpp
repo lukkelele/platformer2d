@@ -2,7 +2,7 @@
 
 #include "core/window.h"
 #include "core/input/keyboard.h"
-#include "game/gameinstance.h"
+#include "game/instance.h"
 #include "renderer/color.h"
 #include "renderer/font.h"
 #include "renderer/renderer.h"

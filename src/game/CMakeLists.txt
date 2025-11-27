@@ -1,7 +1,7 @@
 project_library(game)
 project_library_sources(
-	gameinstance.h
-	gameinstance.cpp
+	instance.h
+	instance.cpp
 	interaction.h
 	player.h
 	player.cpp

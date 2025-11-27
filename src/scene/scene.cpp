@@ -5,7 +5,7 @@
 #include <istream>
 
 #include "core/string.h"
-#include "game/gameinstance.h"
+#include "game/instance.h"
 #include "serialization/serialization.h"
 
 namespace platformer2d {

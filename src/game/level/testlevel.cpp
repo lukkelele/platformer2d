@@ -987,13 +987,7 @@ namespace platformer2d::Level {
 		ImGuiStyle& Style = ImGui::GetStyle();
 
 		/* Modify the size on the y-axis to account for the docking separators. */
-		//DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize + TopBar.FramePadding.y));
 		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
-
-#if 0
-		EditorViewportBounds[0] = { DockNode->Pos.x , DockNode->Pos.y };
-		EditorViewportBounds[1] = { DockNode->Pos.x + DockNode->Size.x, DockNode->Pos.y + DockNode->Size.y };
-#endif
 
 		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
 		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;

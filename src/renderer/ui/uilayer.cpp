@@ -1,7 +1,7 @@
 #include "uilayer.h"
 
 #include "core/window.h"
-#include "game/gameinstance.h"
+#include "game/instance.h"
 #include "renderer/renderer.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
