@@ -20,8 +20,8 @@ namespace platformer2d {
 	{
 		uint16_t StartTileX = 0;
 		uint16_t StartTileY = 0;
-		std::size_t FrameCount;
-		uint16_t TicksPerFrame;
+		std::size_t FrameCount = 0;
+		uint16_t TicksPerFrame = 1;
 
 		/**
 		 * @brief Calculate the frame to use for the animation.

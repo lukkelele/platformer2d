@@ -8,8 +8,8 @@ namespace platformer2d {
 	struct FBackendInfo
 	{
 		struct {
-			int Major;
-			int Minor;
+			int Major = 0;
+			int Minor = 0;
 		} Version;
 		std::vector<std::string> Extensions;
 	};

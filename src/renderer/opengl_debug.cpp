@@ -67,8 +67,12 @@ namespace platformer2d::OpenGL::Internal {
 									   const GLchar* Message,
 									   const void* UserParam)
 	{
-		LK_UNUSED(Length);
-		LK_UNUSED(UserParam);
+		LK_UNUSED(Length, UserParam);
+		if ((Severity == GL_DEBUG_SEVERITY_NOTIFICATION) || (Severity == GL_DEBUG_SEVERITY_MEDIUM))
+		{
+			return;
+		}
+
 		LK_ERROR_TAG("OpenGL", "\n * Type: {}\n"
 					 " * Source: {}\n * Severity: {}\n * ID: {}\n"
 					 "\n{}\n",
