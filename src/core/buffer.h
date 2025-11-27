@@ -150,14 +150,14 @@ namespace platformer2d {
 		operator bool() { return (Data && (Size > 0)); }
 		operator bool() const { return (Data && (Size > 0)); }
 
-		uint8_t& operator[](int index)
+		uint8_t& operator[](const int Idx)
 		{
-			return ((uint8_t*)Data)[index];
+			return ((uint8_t*)Data)[Idx];
 		}
 
-		uint8_t operator[](int index) const
+		uint8_t operator[](const int Idx) const
 		{
-			return ((uint8_t*)Data)[index];
+			return ((uint8_t*)Data)[Idx];
 		}
 
 		template<typename T>
