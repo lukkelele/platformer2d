@@ -69,19 +69,9 @@ namespace platformer2d::Level {
 
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
-
-		std::array<glm::vec2, 2> EditorViewportBounds;
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
-
-	static glm::vec2 GetEditorViewportSize()
-	{
-		return glm::vec2(
-			EditorViewportBounds[1].x - EditorViewportBounds[0].x,
-			EditorViewportBounds[1].y - EditorViewportBounds[0].y
-		);
-	}
 
 	static void UpdateInputBuffer(std::size_t Count)
 	{
@@ -200,14 +190,7 @@ namespace platformer2d::Level {
 	{
 		DeltaTime = InDeltaTime;
 		CCamera& Camera = Player->GetCamera();
-#if 0
-		const glm::vec2 EditorViewport = GetEditorViewportSize();
-		ViewportWidth = EditorViewport.x;
-		ViewportHeight = EditorViewport.y;
-		Camera.SetViewportSize(ViewportWidth, ViewportHeight);
-#else
 		Camera.SetViewportSize(EditorViewportWidth, EditorViewportHeight);
-#endif
 		CRenderer::BeginScene(Camera);
 
 		Player->Tick(DeltaTime);
@@ -357,22 +340,7 @@ namespace platformer2d::Level {
 			UI_Player();
 
 			UI::SelectionPanel();
-
-			if (std::shared_ptr<CActor> SelectedRef = SelectedActor.lock(); SelectedRef != nullptr)
-			{
-				if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport))
-				{
-					ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
-
-					CCamera& Camera = Player->GetCamera();
-					if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix()))
-					{
-						Player->SetAwake(true);
-					}
-
-					ImGui::End();
-				}
-			}
+			UI_DrawGizmo();
 		}
 		UI::End(); /* ~EditorViewport */
 
@@ -810,12 +778,26 @@ namespace platformer2d::Level {
 		);
 	}
 
-	void CTestLevel::DrawBackground() const
+	void CTestLevel::UI_DrawGizmo()
 	{
-		const CTexture& BgTexture = *CRenderer::GetTexture(ETexture::Background);
-		const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
-		const glm::vec2 BgSize(HalfSize.x * 3.0f, HalfSize.y * 4.0f);
-		CRenderer::DrawQuad({ 0.0f, 0.0f, 0.0f }, BgSize, BgTexture, FColor::White);
+		std::shared_ptr<CActor> SelectedRef = SelectedActor.lock();
+		if (!SelectedRef)
+		{
+			return;
+		}
+
+		if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport))
+		{
+			ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
+
+			CCamera& Camera = Player->GetCamera();
+			if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix()))
+			{
+				Player->SetAwake(true);
+			}
+
+			ImGui::End();
+		}
 	}
 
 	void CTestLevel::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)

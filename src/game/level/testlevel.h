@@ -46,8 +46,7 @@ namespace platformer2d::Level {
 		void UI_Level();
 		void UI_Player();
 		void UI_ViewportTexture();
-
-		void DrawBackground() const;
+		void UI_DrawGizmo();
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnKeyPressed(const FKeyData& Data);
@@ -68,6 +67,7 @@ namespace platformer2d::Level {
 
 		uint16_t EditorViewportWidth = 0;
 		uint16_t EditorViewportHeight = 0;
+		std::array<glm::vec2, 2> EditorViewportBounds{};
 	};
 
 }
