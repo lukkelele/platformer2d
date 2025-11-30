@@ -40,8 +40,6 @@ namespace platformer2d::Level {
 		virtual glm::vec2 GetMouseInWorldSpace(const CCamera& Camera) override;
 
 		void CreatePlayer();
-		void CreatePlatform();
-		void CreateTerrain();
 
 		void UI_Level();
 		void UI_Player();
@@ -56,8 +54,6 @@ namespace platformer2d::Level {
 
 		void MousePickScene();
 		void RaycastScene();
-
-		void DeserializeActors(const YAML::Node& ActorsNode);
 
 		void UI_PrepareEditorViewport();
 

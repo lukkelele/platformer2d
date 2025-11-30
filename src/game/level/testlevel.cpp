@@ -35,20 +35,24 @@ namespace platformer2d::Level {
 			.Name = "TestLevel",
 			.Gravity = { 0.0f, -5.0f },
 			.Zoom = 0.32f,
-			.PlayerBody = {
-				.Type = EBodyType::Dynamic,
-				.Shape = FPolygon{
-					.Size = { 0.20f, 0.24f },
-					.Radius = 0.12f,
-					.Rotation = glm::radians(0.0f),
+
+			.Player = {
+				.ActorSpec = FActorSpecification(ETexture::Player),
+				.BodySpec = {
+					.Type = EBodyType::Dynamic,
+					.Shape = FPolygon{
+						.Size = { 0.20f, 0.24f },
+						.Radius = 0.12f,
+						.Rotation = glm::radians(0.0f),
+					},
+					.Position = { 0.0f, 0.50f },
+					.Friction = 0.750f,
+					.Density = 0.60f,
+					.LinearDamping = 0.50f,
+					.Flags = EBodyFlag::EBodyFlag_SensorEvents,
+					.MotionLock = EMotionLock_Z,
 				},
-				.Position = { 0.0f, 0.50f },
-				.Friction = 0.750f,
-				.Density = 0.60f,
-				.LinearDamping = 0.50f,
-				.Flags = EBodyFlag::EBodyFlag_SensorEvents,
-				.MotionLock = EMotionLock_Z,
-			},
+			}
 		};
 
 		constexpr float UI_BG_ALPHA = 0.70f;
@@ -132,12 +136,7 @@ namespace platformer2d::Level {
 		CreatePlayer();
 		LK_VERIFY(Player);
 
-#if 1
 		Deserialize(GameSpec.LevelFilepath);
-#else
-		CreateTerrain();
-		CreatePlatform();
-#endif
 
 		CCamera* Camera = GetActiveCamera();
 		LK_VERIFY(Camera);
@@ -497,7 +496,9 @@ namespace platformer2d::Level {
 	void CTestLevel::CreatePlayer()
 	{
 		const FGameSpecification& Spec = GetSpecification();
-		Player = std::make_shared<CPlayer>(Spec.PlayerBody, ETexture::Player);
+		FActorSpecification ActorSpec;
+		ActorSpec.Texture = ETexture::Player;
+		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec , Spec.Player.BodySpec);
 		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)
@@ -509,119 +510,6 @@ namespace platformer2d::Level {
 		{
 			LK_TRACE("Player {} landed", PlayerData.ID);
 		});
-	}
-
-	void CTestLevel::CreatePlatform()
-	{
-		FBodySpecification Spec;
-		Spec.Name = "SpawnPlatform";
-		Spec.Position = { 0.0f, -0.72f };
-		Spec.Type = EBodyType::Static;
-		Spec.Flags = EBodyFlag_PreSolveEvents;
-
-		FPolygon Polygon = {
-			.Size = { 2.0f, 0.08f }
-		};
-		Spec.Shape.emplace<FPolygon>(Polygon);
-
-		std::shared_ptr<CActor> Platform = Scene->Create<CActor>(Spec, ETexture::Metal);
-		FTransformComponent& TC = Platform->GetTransformComponent();
-		TC.SetScale(Polygon.Size);
-	}
-
-	void CTestLevel::CreateTerrain()
-	{
-		/* Object 1. */
-		{
-			FBodySpecification Spec;
-			Spec.Type = EBodyType::Static;
-			Spec.Position = { 3.29f, -0.33f };
-			Spec.Flags = EBodyFlag_PreSolveEvents;
-			Spec.Name = "Right-Platform";
-
-			FPolygon Polygon = {
-				.Size = { 3.04f, 0.12f },
-				.Rotation = glm::radians(22.0f),
-			};
-			Spec.Shape.emplace<FPolygon>(Polygon);
-
-			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::LightGreen);
-		}
-
-		/* Object 2. */
-		{
-			FBodySpecification Spec;
-			Spec.Type = EBodyType::Static;
-			Spec.Position = { -1.48f, -0.04f };
-			Spec.Flags = EBodyFlag_PreSolveEvents;
-			Spec.Name = "Spawn-Wall-Left";
-
-			FPolygon Polygon = {
-				.Size = { 1.45f, 0.95f },
-				.Rotation = glm::radians(90.0f),
-			};
-			Spec.Shape.emplace<FPolygon>(Polygon);
-
-			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::Bricks);
-		}
-
-		/* Object 3. */
-		{
-			FBodySpecification Spec;
-			Spec.Type = EBodyType::Static;
-			Spec.Position = { -0.43f, -0.10f };
-			Spec.Flags = EBodyFlag_PreSolveEvents;
-			Spec.Name = "FlyingPlatform-1";
-
-			FPolygon Polygon = {
-				.Size = { 0.40f, 0.06f },
-				.Rotation = glm::radians(0.0f),
-			};
-			Spec.Shape.emplace<FPolygon>(Polygon);
-
-			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::Magenta));
-		}
-
-		/* Object 4. */
-		{
-			FBodySpecification Spec;
-			Spec.Type = EBodyType::Static;
-			Spec.Position = { 0.43f, 0.02f };
-			Spec.Flags = EBodyFlag_PreSolveEvents;
-			Spec.Name = "Rotating-Platform";
-
-			FPolygon Polygon = {
-				.Size = { 0.40f, 0.06f },
-				.Rotation = glm::radians(0.0f),
-			};
-			Spec.Shape.emplace<FPolygon>(Polygon);
-
-			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::Convert(RGBA32::DarkCyan));
-			RotatingPlatform = Actor;
-		}
-
-		/* Object 5. */
-		{
-			FBodySpecification Spec;
-			Spec.Type = EBodyType::Static;
-			Spec.Position = { 0.10f, -1.60f };
-			Spec.Flags = EBodyFlag_PreSolveEvents;
-			Spec.Name = "Bottom-Platform2";
-
-			FPolygon Polygon = {
-				.Size = { 9.60f, 0.22f },
-			};
-			Spec.Shape.emplace<FPolygon>(Polygon);
-
-			std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, FColor::Gray);
-		}
-
-		CSpawner::CreateStaticPolygon(
-			"Right-Wall-1",
-			{ 4.830f, -0.90f }, /* Pos */
-			{ 0.10f, 1.20f },   /* Size */
-			FColor::Convert(RGBA32::Magenta)
-		);
 	}
 
 	void CTestLevel::UI_Level()
@@ -910,41 +798,6 @@ namespace platformer2d::Level {
 			}
 		}
 #endif
-	}
-
-	void CTestLevel::DeserializeActors(const YAML::Node& ActorsNode)
-	{
-		LK_INFO_TAG("TestLevel", "Deserializing actors");
-		for (const YAML::Node& Node : ActorsNode)
-		{
-			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Texture"] && Node["Color"] && Node["TransformComponent"]);
-			const LUUID ActorHandle = Node["ID"].as<LUUID>();
-			const std::string ActorName = Node["Name"].as<std::string>();
-			const ETexture ActorTexture = static_cast<ETexture>(Node["Texture"].as<int>());
-			const glm::vec4 ActorColor = Node["Color"].as<glm::vec4>();
-			LK_TRACE_TAG("TestLevel", "Handle={} Name={}", ActorHandle, ActorName);
-
-			const YAML::Node TCNode = Node["TransformComponent"];
-			FTransformComponent TC;
-			Serialization::Deserialize(TC, TCNode);
-
-			FBodySpecification BodySpec;
-			BodySpec.Name = ActorName;
-			if (const YAML::Node BodyNode = Node["Body"]; !BodyNode.IsNull())
-			{
-				Serialization::Deserialize(BodySpec, BodyNode);
-				LK_TRACE("{}", CBody::ToString(BodySpec));
-			}
-
-			if (!Scene->DoesActorExist(ActorHandle))
-			{
-				std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
-			}
-			else
-			{
-				LK_ERROR_TAG("TestLevel", "Duplicate actors found during deserialization with handle {}", ActorHandle);
-			}
-		}
 	}
 
 	void CTestLevel::UI_PrepareEditorViewport()
