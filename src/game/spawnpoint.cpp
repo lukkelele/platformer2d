@@ -10,7 +10,7 @@ namespace platformer2d {
 	}
 
 	CSpawnpoint::CSpawnpoint(const glm::vec2& InPos)
-		: CActor(DefaultBodySpec, ETexture::White)
+		: CActor(FActorSpecification(), DefaultBodySpec)
 	{
 		LK_DEBUG_TAG("Spawnpoint", "Created at {}", InPos);
 		SetPosition(InPos);

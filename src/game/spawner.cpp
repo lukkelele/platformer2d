@@ -13,23 +13,27 @@ namespace platformer2d {
 		LK_VERIFY(GameInstance);
 		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
 
-		FBodySpecification Spec;
-		Spec.Type = EBodyType::Static;
-		Spec.Name = Name;
-		Spec.Position = Pos;
-		Spec.Flags = EBodyFlag_PreSolveEvents;
+		FActorSpecification ActorSpec;
+		ActorSpec.Texture = ETexture::White;
+		ActorSpec.Color = Color;
+
+		FBodySpecification BodySpec;
+		BodySpec.Type = EBodyType::Static;
+		BodySpec.Name = Name;
+		BodySpec.Position = Pos;
+		BodySpec.Flags = EBodyFlag_PreSolveEvents;
 
 		FPolygon Polygon = {
 			.Size = Size,
 		};
-		Spec.Shape.emplace<FPolygon>(Polygon);
+		BodySpec.Shape.emplace<FPolygon>(Polygon);
 
 		LK_INFO_TAG("Spawner", "Create: {}", Name);
-		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, ETexture::White, Color);
+		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
 	}
 
-	std::shared_ptr<CActor> CSpawner::CreatePolygon(std::string_view Name, const FBodySpecification& BodySpec,
+	std::shared_ptr<CActor> CSpawner::CreatePolygon(std::string_view Name, const FBodySpecification& InBodySpec,
 													const glm::vec2& Size, const glm::vec4& Color, const ETexture Texture)
 	{
 		LK_VERIFY(!Name.empty(), "Name cannot be empty");
@@ -37,15 +41,19 @@ namespace platformer2d {
 		LK_VERIFY(GameInstance);
 		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
 
-		FBodySpecification& Spec = const_cast<FBodySpecification&>(BodySpec);
-		Spec.Name = Name;
+		FActorSpecification ActorSpec;
+		ActorSpec.Texture = Texture;
+		ActorSpec.Color = Color;
+
+		FBodySpecification& BodySpec = const_cast<FBodySpecification&>(InBodySpec);
+		BodySpec.Name = Name;
 		FPolygon Polygon = {
 			.Size = Size,
 		};
-		Spec.Shape.emplace<FPolygon>(Polygon);
+		BodySpec.Shape.emplace<FPolygon>(Polygon);
 
 		LK_INFO_TAG("Spawner", "Create: {}  Texture={} Color={}", Name, Enum::ToString(Texture), Color);
-		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(Spec, Texture, Color);
+		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
 	}
 
