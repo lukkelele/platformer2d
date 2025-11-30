@@ -5,9 +5,12 @@ Actors:
     Name: Right-Platform
     Texture: 0
     Color: [0, 0.75, 0, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [3.168577, -0.31357962, 0.1]
-      Rotation: 0.66032434
+      Rotation: 0.6607687
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -15,7 +18,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.66032434
+        Rotation: 0.66076875
         Radius: 0.5
       Position: [3.168577, -0.31357962]
       Flags: 2
@@ -28,6 +31,9 @@ Actors:
     Name: Spawn-Wall-Left
     Texture: 5
     Color: [1, 1, 1, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [-1.4862326, -0.025966717, 0]
       Rotation: 1.5707963
@@ -51,6 +57,9 @@ Actors:
     Name: FlyingPlatform-1
     Texture: 0
     Color: [1, 0, 1, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [-0.5315029, -0.21425083, 2]
       Rotation: 0
@@ -74,9 +83,12 @@ Actors:
     Name: Rotating-Object1
     Texture: 0
     Color: [0, 0.54509807, 0.54509807, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [0.70239645, 0.08914068, 0.6]
-      Rotation: -0.71788156
+      Rotation: -2.9024987
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: Rotate
@@ -87,7 +99,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -0.71788156
+        Rotation: -2.9024987
         Radius: 0.5
       Position: [0.70239645, 0.08914068]
       Flags: 2
@@ -100,6 +112,9 @@ Actors:
     Name: LowerPlatform
     Texture: 0
     Color: [0.45, 0.45, 0.45, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [0.21569733, -1.50759, 0]
       Rotation: -3.1415925
@@ -123,6 +138,9 @@ Actors:
     Name: PinkWall
     Texture: 0
     Color: [1, 0, 1, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [4.9293427, -0.900186, 0]
       Rotation: -3.1415925
@@ -146,6 +164,9 @@ Actors:
     Name: SpawnPlatform
     Texture: 3
     Color: [1, 1, 1, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [-0.0046748593, -0.68743986, 0]
       Rotation: -3.1415925
@@ -169,6 +190,9 @@ Actors:
     Name: Actor-9
     Texture: 0
     Color: [0.96, 0.105, 0.83, 1]
+    Outline:
+      Thickness: 1
+      Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [0.27088338, -0.49311802, 0.13]
       Rotation: 0
