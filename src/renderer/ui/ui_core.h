@@ -19,6 +19,7 @@ namespace platformer2d::UI {
 		inline constexpr const char* const TopBar = "##TopBar";
 		inline constexpr const char* const Sidebar1 = "##Sidebar1";
 		inline constexpr const char* const Sidebar2 = "##Sidebar2";
+		inline constexpr const char* const Selection = "Selection";
 		inline constexpr const char* const SceneManager = "##SceneManager";
 		inline constexpr const char* const ContentBrowser = "##ContentBrowser";
 	}
@@ -34,7 +35,6 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoInputs
 		| ImGuiWindowFlags_NoBackground
 		| ImGuiWindowFlags_NoDocking;
-		//| ImGuiWindowFlags_NoSavedSettings;
 
 	inline ImGuiWindowFlags ViewportFlags = ImGuiWindowFlags_NoTitleBar
 		| ImGuiWindowFlags_NoCollapse
@@ -45,7 +45,6 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoBackground
 		| ImGuiWindowFlags_NoBringToFrontOnFocus
 		| ImGuiWindowFlags_NoDocking;
-		//| ImGuiWindowFlags_NoSavedSettings;
 
 	inline constexpr ImGuiWindowFlags EditorViewportFlags = ImGuiWindowFlags_NoTitleBar
 		| ImGuiWindowFlags_NoCollapse
@@ -79,7 +78,7 @@ namespace platformer2d::UI {
 	void PushID();
 	void PopID();
 
-	bool Begin(const char* WindowTitle, bool* Open, ImGuiWindowFlags WindowFlags);
+	bool Begin(const char* WindowTitle, bool* Open = nullptr, ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None);
 	void End();
 
 	void BeginViewport(CWindow* Window);

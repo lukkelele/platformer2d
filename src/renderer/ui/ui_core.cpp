@@ -90,6 +90,7 @@ namespace platformer2d::UI {
 
 			ImGuiID DockID_Main = DockspaceID;
 			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, 0.18f, nullptr, &DockID_Main);
+			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.42f, nullptr, &DockID_Left);
 
 			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, 0.22f, nullptr, &DockID_Main);
 			ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.52f, nullptr, &DockID_Right);
@@ -100,13 +101,13 @@ namespace platformer2d::UI {
 			ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, 0.04f, nullptr, &DockID_Main);
 
 			ImGui::DockBuilderDockWindow(PanelID::EditorViewport, DockID_Main);
-			ImGui::DockBuilderDockWindow(PanelID::Sidebar1,       DockID_Left);
+			ImGui::DockBuilderDockWindow(PanelID::Sidebar1,       DockID_Left_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar2,       DockID_Right_Top);
-			ImGui::DockBuilderDockWindow(PanelID::ContentBrowser, DockID_Bottom);
 			ImGui::DockBuilderDockWindow(PanelID::TopBar,         DockID_Top);
 
-			/* Dock the scene manager to the right sidebar. */
-			ImGui::DockBuilderDockWindow(PanelID::SceneManager, DockID_Right);
+			ImGui::DockBuilderDockWindow(PanelID::ContentBrowser, DockID_Bottom);
+			ImGui::DockBuilderDockWindow(PanelID::Selection,      DockID_Left);
+			ImGui::DockBuilderDockWindow(PanelID::SceneManager,   DockID_Right);
 
 			/* Finish the dockspace. */
 			ImGui::DockBuilderFinish(DockspaceID);

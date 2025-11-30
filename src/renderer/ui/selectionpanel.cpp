@@ -27,49 +27,12 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		if (!ImGui::Begin("Selection", nullptr))
+		if (!UI::Begin(PanelID::Selection, nullptr))
 		{
-			ImGui::End();
 			return;
 		}
 
 		const LUUID SelectedID = CSelectionContext::GetSelected();
-
-#if 0
-		static constexpr float LabelColumnWidth = 180.0f;
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
-
-		auto Label = [](std::string_view Str) -> void
-		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text(Str.data());
-		};
-
-		auto NextColumn = []() -> void
-		{
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
-		};
-
-		ImGui::TableNextRow();
-		if (std::shared_ptr<CActor> Actor = Scene->FindActor(SelectedID); Actor != nullptr)
-		{
-			Label("Name");
-			NextColumn();
-			ImGui::Text("%s", Actor->GetName().data());
-		}
-		else
-		{
-			Label("Name");
-			NextColumn();
-			ImGui::Text("None");
-		}
-
-		ImGui::EndTable();
-#endif
 		if (std::shared_ptr<CActor> Actor = Scene->FindActor(SelectedID); Actor != nullptr)
 		{
 			UI::Draw::ActorNode_Data(*Actor);
@@ -80,7 +43,7 @@ namespace platformer2d::UI {
 			ImGui::Dummy(ImVec2(0, 4));
 		}
 
-		ImGui::End(); /* ~SelectionPanel */
+		UI::End(); /* ~SelectionPanel */
 	}
 
 }

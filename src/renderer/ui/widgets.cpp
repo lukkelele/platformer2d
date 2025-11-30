@@ -26,9 +26,9 @@ namespace platformer2d::UI::Draw {
 		ImGui::PushID(Handle);
 
 		static constexpr float LabelColumnWidth = 180.0f;
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+		ImGui::BeginTable("##ActorNode_Data", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
 		bool Changed = false;
 
