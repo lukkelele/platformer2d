@@ -1,0 +1,13 @@
+{
+  "version": 5,
+  "configurePresets": [
+    {
+      "name": "Debug",
+      "binaryDir": "${sourceDir}/build/Debug"
+    },
+    {
+      "name": "Release",
+      "binaryDir": "${sourceDir}/build/Release"
+    }
+  ]
+}
