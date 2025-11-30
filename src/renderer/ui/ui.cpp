@@ -481,8 +481,7 @@ namespace platformer2d::UI {
 		}
 	}
 
-	/** @todo: The initial position needs to be placed in an upper-left/right corner. */
-	void Statistics()
+	void Statistics(const EWidgetPlacement Placement)
 	{
 		CGameInstance* GameInstance = CGameInstance::Get();
 		if (!GameInstance)
@@ -490,9 +489,15 @@ namespace platformer2d::UI {
 			return;
 		}
 
+		const ImGuiStyle& Style = ImGui::GetStyle();
+
 		/** @todo: Remove docknode tab */
 		ImGui::SetNextWindowBgAlpha(0.25f);
-		ImGui::SetNextWindowSize(ImVec2(284, 0), ImGuiCond_Always);
+		const ImVec2 WindowPos = ImGui::GetWindowPos();
+		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
+		ImGui::SetNextWindowPos({ WindowPos.x + Padding, Padding }, ImGuiCond_Always);
+
+		ImGui::SetNextWindowSize(ImVec2(260, 0), ImGuiCond_Always);
 		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration;
 		if (!ImGui::Begin("##Statistics", nullptr, WindowFlags))
 		{

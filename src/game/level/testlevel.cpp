@@ -339,6 +339,7 @@ namespace platformer2d::Level {
 			UI_Level();
 			UI_Player();
 
+			UI::Statistics();
 			UI::SelectionPanel();
 			UI_DrawGizmo();
 		}
@@ -774,7 +775,7 @@ namespace platformer2d::Level {
 			ImVec2(0, 1),       /* UV0 */
 			ImVec2(1, 0),       /* UV1 */
 			ImVec4(1, 1, 1, 1), /* Tint Color   */
-			ImVec4(1, 1, 0, 1)  /* Border Color */
+			ImVec4(1, 1, 1, 0)  /* Border Color */
 		);
 	}
 

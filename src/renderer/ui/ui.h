@@ -24,6 +24,15 @@ namespace platformer2d::UI {
 	constexpr float GAME_MENU_LABEL_INDENT_WIDTH = 24.0f;
 	constexpr float GAME_MENU_COLUMN_ITEM_WIDTH = 410.0f;
 
+	enum class EWidgetPlacement
+	{
+		Center,
+		TopLeft,
+		TopRight,
+		BottomLeft,
+		BottomRight,
+	};
+
 	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
 	extern FOnGameMenuOpened OnGameMenuOpened;
 
@@ -102,7 +111,7 @@ namespace platformer2d::UI {
 				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
 	void PlayerData(std::shared_ptr<CPlayer> Player);
-	void Statistics();
+	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
 
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);
 	void RainbowTextGradient(const char* Text, float Speed = 0.15f);
