@@ -212,20 +212,7 @@ namespace platformer2d::Level {
 			Player->GetOutlineColor()
 		);
 
-		/* Render level. */
-		for (const std::shared_ptr<CActor>& Actor : Scene->GetActors())
-		{
-			const FTransformComponent& TC = Actor->GetTransformComponent();
-			CRenderer::DrawQuad(
-				Actor->GetPosition(),
-				TC.Scale,
-				Actor->GetTexture(),
-				Actor->GetColor(),
-				glm::degrees(TC.GetRotation2D()),
-				Actor->GetOutlineThickness(),
-				Actor->GetOutlineColor()
-			);
-		}
+		Scene->Render();
 	}
 
 	CCamera* CTestLevel::GetActiveCamera() const

@@ -24,6 +24,7 @@ namespace platformer2d {
 		~CScene();
 
 		void Tick(float DeltaTime);
+		void Render();
 
 		template<typename T, typename... TArgs>
 		std::shared_ptr<T> Create(TArgs&&... Args)

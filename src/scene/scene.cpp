@@ -6,6 +6,7 @@
 
 #include "core/string.h"
 #include "game/instance.h"
+#include "renderer/renderer.h"
 #include "serialization/serialization.h"
 
 namespace platformer2d {
@@ -39,6 +40,23 @@ namespace platformer2d {
 		for (const auto& Actor : Actors)
 		{
 			Actor->Tick(DeltaTime);
+		}
+	}
+
+	void CScene::Render()
+	{
+		for (const auto& Actor : Actors)
+		{
+			const FTransformComponent& TC = Actor->GetTransformComponent();
+			CRenderer::DrawQuad(
+				Actor->GetPosition(),
+				TC.Scale,
+				Actor->GetTexture(),
+				Actor->GetColor(),
+				glm::degrees(TC.GetRotation2D()),
+				Actor->GetOutlineThickness(),
+				Actor->GetOutlineColor()
+			);
 		}
 	}
 
