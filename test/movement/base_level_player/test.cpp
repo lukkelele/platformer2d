@@ -105,8 +105,9 @@ namespace platformer2d::test {
 		 * Player
 		 *********************************/
 		FActorSpecification PlayerSpec;
+		FBodySpecification BodySpec;
 		/* @fixme */
-		CPlayer Player(PlayerSpec);
+		CPlayer Player(PlayerSpec, BodySpec);
 		Player.SetPosition(-0.280f, -0.410f);
 		FTransformComponent& TransformComp = Player.GetTransformComponent();
 		TransformComp.SetTranslation({ -0.28f, -0.41f });
