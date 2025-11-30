@@ -89,14 +89,6 @@ namespace platformer2d::UI {
 	bool ActorAttributes(FActorAttributes& Attr)
 	{
 		bool Updated = false;
-#if 0 /* NO LABEL */
-		UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
-		static constexpr const char* CreatorMenuLabel = "Creator";
-		static const ImVec2 LabelSize = ImGui::CalcTextSize(CreatorMenuLabel);
-		UI::ShiftCursorX((0.50f * Avail.x) - LabelSize.x);
-		ImGui::Text("Creator Menu");
-		UI::Font::Pop();
-#endif
 		static constexpr float ColWidth = 180.0f;
 
 		ImGui::BeginTable("##ActorAttributes", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
@@ -174,72 +166,70 @@ namespace platformer2d::UI {
 	void ActorCreateButtons(std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Scene);
+		static const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
+
+		ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
+		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(1);
+
 		/* Button: Create */
+		UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+		UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+		UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
 		{
-			static const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
+			UI::FScopedColorStack ButtonColours(
+				ImGuiCol_Button, RGBA32::LightGreen,
+				ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+				ImGuiCol_ButtonActive, RGBA32::NiceGreen
+			);
 
-			ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
-			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(1);
-
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
-			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+			const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
+			if (ActorExists)
 			{
-				UI::FScopedColorStack ButtonColours(
-					ImGuiCol_Button, RGBA32::LightGreen,
-					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-					ImGuiCol_ButtonActive, RGBA32::NiceGreen
-				);
-
-				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
-				if (ActorExists)
-				{
-					ImGui::BeginDisabled();
-				}
-
-				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
-				if (ImGui::Button("Create", ButtonSize))
-				{
-					FBodySpecification NewBodySpec;
-					Aggregate(PhysicsBodyData, NewBodySpec);
-					LK_INFO("{}", CBody::ToString(NewBodySpec));
-					CSpawner::CreatePolygon(
-						ActorAttr.NameBuf.data(),
-						NewBodySpec,
-						ActorAttr.Size,
-						FColor::Get(ActorAttr.Color),
-						ActorAttr.Texture
-					);
-				}
-				if (ActorExists)
-				{
-					ImGui::EndDisabled();
-				}
+				ImGui::BeginDisabled();
 			}
 
-			/* Button: Delete */
+			UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+			if (ImGui::Button("Create", ButtonSize))
 			{
-				ImGui::SameLine();
-				UI::FScopedColorStack ButtonColours(
-					ImGuiCol_Button, RGBA32::WineRed,
-					ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-					ImGuiCol_ButtonActive, RGBA32::Red
+				FBodySpecification NewBodySpec;
+				Aggregate(PhysicsBodyData, NewBodySpec);
+				LK_INFO("{}", CBody::ToString(NewBodySpec));
+				CSpawner::CreatePolygon(
+					ActorAttr.NameBuf.data(),
+					NewBodySpec,
+					ActorAttr.Size,
+					FColor::Get(ActorAttr.Color),
+					ActorAttr.Texture
 				);
-
-				UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
-				if (ImGui::Button("Delete", ButtonSize))
-				{
-					LK_WARN("PLACEHOLDER");
-				}
 			}
-
-			ImGui::EndTable();
+			if (ActorExists)
+			{
+				ImGui::EndDisabled();
+			}
 		}
+
+		/* Button: Delete */
+		{
+			ImGui::SameLine();
+			UI::FScopedColorStack ButtonColours(
+				ImGuiCol_Button, RGBA32::WineRed,
+				ImGuiCol_ButtonHovered, RGBA32::DarkRed,
+				ImGuiCol_ButtonActive, RGBA32::Red
+			);
+
+			UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
+			if (ImGui::Button("Delete", ButtonSize))
+			{
+				LK_WARN("PLACEHOLDER");
+			}
+		}
+
+		ImGui::EndTable();
 	}
 
 	bool DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
