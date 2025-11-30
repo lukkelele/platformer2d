@@ -76,6 +76,10 @@ namespace platformer2d {
 		inline std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
 		void SetTexture(ETexture InTexture);
+		float GetOutlineThickness() const { return Outline.Thickness; }
+		const glm::vec4& GetOutlineColor() const { return Outline.Color; }
+		void SetOutlineThickness(float InThickness);
+		void SetOutlineColor(const glm::vec4& InColor);
 
 		template<typename T>
 		T& GetComponent()

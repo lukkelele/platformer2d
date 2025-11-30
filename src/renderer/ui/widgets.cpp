@@ -27,8 +27,8 @@ namespace platformer2d::UI::Draw {
 
 		static constexpr float LabelColumnWidth = 180.0f;
 		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
 		bool Changed = false;
 
@@ -92,7 +92,7 @@ namespace platformer2d::UI::Draw {
 		}
 #endif
 
-		/* Actor Name */
+		/* Actor name */
 		auto Iter = ActorDataMap.find(Handle);
 		if (Iter != ActorDataMap.end())
 		{
@@ -115,7 +115,7 @@ namespace platformer2d::UI::Draw {
 			}
 		}
 
-		/* Texture. */
+		/* Texture */
 		ImGui::TableNextRow();
 		{
 			ETexture Texture = Actor.GetTexture();
@@ -126,7 +126,7 @@ namespace platformer2d::UI::Draw {
 			}
 		}
 
-		/* Color. */
+		/* Color */
 		ImGui::TableNextRow();
 		{
 			const glm::vec4& ColorRef = Actor.GetColor();
@@ -144,6 +144,27 @@ namespace platformer2d::UI::Draw {
 			if (!ColorDeduced)
 			{
 				ImGui::EndDisabled();
+			}
+		}
+
+		/* Outline thickness */
+		ImGui::TableNextRow();
+		{
+			float Thickness = Actor.GetOutlineThickness();
+			if (UI::Draw::DragFloat("Outline Thickness", &Thickness, 0.10f, 0.0f, 20.0f))
+			{
+				Actor.SetOutlineThickness(Thickness);
+			}
+		}
+
+		/* Outline color */
+		ImGui::TableNextRow();
+		{
+			const glm::vec4& Color = Actor.GetOutlineColor();
+			glm::vec3 C = { Color.x, Color.y, Color.z };
+			if (UI::Draw::Vec3Control("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f))
+			{
+				Actor.SetOutlineColor(glm::vec4(C, 1.0f));
 			}
 		}
 

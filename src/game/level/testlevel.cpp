@@ -207,7 +207,9 @@ namespace platformer2d::Level {
 			*CRenderer::GetTexture(Player->GetTexture()),
 			Player->GetSprite().GetUV(),
 			FColor::White,
-			glm::degrees(Player->GetRotation())
+			glm::degrees(Player->GetRotation()),
+			Player->GetOutlineThickness(),
+			Player->GetOutlineColor()
 		);
 
 		/* Render level. */
@@ -219,7 +221,9 @@ namespace platformer2d::Level {
 				TC.Scale,
 				Actor->GetTexture(),
 				Actor->GetColor(),
-				glm::degrees(TC.GetRotation2D())
+				glm::degrees(TC.GetRotation2D()),
+				Actor->GetOutlineThickness(),
+				Actor->GetOutlineColor()
 			);
 		}
 	}

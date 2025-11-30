@@ -150,6 +150,16 @@ namespace platformer2d {
 		Texture = InTexture;
 	}
 
+	void CActor::SetOutlineThickness(const float InThickness)
+	{
+		Outline.Thickness = InThickness;
+	}
+
+	void CActor::SetOutlineColor(const glm::vec4& InColor)
+	{
+		Outline.Color = InColor;
+	}
+
 	bool CActor::Serialize(YAML::Emitter& Out) const
 	{
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
