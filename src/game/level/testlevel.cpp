@@ -318,11 +318,11 @@ namespace platformer2d::Level {
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags);
-		ImGui::PopStyleVar(2);
 
 		UI_PrepareEditorViewport();
 		UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
 		{
+			ImGui::PopStyleVar(2); /* FramePadding, WindowPadding */
 			UpdateEditorViewportBounds();
 			UI_ViewportTexture();
 
@@ -387,7 +387,7 @@ namespace platformer2d::Level {
 		const YAML::Node Data = YAML::Load(YamlString);
 
 		/* Load the scene. */
-		const YAML::Node SceneNode = Data["Scene"];
+		const YAML::Node& SceneNode = Data["Scene"];
 		LK_ASSERT(!SceneNode.IsNull());
 		if (SceneNode.IsNull())
 		{
