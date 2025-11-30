@@ -8,8 +8,14 @@ namespace platformer2d {
 
 	struct FActorSpecification
 	{
+		LUUID Handle = 0;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
+		float OutlineThickness = 0.0f;
+		glm::vec4 OutlineColor = FColor::Transparent;
+
+		FActorSpecification() = default;
+		FActorSpecification(const ETexture InTexture) : Texture(InTexture) {}
 	};
 
 }

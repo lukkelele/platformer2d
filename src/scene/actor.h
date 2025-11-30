@@ -38,8 +38,7 @@ namespace platformer2d {
 	{
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
-		CActor(LUUID InHandle, const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
-		CActor(const FBodySpecification& BodySpec, ETexture InTexture = ETexture::White, const glm::vec4& InColor = FColor::White);
+		CActor(const FActorSpecification& InSpec, const FBodySpecification& BodySpec);
 		virtual ~CActor();
 
 		virtual void Tick(float DeltaTime);
@@ -161,9 +160,17 @@ namespace platformer2d {
 		FTransformComponent TransformComp{};
 		std::optional<FEffectComponent> EffectComp;
 
+		std::string Name;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
-		std::string Name;
+
+		struct FOutline
+		{
+			float Thickness = 0.0f;
+			glm::vec4 Color = FColor::Transparent;
+		};
+		FOutline Outline;
+
 	private:
 		LUUID Handle;
 		bool bTickEnabled = true;

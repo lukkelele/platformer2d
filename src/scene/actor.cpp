@@ -13,11 +13,12 @@ namespace platformer2d {
 	{
 	}
 
-	CActor::CActor(const LUUID InHandle, const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
-		: Handle(InHandle)
+	CActor::CActor(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
+		: Handle(InSpec.Handle)
 		, Name(BodySpec.Name)
-		, Texture(InTexture)
-		, Color(InColor)
+		, Texture(InSpec.Texture)
+		, Color(InSpec.Color)
+		, Outline(InSpec.OutlineThickness, InSpec.OutlineColor)
 	{
 		LK_TRACE_TAG("Actor", "Create: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
 		Body = std::make_unique<CBody>(BodySpec, this);
@@ -31,11 +32,6 @@ namespace platformer2d {
 			LK_TRACE_TAG("Actor", "[{}] Scaling polygon -> {}", Handle, Polygon->Size);
 			TransformComp.SetScale(Polygon->Size);
 		}
-	}
-
-	CActor::CActor(const FBodySpecification& BodySpec, ETexture InTexture, const glm::vec4& InColor)
-		: CActor(LUUID(), BodySpec, InTexture, InColor)
-	{
 	}
 
 	CActor::~CActor()
@@ -163,6 +159,12 @@ namespace platformer2d {
 		Out << YAML::Key << "Name" << YAML::Value << Name;
 		Out << YAML::Key << "Texture" << YAML::Value << std::to_underlying(Texture);
 		Out << YAML::Key << "Color" << YAML::Value << Color;
+
+		Out << YAML::Value << "Outline";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "Thickness" << YAML::Value << Outline.Thickness;
+		Out << YAML::Key << "Color" << YAML::Value << Outline.Color;
+		Out << YAML::EndMap;
 
 		/* TransformComponent */
 		const FTransformComponent& TC = GetTransformComponent();
