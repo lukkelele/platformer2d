@@ -55,60 +55,7 @@ namespace platformer2d {
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
 
-#define DOCKSPACE_DISABLED 0
-#if DOCKSPACE_DISABLED
-		using namespace UI;
-		FScopedStyle WindowRounding(ImGuiStyleVar_WindowRounding, 0.0f);
-		FScopedStyle WindowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		FScopedColor MenuBarBg(ImGuiCol_MenuBarBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-		ImGuiViewport* CoreViewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(CoreViewport->Pos);
-        ImGui::SetNextWindowSize(CoreViewport->Size);
-        ImGui::SetNextWindowViewport(CoreViewport->ID);
-
-		ImGui::Begin(PanelID::HostWindow, nullptr, HostWindowFlags);
-		ImGuiID DockspaceID = ImGui::GetID(PanelID::Dockspace);
-		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr)
-		{
-			/* Remove existing layout. */
-			LK_WARN_TAG("ImGuiLayer", "Removing existing dock layout");
-			ImGui::DockBuilderRemoveNode(DockspaceID);
-			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace 
-				| ImGuiDockNodeFlags_NoWindowMenuButton;
-			ImGui::DockBuilderAddNode(DockspaceID, DockFlags);
-			ImGui::DockBuilderSetNodeSize(DockspaceID, CoreViewport->Size);
-
-			ImGuiID DockID_Main = DockspaceID;
-#ifdef DOCKSPACE_SPLIT
-			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, 0.18f, nullptr, &DockID_Main);
-			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, 0.22f, nullptr, &DockID_Main);
-
-			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
-			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
-#endif
-			
-			ImGui::DockBuilderFinish(DockspaceID);
-		}
-
-		ImGui::DockSpace(DockspaceID, ImVec2(0, 0), DockspaceFlags);
-		/* Submit the dockspace. */
-		ImGui::End(); /* Viewport */
-
-#ifdef NO_WINDOW_PADDING
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-#endif
-		ImGui::SetNextWindowPos(CoreViewport->Pos);
-		ImGui::SetNextWindowSize(CoreViewport->Size);
-		ImGui::SetNextWindowViewport(CoreViewport->ID);
-		ImGui::Begin(PanelID::CoreViewport, NULL, ViewportFlags);
-#ifdef NO_WINDOW_PADDING
-		ImGui::PopStyleVar(2);
-#endif
-#else
 		UI::BeginViewport(CWindow::Get());
-#endif /* DOCKSPACE_DISABLED */
 	}
 
 	void CImGuiLayer::EndFrame()
