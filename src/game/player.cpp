@@ -59,39 +59,8 @@ namespace platformer2d {
 		};
 	}
 
-	CPlayer::CPlayer(const FActorSpecification& Spec)
-		: CActor(Spec)
-		, NextSpriteFrame(std::to_underlying(ESpriteFrame::COUNT))
-	{
-		LK_VERIFY(Spec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(Spec.Texture));
-		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
-		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
-		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
-
-		if (Name.empty())
-		{
-			Name = "Player";
-		}
-
-		SetDeletable(false);
-
-		constexpr glm::vec2 TilePos = { ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y };
-		WalkAnim.StartTileX = TilePos.x;
-		WalkAnim.StartTileY = TilePos.y;
-		WalkAnim.FrameCount = 4;
-		WalkAnim.TicksPerFrame = WalkAnim.FrameCount * 4;
-		constexpr glm::vec2 TileSize = { 32, 32 };
-		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, TileSize);
-
-		Timer.Reset();
-		LK_VERIFY(Body && Sprite);
-
-		/* Set z-index. */
-		TransformComp.Translation.z = 0.030f;
-	}
-
-	CPlayer::CPlayer(const FBodySpecification& BodySpec, const ETexture InTexture)
-		: CActor(BodySpec, InTexture)
+	CPlayer::CPlayer(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
+		: CActor(InSpec, BodySpec)
 		, NextSpriteFrame(std::to_underlying(ESpriteFrame::COUNT))
 	{
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -111,7 +80,7 @@ namespace platformer2d {
 		WalkAnim.FrameCount = 4;
 		WalkAnim.TicksPerFrame = WalkAnim.FrameCount * 5;
 		constexpr glm::vec2 TileSize = { 32, 32 };
-		LK_VERIFY(InTexture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InTexture));
+		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
 		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, TileSize);
 
 		Timer.Reset();
