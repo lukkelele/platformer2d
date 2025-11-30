@@ -208,11 +208,18 @@ namespace platformer2d {
 		for (const YAML::Node& Node : ActorsNode)
 		{
 			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Texture"] && Node["Color"] && Node["TransformComponent"]);
-			const LUUID ActorHandle = Node["ID"].as<LUUID>();
+
+			FActorSpecification ActorSpec;
+			ActorSpec.Handle = Node["ID"].as<LUUID>();
 			const std::string ActorName = Node["Name"].as<std::string>();
-			const ETexture ActorTexture = static_cast<ETexture>(Node["Texture"].as<int>());
-			const glm::vec4 ActorColor = Node["Color"].as<glm::vec4>();
-			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorName, ActorHandle);
+			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorName, ActorSpec.Handle);
+
+			ActorSpec.Texture = static_cast<ETexture>(Node["Texture"].as<int>());
+			ActorSpec.Color = Node["Color"].as<glm::vec4>();
+
+			const YAML::Node& OutlineNode = Node["Outline"];
+			LK_DESERIALIZE_PROPERTY(Thickness, ActorSpec.OutlineThickness, 1.0f, OutlineNode);
+			LK_DESERIALIZE_PROPERTY(Color, ActorSpec.OutlineColor, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), OutlineNode);
 
 			FTransformComponent TC;
 			if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined())
@@ -221,7 +228,7 @@ namespace platformer2d {
 			}
 			else
 			{
-				LK_WARN_TAG("Scene", "TransformComponent missing in YAML");
+				LK_ERROR_TAG("Scene", "TransformComponent missing in YAML");
 			}
 
 			FBodySpecification BodySpec;
@@ -232,7 +239,7 @@ namespace platformer2d {
 			}
 			else
 			{
-				LK_WARN_TAG("Scene", "Body missing in YAML");
+				LK_ERROR_TAG("Scene", "Body missing in YAML");
 			}
 
 			bool HasEffectComponent = false;
@@ -244,9 +251,9 @@ namespace platformer2d {
 				LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
 			}
 
-			if (!DoesActorExist(ActorHandle))
+			if (!DoesActorExist(ActorSpec.Handle))
 			{
-				std::shared_ptr<CActor> Actor = Create<CActor>(ActorHandle, BodySpec, ActorTexture, ActorColor);
+				std::shared_ptr<CActor> Actor = Create<CActor>(ActorSpec, BodySpec);
 				Actor->GetTransformComponent() = TC;
 
 				if (HasEffectComponent)
@@ -256,7 +263,7 @@ namespace platformer2d {
 			}
 			else
 			{
-				LK_ERROR_TAG("Scene", "Duplicate actors found with handle {}", ActorHandle);
+				LK_ERROR_TAG("Scene", "Duplicate actors found with handle {}", ActorSpec.Handle);
 			}
 		}
 	}
