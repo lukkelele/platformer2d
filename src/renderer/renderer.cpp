@@ -188,11 +188,13 @@ namespace platformer2d {
 	void CRenderer::SetupQuadRenderer()
 	{
 		const FVertexBufferLayout QuadLayout = {
-			{ "pos",        EShaderDataType::Float3, },
-			{ "color",      EShaderDataType::Float4, },
-			{ "texcoord",   EShaderDataType::Float2, },
-			{ "texindex",   EShaderDataType::Int,    },
-			{ "tilefactor", EShaderDataType::Float,  },
+			{ "pos",              EShaderDataType::Float3, },
+			{ "color",            EShaderDataType::Float4, },
+			{ "texcoord",         EShaderDataType::Float2, },
+			{ "texindex",         EShaderDataType::Int,    },
+			{ "tilefactor",       EShaderDataType::Float,  },
+			{ "outlinethickness", EShaderDataType::Float,  },
+			{ "outlinecolor",     EShaderDataType::Float4, },
 		};
 
 		QuadVAO = OpenGL::VertexArray::Create();
@@ -474,8 +476,7 @@ namespace platformer2d {
 		return Data.FrameIndex;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size,
-							 const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -496,20 +497,21 @@ namespace platformer2d {
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = TextureIndex;
 			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr->OutlineThickness = OutlineThickness;
+			QuadVertexBufferPtr->OutlineColor = OutlineColor;
 			QuadVertexBufferPtr++;
 		}
 
 		QuadIndexCount += 6;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture,
-							 const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color, const float RotationDeg,
+							 const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, Color, RotationDeg);
+		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
-	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture,
-							 const glm::vec4& Color, float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -529,6 +531,8 @@ namespace platformer2d {
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr->OutlineThickness = OutlineThickness;
+			QuadVertexBufferPtr->OutlineColor = OutlineColor;
 			QuadVertexBufferPtr++;
 		}
 
@@ -536,14 +540,14 @@ namespace platformer2d {
 		DrawStats.QuadCount++;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture,
-							 const glm::vec2(&TexCoords)[4], const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2(& TexCoords)[4], const glm::vec4& Color,
+							 const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, TexCoords, Color, RotationDeg);
 	}
 
-	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture,
-							 const glm::vec2(&TexCoords)[4], const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4],
+							 const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -563,6 +567,8 @@ namespace platformer2d {
 			QuadVertexBufferPtr->TexCoord = TexCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr->OutlineThickness = OutlineThickness;
+			QuadVertexBufferPtr->OutlineColor = OutlineColor;
 			QuadVertexBufferPtr++;
 		}
 
@@ -570,14 +576,14 @@ namespace platformer2d {
 		DrawStats.QuadCount++;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV,
-							 const glm::vec4& Color, const float RotationDeg)
+
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, const float RotationDeg, float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, UV, Color, RotationDeg);
+		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, UV, Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
-	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV,
-							 const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, const float RotationDeg,
+							 const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices)
 		{
@@ -604,6 +610,8 @@ namespace platformer2d {
 			QuadVertexBufferPtr->TexCoord = TexCoords[Idx];
 			QuadVertexBufferPtr->TexIndex = Texture.GetSlot();
 			QuadVertexBufferPtr->TileFactor = TileFactor;
+			QuadVertexBufferPtr->OutlineThickness = OutlineThickness;
+			QuadVertexBufferPtr->OutlineColor = OutlineColor;
 			QuadVertexBufferPtr++;
 		}
 
@@ -611,10 +619,9 @@ namespace platformer2d {
 		DrawStats.QuadCount++;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const ETexture Texture,
-							 const glm::vec4& Color, const float RotationDeg)
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const ETexture Texture, const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad(Pos, Size, *GetTexture(Texture), Color, RotationDeg);
+		DrawQuad(Pos, Size, *GetTexture(Texture), Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
 	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)

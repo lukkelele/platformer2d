@@ -24,6 +24,8 @@ namespace platformer2d {
 		glm::vec2 TexCoord = { 0.0f, 0.0f };
 		int TexIndex = 0;
 		float TileFactor = 1.0f;
+		float OutlineThickness = 0.0f;
+		glm::vec4 OutlineColor = FColor::Transparent;
 	};
 
 	struct FLineVertex
@@ -84,14 +86,14 @@ namespace platformer2d {
 		static std::shared_ptr<CFramebuffer> GetViewportFramebuffer();
 		static uint16_t GetFrameIndex();
 
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
 
 		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
 		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
