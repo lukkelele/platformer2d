@@ -30,7 +30,11 @@ namespace platformer2d {
 
 		float Zoom = 0.25f; /* Initial zoom. */
 
-		FBodySpecification PlayerBody{};
+		struct
+		{
+			FActorSpecification ActorSpec{};
+			FBodySpecification BodySpec{};
+		} Player{};
 	};
 
 	class CGameInstance : public CLayer, public ISerializable<ESerializable::File>
