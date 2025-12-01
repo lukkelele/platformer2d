@@ -167,8 +167,8 @@ namespace platformer2d::UI {
 		}
 	}
 
-	namespace Draw 
-	{
+	namespace Widget {
+
 		inline void Underline(bool FullWidth = false, const float OffsetX = 0.0f, const float OffsetY = -1.0f)
 		{
 			if (FullWidth)
@@ -204,6 +204,7 @@ namespace platformer2d::UI {
 				}
 			}
 		}
+
 	}
 }
 

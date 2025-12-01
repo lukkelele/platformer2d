@@ -9,7 +9,7 @@
 #include "ui.h"
 #include "scene/scene.h"
 
-namespace platformer2d::UI::Draw {
+namespace platformer2d::UI::Widget {
 
 	struct FActorDataEntry
 	{
@@ -64,7 +64,7 @@ namespace platformer2d::UI::Draw {
 		/* Transform Component */
 		ImGui::TableNextRow();
 		glm::vec3 Translation = TC.GetTranslation();
-		Changed |= UI::Draw::Vec3Control("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
+		Changed |= UI::Widget::Vec3Control("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
 		if (Changed)
 		{
 			Actor.SetPosition(Translation);
@@ -73,7 +73,7 @@ namespace platformer2d::UI::Draw {
 		/* Rotation */
 		ImGui::TableNextRow();
 		float Rotation = glm::degrees(TC.GetRotation2D());
-		Changed |= UI::Draw::DragFloat("Rotation", &Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f");
+		Changed |= UI::Widget::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f");
 		if (Changed)
 		{
 			Actor.SetRotation(glm::radians(Rotation));
@@ -81,11 +81,11 @@ namespace platformer2d::UI::Draw {
 
 		/* Scale */
 		ImGui::TableNextRow();
-		Changed |= UI::Draw::Vec2Control("Scale", TC.Scale, 0.10f, 0.010f, 0.010f);
+		Changed |= UI::Widget::Vec2Control("Scale", TC.Scale, 0.10f, 0.010f, 0.010f);
 #if 0
 		glm::vec2 Scale = TC.Scale;
 		constexpr float LabelColumnWidth = 100.0f;
-		Changed |= UI::Draw::Vec2Control("Scale", Scale, 0.10f, 0.010f, 0.010f, 0.0f, LabelColumnWidth);
+		Changed |= UI::Widget::Vec2Control("Scale", Scale, 0.10f, 0.010f, 0.010f, 0.0f, LabelColumnWidth);
 		if (Changed)
 		{
 			Actor.GetBody().SetScale(TC.Scale);
@@ -151,7 +151,7 @@ namespace platformer2d::UI::Draw {
 		ImGui::TableNextRow();
 		{
 			float Thickness = Actor.GetOutlineThickness();
-			if (UI::Draw::DragFloat("Outline Thickness", &Thickness, 0.10f, 0.0f, 20.0f))
+			if (UI::Widget::DragFloat("Outline Thickness", Thickness, 0.10f, 0.0f, 20.0f))
 			{
 				Actor.SetOutlineThickness(Thickness);
 			}
@@ -162,7 +162,7 @@ namespace platformer2d::UI::Draw {
 		{
 			const glm::vec4& Color = Actor.GetOutlineColor();
 			glm::vec3 C = { Color.x, Color.y, Color.z };
-			if (UI::Draw::Vec3Control("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f))
+			if (UI::Widget::Vec3Control("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f))
 			{
 				Actor.SetOutlineColor(glm::vec4(C, 1.0f));
 			}

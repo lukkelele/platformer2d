@@ -109,10 +109,10 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::TableNextRow();
-		Updated |= UI::Draw::Vec2Control("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
+		Updated |= UI::Widget::Vec2Control("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
 
 		ImGui::TableNextRow();
-		Updated |= UI::Draw::Vec2Control("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
+		Updated |= UI::Widget::Vec2Control("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
 		ImGui::TableNextRow();
 		Updated |= TextureDropdown(Attr.Texture);
@@ -386,7 +386,7 @@ namespace platformer2d::UI {
 		/* Jump impulse. */
 		ImGui::TableNextRow();
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
-		Changed |= UI::Draw::DragFloat("Jump Impulse", &PlayerJumpImpulse, 0.010f, 0.0f, 20.0f, "%.3f");
+		Changed |= UI::Widget::DragFloat("Jump Impulse", PlayerJumpImpulse, 0.010f, 0.0f, 20.0f, "%.3f");
 		if (Changed)
 		{
 			Player->SetJumpImpulse(PlayerJumpImpulse);
@@ -395,7 +395,7 @@ namespace platformer2d::UI {
 		/* Direction force. */
 		ImGui::TableNextRow();
 		float DirForce = Player->GetDirectionForce();
-		Changed |= UI::Draw::DragFloat("Direction Force", &DirForce, 0.010f, 0.0f, 10.0f, "%.3f");
+		Changed |= UI::Widget::DragFloat("Direction Force", DirForce, 0.010f, 0.0f, 10.0f, "%.3f");
 		if (Changed)
 		{
 			Player->SetDirectionForce(DirForce);
@@ -413,7 +413,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			static float BodyScale = TC.Scale.x;
-			UI::Draw::DragFloat("Body Scale", &BodyScale, 0.010f, 0.0f, 2.0f, "%.2f");
+			UI::Widget::DragFloat("Body Scale", BodyScale, 0.010f, 0.0f, 2.0f, "%.2f");
 			ImGui::SameLine();
 			if (ImGui::Button("Apply##Scale"))
 			{
@@ -432,7 +432,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			float Mass = Body.GetMass();
-			Changed |= UI::Draw::DragFloat("Mass", &Mass, 0.010f, 0.0f, 10.0f, "%.2f");
+			Changed |= UI::Widget::DragFloat("Mass", Mass, 0.010f, 0.0f, 10.0f, "%.2f");
 			if (Changed)
 			{
 				Body.SetMass(Mass);
@@ -443,7 +443,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			float PlayerFriction = Body.GetFriction();
-			Changed |= UI::Draw::DragFloat("Friction", &PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
+			Changed |= UI::Widget::DragFloat("Friction", PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
 			if (Changed)
 			{
 				Body.SetFriction(PlayerFriction);
@@ -454,7 +454,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			float Restitution = Body.GetRestitution();
-			Changed |= UI::Draw::DragFloat("Restitution", &Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
+			Changed |= UI::Widget::DragFloat("Restitution", Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
 			if (Changed)
 			{
 				Body.SetRestitution(Restitution);
@@ -466,7 +466,7 @@ namespace platformer2d::UI {
 
 		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			UI::Draw::ActorNode_Data(*Player);
+			UI::Widget::ActorNode_Data(*Player);
 			ImGui::TreePop();
 		}
 	}

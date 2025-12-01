@@ -18,8 +18,8 @@ namespace platformer2d::UI {
 		XYZ,
 	};
 
-	namespace Draw
-	{
+	namespace Widget {
+
 		void ActorNode_Data(CActor& Actor);
 		void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene);
 		void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
@@ -29,8 +29,8 @@ namespace platformer2d::UI {
 		 */
 		void OnActorDeleted(LUUID ActorHandle);
 
-		/** @todo Pass 'Value' as reference instead. */
-		inline bool DragFloat(const char* Label, float* Value, float ValueSpeed = 1.0f, float ValueMin = 0.0f, float ValueMax = 0.0f,
+		inline bool DragFloat(const char* Label, float& Value, float ValueSpeed = 1.0f,
+							  float ValueMin = 0.0f, float ValueMax = 0.0f,
 							  const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
 		{
 			static constexpr int LABEL_BUFSIZE = 72;
@@ -71,13 +71,13 @@ namespace platformer2d::UI {
 			ImGui::SetNextItemWidth(InputItemWidth);
 			const ImGuiID InputID = ImGui::GetID(LabelBuf.data());
 			bool Modified = ImGui::DragScalar(
-				LabelBuf.data(), 
-				ImGuiDataType_Float, 
-				Value, 
-				ValueSpeed, 
-				&ValueMin, 
-				&ValueMax, 
-				Format, 
+				LabelBuf.data(),
+				ImGuiDataType_Float,
+				&Value,
+				ValueSpeed,
+				&ValueMin,
+				&ValueMax,
+				Format,
 				Flags
 			);
 
