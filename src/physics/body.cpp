@@ -455,6 +455,7 @@ namespace platformer2d {
 				return EBodyType::Kinematic;
 			default:
 				LK_VERIFY(false);
+				return EBodyType::COUNT;
 		}
 	}
 
