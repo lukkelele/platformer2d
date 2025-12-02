@@ -89,6 +89,15 @@ namespace platformer2d::Serialization {
 		Out << YAML::EndSeq;
 	}
 
+	template<>
+	void Serialize(const FInteractionComponent& IC, YAML::Emitter& Out)
+	{
+		Out << YAML::Key << "InteractionComponent";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(IC.GetType());
+		Out << YAML::EndMap;
+	}
+
 	template<typename T>
 	static void Deserialize(T& Target, const YAML::Node& Node)
 	{
@@ -142,6 +151,12 @@ namespace platformer2d::Serialization {
 				EC.Effects.push_back(Instance);
 			}
 		}
+	}
+
+	template<>
+	void Deserialize(FInteractionComponent& IC, const YAML::Node& Node)
+	{
+		IC.Type = static_cast<EInteraction>(Node["Type"].as<std::underlying_type_t<EInteraction>>());
 	}
 
 	template<>
