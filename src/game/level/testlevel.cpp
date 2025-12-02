@@ -15,6 +15,7 @@
 #include "game/spawner.h"
 #include "renderer/renderer.h"
 #include "renderer/debugrenderer.h"
+#include "renderer/ui/editor_resources.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
 #include "renderer/ui/selectionpanel.h"
@@ -25,8 +26,7 @@
 
 namespace platformer2d::Level {
 
-	namespace
-	{
+	namespace {
 		/*************************************
 		 *        GAME SPECIFICATION
 		 *************************************/
@@ -125,7 +125,7 @@ namespace platformer2d::Level {
 		{
 			LK_DEBUG_TAG("TestLevel", "OnActorDeleted: {}", Handle);
 			UpdateInputBuffer(Scene->GetActors().size());
-			UI::Draw::OnActorDeleted(Handle);
+			UI::Widget::OnActorDeleted(Handle);
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
@@ -161,6 +161,9 @@ namespace platformer2d::Level {
 
 		CKeyboard::OnKeyPressed.Add(this, &CTestLevel::OnKeyPressed);
 		CMouse::OnButtonPressed.Add(this, &CTestLevel::OnMouseButtonPressed);
+
+		LK_DEBUG_TAG("TestLevel", "Initialize editor resources");
+		EditorResources.Initialize();
 	}
 
 	void CTestLevel::Destroy()
@@ -171,6 +174,8 @@ namespace platformer2d::Level {
 		LK_DEBUG_TAG("TestLevel", "Release level resources");
 		Player.reset();
 		Scene.reset();
+
+		EditorResources.Destroy();
 	}
 
 	void CTestLevel::OnAttach()
@@ -608,10 +613,10 @@ namespace platformer2d::Level {
 		 */
 		const auto Actors = Scene->GetActors();
 		ImGui::Text("Actors: %d", Actors.size() + 1);
-		UI::Draw::ActorNode(Player, Scene);
+		UI::Widget::ActorNode(Player, Scene);
 		for (auto& Actor : Actors)
 		{
-			UI::Draw::ActorNode(Actor, Scene);
+			UI::Widget::ActorNode(Actor, Scene);
 		}
 
 		ImGui::Dummy(ImVec2(0, 10));
@@ -740,6 +745,23 @@ namespace platformer2d::Level {
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
 		LK_DEBUG_TAG("TestLevel", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+
+		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
+		{
+			return;
+		}
+
+		/**
+		 * Player is overlapping the sensor.
+		 * Determine the type of sensor.
+		 */
+		if (Event.Visitor == Player.get())
+		{
+			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>())
+			{
+				LK_WARN("IC: {}", Enum::ToString(IC->GetType()));
+			}
+		}
 	}
 
 	void CTestLevel::OnSensorEndEvent(const CSensorEndEvent& Event)
