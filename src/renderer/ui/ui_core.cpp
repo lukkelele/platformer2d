@@ -2,6 +2,12 @@
 
 #include <queue>
 
+#include "editor_resources.h"
+
+namespace platformer2d {
+	FEditorResources EditorResources;
+}
+
 namespace platformer2d::UI {
 
 	namespace {
@@ -90,7 +96,7 @@ namespace platformer2d::UI {
 
 			ImGuiID DockID_Main = DockspaceID;
 			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, 0.18f, nullptr, &DockID_Main);
-			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.42f, nullptr, &DockID_Left);
+			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.34f, nullptr, &DockID_Left);
 
 			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, 0.22f, nullptr, &DockID_Main);
 			ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.52f, nullptr, &DockID_Right);

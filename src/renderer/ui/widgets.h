@@ -3,7 +3,9 @@
 #include <array>
 
 #include "ui_core.h"
+#include "ui.h"
 #include "scoped.h"
+#include "core/selectioncontext.h"
 #include "scene/actor.h"
 
 namespace platformer2d {
@@ -20,8 +22,9 @@ namespace platformer2d::UI {
 
 	namespace Widget {
 
-		void ActorNode_Data(CActor& Actor);
-		void ActorNode_Buttons(CActor& Actor, std::shared_ptr<CScene> Scene);
+		void ActorNode_Data(std::shared_ptr<CActor> Actor);
+		void ActorDeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
+		void ActorNode_Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 		void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 
 		/**
@@ -332,6 +335,127 @@ namespace platformer2d::UI {
 
 			return Modified;
 		}
-	}
 
+		template<typename TComponent, typename TUIFunction>
+		inline void DrawComponent(const std::string& ComponentName, std::shared_ptr<CActor> Actor, TUIFunction UIFunction)
+		{
+			if (!Actor || !Actor->HasComponent<TComponent>())
+			{
+				return;
+			}
+
+			static constexpr ImGuiTreeNodeFlags TreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen
+				| ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth
+				| ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_FramePadding;
+			auto& Comp = Actor->GetComponent<TComponent>();
+
+			ImGuiStyle& Style = ImGui::GetStyle();
+			const bool DisplayFrame = (TreeNodeFlags & ImGuiTreeNodeFlags_Framed) != 0;
+			const ImVec2 Padding = (DisplayFrame || (TreeNodeFlags & ImGuiTreeNodeFlags_FramePadding)) ? Style.FramePadding : ImVec2(Style.FramePadding.x, ImMin(ImGui::GetCurrentWindow()->DC.CurrLineTextBaseOffset, Style.FramePadding.y));
+			const float LineHeight = GImGui->FontSize + GImGui->Style.FramePadding.y + Padding.y;
+
+			const ImVec2 ContentRegionAvailable = ImGui::GetContentRegionAvail();
+			const bool Open = ImGui::TreeNodeEx((void*)typeid(TComponent).hash_code(), TreeNodeFlags, ComponentName.c_str());
+			ImGui::SameLine(ContentRegionAvailable.x - LineHeight * 0.50f);
+			if (ImGui::Button("+", ImVec2(LineHeight, LineHeight)))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+
+			bool RemoveComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove Component"))
+				{
+					RemoveComponent = true;
+				}
+				ImGui::EndPopup();
+			}
+
+			if (Open)
+			{
+				UIFunction(Comp);
+				ImGui::TreePop();
+			}
+
+			if (RemoveComponent)
+			{
+				LK_DEBUG_TAG("UI", "Removing component from: {}", Actor->GetName());
+				if (!Actor->RemoveComponent<TComponent>())
+				{
+					LK_ERROR_TAG("UI", "Failed to remove component from {}", Actor->GetName());
+				}
+			}
+		}
+
+		template<typename TComponent, typename... TIncompatible>
+		void DrawAddComponentButton(std::string_view Name, std::shared_ptr<CTexture> Icon, std::shared_ptr<CActor> Actor)
+		{
+			static constexpr float RowHeight = 25.0f;
+			auto* Window = ImGui::GetCurrentWindow();
+			Window->DC.CurrLineSize.y = RowHeight;
+			ImGui::TableNextRow(0, RowHeight);
+			ImGui::TableSetColumnIndex(0);
+
+			Window->DC.CurrLineTextBaseOffset = 3.0f;
+
+			const ImVec2 RowAreaMin = ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 0).Min;
+			const ImVec2 RowAreaMax = { ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnCount() - 1).Max.x - 20,
+										RowAreaMin.y + RowHeight };
+
+			ImGuiID ID = ImGui::GetID(Name.data());
+			ImRect RowRect(RowAreaMin, RowAreaMax);
+			ImGui::ItemAdd(RowRect, ID);
+			ImGui::PushClipRect(RowAreaMin, RowAreaMax, false);
+
+			bool IsRowHovered = false;
+			bool IsHeld = false;
+			ImGui::SetNextItemAllowOverlap();
+			bool IsRowClicked = ImGui::ButtonBehavior(RowRect, ID, &IsRowHovered, &IsHeld, ImGuiButtonFlags_AllowOverlap);
+			ImGui::PopClipRect();
+
+			auto FillRowWithColor = [](const ImColor& Color)
+			{
+				for (int Column = 0; Column < ImGui::TableGetColumnCount(); Column++)
+				{
+					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, Color, Column);
+				}
+			};
+
+			if (IsRowHovered)
+			{
+				FillRowWithColor(RGBA32::Background);
+				ImGui::SetTooltip("Clicked: %d RowAreaMin=(%.2f, %.2f) RowAreaMax=(%.2f, %.2f)", IsRowClicked, RowAreaMin.x,
+								  RowAreaMin.y, RowAreaMax.x, RowAreaMax.y);
+			}
+
+			UI::Image(Icon, ImVec2(RowHeight - 3.0f, RowHeight - 3.0f));
+			ImGui::TableSetColumnIndex(1);
+			ImGui::SetNextItemWidth(-1);
+			ImGui::TextUnformatted(Name.data());
+
+			if (IsRowClicked)
+			{
+				if ((sizeof...(TIncompatible) > 0) && Actor->HasAny<TIncompatible...>())
+				{
+					return;
+				}
+
+				if (!Actor->HasComponent<TComponent>())
+				{
+					LK_INFO_TAG("UI", "Add component to {}", Actor->GetName());
+					Actor->AddComponent<TComponent>();
+				}
+				else
+				{
+					LK_INFO_TAG("UI", "Actor {} already has that component", Actor->GetName());
+				}
+
+				ImGui::CloseCurrentPopup();
+			}
+		}
+
+		void DrawComponents(std::shared_ptr<CActor> Actor);
+
+	}
 }

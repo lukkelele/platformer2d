@@ -38,6 +38,9 @@ namespace platformer2d::UI {
 
 	extern const std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames;
 
+	void BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
+	void EndPropertyGrid();
+
 	struct FPhysicsBodyData
 	{
 		EBodyType BodyType = EBodyType::Static;

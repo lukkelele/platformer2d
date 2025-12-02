@@ -2,6 +2,7 @@ project_library_sources(
 	gamemenu.h
 	imguilayer.h
 	imguilayer.cpp
+	editor_resources.h
 	physics.cpp
 	selectionpanel.h
 	selectionpanel.cpp

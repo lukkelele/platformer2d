@@ -7,6 +7,7 @@
 #include "core/core.h"
 #include "core/window.h"
 #include "renderer/color.h"
+#include "renderer/texture.h"
 #include "scoped.h"
 
 namespace platformer2d::UI {
@@ -165,6 +166,11 @@ namespace platformer2d::UI {
 			UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::Text::Brighter);
 			ImGui::SetTooltip(Text.data());
 		}
+	}
+
+	inline void Image(std::shared_ptr<CTexture> Texture, const ImVec2& Size, const ImVec2& UV0 = ImVec2(0, 1), const ImVec2& UV1 = ImVec2(1, 0))
+	{
+		ImGui::Image(static_cast<ImU64>(Texture->GetID()), Size, UV0, UV1);
 	}
 
 	namespace Widget {

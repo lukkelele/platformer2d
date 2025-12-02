@@ -35,6 +35,20 @@ namespace platformer2d::UI {
 
 	const FViewportData& GetViewportData() { return ViewportData; }
 
+	void BeginPropertyGrid(const std::size_t LabelColumnWidth)
+	{
+		UI::PushID();
+		ImGui::BeginTable("##PropertyGrid", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+	}
+
+	void EndPropertyGrid()
+	{
+		ImGui::EndTable();
+		UI::PopID();
+	}
+
 	bool ColorDropdown(EColor& Selected)
 	{
 		bool Updated = false;
@@ -466,7 +480,7 @@ namespace platformer2d::UI {
 
 		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
-			UI::Widget::ActorNode_Data(*Player);
+			UI::Widget::ActorNode_Data(Player);
 			ImGui::TreePop();
 		}
 	}
