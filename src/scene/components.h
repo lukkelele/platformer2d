@@ -105,10 +105,14 @@ namespace platformer2d {
 		}
 	};
 
+	/**************************************
+	 * EffectComponent
+	 **************************************/
 	enum class EEffectType
 	{
 		None,
-		Rotate
+		Rotate,
+		COUNT
 	};
 
 	struct FRotateEffect
@@ -132,6 +136,24 @@ namespace platformer2d {
 		{
 			return !Effects.empty();
 		}
+	};
+
+	/**************************************
+	 * InteractionComponent
+	 **************************************/
+	enum class EInteraction
+	{
+		None,
+		Damage,
+		Pickup,
+		COUNT
+	};
+
+	struct FInteractionComponent
+	{
+		EInteraction Type = EInteraction::None;
+
+		EInteraction GetType() const { return Type; }
 	};
 
 	namespace Enum
@@ -160,6 +182,24 @@ namespace platformer2d {
 		#undef _
 			LK_ASSERT(false);
 			return EEffectType::None;
+		}
+
+		inline const char* ToString(const EInteraction Interaction)
+		{
+			const char* S = "";
+		#define _(EnumValue) case EInteraction::EnumValue: S = #EnumValue; break
+			switch (Interaction)
+			{
+				_(None);
+				_(Damage);
+				_(Pickup);
+				_(COUNT);
+				default:
+					LK_THROW_ENUM_ERR(Interaction);
+					break;
+			}
+		#undef _
+			return S;
 		}
 	}
 
