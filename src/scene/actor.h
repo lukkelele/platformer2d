@@ -10,13 +10,6 @@
 #include "physics/body.h"
 #include "serialization/serializable.h"
 
-#define LK_ASSERT_COMPONENT_RETRIEVAL 1
-#if LK_ASSERT_COMPONENT_RETRIEVAL
-#	define LK_ASSERT_GET_COMP(...) LK_ASSERT(__VA_ARGS__)
-#else
-#	define LK_ASSERT_GET_COMP(...)
-#endif
-
 namespace platformer2d {
 
 	class CScene;
@@ -81,6 +74,29 @@ namespace platformer2d {
 		void SetOutlineThickness(float InThickness);
 		void SetOutlineColor(const glm::vec4& InColor);
 
+		virtual bool Serialize(YAML::Emitter& Out) const override;
+
+		template<typename T>
+		T& AddComponent()
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "AddComponent not specialized for this type");
+		}
+
+		template<typename T>
+		T& AddComponent(const T& Value)
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(!std::is_same_v<T, T>, "AddComponent not specialized for this type");
+		}
+
+		template<typename T>
+		bool RemoveComponent()
+		{
+			/* Force generic template to be ill-formed, no return needed. */
+			static_assert(sizeof(T) == 0, "RemoveComponent not specialized for this type");
+		}
+
 		template<typename T>
 		T& GetComponent()
 		{
@@ -110,20 +126,6 @@ namespace platformer2d {
 		}
 
 		template<typename T>
-		T& AddComponent()
-		{
-			/* Force generic template to be ill-formed, no return needed. */
-			static_assert(sizeof(T) == 0, "AddComponent not specialized for this type");
-		}
-
-		template<typename T>
-		T& AddComponent(const T& Value)
-		{
-			/* Force generic template to be ill-formed, no return needed. */
-			static_assert(!std::is_same_v<T, T>, "AddComponent not specialized for this type");
-		}
-
-		template<typename T>
 		bool HasComponent() const
 		{
 			return false;
@@ -147,11 +149,13 @@ namespace platformer2d {
 			{
 				Ret = (Ret || HasComponent<FEffectComponent>());
 			}
+			if constexpr (!IsOneOf<FInteractionComponent, TExcluded...>)
+			{
+				Ret = (Ret || HasComponent<FEffectComponent>());
+			}
 
 			return Ret;
 		}
-
-		virtual bool Serialize(YAML::Emitter& Out) const override;
 
 	private:
 		void UpdateEffectComponent(FEffectComponent& EC);
@@ -163,6 +167,7 @@ namespace platformer2d {
 		std::unique_ptr<CBody> Body;
 		FTransformComponent TransformComp{};
 		std::optional<FEffectComponent> EffectComp;
+		std::optional<FInteractionComponent> InteractionComp;
 
 		std::string Name;
 		ETexture Texture = ETexture::White;
@@ -181,105 +186,6 @@ namespace platformer2d {
 		bool bDeletable = true;
 	};
 
-	template<>
-	inline FTransformComponent& CActor::GetComponent<FTransformComponent>()
-	{
-		return TransformComp;
-	}
-
-	template<>
-	inline const FTransformComponent& CActor::GetComponent<FTransformComponent>() const
-	{
-		return TransformComp;
-	}
-
-	template<>
-	inline FEffectComponent& CActor::GetComponent<FEffectComponent>()
-	{
-		LK_ASSERT_GET_COMP(EffectComp.has_value());
-		return EffectComp.value();
-	}
-
-	template<>
-	inline const FEffectComponent& CActor::GetComponent<FEffectComponent>() const
-	{
-		LK_ASSERT_GET_COMP(EffectComp.has_value());
-		return EffectComp.value();
-	}
-
-	template<>
-	inline FTransformComponent* CActor::TryGetComponent<FTransformComponent>()
-	{
-		return &TransformComp;
-	}
-
-	template<>
-	inline const FTransformComponent* CActor::TryGetComponent<FTransformComponent>() const
-	{
-		return &TransformComp;
-	}
-
-	template<>
-	inline FEffectComponent* CActor::TryGetComponent<FEffectComponent>()
-	{
-		if (!EffectComp.has_value())
-		{
-			return nullptr;
-		}
-
-		return std::addressof(EffectComp.value());
-	}
-
-	template<>
-	inline const FEffectComponent* CActor::TryGetComponent<FEffectComponent>() const
-	{
-		if (!EffectComp.has_value())
-		{
-			return nullptr;
-		}
-
-		return std::addressof(EffectComp.value());
-	}
-
-	template<>
-	inline FEffectComponent& CActor::AddComponent<FEffectComponent>()
-	{
-		if (!EffectComp.has_value())
-		{
-			EffectComp.emplace();
-		}
-
-		return EffectComp.value();
-	}
-
-	template<>
-	inline FEffectComponent& CActor::AddComponent<FEffectComponent>(const FEffectComponent& Value)
-	{
-		LK_ASSERT(Value.HasAny(), "Added component has no effects");
-		if (!EffectComp.has_value())
-		{
-			EffectComp = Value;
-		}
-		else
-		{
-			EffectComp.value() = Value;
-		}
-
-		return EffectComp.value();
-	}
-
-	template<>
-	inline bool CActor::HasComponent<FTransformComponent>() const
-	{
-		return true;
-	}
-
-	template<>
-	inline bool CActor::HasComponent<FEffectComponent>() const
-	{
-		return EffectComp.has_value();
-	}
-
 }
 
-#undef LK_ASSERT_GET_COMP
+#include "actor_impl.h"

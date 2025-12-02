@@ -184,10 +184,18 @@ namespace platformer2d {
 		/* EffectComponent */
 		if (HasComponent<FEffectComponent>())
 		{
-			const FEffectComponent& EC = GetComponent<FEffectComponent>();
+			const auto& EC = GetComponent<FEffectComponent>();
 			Serialization::Serialize(EC, Out);
 		}
 		/* ~EffectComponent */
+
+		/* InteractionComponent */
+		if (HasComponent<FInteractionComponent>())
+		{
+			const auto& IC = GetComponent<FInteractionComponent>();
+			Serialization::Serialize(IC, Out);
+		}
+		/* ~InteractionComponent */
 
 		if (Body)
 		{
