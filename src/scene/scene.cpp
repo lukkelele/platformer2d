@@ -269,6 +269,14 @@ namespace platformer2d {
 				LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
 			}
 
+			bool HasInteractionComponent = false;
+			FInteractionComponent IC;
+			if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined())
+			{
+				HasEffectComponent = true;
+				Serialization::Deserialize(IC, InteractionCompNode);
+			}
+
 			if (!DoesActorExist(ActorSpec.Handle))
 			{
 				std::shared_ptr<CActor> Actor = Create<CActor>(ActorSpec, BodySpec);
@@ -277,6 +285,10 @@ namespace platformer2d {
 				if (HasEffectComponent)
 				{
 					Actor->AddComponent<FEffectComponent>(EC);
+				}
+				if (HasInteractionComponent)
+				{
+					Actor->AddComponent<FInteractionComponent>(IC);
 				}
 			}
 			else
