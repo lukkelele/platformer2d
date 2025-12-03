@@ -11,6 +11,8 @@ namespace platformer2d {
 		LUUID Handle = 0;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
+
+		bool OutlineEnabled = true;
 		float OutlineThickness = 0.0f;
 		glm::vec4 OutlineColor = FColor::Transparent;
 

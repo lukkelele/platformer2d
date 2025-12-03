@@ -18,7 +18,7 @@ namespace platformer2d {
 		, Name(BodySpec.Name)
 		, Texture(InSpec.Texture)
 		, Color(InSpec.Color)
-		, Outline(InSpec.OutlineThickness, InSpec.OutlineColor)
+		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
 	{
 		LK_TRACE_TAG("Actor", "Create: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
 		Body = std::make_unique<CBody>(BodySpec, this);
@@ -150,6 +150,11 @@ namespace platformer2d {
 		Texture = InTexture;
 	}
 
+	void CActor::SetOutlineEnabled(const bool Enabled)
+	{
+		Outline.bEnabled = Enabled;
+	}
+
 	void CActor::SetOutlineThickness(const float InThickness)
 	{
 		Outline.Thickness = InThickness;
@@ -172,6 +177,7 @@ namespace platformer2d {
 
 		Out << YAML::Value << "Outline";
 		Out << YAML::BeginMap;
+		Out << YAML::Key << "Enabled" << YAML::Value << Outline.bEnabled;
 		Out << YAML::Key << "Thickness" << YAML::Value << Outline.Thickness;
 		Out << YAML::Key << "Color" << YAML::Value << Outline.Color;
 		Out << YAML::EndMap;

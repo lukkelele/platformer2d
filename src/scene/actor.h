@@ -61,6 +61,7 @@ namespace platformer2d {
 		inline bool IsDeletable() const { return bDeletable; }
 		void SetDeletable(bool Deletable);
 		bool IsPlayer() const { return GetType() == EActorType::Player; }
+		bool IsSensor() const { return (Body ? Body->IsSensor() : false); }
 
 		inline ETexture GetTexture() const { return Texture; }
 		inline const glm::vec4& GetColor() const { return Color; }
@@ -69,8 +70,10 @@ namespace platformer2d {
 		inline std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
 		void SetTexture(ETexture InTexture);
+		bool IsOutlineEnabled() const { return Outline.bEnabled; }
 		float GetOutlineThickness() const { return Outline.Thickness; }
 		const glm::vec4& GetOutlineColor() const { return Outline.Color; }
+		void SetOutlineEnabled(bool Enabled);
 		void SetOutlineThickness(float InThickness);
 		void SetOutlineColor(const glm::vec4& InColor);
 
@@ -175,6 +178,7 @@ namespace platformer2d {
 
 		struct FOutline
 		{
+			bool bEnabled = true;
 			float Thickness = 0.0f;
 			glm::vec4 Color = FColor::Transparent;
 		};

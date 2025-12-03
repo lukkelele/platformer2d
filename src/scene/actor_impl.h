@@ -38,7 +38,6 @@ namespace platformer2d {
 	template<>
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>(const FEffectComponent& Other)
 	{
-		LK_ASSERT(Other.HasAny(), "Added component has no effects");
 		LK_DEBUG_TAG("Actor", "{}: Add effect component", Name);
 		if (!EffectComp.has_value())
 		{
@@ -141,14 +140,14 @@ namespace platformer2d {
 	template<>
 	inline FInteractionComponent& CActor::GetComponent<FInteractionComponent>()
 	{
-		LK_ASSERT_GET_COMP(EffectComp.has_value());
+		LK_ASSERT_GET_COMP(InteractionComp.has_value());
 		return InteractionComp.value();
 	}
 
 	template<>
 	inline const FInteractionComponent& CActor::GetComponent<FInteractionComponent>() const
 	{
-		LK_ASSERT_GET_COMP(EffectComp.has_value());
+		LK_ASSERT_GET_COMP(InteractionComp.has_value());
 		return InteractionComp.value();
 	}
 
