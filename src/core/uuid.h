@@ -1,5 +1,7 @@
 #pragma once
 
+#include <random>
+
 #include "core/core.h"
 
 namespace platformer2d {
@@ -13,6 +15,18 @@ namespace platformer2d {
 		LUUID(const LUUID&) = default;
 
 		operator uint64_t() const { return UUID; }
+
+	private:
+		static SizeType Generate()
+		{
+			static std::random_device RandomDevice;
+			static std::mt19937_64 RandomEngine(RandomDevice());
+			static std::uniform_int_distribution<SizeType> UniformDistribution(
+				1,
+				std::numeric_limits<SizeType>::max()
+			);
+			return UniformDistribution(RandomEngine);
+		}
 
 	private:
 		uint64_t UUID = 0;
