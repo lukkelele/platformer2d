@@ -20,6 +20,12 @@ namespace platformer2d::UI {
 		XYZ,
 	};
 
+	enum class EPlacementPolicy
+	{
+		Auto,
+		InPlace, /* Do not adjust based on current widget environment (e.g if in a table) */
+	};
+
 	namespace Widget {
 
 		void ActorNode_Data(std::shared_ptr<CActor> Actor);
@@ -32,6 +38,7 @@ namespace platformer2d::UI {
 		 */
 		void OnActorDeleted(LUUID ActorHandle);
 
+		template<EPlacementPolicy Policy = EPlacementPolicy::Auto>
 		inline bool DragFloat(const char* Label, float& Value, float ValueSpeed = 1.0f,
 							  float ValueMin = 0.0f, float ValueMax = 0.0f,
 							  const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
@@ -49,25 +56,33 @@ namespace platformer2d::UI {
 			const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
 
 			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
-			if (ImGui::GetCurrentTable() != nullptr)
+			if constexpr (Policy == EPlacementPolicy::Auto)
 			{
-				if ((LabelSize > 0) && (Label[0] != '#'))
+				if (ImGui::GetCurrentTable() != nullptr)
 				{
-					ImGui::TableSetColumnIndex(0);
-					UI::ShiftCursor(17.0f, 7.0f);
-					ImGui::Text(Label);
-				}
+					if ((LabelSize > 0) && (Label[0] != '#'))
+					{
+						ImGui::TableSetColumnIndex(0);
+						UI::ShiftCursor(17.0f, 7.0f);
+						ImGui::Text(Label);
+					}
 
-				ImGui::TableSetColumnIndex(1);
-				UI::ShiftCursor(7.0f, 0.0f);
-			}
-			else
-			{
-				if ((LabelSize > 0) && (Label[0] != '#'))
-				{
-					ImGui::Text(Label);
-					ImGui::SameLine();
+					ImGui::TableSetColumnIndex(1);
+					UI::ShiftCursor(7.0f, 0.0f);
 				}
+				else
+				{
+					if ((LabelSize > 0) && (Label[0] != '#'))
+					{
+						ImGui::Text(Label);
+						ImGui::SameLine();
+					}
+				}
+			}
+			else if constexpr (Policy == EPlacementPolicy::InPlace)
+			{
+				ImGui::Text(Label);
+				ImGui::SameLine();
 			}
 
 			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);

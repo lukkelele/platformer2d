@@ -168,6 +168,36 @@ namespace platformer2d::UI {
 		}
 	}
 
+	inline void LargeText(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
+	{
+		UI::FScopedFont ScopedFont(Font::Get(Font, EFontSize::Large, Modifier));
+		ImGui::Text("%s", Text.data());
+	}
+
+	inline void LargeTextCentralized(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
+	{
+		UI::FScopedFont ScopedFont(Font::Get(Font, EFontSize::Large, Modifier));
+		const ImVec2 Size = ImGui::CalcTextSize(Text.data());
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		UI::ShiftCursorX((Avail.x * 0.50f) - (Size.x * 0.50f));
+		ImGui::Text("%s", Text.data());
+	}
+
+	inline void HeaderText(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
+	{
+		UI::FScopedFont ScopedFont(Font::Get(Font, EFontSize::Header, Modifier));
+		ImGui::Text("%s", Text.data());
+	}
+
+	inline void HeaderTextCentralized(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
+	{
+		UI::FScopedFont ScopedFont(Font::Get(Font, EFontSize::Header, Modifier));
+		const ImVec2 Size = ImGui::CalcTextSize(Text.data());
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		UI::ShiftCursorX((Avail.x * 0.50f) - (Size.x * 0.50f));
+		ImGui::Text("%s", Text.data());
+	}
+
 	inline void Image(std::shared_ptr<CTexture> Texture, const ImVec2& Size, const ImVec2& UV0 = ImVec2(0, 1), const ImVec2& UV1 = ImVec2(1, 0))
 	{
 		ImGui::Image(static_cast<ImU64>(Texture->GetID()), Size, UV0, UV1);

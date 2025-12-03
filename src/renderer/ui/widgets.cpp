@@ -117,6 +117,19 @@ namespace platformer2d::UI::Widget {
 			}
 		}
 
+		/* Outline enabled */
+		ImGui::TableNextRow();
+		{
+			Label("Outline");
+			NextColumn();
+			bool Enabled = Actor->IsOutlineEnabled();
+			UI::ShiftCursor(7.0f, 0.0f);
+			if (ImGui::Checkbox("##Outline", &Enabled))
+			{
+				Actor->SetOutlineEnabled(Enabled);
+			}
+		}
+
 		/* Outline thickness */
 		ImGui::TableNextRow();
 		{
@@ -414,6 +427,118 @@ namespace platformer2d::UI::Widget {
 			UI::EndPropertyGrid();
 		});
 
+		/***********************************
+		 * Interaction Component
+		 **********************************/
+		UI::Widget::DrawComponent<FInteractionComponent>("Interaction", Actor, [Actor](FInteractionComponent& IC)
+		{
+			EInteraction InteractionType = IC.GetType();
+			std::size_t SelectedIdx = std::to_underlying(InteractionType);
+			static constexpr std::array<EInteraction, std::to_underlying(EInteraction::COUNT)> Types = {
+				EInteraction::None,
+				EInteraction::Damage,
+				EInteraction::Pickup,
+			};
+
+			bool Updated = false;
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
+			ImGui::SetNextItemWidth(ComboItemWidth);
+			if (ImGui::BeginCombo("##EffectType", Enum::ToString(InteractionType)))
+			{
+				for (int Idx = 0; Idx < Types.size(); Idx++)
+				{
+					const char* Option = Enum::ToString(Types[Idx]);
+					if (Option == nullptr)
+					{
+						continue;
+					}
+
+					const bool IsSelected = (SelectedIdx == Idx);
+					if (ImGui::Selectable(Option, IsSelected))
+					{
+						if (SelectedIdx != Idx)
+						{
+							Updated = true;
+							SelectedIdx = Idx;
+						}
+					}
+				}
+
+				ImGui::EndCombo();
+				if (Updated)
+				{
+					InteractionType = static_cast<EInteraction>(SelectedIdx);
+					IC.Type = InteractionType;
+					LK_DEBUG_TAG("UI", "Set IC type: {}", Enum::ToString(IC.Type));
+
+					/* Convert to new variant. */
+					switch (IC.Type)
+					{
+						case EInteraction::None:
+						{
+							IC.Data = std::monostate{};
+							break;
+						}
+						case EInteraction::Damage:
+						{
+							FDamageInteraction Data;
+							IC.Data = Data;
+							break;
+						}
+						case EInteraction::Pickup:
+						{
+							FPickupInteraction Data;
+							IC.Data = Data;
+							break;
+						}
+
+						default:
+							LK_ERROR_TAG("UI", "Unsupported interaction type: {}", Enum::ToString(IC.Type));
+							break;
+					}
+				}
+			}
+			ImGui::PopStyleVar(2);
+
+			/**********************************
+			 * Interaction Data
+			 **********************************/
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+			UI::BeginPropertyGrid();
+			switch (IC.GetType())
+			{
+				case EInteraction::Damage:
+				{
+					ImGui::TableNextRow();
+					auto& Data = std::get<FDamageInteraction>(IC.GetData());
+					UI::Widget::DragFloat("Damage", Data.Damage, 1.0f, 0.0, 100.0f, "%.1f");
+					break;
+				}
+				case EInteraction::Pickup:
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					ImGui::Text("Expire When Picked Up");
+
+					ImGui::TableSetColumnIndex(1);
+					auto& Data = std::get<FPickupInteraction>(IC.GetData());
+					ImGui::Checkbox("####ExpireWhenPickedUp", &Data.bExpireWhenPickedUp);
+					break;
+				}
+
+				default:
+					break;
+			}
+			UI::EndPropertyGrid();
+			ImGui::PopStyleVar(2);
+		});
+
+		/**********************************
+		 * Effect Component
+		 **********************************/
 		UI::Widget::DrawComponent<FEffectComponent>("Effect", Actor, [Actor](FEffectComponent& EC)
 		{
 			UI::BeginPropertyGrid();
@@ -421,16 +546,24 @@ namespace platformer2d::UI::Widget {
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Text("%s", Enum::ToString(Effect.Type));
+
 				switch (Effect.Type)
 				{
 					case EEffectType::Rotate:
 					{
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex(1);
+						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+						if (ImGui::TreeNodeEx("Rotate", ImGuiTreeNodeFlags_SpanAllColumns))
+						{
+							ImGui::TableNextRow();
+							ImGui::TableSetColumnIndex(1);
 
-						auto& EffectRef = std::get<FRotateEffect>(Effect.Data);
-						UI::Widget::DragFloat("Angular Speed (deg/s)", EffectRef.AngularSpeedDegPerSecond, 1.0f, -360.0f, 360.0f);
+							auto& EffectRef = std::get<FRotateEffect>(Effect.Data);
+							UI::PushID();
+							UI::Widget::DragFloat("Angular Speed (deg/s)", EffectRef.AngularSpeedDegPerSecond, 1.0f, -360.0f, 360.0f);
+							UI::PopID();
+
+							ImGui::TreePop();
+						}
 						break;
 					}
 
@@ -438,20 +571,36 @@ namespace platformer2d::UI::Widget {
 						break;
 				}
 			}
+			UI::EndPropertyGrid();
 
-			ImGui::Dummy(ImVec2(0, 20));
+			if (EC.HasAny())
+			{
+				ImGui::Dummy(ImVec2(0, 10));
+				ImGui::Separator();
+				ImGui::Dummy(ImVec2(0, 10));
+			}
+
+			/*********************************
+			 * Panel for adding effects.
+			 *********************************/
+			UI::LargeTextCentralized("Add effects");
+			static EEffectType EffectType = EEffectType::Rotate;
+			static float AngularSpeed = 10.0f;
+
+			UI::BeginPropertyGrid();
 			{
 				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
+				ImGui::TableSetColumnIndex(1);
 
 				static std::size_t SelectedIdx = std::to_underlying(EEffectType::Rotate);
-				static const std::array<EEffectType, std::to_underlying(EEffectType::COUNT)> EffectTypes = {
+				static constexpr std::array<EEffectType, std::to_underlying(EEffectType::COUNT)> EffectTypes = {
 					EEffectType::None,
 					EEffectType::Rotate,
 				};
 
-				static EEffectType EffectType = EEffectType::Rotate;
-				const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+				const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
 				ImGui::SetNextItemWidth(ComboItemWidth);
 				if (ImGui::BeginCombo("##EffectType", Enum::ToString(EffectType)))
 				{
@@ -476,41 +625,75 @@ namespace platformer2d::UI::Widget {
 						EffectType = static_cast<EEffectType>(SelectedIdx);
 					}
 				}
+				ImGui::PopStyleVar(2);
 
-				ImGui::TableSetColumnIndex(1);
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
 				{
 					UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-					if (ImGui::Button("Add effect"))
+					switch (EffectType)
 					{
-						FEffectInstance Effect;
-						Effect.Type = EEffectType::Rotate;
+						case EEffectType::Rotate:
+							UI::Widget::DragFloat<EPlacementPolicy::Auto>("Angular Speed", AngularSpeed, 1.0f, -360.0f, 360.0f);
+							break;
+
+						default:
+							break;
+					}
+				}
+			}
+			UI::EndPropertyGrid();
+
+			/***************************
+			 * Button: Add
+			 ***************************/
+			static constexpr ImVec2 ButtonSize(92, 36);
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			UI::ShiftCursorX(Avail.x - (ButtonSize.x + 10));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+			if (ImGui::Button("Add", ButtonSize))
+			{
+				FEffectInstance Effect;
+				Effect.Type = EffectType;
+				switch (Effect.Type)
+				{
+					case EEffectType::Rotate:
+					{
+						LK_DEBUG_TAG("UI", "Add rotate effect: AngularSpeed={}", AngularSpeed);
 						FRotateEffect Rotate;
-						Rotate.AngularSpeedDegPerSecond = 10.0f;
+						Rotate.AngularSpeedDegPerSecond = AngularSpeed;
 						Effect.Data = Rotate;
 						EC.Effects.push_back(Effect);
 					}
 				}
 			}
-
-			UI::EndPropertyGrid();
 		});
 
-		/* Button: Add Component */
+		ImGui::Dummy(ImVec2(0, 30));
+
+		/******************************
+		 * Button: Add Component
+		 ******************************/
 		{
 			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+
 			const float LineHeight = GImGui->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 			static const char* AddButtonLabel = "Add Component";
 			ImVec2 AddTextSize = ImGui::CalcTextSize(AddButtonLabel);
-			ImVec2 AddButtonSize = ImVec2(AddTextSize.x * 1.30f, LineHeight + 2.0f);
+			ImVec2 ButtonSize = ImVec2(AddTextSize.x * 1.30f, LineHeight + 2.0f);
 
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-			if (ImGui::Button(AddButtonLabel, AddButtonSize))
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			UI::ShiftCursorX(Avail.x - (ButtonSize.x + 10));
+			if (ImGui::Button(AddButtonLabel, ButtonSize))
 			{
 				ImGui::OpenPopup("AddComponent");
 			}
 		}
 
-		/* Popup: Add Component */
+		/******************************
+		 * Popup: Add Component
+		 ******************************/
 		if (ImGui::BeginPopup("AddComponent", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking))
 		{
 			static constexpr float AddCompPanelWidth = 250.0f;
@@ -521,6 +704,7 @@ namespace platformer2d::UI::Widget {
 
 				UI::Widget::DrawAddComponentButton<FTransformComponent>("Transform", EditorResources.PlusIcon, Actor);
 				UI::Widget::DrawAddComponentButton<FEffectComponent>("Effect", EditorResources.PlusIcon, Actor);
+				UI::Widget::DrawAddComponentButton<FInteractionComponent>("Interaction", EditorResources.PlusIcon, Actor);
 
 				ImGui::EndTable();
 			}
