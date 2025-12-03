@@ -8,7 +8,7 @@ namespace platformer2d {
 
 	struct FActorSpecification
 	{
-		LUUID Handle = 0;
+		LUUID Handle{};
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
 
