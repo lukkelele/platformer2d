@@ -211,7 +211,7 @@ namespace platformer2d {
 	CTexture::~CTexture()
 	{
 		/* @todo: Check if resources left behind */
-		LK_DEBUG_TAG("Texture", "Release: {} {}x{}", Name, Width, Height);
+		LK_TRACE_TAG("Texture", "Release: {} {}x{}", Name, Width, Height);
 	}
 
 	void CTexture::Bind(const uint32_t Slot) const
