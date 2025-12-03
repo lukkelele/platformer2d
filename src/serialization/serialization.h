@@ -72,15 +72,14 @@ namespace platformer2d::Serialization {
 			YAML::Node EffectNode;
 
 			Out << YAML::BeginMap;
-			Out << YAML::Key << "Type" << YAML::Value << Enum::ToString(Instance.Type);
+			Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(Instance.Type);
 
 			switch (Instance.Type)
 			{
 				case EEffectType::Rotate:
 				{
 					const FRotateEffect& Rotate = std::get<FRotateEffect>(Instance.Data);
-					Out << YAML::Key << "AngularSpeedDegPerSecond";
-					Out << YAML::Value << Rotate.AngularSpeedDegPerSecond;
+					Out << YAML::Key << "AngularSpeedDegPerSecond" << YAML::Value << Rotate.AngularSpeedDegPerSecond;
 					break;
 				}
 
@@ -99,6 +98,26 @@ namespace platformer2d::Serialization {
 		Out << YAML::Key << "InteractionComponent";
 		Out << YAML::BeginMap;
 		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(IC.GetType());
+		switch (IC.Type)
+		{
+			case EInteraction::Damage:
+			{
+				const auto& Data = std::get<FDamageInteraction>(IC.Data);
+				Out << YAML::Key << "Damage" << YAML::Value << Data.Damage;
+				break;
+			}
+			case EInteraction::Pickup:
+			{
+				const auto& Data = std::get<FPickupInteraction>(IC.Data);
+				Out << YAML::Key << "ExpireWhenPickedUp" << YAML::Value << Data.bExpireWhenPickedUp;
+				break;
+			}
+
+			default:
+				LK_ERROR_TAG("Serializer", "Interaction {} not supported", Enum::ToString(IC.Type));
+				break;
+		}
+
 		Out << YAML::EndMap;
 	}
 
@@ -137,11 +156,8 @@ namespace platformer2d::Serialization {
 			Instance.Type = EEffectType::None;
 			Instance.Data = std::monostate{};
 
-			const std::string TypeString = EffectNode["Type"].as<std::string>();
-			const EEffectType Type = Enum::FromString(TypeString);
-			LK_TRACE("Type={} TypeString={}", std::to_underlying(Type), TypeString);
-
-			if (TypeString == "Rotate")
+			const EEffectType Type = static_cast<EEffectType>(EffectNode["Type"].as<std::size_t>());
+			if (Type == EEffectType::Rotate)
 			{
 				Instance.Type = EEffectType::Rotate;
 				FRotateEffect Rotate;
@@ -151,7 +167,7 @@ namespace platformer2d::Serialization {
 
 			if (Instance.Type != EEffectType::None)
 			{
-				LK_TRACE("Push effect: {}", TypeString);
+				LK_TRACE("Push effect: {}", Enum::ToString(Instance.Type));
 				EC.Effects.push_back(Instance);
 			}
 		}
@@ -161,6 +177,29 @@ namespace platformer2d::Serialization {
 	void Deserialize(FInteractionComponent& IC, const YAML::Node& Node)
 	{
 		IC.Type = static_cast<EInteraction>(Node["Type"].as<std::underlying_type_t<EInteraction>>());
+		switch (IC.Type)
+		{
+			case EInteraction::Damage:
+			{
+				FDamageInteraction Data;
+				LK_DESERIALIZE_PROPERTY(Damage, Data.Damage, 0.0f, Node);
+				IC.Data = Data;
+				LK_DEBUG_TAG("Deserializer", "FDamageInteraction::Damage: {}", Data.Damage);
+				break;
+			}
+			case EInteraction::Pickup:
+			{
+				FPickupInteraction Data;
+				LK_DESERIALIZE_PROPERTY(ExpireWhenPickedUp, Data.bExpireWhenPickedUp, false, Node);
+				IC.Data = Data;
+				LK_DEBUG_TAG("Deserializer", "FPickupInteraction::bExpireWhenPickedUp: {}", Data.bExpireWhenPickedUp);
+				break;
+			}
+
+			default:
+				LK_ERROR_TAG("Deserializer", "Interaction {} not supported", Enum::ToString(IC.Type));
+				break;
+		}
 	}
 
 	template<>
