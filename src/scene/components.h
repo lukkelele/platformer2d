@@ -149,11 +149,25 @@ namespace platformer2d {
 		COUNT
 	};
 
+	struct FDamageInteraction
+	{
+		float Damage = 0.0f;
+	};
+
+	struct FPickupInteraction
+	{
+		bool bExpireWhenPickedUp = false;
+	};
+
+	using TInteractionData = std::variant<std::monostate, FDamageInteraction, FPickupInteraction>;
+
 	struct FInteractionComponent
 	{
 		EInteraction Type = EInteraction::None;
+		TInteractionData Data;
 
 		EInteraction GetType() const { return Type; }
+		TInteractionData& GetData() { return Data; }
 	};
 
 	namespace Enum
@@ -172,16 +186,6 @@ namespace platformer2d {
 			}
 		#undef _
 			return S;
-		}
-
-		inline EEffectType FromString(std::string_view String)
-		{
-		#define _(EnumValue) if (String == #EnumValue) { return EEffectType::EnumValue; }
-			_(None);
-			_(Rotate);
-		#undef _
-			LK_ASSERT(false);
-			return EEffectType::None;
 		}
 
 		inline const char* ToString(const EInteraction Interaction)
