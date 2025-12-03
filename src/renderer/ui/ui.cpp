@@ -227,22 +227,6 @@ namespace platformer2d::UI {
 			}
 		}
 
-		/* Button: Delete */
-		{
-			ImGui::SameLine();
-			UI::FScopedColorStack ButtonColours(
-				ImGuiCol_Button, RGBA32::WineRed,
-				ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-				ImGuiCol_ButtonActive, RGBA32::Red
-			);
-
-			UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
-			if (ImGui::Button("Delete", ButtonSize))
-			{
-				LK_WARN("PLACEHOLDER");
-			}
-		}
-
 		ImGui::EndTable();
 	}
 
