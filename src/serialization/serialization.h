@@ -27,6 +27,10 @@ namespace platformer2d::Serialization {
 					Destination = DefaultValue; \
 				} \
 			} \
+			else \
+			{ \
+				LK_WARN_TAG("Deserializer", "Property not found: {}", #PropertyName); \
+			} \
 		} \
 		else \
 		{ \
