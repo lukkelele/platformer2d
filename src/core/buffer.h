@@ -122,7 +122,7 @@ namespace platformer2d {
 		{
 			if (Data)
 			{
-				LK_DEBUG_TAG("Buffer", "Release {} bytes: {}", Size, Data);
+				LK_TRACE_TAG("Buffer", "Release {} bytes: {}", Size, Data);
 				delete[](uint8_t*)Data;
 				Data = nullptr;
 				Size = 0;
