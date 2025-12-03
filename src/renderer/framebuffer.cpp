@@ -101,9 +101,9 @@ namespace platformer2d {
 				ColorAttachments.push_back(Image);
 
 				LK_OpenGL_Verify(glFramebufferTexture2D(
-					GL_FRAMEBUFFER, 
-					(GL_COLOR_ATTACHMENT0 + Idx), 
-					GL_TEXTURE_2D, 
+					GL_FRAMEBUFFER,
+					(GL_COLOR_ATTACHMENT0 + Idx),
+					GL_TEXTURE_2D,
 					ColorAttachments[Idx]->GetID(),
 					0
 				));
@@ -162,8 +162,8 @@ namespace platformer2d {
 		/* @fixme: Use ClearColor member instead */
 		const glm::vec4& C = CRenderer::GetClearColor();
 		//const glm::vec4& C = ClearColor;
-        LK_OpenGL_Verify(glClearColor(C.r, C.g, C.b, C.a));
-        LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+		LK_OpenGL_Verify(glClearColor(C.r, C.g, C.b, C.a));
+		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
 
 	std::shared_ptr<CTexture> CFramebuffer::GetImage(const uint32_t AttachmentIdx)
@@ -175,6 +175,10 @@ namespace platformer2d {
 	void CFramebuffer::Resize(const uint32_t InWidth, const uint32_t InHeight)
 	{
 		LK_DEBUG_TAG("Framebuffer", "Resize: ({}, {})", InWidth, InHeight);
+		if ((InWidth <= 0) || (InHeight <= 0))
+		{
+			return;
+		}
 		Spec.Width = InWidth;
 		Spec.Height = InHeight;
 		Invalidate();
