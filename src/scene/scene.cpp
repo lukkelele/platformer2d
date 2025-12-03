@@ -54,7 +54,7 @@ namespace platformer2d {
 				Actor->GetTexture(),
 				Actor->GetColor(),
 				glm::degrees(TC.GetRotation2D()),
-				Actor->GetOutlineThickness(),
+				Actor->IsOutlineEnabled() ? Actor->GetOutlineThickness() : 0.0f,
 				Actor->GetOutlineColor()
 			);
 		}
@@ -236,6 +236,7 @@ namespace platformer2d {
 			ActorSpec.Color = Node["Color"].as<glm::vec4>();
 
 			const YAML::Node& OutlineNode = Node["Outline"];
+			LK_DESERIALIZE_PROPERTY(Enabled, ActorSpec.OutlineEnabled, true, OutlineNode);
 			LK_DESERIALIZE_PROPERTY(Thickness, ActorSpec.OutlineThickness, 1.0f, OutlineNode);
 			LK_DESERIALIZE_PROPERTY(Color, ActorSpec.OutlineColor, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), OutlineNode);
 
@@ -273,7 +274,7 @@ namespace platformer2d {
 			FInteractionComponent IC;
 			if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined())
 			{
-				HasEffectComponent = true;
+				HasInteractionComponent = true;
 				Serialization::Deserialize(IC, InteractionCompNode);
 			}
 
