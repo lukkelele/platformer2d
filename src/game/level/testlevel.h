@@ -34,6 +34,7 @@ namespace platformer2d::Level {
 		virtual bool Deserialize(const std::filesystem::path& InFile) override;
 
 	private:
+		void UpdateEditorViewportState();
 		void UpdateEditorViewportBounds();
 		virtual void UpdateViewportBounds() override;
 		virtual glm::vec2 GetMouseInViewportSpace() override;
@@ -64,6 +65,8 @@ namespace platformer2d::Level {
 		uint16_t EditorViewportWidth = 0;
 		uint16_t EditorViewportHeight = 0;
 		std::array<glm::vec2, 2> EditorViewportBounds{};
+		bool bEditorViewportHovered = false;
+		bool bEditorViewportFocused = true;
 	};
 
 }

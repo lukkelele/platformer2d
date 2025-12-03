@@ -87,7 +87,7 @@ namespace platformer2d {
 		LK_VERIFY(Body && Sprite);
 
 		/* Set z-index. */
-		TransformComp.Translation.z = 0.030f;
+		TransformComp.Translation.z = -0.010f;
 	}
 
 	void CPlayer::Tick(const float DeltaTime)

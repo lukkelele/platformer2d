@@ -35,7 +35,6 @@ namespace platformer2d::Level {
 			.Name = "TestLevel",
 			.Gravity = { 0.0f, -5.0f },
 			.Zoom = 0.32f,
-
 			.Player = {
 				.ActorSpec = FActorSpecification(ETexture::Player),
 				.BodySpec = {
@@ -322,13 +321,18 @@ namespace platformer2d::Level {
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags);
+		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags))
+		{
+			return;
+		}
 
 		UI_PrepareEditorViewport();
-		UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
+		const bool EditorViewportOpen = UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
+		ImGui::PopStyleVar(2);
+		if (EditorViewportOpen)
 		{
-			ImGui::PopStyleVar(2); /* FramePadding, WindowPadding */
-			UpdateEditorViewportBounds();
+			UpdateEditorViewportState();
+
 			UI_ViewportTexture();
 
 			UI_Level();
@@ -337,8 +341,9 @@ namespace platformer2d::Level {
 			UI::Statistics();
 			UI::SelectionPanel();
 			UI_DrawGizmo();
+
+			UI::End(); /* ~EditorViewport */
 		}
-		UI::End(); /* ~EditorViewport */
 
 		UI::End(); /* ~Viewport */
 	}
@@ -410,6 +415,20 @@ namespace platformer2d::Level {
 		}
 
 		return true;
+	}
+
+	void CTestLevel::UpdateEditorViewportState()
+	{
+		UpdateEditorViewportBounds();
+
+		bEditorViewportFocused = ImGui::IsWindowFocused();
+		bEditorViewportHovered = ImGui::IsWindowHovered();
+
+		const auto [PosX, PosY] = CMouse::GetPos();
+		bEditorViewportHovered = (PosX >= EditorViewportBounds[0].x) &&
+			(PosY >= EditorViewportBounds[0].y) &&
+			(PosX <= EditorViewportBounds[1].x) &&
+			(PosY <= EditorViewportBounds[1].y);
 	}
 
 	void CTestLevel::UpdateEditorViewportBounds()
@@ -512,13 +531,18 @@ namespace platformer2d::Level {
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
 		UI::PrepareRightSidebar();
-		if (!ImGui::Begin(UI::PanelID::Sidebar2))
+		if (!UI::Begin(UI::PanelID::Sidebar2))
 		{
-			ImGui::End();
 			return;
 		}
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
+
+		ImGui::SeparatorText("Editor Viewport");
+		ImGui::Text("Focused: %d", bEditorViewportFocused);
+		ImGui::Text("Hovered: %d", bEditorViewportHovered);
+
+		ImGui::Spacing();
 
 		if (ImGui::TreeNodeEx("Info", ImGuiTreeNodeFlags_SpanAvailWidth))
 		{
@@ -625,7 +649,7 @@ namespace platformer2d::Level {
 		UI::CreatorMenu(Scene);
 
 		UI::Font::Pop();
-		ImGui::End();
+		UI::End();
 	}
 
 	void CTestLevel::UI_Player()
@@ -722,7 +746,10 @@ namespace platformer2d::Level {
 			{
 				if (Data.Button == EMouseButton::Button0)
 				{
-					MousePickScene();
+					if (bEditorViewportFocused)
+					{
+						MousePickScene();
+					}
 				}
 				else if (Data.Button == EMouseButton::Button1)
 				{
@@ -745,7 +772,6 @@ namespace platformer2d::Level {
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
 		LK_DEBUG_TAG("TestLevel", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-
 		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
 		{
 			return;
@@ -759,7 +785,27 @@ namespace platformer2d::Level {
 		{
 			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>())
 			{
-				LK_WARN("IC: {}", Enum::ToString(IC->GetType()));
+				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
+				Event.Sensor->SetOutlineEnabled(true);
+
+				switch (IC->GetType())
+				{
+					case EInteraction::Damage:
+					{
+						auto& Data = std::get<FDamageInteraction>(IC->GetData());
+						LK_DEBUG("Damage: {}", Data.Damage);
+						break;
+					}
+					case EInteraction::Pickup:
+					{
+						auto& Data = std::get<FPickupInteraction>(IC->GetData());
+						LK_DEBUG("ExpireOnPickup: {}", Data.bExpireWhenPickedUp);
+						break;
+					}
+
+					default:
+						break;
+				}
 			}
 		}
 	}
@@ -768,6 +814,23 @@ namespace platformer2d::Level {
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
 		LK_DEBUG_TAG("TestLevel", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
+		{
+			return;
+		}
+
+		/**
+		 * Player is overlapping the sensor.
+		 * Determine the type of sensor.
+		 */
+		if (Event.Visitor == Player.get())
+		{
+			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>())
+			{
+				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
+				Event.Sensor->SetOutlineEnabled(false);
+			}
+		}
 	}
 
 	void CTestLevel::MousePickScene()
