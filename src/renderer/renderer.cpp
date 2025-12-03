@@ -180,6 +180,10 @@ namespace platformer2d {
 
 		CWindow::OnFramebufferResized.Add([&](const uint32_t NewWidth, const uint32_t NewHeight)
 		{
+			if ((NewWidth <= 0) || (NewHeight <= 0))
+			{
+				return;
+			}
 			LK_DEBUG_TAG("Renderer", "OnFramebufferResized: ({}, {})", NewWidth, NewHeight);
 			Data.ViewportFramebuffer->Resize(NewWidth, NewHeight);
 		});
