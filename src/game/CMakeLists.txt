@@ -1,5 +1,7 @@
 project_library(game)
 project_library_sources(
+	editor.h
+	editor.cpp
 	instance.h
 	instance.cpp
 	player.h
@@ -9,8 +11,6 @@ project_library_sources(
 	spawnpoint.h
 	spawnpoint.cpp
 )
-
-add_subdirectory(level)
 
 target_link_libraries(game PUBLIC 
 	core

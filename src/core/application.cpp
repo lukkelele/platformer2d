@@ -12,9 +12,9 @@
 #include "scene/effectmanager.h"
 
 /** @todo: Level loading from a main menu */
-#define LOAD_TEST_LEVEL_ON_STARTUP 1
-#if LOAD_TEST_LEVEL_ON_STARTUP
-#include "game/level/testlevel.h"
+#define LOAD_EDITOR_ON_STARTUP 1
+#if LOAD_EDITOR_ON_STARTUP
+#include "game/editor.h"
 #endif
 
 namespace platformer2d {
@@ -45,10 +45,10 @@ namespace platformer2d {
 		UILayer = std::make_shared<CUILayer>();
 		LayerStack.PushOverlay(UILayer);
 
-#ifdef LOAD_TEST_LEVEL_ON_STARTUP
+#ifdef LOAD_EDITOR_ON_STARTUP
 		LK_TRACE_TAG("Application", "Adding testlevel to layerstack");
-		std::shared_ptr<Level::CTestLevel> TestLevel = std::make_shared<Level::CTestLevel>();
-		LayerStack.PushLayer(TestLevel);
+		std::shared_ptr<CEditor> Editor = std::make_shared<CEditor>();
+		LayerStack.PushLayer(Editor);
 #endif
 	}
 

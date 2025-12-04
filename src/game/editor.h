@@ -6,13 +6,13 @@
 #include "physics/events.h"
 #include "scene/scene.h"
 
-namespace platformer2d::Level {
+namespace platformer2d {
 
-	class CTestLevel : public CGameInstance
+	class CEditor : public CGameInstance
 	{
 	public:
-		CTestLevel();
-		virtual ~CTestLevel() = default;
+		CEditor();
+		virtual ~CEditor() = default;
 
 		virtual void Initialize() override;
 		virtual void Destroy() override;

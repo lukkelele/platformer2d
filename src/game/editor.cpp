@@ -1,4 +1,4 @@
-#include "testlevel.h"
+#include "editor.h"
 
 #include <fstream>
 #include <istream>
@@ -24,7 +24,7 @@
 #include "physics/ray.h"
 #include "serialization/serialization.h"
 
-namespace platformer2d::Level {
+namespace platformer2d {
 
 	namespace {
 		/*************************************
@@ -81,24 +81,24 @@ namespace platformer2d::Level {
 		std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Count + 2);
 	}
 
-	CTestLevel::CTestLevel()
+	CEditor::CEditor()
 		: CGameInstance(this, GameSpec)
 	{
 		CRenderer::SetClearColor(FColor::SkyBlue);
 	}
 
-	void CTestLevel::Initialize()
+	void CEditor::Initialize()
 	{
-		LK_DEBUG_TAG("TestLevel", "Initialize");
+		LK_DEBUG_TAG("Editor", "Initialize");
 		LK_ASSERT(Player == nullptr);
 
-		Scene = std::make_shared<CScene>("TestLevel");
+		Scene = std::make_shared<CScene>("Editor");
 
 		CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
 			{
-				LK_TRACE_TAG("TestLevel", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
+				LK_TRACE_TAG("Editor", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				LK_ASSERT(Scene);
 				UpdateInputBuffer(Scene->GetActors().size());
 
@@ -122,15 +122,15 @@ namespace platformer2d::Level {
 
 		CScene::OnActorDeleted.Add([&](const LUUID Handle)
 		{
-			LK_DEBUG_TAG("TestLevel", "OnActorDeleted: {}", Handle);
+			LK_DEBUG_TAG("Editor", "OnActorDeleted: {}", Handle);
 			UpdateInputBuffer(Scene->GetActors().size());
 			UI::Widget::OnActorDeleted(Handle);
 		});
 
 		const FGameSpecification& Spec = GetSpecification();
 		CPhysicsWorld::SetGravity(Spec.Gravity);
-		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CTestLevel::OnSensorBeginEvent);
-		CPhysicsWorld::OnSensorEndEvent.Add(this, &CTestLevel::OnSensorEndEvent);
+		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
+		CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
 
 		CreatePlayer();
 		LK_VERIFY(Player);
@@ -153,43 +153,43 @@ namespace platformer2d::Level {
 			}
 		});
 
-		CWindow::OnResized.Add(this, &CTestLevel::OnWindowResized);
+		CWindow::OnResized.Add(this, &CEditor::OnWindowResized);
 		CWindow* Window = CWindow::Get();
 		Window->Maximize();
 		UpdateViewportBounds();
 
-		CKeyboard::OnKeyPressed.Add(this, &CTestLevel::OnKeyPressed);
-		CMouse::OnButtonPressed.Add(this, &CTestLevel::OnMouseButtonPressed);
+		CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
+		CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
 
-		LK_DEBUG_TAG("TestLevel", "Initialize editor resources");
+		LK_DEBUG_TAG("Editor", "Initialize editor resources");
 		EditorResources.Initialize();
 	}
 
-	void CTestLevel::Destroy()
+	void CEditor::Destroy()
 	{
-		LK_TRACE_TAG("TestLevel", "Destroy");
+		LK_TRACE_TAG("Editor", "Destroy");
 		Serialize(GameSpec.LevelFilepath);
 
-		LK_DEBUG_TAG("TestLevel", "Release level resources");
+		LK_DEBUG_TAG("Editor", "Release level resources");
 		Player.reset();
 		Scene.reset();
 
 		EditorResources.Destroy();
 	}
 
-	void CTestLevel::OnAttach()
+	void CEditor::OnAttach()
 	{
-		LK_TRACE_TAG("TestLevel", "OnAttach");
+		LK_TRACE_TAG("Editor", "OnAttach");
 		Initialize();
 	}
 
-	void CTestLevel::OnDetach()
+	void CEditor::OnDetach()
 	{
-		LK_TRACE_TAG("TestLevel", "OnDetach");
+		LK_TRACE_TAG("Editor", "OnDetach");
 		Destroy();
 	}
 
-	void CTestLevel::Tick(const float InDeltaTime)
+	void CEditor::Tick(const float InDeltaTime)
 	{
 		DeltaTime = InDeltaTime;
 		CCamera& Camera = Player->GetCamera();
@@ -219,18 +219,18 @@ namespace platformer2d::Level {
 		Scene->Render();
 	}
 
-	CCamera* CTestLevel::GetActiveCamera() const
+	CCamera* CEditor::GetActiveCamera() const
 	{
 		return (Player ? &Player->GetCamera() : nullptr);
 	}
 
-	CPlayer* CTestLevel::GetPlayer(const std::size_t Idx) const
+	CPlayer* CEditor::GetPlayer(const std::size_t Idx) const
 	{
-		LK_ASSERT(Idx == 0, "TestLevel only supports 1 player");
+		LK_ASSERT(Idx == 0, "Only 1 player supported");
 		return Player.get();
 	}
 
-	uint16_t CTestLevel::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
+	uint16_t CEditor::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
 		static FRayCast RayData;
 		HitResults.clear();
@@ -280,7 +280,7 @@ namespace platformer2d::Level {
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
-	uint16_t CTestLevel::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
+	uint16_t CEditor::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
 		HitResults.clear();
 		const CCamera& Camera = *GetActiveCamera();
@@ -317,7 +317,7 @@ namespace platformer2d::Level {
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
-	void CTestLevel::RenderUI()
+	void CEditor::RenderUI()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -348,9 +348,9 @@ namespace platformer2d::Level {
 		UI::End(); /* ~Viewport */
 	}
 
-	bool CTestLevel::Serialize(const std::filesystem::path& OutFile) const
+	bool CEditor::Serialize(const std::filesystem::path& OutFile) const
 	{
-		LK_INFO_TAG("TestLevel", "Serialize: {}", OutFile);
+		LK_INFO_TAG("Editor", "Serialize: {}", OutFile);
 		YAML::Emitter Out;
 
 		Out << YAML::BeginMap; /* Level */
@@ -379,13 +379,13 @@ namespace platformer2d::Level {
 		return true;
 	}
 
-	bool CTestLevel::Deserialize(const std::filesystem::path& Filepath)
+	bool CEditor::Deserialize(const std::filesystem::path& Filepath)
 	{
-		LK_INFO_TAG("TestLevel", "Deserialize: {}", StringUtils::GetPathRelativeToProject(Filepath));
+		LK_INFO_TAG("Editor", "Deserialize: {}", StringUtils::GetPathRelativeToProject(Filepath));
 		LK_ASSERT(std::filesystem::exists(Filepath), "Filepath does not exist: {}", Filepath);
 		if (!std::filesystem::exists(Filepath))
 		{
-			LK_ERROR_TAG("TestLevel", "Filepath does not exist: {}", Filepath);
+			LK_ERROR_TAG("Editor", "Filepath does not exist: {}", Filepath);
 			return false;
 		}
 
@@ -401,23 +401,23 @@ namespace platformer2d::Level {
 		LK_ASSERT(!SceneNode.IsNull());
 		if (SceneNode.IsNull())
 		{
-			LK_ERROR_TAG("TestLevel", "Scene node is missing in YAML");
+			LK_ERROR_TAG("Editor", "Scene node is missing in YAML");
 			return false;
 		}
 
 		const std::filesystem::path SceneFilepath = SceneNode.as<std::filesystem::path>();
-		LK_INFO_TAG("TestLevel", "Loading scene: {}", StringUtils::GetPathRelativeToProject(SceneFilepath));
+		LK_INFO_TAG("Editor", "Loading scene: {}", StringUtils::GetPathRelativeToProject(SceneFilepath));
 		const bool SceneDeserialized = Scene->Deserialize(SceneFilepath);
 		if (!SceneDeserialized)
 		{
-			LK_FATAL_TAG("TestLevel", "Failed to deserialize scene");
+			LK_FATAL_TAG("Editor", "Failed to deserialize scene");
 			return false;
 		}
 
 		return true;
 	}
 
-	void CTestLevel::UpdateEditorViewportState()
+	void CEditor::UpdateEditorViewportState()
 	{
 		UpdateEditorViewportBounds();
 
@@ -431,7 +431,7 @@ namespace platformer2d::Level {
 			(PosY <= EditorViewportBounds[1].y);
 	}
 
-	void CTestLevel::UpdateEditorViewportBounds()
+	void CEditor::UpdateEditorViewportBounds()
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
 		const ImVec2 WindowPos = Window->Pos;
@@ -461,7 +461,7 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::UpdateViewportBounds()
+	void CEditor::UpdateViewportBounds()
 	{
 		ViewportBounds[0] = { 0.0f, 0.0f };
 		if (CWindow* Window = CWindow::Get(); Window != nullptr)
@@ -470,12 +470,12 @@ namespace platformer2d::Level {
 		}
 		else
 		{
-			LK_WARN_TAG("TestLevel", "[{}] No window reference", GetSpecification().Name);
+			LK_WARN_TAG("Editor", "[{}] No window reference", GetSpecification().Name);
 			ViewportBounds[1] = { 0.0f, 0.0f };
 		}
 	}
 
-	glm::vec2 CTestLevel::GetMouseInViewportSpace()
+	glm::vec2 CEditor::GetMouseInViewportSpace()
 	{
 		auto [MouseX, MouseY] = CMouse::GetPos();
 		MouseX -= EditorViewportBounds[0].x;
@@ -489,7 +489,7 @@ namespace platformer2d::Level {
 		);
 	}
 
-	glm::vec2 CTestLevel::GetMouseInWorldSpace(const CCamera& Camera)
+	glm::vec2 CEditor::GetMouseInWorldSpace(const CCamera& Camera)
 	{
 		const glm::vec2 MousePos = GetMouseInViewportSpace();
 		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
@@ -508,7 +508,7 @@ namespace platformer2d::Level {
 		return WorldPos;
 	}
 
-	void CTestLevel::CreatePlayer()
+	void CEditor::CreatePlayer()
 	{
 		const FGameSpecification& Spec = GetSpecification();
 		FActorSpecification ActorSpec;
@@ -527,7 +527,7 @@ namespace platformer2d::Level {
 		});
 	}
 
-	void CTestLevel::UI_Level()
+	void CEditor::UI_Level()
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
 		UI::PrepareRightSidebar();
@@ -652,7 +652,7 @@ namespace platformer2d::Level {
 		UI::End();
 	}
 
-	void CTestLevel::UI_Player()
+	void CEditor::UI_Player()
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA); /* @todo Dock node alpha. */
 		UI::PrepareLeftSidebar();
@@ -667,7 +667,7 @@ namespace platformer2d::Level {
 		ImGui::End(); /* ~Player */
 	}
 
-	void CTestLevel::UI_ViewportTexture()
+	void CEditor::UI_ViewportTexture()
 	{
 		const ImVec2 WindowSize = {
 			static_cast<float>(EditorViewportWidth),
@@ -687,7 +687,7 @@ namespace platformer2d::Level {
 		);
 	}
 
-	void CTestLevel::UI_DrawGizmo()
+	void CEditor::UI_DrawGizmo()
 	{
 		std::shared_ptr<CActor> SelectedRef = SelectedActor.lock();
 		if (!SelectedRef)
@@ -709,14 +709,14 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
+	void CEditor::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
 	{
-		LK_TRACE_TAG("TestLevel", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
+		LK_TRACE_TAG("Editor", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 		ViewportWidth = InWidth;
 		ViewportHeight = InHeight;
 	}
 
-	void CTestLevel::OnKeyPressed(const FKeyData& Data)
+	void CEditor::OnKeyPressed(const FKeyData& Data)
 	{
 		switch (Data.Key)
 		{
@@ -738,7 +738,7 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::OnMouseButtonPressed(const FMouseButtonData& Data)
+	void CEditor::OnMouseButtonPressed(const FMouseButtonData& Data)
 	{
 		switch (Data.State)
 		{
@@ -768,10 +768,10 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::OnSensorBeginEvent(const CSensorBeginEvent& Event)
+	void CEditor::OnSensorBeginEvent(const CSensorBeginEvent& Event)
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("TestLevel", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		LK_DEBUG_TAG("Editor", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
 		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
 		{
 			return;
@@ -810,10 +810,10 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::OnSensorEndEvent(const CSensorEndEvent& Event)
+	void CEditor::OnSensorEndEvent(const CSensorEndEvent& Event)
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("TestLevel", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		LK_DEBUG_TAG("Editor", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
 		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
 		{
 			return;
@@ -833,7 +833,7 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::MousePickScene()
+	void CEditor::MousePickScene()
 	{
 		CCamera* Camera = GetActiveCamera();
 		if (!Scene || !Camera)
@@ -854,7 +854,7 @@ namespace platformer2d::Level {
 		}
 	}
 
-	void CTestLevel::RaycastScene()
+	void CEditor::RaycastScene()
 	{
 		CCamera* Camera = GetActiveCamera();
 		if (!Scene || !Camera)
@@ -876,7 +876,7 @@ namespace platformer2d::Level {
 #endif
 	}
 
-	void CTestLevel::UI_PrepareEditorViewport()
+	void CEditor::UI_PrepareEditorViewport()
 	{
 		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
 		if (!Window)

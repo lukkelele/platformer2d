@@ -41,7 +41,7 @@ namespace platformer2d::test {
 #endif
 
 #if LOAD_TEST_LEVEL_ON_STARTUP
-		std::shared_ptr<Level::CTestLevel> TestLevel = std::make_shared<Level::CTestLevel>();
+		std::shared_ptr<Level::CEditor> TestLevel = std::make_shared<Level::CEditor>();
 		const bool LayerAdded = Application->PushLayer(TestLevel);
 		LK_VERIFY(LayerAdded, "Failed to add layer");
 #endif
