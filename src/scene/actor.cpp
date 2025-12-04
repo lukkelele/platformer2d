@@ -5,17 +5,18 @@
 
 namespace platformer2d {
 
-	CActor::CActor(const FActorSpecification& Spec)
-		: Handle(LUUID())
-		, Name("")
-		, Texture(Spec.Texture)
-		, Color(Spec.Color)
+	CActor::CActor(const FActorSpecification& InSpec)
+		: Handle(InSpec.Handle)
+		, Name(InSpec.Name)
+		, Texture(InSpec.Texture)
+		, Color(InSpec.Color)
+		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
 	{
 	}
 
 	CActor::CActor(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
 		: Handle(InSpec.Handle)
-		, Name(BodySpec.Name)
+		, Name(InSpec.Name)
 		, Texture(InSpec.Texture)
 		, Color(InSpec.Color)
 		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
@@ -64,7 +65,20 @@ namespace platformer2d {
 
 	glm::vec2 CActor::GetSize() const
 	{
-		return Body ? Body->GetSize() : glm::vec2(0.0f, 0.0f);
+		return Body ? Body->GetSize() : GetTransformComponent().GetScale();
+	}
+
+	void CActor::SetSize(const glm::vec2 & InSize)
+	{
+		if (Body)
+		{
+			LK_FATAL_TAG("Actor", "Not supported yet: {}", LK_FUNCSIG);
+		}
+		else
+		{
+			TransformComp.Scale.x = InSize.x;
+			TransformComp.Scale.y = InSize.y;
+		}
 	}
 
 	glm::vec3 CActor::GetPosition() const
@@ -81,13 +95,19 @@ namespace platformer2d {
 	{
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
-		Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+		if (Body)
+		{
+			Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+		}
 	}
 
 	void CActor::SetPosition(const glm::vec3& NewPos)
 	{
 		TransformComp.Translation = NewPos;
-		Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+		if (Body)
+		{
+			Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+		}
 	}
 
 	float CActor::GetRotation() const
@@ -203,10 +223,18 @@ namespace platformer2d {
 		}
 		/* ~InteractionComponent */
 
+		/* Body */
+		Out << YAML::Key << "Body";
+		Out << YAML::BeginMap;
 		if (Body)
 		{
 			Body->Serialize(Out);
 		}
+		else
+		{
+		}
+		Out << YAML::EndMap;
+		/* ~Body */
 
 		Out << YAML::Key << "Deletable";
 		Out << YAML::Value << bDeletable;

@@ -3,6 +3,7 @@
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "game/instance.h"
+#include "game/gameplaysystem.h"
 #include "renderer/color.h"
 #include "renderer/font.h"
 #include "renderer/renderer.h"
@@ -149,6 +150,25 @@ namespace platformer2d::UI {
 		static const std::string FuncID = LK_FUNCSIG;
 		ImGui::PushID(FuncID.c_str());
 
+		{
+			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
+			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+			static constexpr ImVec2 ButtonSize = ImVec2(142, 50);
+			if (ImGui::Button("Add Spawnpoint", ButtonSize))
+			{
+				LK_WARN("Add spawnpoint");
+				CSpawner::CreateSpawnpoint("PlayerSpawn", { 0.0f, 0.0f });
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Teleport player", ButtonSize))
+			{
+				LK_WARN("Teleport player");
+				auto Player = CGameInstance::Get()->GetPlayer(0);
+				CGameplaySystem::Teleport(Player, {0.0f, 0.0f});
+			}
+		}
+
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
 		const bool CreateMenuOpened = ImGui::TreeNodeEx("Creator", ImGuiTreeNodeFlags_SpanAvailWidth);
@@ -161,6 +181,7 @@ namespace platformer2d::UI {
 
 			ActorAttributes(ActorAttr);
 
+			/* Menu: Physics body */
 			UI::ShiftCursorY(30);
 			PhysicsBodyMenu(PhysicsBodyData);
 			UI::ShiftCursorY(30);
@@ -284,7 +305,7 @@ namespace platformer2d::UI {
 	{
 		LK_ASSERT(Player);
 		CCamera& Camera = Player->GetCamera();
-		CBody& Body = Player->GetBody();
+		CBody* Body = Player->GetBody();
 		const FPlayerData& Data = Player->GetData();
 		FTransformComponent& TC = Player->GetTransformComponent();
 
@@ -309,7 +330,7 @@ namespace platformer2d::UI {
 		};
 
 		ImGui::TableNextRow();
-		glm::vec2 BodyPos = Body.GetPosition();
+		glm::vec2 BodyPos = Body->GetPosition();
 		{
 			Label("Position");
 			NextColumn();
@@ -366,7 +387,7 @@ namespace platformer2d::UI {
 		/* Linear velocity. */
 		ImGui::TableNextRow();
 		{
-			const glm::vec2 LinearVelocity = Body.GetLinearVelocity();
+			const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 			Label("Linear Velocity");
 			NextColumn();
 			ImGui::Text("(%.2f, %.2f)", LinearVelocity.x, LinearVelocity.y);
@@ -375,7 +396,7 @@ namespace platformer2d::UI {
 		/* Angular velocity. */
 		ImGui::TableNextRow();
 		{
-			const float AngularVelocity = Body.GetAngularVelocity();
+			const float AngularVelocity = Body->GetAngularVelocity();
 			Label("Angular Velocity");
 			NextColumn();
 			ImGui::Text("%.2f", AngularVelocity);
@@ -415,7 +436,7 @@ namespace platformer2d::UI {
 			ImGui::SameLine();
 			if (ImGui::Button("Apply##Scale"))
 			{
-				Body.SetScale(BodyScale);
+				Body->SetScale(BodyScale);
 			}
 			if (ImGui::IsItemHovered())
 			{
@@ -429,33 +450,33 @@ namespace platformer2d::UI {
 		/* Mass. */
 		ImGui::TableNextRow();
 		{
-			float Mass = Body.GetMass();
+			float Mass = Body->GetMass();
 			Changed |= UI::Widget::DragFloat("Mass", Mass, 0.010f, 0.0f, 10.0f, "%.2f");
 			if (Changed)
 			{
-				Body.SetMass(Mass);
+				Body->SetMass(Mass);
 			}
 		}
 
 		/* Friction. */
 		ImGui::TableNextRow();
 		{
-			float PlayerFriction = Body.GetFriction();
+			float PlayerFriction = Body->GetFriction();
 			Changed |= UI::Widget::DragFloat("Friction", PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
 			if (Changed)
 			{
-				Body.SetFriction(PlayerFriction);
+				Body->SetFriction(PlayerFriction);
 			}
 		}
 
 		/* Restitution. */
 		ImGui::TableNextRow();
 		{
-			float Restitution = Body.GetRestitution();
+			float Restitution = Body->GetRestitution();
 			Changed |= UI::Widget::DragFloat("Restitution", Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
 			if (Changed)
 			{
-				Body.SetRestitution(Restitution);
+				Body->SetRestitution(Restitution);
 			}
 		}
 
@@ -493,7 +514,7 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		CPlayer* Player = GameInstance->GetPlayer();
+		std::shared_ptr<CPlayer> Player = GameInstance->GetPlayer();
 		CCamera& Camera = Player->GetCamera();
 
 		static constexpr float LabelColumnWidth = 150.0f;

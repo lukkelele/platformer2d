@@ -91,7 +91,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
 		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
-		const b2ShapeId PlayerShapeID = Player.GetBody().GetShapeID();
+		const b2ShapeId PlayerShapeID = Player.GetBody()->GetShapeID();
 
 		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
 		if (!InvolvesPlayer)
@@ -117,7 +117,7 @@ namespace platformer2d {
 			return true;
 		}
 
-		const b2BodyId PlayerBody = Player.GetBody().GetID();
+		const b2BodyId PlayerBody = Player.GetBody()->GetID();
 		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
 		const float Vn = V.x * Normal.x + V.y * Normal.y;
 		if (Vn > 0.0f)

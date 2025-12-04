@@ -11,6 +11,7 @@
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
+#include "game/gameplaysystem.h"
 #include "game/player.h"
 #include "game/spawner.h"
 #include "renderer/renderer.h"
@@ -224,10 +225,10 @@ namespace platformer2d {
 		return (Player ? &Player->GetCamera() : nullptr);
 	}
 
-	CPlayer* CEditor::GetPlayer(const std::size_t Idx) const
+	std::shared_ptr<CPlayer> CEditor::GetPlayer(const std::size_t Idx) const
 	{
 		LK_ASSERT(Idx == 0, "Only 1 player supported");
-		return Player.get();
+		return Player;
 	}
 
 	uint16_t CEditor::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
@@ -254,7 +255,7 @@ namespace platformer2d {
 		for (const auto& Actor : TargetScene->GetActors())
 		{
 			const glm::vec2 Pos = Actor->GetPosition();
-			const glm::vec2 Size = Actor->GetBody().GetSize();
+			const glm::vec2 Size = Actor->GetSize();
 			const glm::vec2 HalfSize = Size * 0.50f;
 			const glm::vec2 BoxMin = Pos - HalfSize;
 			const glm::vec2 BoxMax = Pos + HalfSize;
@@ -293,7 +294,7 @@ namespace platformer2d {
 		for (const auto& Actor : TargetScene->GetActors())
 		{
 			const glm::vec2 Pos = Actor->GetPosition();
-			const glm::vec2 Size = Actor->GetBody().GetSize();
+			const glm::vec2 Size = Actor->GetSize();
 			const float Rotation = Actor->GetRotation();
 			if (Math::IsPointInPolygon(MouseWorld, Pos, Size, Rotation))
 			{
@@ -793,13 +794,13 @@ namespace platformer2d {
 					case EInteraction::Damage:
 					{
 						auto& Data = std::get<FDamageInteraction>(IC->GetData());
-						LK_DEBUG("Damage: {}", Data.Damage);
+						LK_WARN("Damage={}", Data.Damage);
 						break;
 					}
 					case EInteraction::Pickup:
 					{
 						auto& Data = std::get<FPickupInteraction>(IC->GetData());
-						LK_DEBUG("ExpireOnPickup: {}", Data.bExpireWhenPickedUp);
+						LK_WARN("Kind={} ExpireOnPickup={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp);
 						break;
 					}
 
@@ -910,7 +911,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
 		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
-		const b2ShapeId PlayerShapeID = Player.GetBody().GetShapeID();
+		const b2ShapeId PlayerShapeID = Player.GetBody()->GetShapeID();
 
 		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
 		if (!InvolvesPlayer)
@@ -936,7 +937,7 @@ namespace platformer2d {
 			return true;
 		}
 
-		const b2BodyId PlayerBody = Player.GetBody().GetID();
+		const b2BodyId PlayerBody = Player.GetBody()->GetID();
 		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
 		const float Vn = V.x * Normal.x + V.y * Normal.y;
 		if (Vn > 0.0f)

@@ -50,7 +50,6 @@ namespace platformer2d {
 		std::underlying_type_t<EBodyFlag> Flags = EBodyFlag_None;
 		std::underlying_type_t<EMotionLock> MotionLock = EMotionLock_None;
 
-		std::string Name{};
 		void* UserData = nullptr;
 	};
 

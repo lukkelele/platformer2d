@@ -14,12 +14,12 @@ namespace platformer2d {
 		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
 
 		FActorSpecification ActorSpec;
+		ActorSpec.Name = Name;
 		ActorSpec.Texture = ETexture::White;
 		ActorSpec.Color = Color;
 
 		FBodySpecification BodySpec;
 		BodySpec.Type = EBodyType::Static;
-		BodySpec.Name = Name;
 		BodySpec.Position = Pos;
 		BodySpec.Flags = EBodyFlag_PreSolveEvents;
 
@@ -42,11 +42,11 @@ namespace platformer2d {
 		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
 
 		FActorSpecification ActorSpec;
+		ActorSpec.Name = Name;
 		ActorSpec.Texture = Texture;
 		ActorSpec.Color = Color;
 
 		FBodySpecification& BodySpec = const_cast<FBodySpecification&>(InBodySpec);
-		BodySpec.Name = Name;
 		FPolygon Polygon = {
 			.Size = Size,
 		};
@@ -55,6 +55,28 @@ namespace platformer2d {
 		LK_INFO_TAG("Spawner", "Create: {}  Texture={} Color={}", Name, Enum::ToString(Texture), Color);
 		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
+	}
+
+	std::shared_ptr<CActor> CSpawner::CreateSpawnpoint(std::string_view Name, const glm::vec2& Pos)
+	{
+		LK_VERIFY(!Name.empty(), "Name cannot be empty");
+		CGameInstance* GameInstance = CGameInstance::Get();
+		LK_VERIFY(GameInstance);
+		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+
+		FActorSpecification ActorSpec;
+		ActorSpec.Name = Name;
+		ActorSpec.Texture = ETexture::White;
+		ActorSpec.Color = FColor::Transparent;
+		ActorSpec.Pos = glm::vec3(Pos, 0.0f);
+		ActorSpec.OutlineEnabled = true;
+		ActorSpec.OutlineColor = FColor::Magenta;
+		ActorSpec.OutlineThickness = 6.0f;
+
+		std::shared_ptr<CActor> Spawnpoint = Scene->Create<CActor>(ActorSpec);
+		Spawnpoint->SetSize({ 0.25f, 0.25f });
+
+		return Spawnpoint;
 	}
 
 }

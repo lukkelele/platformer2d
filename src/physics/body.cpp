@@ -283,9 +283,6 @@ namespace platformer2d {
 
 	bool CBody::Serialize(YAML::Emitter& Out) const
 	{
-		Out << YAML::Key << "Body";
-		Out << YAML::BeginMap; /* Body */
-
 		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(BodySpec.Type);
 		Out << YAML::Key << "GravityScale" << YAML::Value << GravityScale;
 
@@ -326,8 +323,6 @@ namespace platformer2d {
 		Out << YAML::Key << "Mass" << YAML::Value << GetMass();
 		Out << YAML::Key << "MotionLock" << YAML::Value << static_cast<uint32_t>(BodySpec.MotionLock);
 		Out << YAML::Key << "Sensor" << YAML::Value << IsSensor();
-
-		Out << YAML::EndMap; /* ~Body */
 
 		return true;
 	}

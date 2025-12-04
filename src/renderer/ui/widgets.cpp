@@ -60,7 +60,7 @@ namespace platformer2d::UI::Widget {
 		}
 
 		FTransformComponent& TC = Actor->GetTransformComponent();
-		const CBody& Body = Actor->GetBody();
+		const CBody* Body = Actor->GetBody();
 
 		/* Actor name */
 		auto Iter = ActorDataMap.find(Handle);
@@ -159,66 +159,69 @@ namespace platformer2d::UI::Widget {
 			ImGui::Text("%s", Actor->IsTickEnabled() ? "Enabled" : "Disabled");
 		}
 
-		/* Body Type. */
-		ImGui::TableNextRow();
+		if (Body)
 		{
-			Label("Body Type");
-			NextColumn();
-			ImGui::Text("%s", Enum::ToString(Body.GetType()));
-		}
+			/* Body Type. */
+			ImGui::TableNextRow();
+			{
+				Label("Body Type");
+				NextColumn();
+				ImGui::Text("%s", Enum::ToString(Body->GetType()));
+			}
 
-		/* Body Size. */
-		ImGui::TableNextRow();
-		{
-			Label("Body Size");
-			NextColumn();
-			const glm::vec2 Size = Body.GetSize();
-			ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
-		}
+			/* Body Size. */
+			ImGui::TableNextRow();
+			{
+				Label("Body Size");
+				NextColumn();
+				const glm::vec2 Size = Body->GetSize();
+				ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
+			}
 
-		/* Linear Velocity. */
-		ImGui::TableNextRow();
-		{
-			Label("Linear Velocity");
-			NextColumn();
-			const glm::vec2 V = Body.GetLinearVelocity();
-			ImGui::Text("(%.2f, %.2f)", V.x, V.y);
-		}
+			/* Linear Velocity. */
+			ImGui::TableNextRow();
+			{
+				Label("Linear Velocity");
+				NextColumn();
+				const glm::vec2 V = Body->GetLinearVelocity();
+				ImGui::Text("(%.2f, %.2f)", V.x, V.y);
+			}
 
-		/* Angular Velocity. */
-		ImGui::TableNextRow();
-		{
-			Label("Angular Velocity");
-			NextColumn();
-			const float V = Body.GetAngularVelocity();
-			ImGui::Text("%.2f", V);
-		}
+			/* Angular Velocity. */
+			ImGui::TableNextRow();
+			{
+				Label("Angular Velocity");
+				NextColumn();
+				const float V = Body->GetAngularVelocity();
+				ImGui::Text("%.2f", V);
+			}
 
-		/* AABB. */
-		ImGui::TableNextRow();
-		{
-			Label("AABB");
-			NextColumn();
-			const FAABB AABB = Body.GetAABB();
-			ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
-			ImGui::SameLine(0.0f, 16.0f);
-			ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
-		}
+			/* AABB. */
+			ImGui::TableNextRow();
+			{
+				Label("AABB");
+				NextColumn();
+				const FAABB AABB = Body->GetAABB();
+				ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
+				ImGui::SameLine(0.0f, 16.0f);
+				ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
+			}
 
-		/* Awake. */
-		ImGui::TableNextRow();
-		{
-			Label("Awake");
-			NextColumn();
-			ImGui::Text("%s", Body.IsAwake() ? "Yes" : "No");
-		}
+			/* Awake. */
+			ImGui::TableNextRow();
+			{
+				Label("Awake");
+				NextColumn();
+				ImGui::Text("%s", Body->IsAwake() ? "Yes" : "No");
+			}
 
-		/* Sensor. */
-		ImGui::TableNextRow();
-		{
-			Label("Sensor");
-			NextColumn();
-			ImGui::Text("%s", Body.IsSensor() ? "Yes" : "No");
+			/* Sensor. */
+			ImGui::TableNextRow();
+			{
+				Label("Sensor");
+				NextColumn();
+				ImGui::Text("%s", Body->IsSensor() ? "Yes" : "No");
+			}
 		}
 
 		ImGui::EndTable();

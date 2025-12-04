@@ -22,7 +22,7 @@ namespace platformer2d {
 
 		virtual void Tick(float InDeltaTime) override;
 		virtual CCamera* GetActiveCamera() const override;
-		virtual CPlayer* GetPlayer(std::size_t Idx = 0) const override;
+		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
 		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
 
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;

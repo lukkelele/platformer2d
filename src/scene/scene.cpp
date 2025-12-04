@@ -23,7 +23,7 @@ namespace platformer2d {
 			LK_DEBUG_TAG("Scene", "OnActorDeleted: {}", Handle);
 			if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr)
 			{
-				CPlayer* Player = GameInstance->GetPlayer(0);
+				std::shared_ptr<CPlayer> Player = GameInstance->GetPlayer(0);
 				Player->SetAwake(true);
 			}
 		});
@@ -230,6 +230,9 @@ namespace platformer2d {
 			FActorSpecification ActorSpec;
 			ActorSpec.Handle = Node["ID"].as<LUUID>();
 			const std::string ActorName = Node["Name"].as<std::string>();
+			ActorSpec.Name = ActorName;
+			const EActorType ActorType = static_cast<EActorType>(Node["Type"].as<std::size_t>());
+			ActorSpec.Type = ActorType;
 			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorName, ActorSpec.Handle);
 
 			ActorSpec.Texture = static_cast<ETexture>(Node["Texture"].as<int>());
@@ -250,11 +253,19 @@ namespace platformer2d {
 				LK_ERROR_TAG("Scene", "TransformComponent missing in YAML");
 			}
 
+			bool HasBody = false;
 			FBodySpecification BodySpec;
-			BodySpec.Name = ActorName;
 			if (const YAML::Node BodyNode = Node["Body"]; BodyNode.IsDefined())
 			{
-				Serialization::Deserialize(BodySpec, BodyNode);
+				if (BodyNode["Type"].IsDefined())
+				{
+					HasBody = true;
+					Serialization::Deserialize(BodySpec, BodyNode);
+				}
+				else
+				{
+					LK_DEBUG_TAG("Scene", "Actor {} has no body", ActorName);
+				}
 			}
 			else
 			{
@@ -280,7 +291,16 @@ namespace platformer2d {
 
 			if (!DoesActorExist(ActorSpec.Handle))
 			{
-				std::shared_ptr<CActor> Actor = Create<CActor>(ActorSpec, BodySpec);
+				std::shared_ptr<CActor> Actor = nullptr;
+				if (HasBody)
+				{
+					Actor = Create<CActor>(ActorSpec, BodySpec);
+				}
+				else
+				{
+					Actor = Create<CActor>(ActorSpec);
+				}
+
 				Actor->GetTransformComponent() = TC;
 
 				if (HasEffectComponent)

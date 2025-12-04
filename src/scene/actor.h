@@ -14,13 +14,6 @@ namespace platformer2d {
 
 	class CScene;
 
-	enum class EActorType : uint16_t
-	{
-		Object,
-		Player,
-		Spawnpoint,
-	};
-
 	enum EActorFlag : uint32_t
 	{
 		EActorFlag_None = 0,
@@ -39,6 +32,7 @@ namespace platformer2d {
 		virtual EActorType GetType() const { return EActorType::Object; }
 
 		glm::vec2 GetSize() const;
+		void SetSize(const glm::vec2& InSize);
 		glm::vec3 GetPosition() const;
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
@@ -52,8 +46,8 @@ namespace platformer2d {
 
 		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
 		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
-		FORCEINLINE CBody& GetBody() { return *Body; }
-		FORCEINLINE const CBody& GetBody() const { return *Body; }
+		FORCEINLINE CBody* GetBody() { return Body ? Body.get() : nullptr; }
+		FORCEINLINE const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
 		bool IsMoving() const;
 
 		inline bool IsTickEnabled() const { return bTickEnabled; }
