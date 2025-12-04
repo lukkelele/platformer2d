@@ -41,6 +41,40 @@ namespace platformer2d::UI {
 	void BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
 	void EndPropertyGrid();
 
+	template<std::size_t N, typename TEnum>
+	inline bool Combo(std::string_view Label, const std::array<TEnum, N>& Options, TEnum& Selected)
+	{
+		char NameBuf[64] = { 0 };
+		std::snprintf(NameBuf, sizeof(NameBuf), "%s", Label.data());
+		if (!ImGui::BeginCombo(NameBuf, Enum::ToString(Selected)))
+		{
+			return false;
+		}
+
+		bool Updated = false;
+		for (std::size_t Idx = 0; Idx < Options.size(); Idx++)
+		{
+			const char* Option = Enum::ToString(Options[Idx]);
+			if (Option == nullptr)
+			{
+				continue;
+			}
+
+			const bool IsSelected = (std::to_underlying(Selected) == Idx);
+			if (ImGui::Selectable(Option, IsSelected))
+			{
+				if (std::to_underlying(Selected) != Idx)
+				{
+					Updated = true;
+					Selected = static_cast<TEnum>(Idx);
+				}
+			}
+		}
+
+		ImGui::EndCombo();
+		return Updated;
+	}
+
 	struct FPhysicsBodyData
 	{
 		EBodyType BodyType = EBodyType::Static;
@@ -123,5 +157,12 @@ namespace platformer2d::UI {
 
 	void PrepareLeftSidebar();
 	void PrepareRightSidebar();
+
+	namespace Array {
+		static constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
+			EPickupKind::Item,
+			EPickupKind::Weapon,
+		};
+	}
 
 }

@@ -502,6 +502,18 @@ namespace platformer2d::UI::Widget {
 			}
 			ImGui::PopStyleVar(2);
 
+			auto CheckboxInTable = [](std::string_view Label, bool& Value)
+			{
+				ImGui::PushID(Label.data());
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%s", Label.data());
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Checkbox("####Checkbox", &Value);
+				ImGui::PopID();
+			};
+
 			/**********************************
 			 * Interaction Data
 			 **********************************/
@@ -519,13 +531,21 @@ namespace platformer2d::UI::Widget {
 				}
 				case EInteraction::Pickup:
 				{
+					auto& Data = std::get<FPickupInteraction>(IC.GetData());
+					CheckboxInTable("Expire When Picked Up", Data.bExpireWhenPickedUp);
+
+					EPickupKind SelectedKind = Data.Kind;
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex(0);
-					ImGui::Text("Expire When Picked Up");
+					ImGui::Text("Kind");
 
 					ImGui::TableSetColumnIndex(1);
-					auto& Data = std::get<FPickupInteraction>(IC.GetData());
-					ImGui::Checkbox("####ExpireWhenPickedUp", &Data.bExpireWhenPickedUp);
+					if (UI::Combo("##PickupKind", Array::PickupKind, SelectedKind))
+					{
+						LK_DEBUG("Set pickup kind: {}", Enum::ToString(SelectedKind));
+						Data.Kind = SelectedKind;
+					}
+
 					break;
 				}
 
