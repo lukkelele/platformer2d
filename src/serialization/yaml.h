@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "core/core.h"
+#include "scene/components.h"
 
 namespace YAML {
 
@@ -49,6 +50,28 @@ namespace YAML {
 			}
 
 			Rhs = std::filesystem::path(YamlNode.as<std::string>());
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<platformer2d::EPickupKind>
+	{
+		static Node encode(const platformer2d::EPickupKind Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(std::to_underlying(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, platformer2d::EPickupKind& Rhs)
+		{
+			if (!YamlNode.IsScalar())
+			{
+				return false;
+			}
+
+			Rhs = static_cast<platformer2d::EPickupKind>(YamlNode.as<std::underlying_type_t<platformer2d::EPickupKind>>());
 			return true;
 		}
 	};

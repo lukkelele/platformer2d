@@ -109,6 +109,7 @@ namespace platformer2d::Serialization {
 			case EInteraction::Pickup:
 			{
 				const auto& Data = std::get<FPickupInteraction>(IC.Data);
+				Out << YAML::Key << "Kind" << YAML::Value << std::to_underlying(Data.Kind);
 				Out << YAML::Key << "ExpireWhenPickedUp" << YAML::Value << Data.bExpireWhenPickedUp;
 				break;
 			}
@@ -190,9 +191,10 @@ namespace platformer2d::Serialization {
 			case EInteraction::Pickup:
 			{
 				FPickupInteraction Data;
+				LK_DESERIALIZE_PROPERTY(Kind, Data.Kind, EPickupKind::Item, Node);
 				LK_DESERIALIZE_PROPERTY(ExpireWhenPickedUp, Data.bExpireWhenPickedUp, false, Node);
 				IC.Data = Data;
-				LK_DEBUG_TAG("Deserializer", "FPickupInteraction::bExpireWhenPickedUp: {}", Data.bExpireWhenPickedUp);
+				LK_DEBUG_TAG("Deserializer", "FPickupInteraction: Kind={} bExpireWhenPickedUp={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp);
 				break;
 			}
 
