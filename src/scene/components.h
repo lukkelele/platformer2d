@@ -141,7 +141,7 @@ namespace platformer2d {
 	/**************************************
 	 * InteractionComponent
 	 **************************************/
-	enum class EInteraction
+	enum class EInteraction : uint16_t
 	{
 		None,
 		Damage,
@@ -154,8 +154,16 @@ namespace platformer2d {
 		float Damage = 0.0f;
 	};
 
+	enum class EPickupKind : uint16_t
+	{
+		Item,
+		Weapon,
+		COUNT
+	};
+
 	struct FPickupInteraction
 	{
+		EPickupKind Kind = EPickupKind::Item;
 		bool bExpireWhenPickedUp = false;
 	};
 
@@ -205,6 +213,24 @@ namespace platformer2d {
 		#undef _
 			return S;
 		}
+
+		inline const char* ToString(const EPickupKind Kind)
+		{
+			const char* S = "";
+		#define _(EnumValue) case EPickupKind::EnumValue: S = #EnumValue; break
+			switch (Kind)
+			{
+				_(Item);
+				_(Weapon);
+				_(COUNT);
+				default:
+					LK_THROW_ENUM_ERR(Kind);
+					break;
+			}
+		#undef _
+			return S;
+		}
+
 	}
 
 }
