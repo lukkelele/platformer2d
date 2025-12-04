@@ -2,12 +2,12 @@
 
 #include "core/core.h"
 #include "renderer/color.h"
-#include "scene/actor.h"
+#include "renderer/texture.h"
 #include "physics/body.h"
 
 namespace platformer2d {
 
-	class CSpawnpoint;
+	class CActor;
 
 	class CSpawner
 	{
