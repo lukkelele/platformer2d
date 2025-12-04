@@ -13,6 +13,8 @@ namespace platformer2d {
 
 		LK_INFO_TAG("GameplaySystem", "Teleport \"{}\": {} -> {}", Source->GetName(), Source->GetPosition(), Destination);
 		Source->SetPosition(Destination);
+
+		return true;
 	}
 
 	bool CGameplaySystem::Teleport(std::shared_ptr<CActor> Source, std::shared_ptr<CActor> Destination)
@@ -24,6 +26,8 @@ namespace platformer2d {
 
 		LK_INFO_TAG("GameplaySystem", "Teleport \"{}\": {} -> {}", Source->GetName(), Source->GetPosition(), Destination->GetPosition());
 		Source->SetPosition(Destination->GetPosition());
+
+		return true;
 	}
 
 }
