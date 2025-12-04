@@ -1,16 +1,17 @@
 Name: TestLevel
 Actors:
-  - ID: 2
+  - ID: 631
     Type: 0
     Name: Right-Platform
     Texture: 0
     Color: [0, 0.75, 0, 1]
     Outline:
+      Enabled: true
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [3.168577, -0.31357962, 0.1]
-      Rotation: 0.6607687
+      Position: [3.3885767, -0.063579604, 0.1]
+      Rotation: 0.6768723
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -18,24 +19,25 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.66076875
+        Rotation: 0.6768723
         Radius: 0.5
-      Position: [3.168577, -0.31357962]
+      Position: [3.3885767, -0.063579604]
       Flags: 2
       Mass: 1
       MotionLock: 0
       Sensor: false
     Deletable: true
-  - ID: 4
+  - ID: 854
     Type: 0
     Name: Spawn-Wall-Left
-    Texture: 5
+    Texture: 4
     Color: [1, 1, 1, 1]
     Outline:
-      Thickness: 1
+      Enabled: true
+      Thickness: 11.3
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-1.4862326, -0.025966717, 0]
+      Position: [-1.4962326, -0.01, 0]
       Rotation: 1.5707963
       Scale: [1.45, 0.95, 1]
     Body:
@@ -46,23 +48,24 @@ Actors:
         Size: [1.45, 0.95]
         Rotation: 1.5707963
         Radius: 0.5
-      Position: [-1.4862326, -0.025966717]
+      Position: [-1.4962326, -0.01]
       Flags: 2
       Mass: 1
       MotionLock: 0
       Sensor: false
     Deletable: true
-  - ID: 6
+  - ID: 95031
     Type: 0
     Name: FlyingPlatform-1
     Texture: 0
     Color: [1, 0, 1, 1]
     Outline:
+      Enabled: true
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-0.5315029, -0.21425083, 2]
-      Rotation: 0
+      Position: [-0.5615029, -0.13425083, 2]
+      Rotation: 0.016019288
       Scale: [0.4, 0.06, 1]
     Body:
       Type: 0
@@ -70,28 +73,29 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: 0
+        Rotation: 0.016019288
         Radius: 0.5
-      Position: [-0.5315029, -0.21425083]
+      Position: [-0.5615029, -0.13425083]
       Flags: 2
       Mass: 1
       MotionLock: 0
       Sensor: false
     Deletable: true
-  - ID: 8
+  - ID: 86192
     Type: 0
     Name: Rotating-Object1
     Texture: 0
     Color: [0, 0.54509807, 0.54509807, 1]
     Outline:
+      Enabled: true
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [0.70239645, 0.08914068, 0.6]
-      Rotation: -2.9024987
+      Position: [0.6123964, 0.12914068, 0.6]
+      Rotation: 1.9326382
       Scale: [0.4, 0.06, 1]
     EffectComponent:
-      - Type: Rotate
+      - Type: 1
         AngularSpeedDegPerSecond: 60
     Body:
       Type: 2
@@ -99,24 +103,25 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -2.9024987
+        Rotation: 1.9326382
         Radius: 0.5
-      Position: [0.70239645, 0.08914068]
+      Position: [0.6123964, 0.12914068]
       Flags: 2
       Mass: 1
       MotionLock: 0
       Sensor: false
     Deletable: true
-  - ID: 10
+  - ID: 659123
     Type: 0
     Name: LowerPlatform
     Texture: 0
     Color: [0.45, 0.45, 0.45, 1]
     Outline:
+      Enabled: true
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [0.21569733, -1.50759, 0]
+      Position: [0.20569733, -1.61759, 0]
       Rotation: -3.1415925
       Scale: [9.6, 0.22, 1]
     Body:
@@ -127,18 +132,19 @@ Actors:
         Size: [9.6, 0.22]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [0.21569733, -1.50759]
+      Position: [0.20569733, -1.61759]
       Flags: 2
       Mass: 1
       MotionLock: 0
       Sensor: false
     Deletable: true
-  - ID: 12
+  - ID: 123913821
     Type: 0
     Name: PinkWall
     Texture: 0
     Color: [1, 0, 1, 1]
     Outline:
+      Enabled: true
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
@@ -159,16 +165,17 @@ Actors:
       MotionLock: 0
       Sensor: false
     Deletable: true
-  - ID: 14
+  - ID: 5128418
     Type: 0
     Name: SpawnPlatform
-    Texture: 3
+    Texture: 5
     Color: [1, 1, 1, 1]
     Outline:
+      Enabled: true
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-0.0046748593, -0.68743986, 0]
+      Position: [-0.014674859, -0.68743986, 0]
       Rotation: -3.1415925
       Scale: [2, 0.08, 1]
     Body:
@@ -179,7 +186,7 @@ Actors:
         Size: [2, 0.08]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [-0.0046748593, -0.68743986]
+      Position: [-0.014674859, -0.68743986]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -187,16 +194,20 @@ Actors:
     Deletable: true
   - ID: 3228445016720479417
     Type: 0
-    Name: Actor-9
+    Name: PickupSensor
     Texture: 0
-    Color: [0.96, 0.105, 0.83, 1]
+    Color: [0, 0, 0, 0]
     Outline:
-      Thickness: 1
-      Color: [0, 0, 0, 1]
+      Enabled: true
+      Thickness: 8.2
+      Color: [1, 0, 0, 1]
     TransformComponent:
-      Position: [0.27088338, -0.49311802, 0.13]
+      Position: [0.28088337, -0.50311804, 0.46]
       Rotation: 0
       Scale: [0.2, 0.2, 1]
+    InteractionComponent:
+      Type: 1
+      Damage: 10
     Body:
       Type: 0
       GravityScale: 1
@@ -205,7 +216,7 @@ Actors:
         Size: [0.2, 0.2]
         Rotation: 0
         Radius: 0.5
-      Position: [0.27088338, -0.49311802]
+      Position: [0.28088337, -0.50311804]
       Flags: 10
       Mass: 1
       MotionLock: 0
