@@ -13,6 +13,10 @@ namespace platformer2d {
 
 		LK_INFO_TAG("GameplaySystem", "Teleport \"{}\": {} -> {}", Source->GetName(), Source->GetPosition(), Destination);
 		Source->SetPosition(Destination);
+		if (auto Body = Source->GetBody())
+		{
+			Body->SetAwake(true);
+		}
 
 		return true;
 	}
@@ -26,6 +30,10 @@ namespace platformer2d {
 
 		LK_INFO_TAG("GameplaySystem", "Teleport \"{}\": {} -> {}", Source->GetName(), Source->GetPosition(), Destination->GetPosition());
 		Source->SetPosition(Destination->GetPosition());
+		if (auto Body = Source->GetBody())
+		{
+			Body->SetAwake(true);
+		}
 
 		return true;
 	}
