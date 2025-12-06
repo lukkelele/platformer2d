@@ -29,6 +29,8 @@ namespace platformer2d {
 		static void DrawCapsule(const glm::vec2& P0, const glm::vec2& P1, float Radius, const glm::vec4& Color);
 		static void DrawCapsule(const glm::vec3& P0, const glm::vec3& P1, float Radius, const glm::vec4& Color);
 
+		static void DrawCircle(const glm::mat4& Transform, float Radius, const glm::vec4& Color);
+
 		static void DrawRayHit(const FRayCast& RayCast, float T, uint16_t LineWidth = 9,
 							   const glm::vec4& LineColor = FColor::Convert(RGBA32::Magenta),
 							   float Radius = 0.030f, const glm::vec4& CircleColor = FColor::Red);

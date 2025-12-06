@@ -16,16 +16,13 @@ namespace platformer2d {
 
 	CDebugRenderer::FLineConfig CDebugRenderer::LineConfig;
 
-	namespace
-	{
+	namespace {
 		constexpr glm::vec4 QuadVertexPositions[4] = {
 			{ -0.50f, -0.50f, 0.0f, 1.0f },
 			{ -0.50f,  0.50f, 0.0f, 1.0f },
 			{  0.50f,  0.50f, 0.0f, 1.0f },
 			{  0.50f, -0.50f, 0.0f, 1.0f }
 		};
-
-		std::vector<glm::vec3> GenerateCircleVertices(float Radius, std::size_t Count);
 	}
 
 	glm::vec4 Decodeb2HexColor(const b2HexColor Hex);
@@ -94,11 +91,12 @@ namespace platformer2d {
 		b2DebugDraw DebugDraw{};
 		DebugDraw.drawBounds = true;
 		DebugDraw.drawContacts = true;
-		//DebugDraw.drawContactForces = true;
 		DebugDraw.drawShapes = true;
+		/** @todo Need drawString callback */
 		//DebugDraw.drawMass = true;
 		//DebugDraw.drawFrictionForces = true;
 		//DebugDraw.drawContactNormals = true;
+		//DebugDraw.drawContactForces = true;
 
 		DebugDraw.DrawCircleFcn = [](b2Vec2 Center, float Radius, b2HexColor HexColor, void* Ctx)
 		{
@@ -136,7 +134,12 @@ namespace platformer2d {
 				const float MaxY = std::max(std::max(V0.y, V1.y), std::max(V2.y, V3.y));
 				const glm::vec2 Pos  = { (MinX + MaxX) * 0.50f, (MinY + MaxY) * 0.50f };
 				const glm::vec2 Size = { (MaxX - MinX), (MaxY - MinY) };
-				CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
+				//CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
+
+				CRenderer::Submit([&]()
+				{
+					CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
+				});
 			}
 		};
 
@@ -145,7 +148,12 @@ namespace platformer2d {
 			const glm::vec3 P0 = { InP0.x, InP0.y, 0.0f };
 			const glm::vec3 P1 = { InP1.x, InP1.y, 0.0f };
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
-			CDebugRenderer::DrawLine(P0, P1, Color, 4);
+
+			//CDebugRenderer::DrawLine(P0, P1, Color, 4);
+			CRenderer::Submit([&]()
+			{
+				CDebugRenderer::DrawLine(P0, P1, Color, 4);
+			});
 		};
 
 		DebugDraw.DrawSolidPolygonFcn = [](b2Transform Transform, const b2Vec2* Vertices, int Count,
@@ -175,7 +183,23 @@ namespace platformer2d {
 			CRenderer::DrawCircle(P0, P1, Radius, Color);
 		};
 
+		DebugDraw.DrawSolidCircleFcn = [](const b2Transform Transform, const float Radius, b2HexColor HexColor, void* Ctx)
+		{
+			//LK_WARN("DrawSolicCircle: T.p.x={} T.p.y={} Radius={}", Transform.p.x, Transform.p.y, Radius);
+			const glm::vec4 Color = Decodeb2HexColor(HexColor);
+			const glm::mat4 T = Math::ToMat4(Transform);
+#if 1
+			CRenderer::DrawCircle(T, FColor::Magenta);
+#else
+			DrawCircle(T, 1.0f, Color);
+#endif
+		};
+
 		CPhysicsWorld::InitDebugDraw(DebugDraw);
+	}
+
+	void CDebugRenderer::Destroy()
+	{
 	}
 
 	void CDebugRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, const float RotationDeg)
@@ -245,14 +269,52 @@ namespace platformer2d {
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
 			* glm::scale(glm::mat4(1.0f), { Radius * 2.0f, Radius * 2.0f, 1.0f });
 
-		//const glm::vec2 V0 = P0 + Offset;
-		//const glm::vec2 V1 = P1 + Offset;
-		//const glm::vec2 V2 = P1 - Offset;
-		//const glm::vec2 V3 = P0 - Offset;
 		const glm::vec2 V0 = Transform * (glm::vec4(P0.x, P0.y, P0.z, 0.0f) + Offset);
 		const glm::vec2 V1 = Transform * (glm::vec4(P1.x, P1.y, P1.z, 0.0f) + Offset);
 		const glm::vec2 V2 = Transform * (glm::vec4(P1.x, P1.y, P1.z, 0.0f) - Offset);
 		const glm::vec2 V3 = Transform * (glm::vec4(P0.x, P0.y, P0.z, 0.0f) - Offset);
+
+		const glm::vec2 Quad[4] = { V0, V1, V2, V3 };
+
+		LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
+		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
+		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Quad), Quad));
+
+		QuadShader->Bind();
+		QuadShader->Set("u_color", Color);
+		QuadShader->Set("u_viewproj", glm::mat4(1.0f));
+		LK_OpenGL_Verify(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, QuadEBO));
+		LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+		QuadShader->Unbind();
+	}
+
+	void CDebugRenderer::DrawCircle(const glm::mat4& Transform, const float Radius, const glm::vec4& Color)
+	{
+		const glm::vec3 LocalP0 = { 0.0f, -0.5f, 0.0f };
+		const glm::vec3 LocalP1 = { 0.0f,  0.5f, 0.0f };
+
+		const glm::vec4 WorldP0 = Transform * glm::vec4(LocalP0, 1.0f);
+		const glm::vec4 WorldP1 = Transform * glm::vec4(LocalP1, 1.0f);
+
+		const glm::vec2 P0 = { WorldP0.x, WorldP0.y };
+		const glm::vec2 P1 = { WorldP1.x, WorldP1.y };
+
+		const glm::vec2 Axis = P1 - P0;
+		const float Length = glm::length(Axis);
+		if (Length < 1e-6f)
+		{
+			LK_WARN("Length < 1e-6");
+			return;
+		}
+
+		const glm::vec2 A = Axis / Length;
+		const glm::vec2 N = glm::normalize(Math::Perp(A));
+		const glm::vec2 Offset = N * Radius;
+
+		const glm::vec2 V0 = P0 + Offset;
+		const glm::vec2 V1 = P1 + Offset;
+		const glm::vec2 V2 = P1 - Offset;
+		const glm::vec2 V3 = P0 - Offset;
 
 		const glm::vec2 Quad[4] = { V0, V1, V2, V3 };
 
@@ -274,36 +336,9 @@ namespace platformer2d {
 		const glm::vec3 Origin = RayCast.Pos;
 		const glm::vec3 Dir = RayCast.Dir;
 		const glm::vec3 HitPos = Origin + Dir * T;
+		LK_DEBUG_TAG("DebugRenderer", "RayHit: Origin={} Dir={} HitPos={} LineWidth={} Radius={}", Origin, Dir, HitPos, LineWidth, Radius);
 		CRenderer::DrawLine(Origin, HitPos, LineColor, LineWidth);
 		CRenderer::DrawCircleFilled(HitPos, Radius, CircleColor);
-	}
-
-	std::vector<glm::vec3> GenerateCircleVertices(const float Radius, const std::size_t Count)
-	{
-		const float Angle = 360.0f / Count;
-		const int TriangleCount = Count - 2;
-
-		std::vector<glm::vec3> Tmp;
-		for (int Idx = 0; Idx < Count; Idx++)
-		{
-			const float CurrentAngle = Angle * Idx;
-			const float x = Radius * std::cos(glm::radians(CurrentAngle));
-			const float y = Radius * std::sin(glm::radians(CurrentAngle));
-			const float z = 0.0f;
-
-			Tmp.emplace_back(glm::vec3(x, y, z));
-		}
-
-		std::vector<glm::vec3> Vertices;
-		Vertices.reserve(TriangleCount * 3);
-		for (int Idx = 0; Idx < TriangleCount; Idx++)
-		{
-			Vertices.push_back(Tmp[0]);
-			Vertices.push_back(Tmp[Idx + 1]);
-			Vertices.push_back(Tmp[Idx + 2]);
-		}
-
-		return Vertices;
 	}
 
 	glm::vec4 Decodeb2HexColor(const b2HexColor Hex)
