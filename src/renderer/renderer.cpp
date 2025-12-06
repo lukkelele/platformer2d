@@ -442,10 +442,8 @@ namespace platformer2d {
 
 			LineShader->Bind();
 			CameraUniformBuffer->Bind();
-			Data.WhiteTexture->Bind(0);
 			LK_OpenGL_Verify(glBindVertexArray(LineVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_LINES, LineIndexCount, GL_UNSIGNED_INT, nullptr));
-			Data.WhiteTexture->Unbind(0);
 			CameraUniformBuffer->Unbind();
 			LineShader->Unbind();
 		}
@@ -459,10 +457,8 @@ namespace platformer2d {
 
 			CircleShader->Bind();
 			CameraUniformBuffer->Bind();
-			Data.WhiteTexture->Bind(0);
 			LK_OpenGL_Verify(glBindVertexArray(CircleVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, CircleIndexCount, GL_UNSIGNED_INT, nullptr));
-			Data.WhiteTexture->Unbind(0);
 			CameraUniformBuffer->Unbind();
 			CircleShader->Unbind();
 		}
@@ -697,10 +693,23 @@ namespace platformer2d {
 			CircleVertexBufferPtr->LocalPosition = QuadVertexPositions[Idx] * 2.0f;
 			CircleVertexBufferPtr->Color = Color;
 			CircleVertexBufferPtr++;
-
-			CircleIndexCount += 6;
-			DrawStats.QuadCount++;
 		}
+
+		CircleIndexCount += 6;
+		DrawStats.QuadCount++;
+	}
+
+	void CRenderer::DrawTransform(const glm::mat4& Transform, const float Scale, const glm::vec4& Color)
+	{
+		glm::vec3 P0 = Transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		glm::vec3 P1 = Transform * glm::vec4(Scale, 0.0f, 0.0f, 1.0f);
+		DrawLine(P0, P1, Color);
+
+		P1 = Transform * glm::vec4(0.0f, Scale, 0.0f, 1.0f);
+		DrawLine(P0, P1, Color);
+
+		P1 = Transform * glm::vec4(0.0f, 0.0f, Scale, 1.0f);
+		DrawLine(P0, P1, Color);
 	}
 
 	void CRenderer::SetLineWidth(const uint16_t LineWidth)
