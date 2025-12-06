@@ -9,6 +9,8 @@ namespace platformer2d {
 		None = 0,
 		SensorBegin,
 		SensorEnd,
+		ContactBegin,
+		ContactEnd,
 		COUNT
 	};
 

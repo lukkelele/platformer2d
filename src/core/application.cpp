@@ -91,12 +91,12 @@ namespace platformer2d {
 			}
 
 			const float DeltaTime = Timer.GetDeltaTime();
-			CPhysicsWorld::Update(DeltaTime);
 
 			Window->BeginFrame();
 			CKeyboard::Update();
 
 			CRenderer::BeginFrame();
+			CPhysicsWorld::Update(DeltaTime);
 			for (auto& Layer : LayerStack)
 			{
 				Layer->Tick(DeltaTime);
