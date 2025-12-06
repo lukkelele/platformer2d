@@ -15,14 +15,21 @@
 
 namespace platformer2d::Math {
 
-	namespace _Internal
-	{
+	namespace _Internal {
 		template<typename T>
 		concept IsGlmVec = std::disjunction_v<
 			std::is_same<T, glm::vec2>,
 			std::is_same<T, glm::vec3>,
 			std::is_same<T, glm::vec4>
 		>;
+
+		template<typename T>
+		concept IsBox2dVec = std::disjunction_v<
+			std::is_same<T, b2Vec2>
+		>;
+
+		template<typename T>
+		concept IsVec = IsGlmVec<T> || IsBox2dVec<T>;
 	}
 
 	inline glm::vec2 Perp(const glm::vec2& V)
@@ -141,6 +148,34 @@ namespace platformer2d::Math {
 	{
 		Dst.x = Src.x;
 		Dst.y = Src.y;
+	}
+
+	inline glm::mat4 ToMat4(const b2Transform& T)
+	{
+		const float C = T.q.c;
+		const float S = T.q.s;
+
+		glm::mat4 M{ 1.0f };
+		M[0][0] = C;
+		M[0][1] = S;
+		M[1][0] = -S;
+		M[1][1] = C;
+
+		M[3][0] = T.p.x;
+		M[3][1] = T.p.y;
+
+		return M;
+	}
+
+	template<_Internal::IsGlmVec TVector>
+	inline bool IsValid(const TVector& V)
+	{
+		return !glm::all(glm::isnan(V));
+	}
+
+	inline bool IsValid(const b2Vec2& V)
+	{
+		return !std::isnan(V.x) && !std::isnan(V.y);
 	}
 
 }
