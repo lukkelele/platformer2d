@@ -5,11 +5,11 @@
 #include "core/input/keyboard.h"
 #include "renderer/renderer.h"
 #include "scene/effectmanager.h"
+#include "instance.h"
 
 namespace platformer2d {
 
-	namespace
-	{
+	namespace {
 		constexpr int SPRITE_TILEPOS_Y = 2; /* Row in the spritesheet. */
 
 		/* @todo: Should not be hardcoded */
@@ -88,6 +88,21 @@ namespace platformer2d {
 
 		/* Set z-index. */
 		TransformComp.Translation.z = -0.010f;
+
+		Rifle = std::make_shared<CRifle>();
+		Rifle->Equip(this);
+
+		CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
+		CMouse::OnButtonPressed.Add(this, &CPlayer::OnMouseButtonPressed);
+	}
+
+	CPlayer::~CPlayer()
+	{
+		if (Rifle)
+		{
+			LK_TRACE_TAG("Player", "Release rifle");
+			Rifle.reset();
+		}
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
@@ -103,6 +118,11 @@ namespace platformer2d {
 
 		HandleInput();
 		SyncTransformComponent();
+
+		if (Rifle)
+		{
+			Rifle->Tick();
+		}
 
 		if (bCameraLock)
 		{
@@ -373,6 +393,46 @@ namespace platformer2d {
 			Camera->SetViewportSize(Width, Height);
 			Camera->UpdateView();
 			Camera->UpdateProjection();
+		}
+	}
+
+	void CPlayer::OnKeyPressed(const FKeyData& Data)
+	{
+		switch (Data.Key)
+		{
+			case EKey::Q:
+				break;
+
+			case EKey::F:
+				break;
+
+			case EKey::R:
+				if (Rifle)
+				{
+					Rifle->Reload();
+				}
+				break;
+		}
+	}
+
+	void CPlayer::OnMouseButtonPressed(const FMouseButtonData& Data)
+	{
+		switch (Data.State)
+		{
+			case EMouseButtonState::Pressed:
+			{
+				if (Data.Button == EMouseButton::Button0)
+				{
+					if (Rifle)
+					{
+						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(*Camera);
+						if (Math::IsValid(TargetPos))
+						{
+							Rifle->Fire(TargetPos);
+						}
+					}
+				}
+			}
 		}
 	}
 

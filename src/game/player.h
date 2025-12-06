@@ -5,6 +5,7 @@
 #include "renderer/camera.h"
 #include "renderer/sprite.h"
 #include "scene/actor.h"
+#include "rifle.h"
 
 namespace platformer2d {
 
@@ -39,10 +40,10 @@ namespace platformer2d {
 		CPlayer(const FActorSpecification&, const FBodySpecification& BodySpec);
 		CPlayer(CPlayer&&) = default;
 		CPlayer(const CPlayer&) = default;
-		~CPlayer() = default;
+		~CPlayer();
 
 		virtual void Tick(float DeltaTime) override;
-		virtual EActorType GetType() const override { return EActorType::Player; }
+		virtual EActorType GetActorType() const override { return EActorType::Player; }
 		void Jump();
 
 		inline const FPlayerData& GetData() const { return Data; }
@@ -65,6 +66,8 @@ namespace platformer2d {
 
 		virtual bool Serialize(YAML::Emitter& Out) const override;
 
+		std::shared_ptr<CRifle> GetRifle() { return Rifle; }
+
 	private:
 		void HandleInput();
 		void OnInputReceived();
@@ -82,6 +85,8 @@ namespace platformer2d {
 		void SetSpriteTilePos(uint16_t X);
 
 		void OnWindowResized(uint16_t Width, uint16_t Height);
+		void OnKeyPressed(const FKeyData& Data);
+		void OnMouseButtonPressed(const FMouseButtonData& Data);
 		void OnMouseScrolled(EMouseScrollDirection Direction);
 
 	public:
@@ -109,10 +114,11 @@ namespace platformer2d {
 		FSpriteAnimation WalkAnim;
 		uint16_t CurrentSpriteFrame = 0;
 		uint16_t NextSpriteFrame = 0;
+
+		std::shared_ptr<CRifle> Rifle = nullptr;
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
 		inline const char* ToString(const EMovementState State)
 		{
 			const char* S = "";
