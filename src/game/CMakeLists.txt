@@ -6,10 +6,15 @@ project_library_sources(
 	instance.cpp
 	gameplaysystem.h
 	gameplaysystem.cpp
+	rifle.h
+	rifle.cpp
 	player.h
 	player.cpp
+	projectile.h
+	projectile.cpp
 	spawner.h
 	spawner.cpp
+	weapon.h
 )
 
 target_link_libraries(game PUBLIC 
