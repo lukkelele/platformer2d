@@ -2,6 +2,7 @@
 
 #include "core/math/math.h"
 #include "game/player.h"
+#include "renderer/renderer.h"
 
 namespace platformer2d {
 
@@ -33,11 +34,15 @@ namespace platformer2d {
 		{
 			b2World_Step(WorldID, DeltaTime, Substep);
 			HandleSensorEvents();
+			HandleContactEvents();
 		}
 
 		if (DebugDraw)
 		{
-			b2World_Draw(WorldID, DebugDraw.get());
+			CRenderer::Submit([&]()
+			{
+				b2World_Draw(WorldID, DebugDraw.get());
+			});
 		}
 	}
 
@@ -165,6 +170,53 @@ namespace platformer2d {
 			CActor* Visitor = static_cast<CActor*>(b2Shape_GetUserData(VisitorShape));
 			CSensorEndEvent Event(Sensor, Visitor);
 			OnSensorEndEvent.Broadcast(Event);
+		}
+	}
+
+	void CPhysicsWorld::HandleContactEvents()
+	{
+		b2ContactEvents Events = b2World_GetContactEvents(WorldID);
+
+		/* Begin */
+		for (int Idx = 0; Idx < Events.beginCount; Idx++)
+		{
+			b2ContactBeginTouchEvent* EventRef = Events.beginEvents + Idx;
+			b2ShapeId ShapeA = EventRef->shapeIdA;
+			b2ShapeId ShapeB = EventRef->shapeIdB;
+			if (!b2Shape_IsValid(ShapeA) || !b2Shape_IsValid(ShapeB))
+			{
+				continue;
+			}
+
+			CActor* A = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
+			CActor* B = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
+			CContactBeginEvent Event(A, B);
+			if (!A || !B)
+			{
+				LK_ERROR("A={}  B={}", A ? "OK" : "NULL", B ? "OK" : "NULL");
+			}
+			OnContactBeginEvent.Broadcast(Event);
+		}
+
+		/* End */
+		for (int Idx = 0; Idx < Events.endCount; Idx++)
+		{
+			b2ContactEndTouchEvent* EventRef = Events.endEvents + Idx;
+			b2ShapeId ShapeA = EventRef->shapeIdA;
+			b2ShapeId ShapeB = EventRef->shapeIdB;
+			if (!b2Shape_IsValid(ShapeA) || !b2Shape_IsValid(ShapeB))
+			{
+				continue;
+			}
+
+			CActor* A = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
+			CActor* B = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
+			if (!A || !B)
+			{
+				LK_ERROR("A={}  B={}", A ? "OK" : "NULL", B ? "OK" : "NULL");
+			}
+			CContactEndEvent Event(A, B);
+			OnContactEndEvent.Broadcast(Event);
 		}
 	}
 

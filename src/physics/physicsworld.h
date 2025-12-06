@@ -17,6 +17,8 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnSensorBeginEvent, CPhysicsWorld, const CSensorBeginEvent&);
 		LK_DECLARE_EVENT(FOnSensorEndEvent, CPhysicsWorld, const CSensorEndEvent&);
+		LK_DECLARE_EVENT(FOnContactBeginEvent, CPhysicsWorld, const CContactBeginEvent&);
+		LK_DECLARE_EVENT(FOnContactEndEvent, CPhysicsWorld, const CContactEndEvent&);
 	public:
 		CPhysicsWorld() = delete;
 		~CPhysicsWorld() = delete;
@@ -42,10 +44,13 @@ namespace platformer2d {
 	private:
 		static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 		static void HandleSensorEvents();
+		static void HandleContactEvents();
 
 	public:
 		static inline FOnSensorBeginEvent OnSensorBeginEvent;
 		static inline FOnSensorEndEvent OnSensorEndEvent;
+		static inline FOnContactBeginEvent OnContactBeginEvent;
+		static inline FOnContactEndEvent OnContactEndEvent;
 	private:
 		static inline b2WorldId WorldID;
 		static inline int Substep = 6;

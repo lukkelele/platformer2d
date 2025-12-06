@@ -7,6 +7,9 @@ namespace platformer2d {
 
 	class CActor;
 
+	/************************************
+	 * Sensor Events
+	 ************************************/
 	class CSensorBeginEvent : public CEvent
 	{
 	public:
@@ -41,6 +44,46 @@ namespace platformer2d {
 		CActor* Visitor = nullptr;
 	private:
 		LK_EVENT(CSensorEndEvent, SensorEnd);
+	};
+
+
+	/************************************
+	 * Contact Events
+	 ************************************/
+	class CContactBeginEvent : public CEvent
+	{
+	public:
+		CContactBeginEvent(CActor* InA, CActor* InB)
+			: A(InA)
+			, B(InB)
+		{
+		}
+		CContactBeginEvent() = delete;
+		~CContactBeginEvent() = default;
+
+	public:
+		CActor* A = nullptr;
+		CActor* B = nullptr;
+	private:
+		LK_EVENT(CContactBeginEvent, ContactBegin);
+	};
+
+	class CContactEndEvent : public CEvent
+	{
+	public:
+		CContactEndEvent(CActor* InA, CActor* InB)
+			: A(InA)
+			, B(InB)
+		{
+		}
+		CContactEndEvent() = delete;
+		~CContactEndEvent() = default;
+
+	public:
+		CActor* A = nullptr;
+		CActor* B = nullptr;
+	private:
+		LK_EVENT(CContactEndEvent, ContactEnd);
 	};
 
 }
