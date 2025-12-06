@@ -73,6 +73,14 @@ namespace platformer2d {
 
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
+
+		/* @todo Remove from here. Just temporary */
+		bool bDrawCircle = true;
+		bool bDrawCircleFilled = true;
+		bool bDrawLine = true;
+		glm::vec3 P1 = { 0.30f, -0.40, 0.50f };
+		glm::vec3 DebugRot = { 0.0f, 0.0f, 0.0f };
+		float DebugRadius = 0.05f;
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -102,22 +110,6 @@ namespace platformer2d {
 				LK_TRACE_TAG("Editor", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				LK_ASSERT(Scene);
 				UpdateInputBuffer(Scene->GetActors().size());
-
-#if 0 /* @fixme: Remove once the creator menu can add new components */
-				std::string_view ActorName = Actor->GetName();
-				if (ActorName.find("Rotating") != std::string::npos)
-				{
-					/* @fixme: Temporary fix until serialization can take effect parameters. */
-					RotatingPlatform = Actor;
-					auto& EC = Actor->AddComponent<FEffectComponent>();
-					FEffectInstance Effect;
-					Effect.Type = EEffectType::Rotate;
-					FRotateEffect Rotate;
-					Rotate.AngularSpeedDegPerSecond = 10.0f;
-					Effect.Data = Rotate;
-					EC.Effects.push_back(Effect);
-				}
-#endif
 			}
 		});
 
@@ -132,6 +124,8 @@ namespace platformer2d {
 		CPhysicsWorld::SetGravity(Spec.Gravity);
 		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
 		CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
+		CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
+		CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
 
 		CreatePlayer();
 		LK_VERIFY(Player);
@@ -216,6 +210,20 @@ namespace platformer2d {
 			Player->GetOutlineThickness(),
 			Player->GetOutlineColor()
 		);
+
+		/* @fixme Just temporarily here */
+		if (bDrawCircle)
+		{
+			CRenderer::DrawCircle(P1, DebugRot, DebugRadius, FColor::Red);
+		}
+		if (bDrawCircleFilled)
+		{
+			CRenderer::DrawCircleFilled(P1, DebugRadius, FColor::Red, 5.0f);
+		}
+		if (bDrawLine)
+		{
+			CRenderer::DrawLine(glm::vec3(0.0f, 0.0f, 1.0f), P1, FColor::Black, 6);
+		}
 
 		Scene->Render();
 	}
@@ -543,6 +551,59 @@ namespace platformer2d {
 		ImGui::Text("Focused: %d", bEditorViewportFocused);
 		ImGui::Text("Hovered: %d", bEditorViewportHovered);
 
+		ImGui::Checkbox("Draw Circle", &bDrawCircle);
+		ImGui::SameLine();
+		ImGui::Checkbox("Draw Circle Filled", &bDrawCircleFilled);
+		ImGui::SameLine();
+		ImGui::Checkbox("Draw Line", &bDrawLine);
+		UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
+		UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
+
+		if (std::shared_ptr<CRifle> Rifle = Player->GetRifle())
+		{
+			ImGui::Dummy(ImVec2(0, 10));
+			ImGui::Separator();
+			UI::LargeTextCentralized("Rifle");
+			ImGui::Spacing();
+
+			ImGui::Spacing();
+			float ProjectileRadius = Rifle->GetProjectileRadius();
+			if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f))
+			{
+				Rifle->SetProjectileRadius(ProjectileRadius);
+			}
+
+			ImGui::Spacing();
+			float ProjectileVelocity = Rifle->GetProjectileVelocity();
+			if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f))
+			{
+				Rifle->SetProjectileVelocity(ProjectileVelocity);
+			}
+
+			ImGui::Spacing();
+			bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
+			if (ImGui::Checkbox("Explode On Impact", &ExplodeOnImpact))
+			{
+				Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
+			}
+
+			ImGui::Spacing();
+			EColor ProjectileColor = EColor::Red;
+			const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
+			if (!ColorDeduced)
+			{
+				ImGui::BeginDisabled();
+			}
+			if (UI::ColorDropdown(ProjectileColor))
+			{
+				Rifle->SetProjectileColor(FColor::Get(ProjectileColor));
+			}
+			if (!ColorDeduced)
+			{
+				ImGui::EndDisabled();
+			}
+		}
+
 		ImGui::Spacing();
 
 		if (ImGui::TreeNodeEx("Info", ImGuiTreeNodeFlags_SpanAvailWidth))
@@ -831,6 +892,55 @@ namespace platformer2d {
 				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(false);
 			}
+		}
+	}
+
+	static void OnProjectileContact(CActor* ProjectileActor, CActor* HitActor)
+	{
+		CProjectile* Projectile = static_cast<CProjectile*>(ProjectileActor);
+		/* Do not destroy if the actor hit is the player who shot the projectile. */
+		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor))
+		{
+			return;
+		}
+
+		LK_TRACE("Projectile hit: {}", HitActor ? HitActor->GetName() : "NULL");
+		if (Projectile->ExplodesOnImpact())
+		{
+			Projectile->Destroy();
+		}
+	};
+
+	void CEditor::OnContactBeginEvent(const CContactBeginEvent& Event)
+	{
+		LK_TRACE_TAG("Editor", "OnContactBeginEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
+		LK_ASSERT(Event.A && Event.B, "Invalid event references");
+		if (!Event.A || !Event.B)
+		{
+			return;
+		}
+
+		const EActorType AType = Event.A->GetActorType();
+		const EActorType BType = Event.B->GetActorType();
+
+		/* Projectile hit. */
+		if (AType == EActorType::Projectile)
+		{
+			OnProjectileContact(Event.A, Event.B);
+		}
+		else if (BType == EActorType::Projectile)
+		{
+			OnProjectileContact(Event.B, Event.A);
+		}
+	}
+
+	void CEditor::OnContactEndEvent(const CContactEndEvent& Event)
+	{
+		LK_TRACE_TAG("Editor", "OnContactEndEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
+		LK_ASSERT(Event.A && Event.B, "Invalid event references");
+		if (!Event.A || !Event.B)
+		{
+			return;
 		}
 	}
 
