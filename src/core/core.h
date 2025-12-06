@@ -27,6 +27,8 @@ namespace platformer2d {
 
 	using LRendererID = uint32_t;
 
+	using namespace std::chrono_literals;
+
 	namespace Core
 	{
 		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
