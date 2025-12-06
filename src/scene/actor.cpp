@@ -37,7 +37,7 @@ namespace platformer2d {
 
 	CActor::~CActor()
 	{
-		LK_DEBUG_TAG("Actor", "Release: {} ({})", Name, Handle);
+		LK_TRACE_TAG("Actor", "Release: {}", Handle);
 	}
 
 	void CActor::Tick(const float DeltaTime)
@@ -190,7 +190,7 @@ namespace platformer2d {
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
 		Out << YAML::BeginMap; /* Actor */
 		Out << YAML::Key << "ID" << YAML::Value << Handle;
-		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(GetType());
+		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(GetActorType());
 		Out << YAML::Key << "Name" << YAML::Value << Name;
 		Out << YAML::Key << "Texture" << YAML::Value << std::to_underlying(Texture);
 		Out << YAML::Key << "Color" << YAML::Value << Color;

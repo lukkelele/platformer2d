@@ -77,8 +77,8 @@ namespace platformer2d {
 		bool bPaused = false;
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
+
 		inline const char* ToString(const ESceneState State)
 		{
 			const char* S = "";

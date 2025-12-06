@@ -29,7 +29,7 @@ namespace platformer2d {
 
 		virtual void Tick(float DeltaTime);
 		inline LUUID GetHandle() const { return Handle; }
-		virtual EActorType GetType() const { return EActorType::Object; }
+		virtual EActorType GetActorType() const { return EActorType::Object; }
 
 		glm::vec2 GetSize() const;
 		void SetSize(const glm::vec2& InSize);
@@ -54,7 +54,7 @@ namespace platformer2d {
 		void SetTickEnabled(bool Enabled);
 		inline bool IsDeletable() const { return bDeletable; }
 		void SetDeletable(bool Deletable);
-		bool IsPlayer() const { return GetType() == EActorType::Player; }
+		bool IsPlayer() const { return GetActorType() == EActorType::Player; }
 		bool IsSensor() const { return (Body ? Body->IsSensor() : false); }
 
 		inline ETexture GetTexture() const { return Texture; }
@@ -76,49 +76,42 @@ namespace platformer2d {
 		template<typename T>
 		T& AddComponent()
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(sizeof(T) == 0, "AddComponent not specialized for this type");
 		}
 
 		template<typename T>
 		T& AddComponent(const T& Value)
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(!std::is_same_v<T, T>, "AddComponent not specialized for this type");
 		}
 
 		template<typename T>
 		bool RemoveComponent()
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(sizeof(T) == 0, "RemoveComponent not specialized for this type");
 		}
 
 		template<typename T>
 		T& GetComponent()
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
 		const T& GetComponent() const
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
 		T* TryGetComponent()
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
 		const T* TryGetComponent() const
 		{
-			/* Force generic template to be ill-formed, no return needed. */
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
@@ -162,7 +155,7 @@ namespace platformer2d {
 
 	protected:
 		std::unique_ptr<CBody> Body;
-		FTransformComponent TransformComp{};
+		FTransformComponent TransformComp{}; /* @todo Make optional */
 		std::optional<FEffectComponent> EffectComp;
 		std::optional<FInteractionComponent> InteractionComp;
 

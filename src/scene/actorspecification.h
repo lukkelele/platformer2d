@@ -11,6 +11,8 @@ namespace platformer2d {
 		Object,
 		Player,
 		Spawnpoint,
+		Projectile,
+		COUNT
 	};
 
 	struct FActorSpecification
@@ -29,5 +31,26 @@ namespace platformer2d {
 		FActorSpecification() = default;
 		FActorSpecification(const ETexture InTexture) : Texture(InTexture) {}
 	};
+
+	namespace Enum {
+		inline const char* ToString(const EActorType Type)
+		{
+			const char* S = "";
+		#define _(EnumValue) case EActorType::EnumValue: S = #EnumValue; break
+			switch (Type)
+			{
+				_(Object);
+				_(Player);
+				_(Spawnpoint);
+				_(Projectile);
+				_(COUNT);
+				default:
+					LK_THROW_ENUM_ERR(Type);
+					break;
+			}
+		#undef _
+			return S;
+		}
+	}
 
 }
