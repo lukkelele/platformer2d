@@ -22,6 +22,7 @@ namespace platformer2d {
 
 		bool Reload();
 		bool NeedToReload() const { return Ammo <= 0; }
+		uint16_t GetAmmo() const { return Ammo; }
 
 		void Equip(CActor* Actor);
 
