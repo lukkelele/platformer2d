@@ -15,15 +15,11 @@ namespace platformer2d {
 		, DepthAttachmentSpec(EImageFormat::DEPTH24STENCIL8)
 	{
 		LK_ASSERT((Spec.Width > 0) && (Spec.Height > 0), "Invalid framebuffer spec");
-		for (FFramebufferTextureSpecification& FramebufferTextureSpec : Spec.Attachments.Attachments)
-		{
+		for (FFramebufferTextureSpecification& FramebufferTextureSpec : Spec.Attachments.Attachments) {
 			LK_TRACE_TAG("Framebuffer", "Iterating: {}", Enum::ToString(FramebufferTextureSpec.ImageFormat));
-			if (!IsDepthFormat(FramebufferTextureSpec.ImageFormat))
-			{
+			if (!IsDepthFormat(FramebufferTextureSpec.ImageFormat)) {
 				ColorAttachmentSpecs.emplace_back(FramebufferTextureSpec);
-			}
-			else
-			{
+			} else {
 				DepthAttachmentSpec = FramebufferTextureSpec;
 			}
 		}
@@ -33,8 +29,7 @@ namespace platformer2d {
 
 	CFramebuffer::~CFramebuffer()
 	{
-		if (ID > 0)
-		{
+		if (ID > 0) {
 			Destroy();
 		}
 	}
@@ -50,9 +45,8 @@ namespace platformer2d {
 
 	void CFramebuffer::Invalidate()
 	{
-		LK_DEBUG_TAG("Framebuffer", "Invalidate");
-		if (ID)
-		{
+		LK_TRACE_TAG("Framebuffer", "Invalidate");
+		if (ID) {
 			LK_TRACE_TAG("Framebuffer", "Delete existing framebuffer");
 			LK_OpenGL_Verify(glDeleteFramebuffers(1, &ID));
 			
@@ -60,8 +54,7 @@ namespace platformer2d {
 			ColorAttachments.clear();
 
 			LK_TRACE_TAG("Framebuffer", "Depth attachment: {}", DepthAttachment);
-			if (DepthAttachment > 0)
-			{
+			if (DepthAttachment > 0) {
 				LK_TRACE_TAG("Framebuffer", "Delete depth attachment");
 				LK_OpenGL_Verify(glDeleteTextures(1, &DepthAttachment));
 				DepthAttachment = 0;
@@ -74,11 +67,9 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
 
 		/* Color attachments. */
-		if (ColorAttachmentSpecs.size() > 0)
-		{
+		if (ColorAttachmentSpecs.size() > 0) {
 			LK_TRACE_TAG("Framebuffer", "Creating {} color attachments {} multisampling", ColorAttachmentSpecs.size(), Multisample ? "with" : "without");
-			for (std::size_t Idx = 0; Idx < ColorAttachmentSpecs.size(); Idx++)
-			{
+			for (std::size_t Idx = 0; Idx < ColorAttachmentSpecs.size(); Idx++) {
 				FTextureSpecification TexSpec;
 				TexSpec.Width = Spec.Width;
 				TexSpec.Height = Spec.Height;
@@ -112,12 +103,12 @@ namespace platformer2d {
 		}
 
 		/* Depth attachment. */
-		if (DepthAttachmentSpec.ImageFormat != EImageFormat::None)
-		{
+		if (DepthAttachmentSpec.ImageFormat != EImageFormat::None) {
 			LK_TRACE_TAG("Framebuffer", "Attach depth texture");
 			const GLenum TexTarget = GetTextureTarget(Multisample);
 			LK_OpenGL_Verify(glCreateTextures(TexTarget, 1, &DepthAttachment));
 			LK_OpenGL_Verify(glBindTexture(TexTarget, DepthAttachment));
+
 			switch (DepthAttachmentSpec.ImageFormat)
 			{
 				case EImageFormat::DEPTH24STENCIL8:
@@ -136,7 +127,7 @@ namespace platformer2d {
 		}
 
 		LK_VERIFY(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete");
-		LK_DEBUG_TAG("Framebuffer", "Created framebuffer with {} color attachments", ColorAttachments.size());
+		LK_TRACE_TAG("Framebuffer", "Created framebuffer with {} color attachments", ColorAttachments.size());
 
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	}
@@ -160,8 +151,11 @@ namespace platformer2d {
 	void CFramebuffer::Clear() const
 	{
 		/* @fixme: Use ClearColor member instead */
+#if 1
 		const glm::vec4& C = CRenderer::GetClearColor();
-		//const glm::vec4& C = ClearColor;
+#else
+		const glm::vec4& C = ClearColor;
+#endif
 		LK_OpenGL_Verify(glClearColor(C.r, C.g, C.b, C.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
@@ -175,8 +169,7 @@ namespace platformer2d {
 	void CFramebuffer::Resize(const uint32_t InWidth, const uint32_t InHeight)
 	{
 		LK_DEBUG_TAG("Framebuffer", "Resize: ({}, {})", InWidth, InHeight);
-		if ((InWidth <= 0) || (InHeight <= 0))
-		{
+		if ((InWidth <= 0) || (InHeight <= 0)) {
 			return;
 		}
 		Spec.Width = InWidth;
