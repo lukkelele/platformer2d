@@ -4,12 +4,18 @@ Screenshots and gifs from during development.
 
 ---
 
-## 2025-11-17
+## 2025-12-07
+![testlevel-1](doc/img/2025-12-07/editor-1.png)
+![testlevel-gif](doc/gif/2025-12-07/projectiles.gif)
 
+<br>
+
+## 2025-11-17
 ![raycast-gif](doc/gif/2025-11-17/raycast.gif)
 
-## 2025-11-11
+<br>
 
+## 2025-11-11
 ![testlevel-gif](doc/gif/2025-11-11/jump-swoosh.gif)
 
 <br>
