@@ -25,6 +25,9 @@ namespace platformer2d {
 		const CRifle* GetOwner() const { return Owner; }
 		virtual EActorType GetActorType() const override { return EActorType::Projectile; }
 
+	public:
+		uint8_t BounceCount = 0;
+		uint8_t MaxBounceCount = 1;
 	private:
 		CRifle* Owner;
 		TDestroy OnDestroy;
