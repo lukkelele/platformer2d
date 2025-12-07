@@ -73,10 +73,8 @@ namespace platformer2d {
 
 	FORCEINLINE static void BindTextures()
 	{
-		for (auto& [Texture, TextureRef] : Data.Textures)
-		{
-			if (TextureRef != nullptr)
-			{
+		for (auto& [Texture, TextureRef] : Data.Textures) {
+			if (TextureRef != nullptr) {
 				TextureRef->Bind(static_cast<uint32_t>(Texture));
 			}
 		}
@@ -98,8 +96,7 @@ namespace platformer2d {
 		OpenGL::Internal::SetupDebugContext(nullptr);
 #endif
 
-		for (int Idx = 0; Idx < CommandQueue.size(); Idx++)
-		{
+		for (int Idx = 0; Idx < CommandQueue.size(); Idx++) {
 			CommandQueue[Idx] = new CRenderCommandQueue();
 		}
 
@@ -131,12 +128,9 @@ namespace platformer2d {
 		 */
 		UI::OnGameMenuOpened.Add([](const bool Open)
 		{
-			if (Open)
-			{
+			if (Open) {
 				SetDepthTest(false);
-			}
-			else
-			{
+			} else {
 				SetDepthTest(true);
 			}
 		});
@@ -148,18 +142,15 @@ namespace platformer2d {
 	{
 		Data.WhiteTexture = nullptr;
 		LK_DEBUG_TAG("Renderer", "Releasing {} textures", Data.Textures.size());
-		for (auto& [Texture, TextureRef] : Data.Textures)
-		{
-			if (TextureRef != nullptr)
-			{
+		for (auto& [Texture, TextureRef] : Data.Textures) {
+			if (TextureRef != nullptr) {
 				LK_TRACE_TAG("Renderer", "Release: {}", Enum::ToString(Texture));
 				TextureRef->Unbind();
 				TextureRef.reset();
 			}
 		}
 
-		if (CameraUniformBuffer)
-		{
+		if (CameraUniformBuffer) {
 			LK_DEBUG_TAG("Renderer", "Releasing uniform buffers");
 			CameraUniformBuffer->Destroy();
 			CameraUniformBuffer.reset();
@@ -180,8 +171,7 @@ namespace platformer2d {
 
 		CWindow::OnFramebufferResized.Add([&](const uint32_t NewWidth, const uint32_t NewHeight)
 		{
-			if ((NewWidth <= 0) || (NewHeight <= 0))
-			{
+			if ((NewWidth <= 0) || (NewHeight <= 0)) {
 				return;
 			}
 			LK_DEBUG_TAG("Renderer", "OnFramebufferResized: ({}, {})", NewWidth, NewHeight);
@@ -208,8 +198,7 @@ namespace platformer2d {
 		uint32_t* QuadIndices = new uint32_t[MaxIndices];
 		LK_VERIFY(QuadIndices, "Failed to alloc QuadIndices on the heap");
 		uint32_t Offset = 0;
-		for (uint32_t Idx = 0; Idx < MaxIndices; Idx += 6)
-		{
+		for (uint32_t Idx = 0; Idx < MaxIndices; Idx += 6) {
 			/* First triangle, 0->1->2 */
 			QuadIndices[Idx + 0] = Offset + 0;
 			QuadIndices[Idx + 1] = Offset + 1;
@@ -231,8 +220,7 @@ namespace platformer2d {
 
 		QuadShader = std::make_shared<CShader>(SHADERS_DIR "/quad.shader");
 		/* Set every texture binding. */
-		for (auto& [Texture, TextureRef] : Data.Textures)
-		{
+		for (auto& [Texture, TextureRef] : Data.Textures) {
 			LK_VERIFY(TextureRef, "Invalid texture reference: {}", Enum::ToString(Texture));
 			const int Idx = static_cast<int>(Texture);
 			QuadShader->Set(LK_FMT("u_texture{}", Idx), Idx);
@@ -258,8 +246,7 @@ namespace platformer2d {
 		LineVertexBufferBase = new FLineVertex[MaxVertices];
 
 		uint32_t* LineIndices = new uint32_t[MaxLineIndices];
-		for (uint32_t Idx = 0; Idx < MaxLineIndices; Idx++)
-		{
+		for (uint32_t Idx = 0; Idx < MaxLineIndices; Idx++) {
 			LineIndices[Idx] = Idx;
 		}
 		LineEBO = OpenGL::ElementBuffer::Create(LineIndices, MaxLineIndices * sizeof(uint32_t));
@@ -313,12 +300,10 @@ namespace platformer2d {
 				.SamplerWrap = ETextureWrap::Clamp,
 				.SamplerFilter = ETextureFilter::Nearest,
 			};
-			if (Size.x > 0.0f)
-			{
+			if (Size.x > 0.0f) {
 				Spec.Width = Size.x;
 			}
-			if (Size.y > 0.0f)
-			{
+			if (Size.y > 0.0f) {
 				Spec.Height = Size.y;
 			}
 
@@ -380,8 +365,7 @@ namespace platformer2d {
 		CameraData.ViewProjection = Camera.GetViewProjection();
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 
-		if (bDebugRender)
-		{
+		if (bDebugRender) {
 			CDebugRenderer::ViewProjection = CameraData.ViewProjection;
 		}
 
@@ -418,8 +402,7 @@ namespace platformer2d {
 	{
 		Data.ViewportFramebuffer->Bind();
 
-		if (QuadIndexCount > 0)
-		{
+		if (QuadIndexCount > 0) {
 			/* Compute byte count. */
 			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)QuadVertexBufferPtr - (uint8_t*)QuadVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
@@ -433,8 +416,7 @@ namespace platformer2d {
 			QuadShader->Unbind();
 		}
 
-		if (LineIndexCount > 0)
-		{
+		if (LineIndexCount > 0) {
 			/* Compute byte count. */
 			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)LineVertexBufferPtr - (uint8_t*)LineVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
@@ -448,8 +430,7 @@ namespace platformer2d {
 			LineShader->Unbind();
 		}
 
-		if (CircleIndexCount > 0)
-		{
+		if (CircleIndexCount > 0) {
 			/* Compute byte count. */
 			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)CircleVertexBufferPtr - (uint8_t*)CircleVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, CircleVBO));
@@ -478,8 +459,7 @@ namespace platformer2d {
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		if (QuadIndexCount >= MaxIndices)
-		{
+		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
 		}
 
@@ -490,8 +470,7 @@ namespace platformer2d {
             * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
-		for (std::size_t Idx = 0; Idx < 4; Idx++)
-		{
+		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
@@ -513,8 +492,7 @@ namespace platformer2d {
 
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		if (QuadIndexCount >= MaxIndices)
-		{
+		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
 		}
 
@@ -524,8 +502,7 @@ namespace platformer2d {
             * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
-		for (std::size_t Idx = 0; Idx < 4; Idx++)
-		{
+		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = QuadTextureCoords[Idx];
@@ -549,8 +526,7 @@ namespace platformer2d {
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4],
 							 const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		if (QuadIndexCount >= MaxIndices)
-		{
+		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
 		}
 
@@ -560,8 +536,7 @@ namespace platformer2d {
             * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
             * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
 
-		for (std::size_t Idx = 0; Idx < 4; Idx++)
-		{
+		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = TexCoords[Idx];
@@ -585,8 +560,7 @@ namespace platformer2d {
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, const float RotationDeg,
 							 const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		if (QuadIndexCount >= MaxIndices)
-		{
+		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
 		}
 
@@ -603,8 +577,7 @@ namespace platformer2d {
 			glm::vec2(UV.U1, UV.V0)
 		};
 
-		for (std::size_t Idx = 0; Idx < 4; Idx++)
-		{
+		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
 			QuadVertexBufferPtr->Color = Color;
 			QuadVertexBufferPtr->TexCoord = TexCoords[Idx];
@@ -663,8 +636,7 @@ namespace platformer2d {
 
 	void CRenderer::DrawCircle(const glm::mat4& Transform, const glm::vec4& Color)
 	{
-		for (int Idx = 0; Idx < CIRCLE_SEGMENTS; Idx++)
-		{
+		for (int Idx = 0; Idx < CIRCLE_SEGMENTS; Idx++) {
 			float AngleRad = 2.0f * glm::pi<float>() * static_cast<float>(Idx) / CIRCLE_SEGMENTS;
 			const glm::vec4 StartPos = { glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f };
 			AngleRad = 2.0f * glm::pi<float>() * static_cast<float>((Idx + 1) % CIRCLE_SEGMENTS) / CIRCLE_SEGMENTS;
@@ -686,8 +658,7 @@ namespace platformer2d {
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
 			* glm::scale(glm::mat4(1.0f), { Radius * 2.0f, Radius * 2.0f, 1.0f });
 
-		for (int Idx = 0; Idx < 4; Idx++)
-		{
+		for (int Idx = 0; Idx < 4; Idx++) {
 			CircleVertexBufferPtr->WorldPosition = Transform * QuadVertexPositions[Idx];
 			CircleVertexBufferPtr->Thickness = Thickness;
 			CircleVertexBufferPtr->LocalPosition = QuadVertexPositions[Idx] * 2.0f;
@@ -722,12 +693,9 @@ namespace platformer2d {
 	{
 		LK_TRACE_TAG("Renderer", "Depth test: {}", Enabled ? "Enabled" : "Disabled");
 		Data.GL.bDepthTest = Enabled;
-		if (Enabled)
-		{
+		if (Enabled) {
 			LK_OpenGL_Verify(glEnable(GL_DEPTH_TEST));
-		}
-		else
-		{
+		} else {
 			LK_OpenGL_Verify(glDisable(GL_DEPTH_TEST));
 		}
 	}
@@ -795,12 +763,9 @@ namespace platformer2d {
 	void CRenderer::SetBlending(const bool Enabled)
 	{
 		Data.GL.bBlending = Enabled;
-		if (Enabled)
-		{
+		if (Enabled) {
 			LK_OpenGL_Verify(glEnable(GL_BLEND));
-		}
-		else
-		{
+		} else {
 			LK_OpenGL_Verify(glDisable(GL_BLEND));
 		}
 	}
