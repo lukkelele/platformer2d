@@ -5,8 +5,10 @@ Screenshots and gifs from during development.
 ---
 
 ## 2025-12-07
-![testlevel-1](doc/img/2025-12-07/editor-1.png)
-![testlevel-gif](doc/gif/2025-12-07/projectiles.gif)
+![rifle-closeup](doc/img/2025-12-07/rifle-closeup.png)
+![editor-1](doc/img/2025-12-07/editor-1.png)
+![rifle-shwocase-gif](doc/gif/2025-12-07/rifle-showcase.gif)
+![projectiles-gif](doc/gif/2025-12-07/projectiles.gif)
 
 <br>
 

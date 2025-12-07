@@ -12,7 +12,8 @@ and thus this project was born.
 
 ## Showcase
 
-![showcase-gif-1](doc/gif/2025-12-07/projectiles.gif)
+![showcase-1](doc/img/2025-12-07/rifle-closeup.png)
+![showcase-gif-1](doc/gif/2025-12-07/rifle-showcase.gif)
 ![showcase-1](doc/img/2025-12-07/editor-1.png)
 ![showcase-gif-2](doc/gif/2025-11-17/raycast.gif)
 
