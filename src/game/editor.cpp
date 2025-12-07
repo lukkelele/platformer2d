@@ -105,8 +105,7 @@ namespace platformer2d {
 
 		CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
-			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr)
-			{
+			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr) {
 				LK_TRACE_TAG("Editor", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				LK_ASSERT(Scene);
 				UpdateInputBuffer(Scene->GetActors().size());
@@ -138,12 +137,9 @@ namespace platformer2d {
 
 		UI::OnGameMenuOpened.Add([](const bool Opened)
 		{
-			if (Opened)
-			{
+			if (Opened) {
 				CPhysicsWorld::Pause();
-			}
-			else
-			{
+			} else {
 				CPhysicsWorld::Unpause();
 			}
 		});
@@ -194,8 +190,7 @@ namespace platformer2d {
 		Player->Tick(DeltaTime);
 		Scene->Tick(DeltaTime);
 
-		if (bRaycastScene)
-		{
+		if (bRaycastScene) {
 			RaycastScene();
 		}
 
@@ -212,20 +207,46 @@ namespace platformer2d {
 		);
 
 		/* @fixme Just temporarily here */
-		if (bDrawCircle)
-		{
+		if (bDrawCircle) {
 			CRenderer::DrawCircle(P1, DebugRot, DebugRadius, FColor::Red);
 		}
-		if (bDrawCircleFilled)
-		{
+		if (bDrawCircleFilled) {
 			CRenderer::DrawCircleFilled(P1, DebugRadius, FColor::Red, 5.0f);
 		}
-		if (bDrawLine)
-		{
+		if (bDrawLine) {
 			CRenderer::DrawLine(glm::vec3(0.0f, 0.0f, 1.0f), P1, FColor::Black, 6);
 		}
 
 		Scene->Render();
+	}
+
+	void CEditor::RenderUI()
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags)) {
+			return;
+		}
+
+		UI_PrepareEditorViewport();
+		const bool EditorViewportOpen = UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
+		ImGui::PopStyleVar(2);
+		if (EditorViewportOpen) {
+			UpdateEditorViewportState();
+			UI_ViewportTexture();
+
+			UI_Level();
+			UI_Player();
+			UI::PlayerHud(Player);
+
+			UI::Statistics();
+			UI::SelectionPanel();
+			UI_DrawGizmo();
+
+			UI::End(); /* ~EditorViewport */
+		}
+
+		UI::End(); /* ~Viewport */
 	}
 
 	CCamera* CEditor::GetActiveCamera() const
@@ -245,8 +266,7 @@ namespace platformer2d {
 		HitResults.clear();
 
 		const glm::vec2 MousePos = GetMouseInViewportSpace();
-		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
-		{
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f)) {
 			return 0;
 		}
 
@@ -260,8 +280,7 @@ namespace platformer2d {
 			MousePos.y
 		);
 
-		for (const auto& Actor : TargetScene->GetActors())
-		{
+		for (const auto& Actor : TargetScene->GetActors()) {
 			const glm::vec2 Pos = Actor->GetPosition();
 			const glm::vec2 Size = Actor->GetSize();
 			const glm::vec2 HalfSize = Size * 0.50f;
@@ -280,8 +299,7 @@ namespace platformer2d {
 			}
 		}
 
-		if (HitResults.empty())
-		{
+		if (HitResults.empty()) {
 			return 0;
 		}
 
@@ -294,18 +312,15 @@ namespace platformer2d {
 		HitResults.clear();
 		const CCamera& Camera = *GetActiveCamera();
 		const glm::vec2 MouseWorld = GetMouseInWorldSpace(Camera);
-		if (!std::isfinite(MouseWorld.x) || !std::isfinite(MouseWorld.y))
-		{
+		if (!std::isfinite(MouseWorld.x) || !std::isfinite(MouseWorld.y)) {
 			return 0;
 		}
 
-		for (const auto& Actor : TargetScene->GetActors())
-		{
+		for (const auto& Actor : TargetScene->GetActors()) {
 			const glm::vec2 Pos = Actor->GetPosition();
 			const glm::vec2 Size = Actor->GetSize();
 			const float Rotation = Actor->GetRotation();
-			if (Math::IsPointInPolygon(MouseWorld, Pos, Size, Rotation))
-			{
+			if (Math::IsPointInPolygon(MouseWorld, Pos, Size, Rotation)) {
 				FHitResult Entry{};
 				Entry.Handle = Actor->GetHandle();
 				Entry.Ref = Actor;
@@ -317,44 +332,12 @@ namespace platformer2d {
 			}
 		}
 
-		if (HitResults.empty())
-		{
+		if (HitResults.empty()) {
 			return 0;
 		}
 
 		std::sort(HitResults.begin(), HitResults.end(), [](const auto& Lhs, const auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
 		return static_cast<uint16_t>(HitResults.size());
-	}
-
-	void CEditor::RenderUI()
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags))
-		{
-			return;
-		}
-
-		UI_PrepareEditorViewport();
-		const bool EditorViewportOpen = UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
-		ImGui::PopStyleVar(2);
-		if (EditorViewportOpen)
-		{
-			UpdateEditorViewportState();
-
-			UI_ViewportTexture();
-
-			UI_Level();
-			UI_Player();
-
-			UI::Statistics();
-			UI::SelectionPanel();
-			UI_DrawGizmo();
-
-			UI::End(); /* ~EditorViewport */
-		}
-
-		UI::End(); /* ~Viewport */
 	}
 
 	bool CEditor::Serialize(const std::filesystem::path& OutFile) const
@@ -392,8 +375,7 @@ namespace platformer2d {
 	{
 		LK_INFO_TAG("Editor", "Deserialize: {}", StringUtils::GetPathRelativeToProject(Filepath));
 		LK_ASSERT(std::filesystem::exists(Filepath), "Filepath does not exist: {}", Filepath);
-		if (!std::filesystem::exists(Filepath))
-		{
+		if (!std::filesystem::exists(Filepath)) {
 			LK_ERROR_TAG("Editor", "Filepath does not exist: {}", Filepath);
 			return false;
 		}
@@ -408,8 +390,7 @@ namespace platformer2d {
 		/* Load the scene. */
 		const YAML::Node& SceneNode = Data["Scene"];
 		LK_ASSERT(!SceneNode.IsNull());
-		if (SceneNode.IsNull())
-		{
+		if (SceneNode.IsNull()) {
 			LK_ERROR_TAG("Editor", "Scene node is missing in YAML");
 			return false;
 		}
@@ -462,8 +443,7 @@ namespace platformer2d {
 		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
 
 		if ((EditorViewportWidth != static_cast<uint16_t>(VpWidth)) ||
-			(EditorViewportHeight != static_cast<uint16_t>(VpHeight)))
-		{
+			(EditorViewportHeight != static_cast<uint16_t>(VpHeight))) {
 			EditorViewportWidth  = static_cast<uint16_t>(VpWidth);
 			EditorViewportHeight = static_cast<uint16_t>(VpHeight);
 			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
@@ -473,12 +453,9 @@ namespace platformer2d {
 	void CEditor::UpdateViewportBounds()
 	{
 		ViewportBounds[0] = { 0.0f, 0.0f };
-		if (CWindow* Window = CWindow::Get(); Window != nullptr)
-		{
+		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
 			ViewportBounds[1] = Window->GetSize();
-		}
-		else
-		{
+		} else {
 			LK_WARN_TAG("Editor", "[{}] No window reference", GetSpecification().Name);
 			ViewportBounds[1] = { 0.0f, 0.0f };
 		}
@@ -501,16 +478,14 @@ namespace platformer2d {
 	glm::vec2 CEditor::GetMouseInWorldSpace(const CCamera& Camera)
 	{
 		const glm::vec2 MousePos = GetMouseInViewportSpace();
-		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
-		{
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f)) {
 			return glm::vec2(std::numeric_limits<float>::quiet_NaN());
 		}
 
 		const glm::vec4 ClipPos = glm::vec4(MousePos.x, MousePos.y, 0.0f, 1.0f);
 		const glm::mat4 InvViewProj = glm::inverse(Camera.GetProjectionMatrix() * Camera.GetViewMatrix());
 		glm::vec4 WorldPos = InvViewProj * ClipPos;
-		if (WorldPos.w != 0.0f)
-		{
+		if (WorldPos.w != 0.0f) {
 			WorldPos /= WorldPos.w;
 		}
 
@@ -540,8 +515,7 @@ namespace platformer2d {
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA);
 		UI::PrepareRightSidebar();
-		if (!UI::Begin(UI::PanelID::Sidebar2))
-		{
+		if (!UI::Begin(UI::PanelID::Sidebar2)) {
 			return;
 		}
 
@@ -559,8 +533,7 @@ namespace platformer2d {
 		UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
 		UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
 
-		if (std::shared_ptr<CRifle> Rifle = Player->GetRifle())
-		{
+		if (std::shared_ptr<CRifle> Rifle = Player->GetRifle()) {
 			ImGui::Dummy(ImVec2(0, 10));
 			ImGui::Separator();
 			UI::LargeTextCentralized("Rifle");
@@ -568,46 +541,39 @@ namespace platformer2d {
 
 			ImGui::Spacing();
 			float ProjectileRadius = Rifle->GetProjectileRadius();
-			if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f))
-			{
+			if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
 				Rifle->SetProjectileRadius(ProjectileRadius);
 			}
 
 			ImGui::Spacing();
 			float ProjectileVelocity = Rifle->GetProjectileVelocity();
-			if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f))
-			{
+			if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
 				Rifle->SetProjectileVelocity(ProjectileVelocity);
 			}
 
 			ImGui::Spacing();
 			bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
-			if (ImGui::Checkbox("Explode On Impact", &ExplodeOnImpact))
-			{
+			if (ImGui::Checkbox("Explode On Impact", &ExplodeOnImpact)) {
 				Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
 			}
 
 			ImGui::Spacing();
 			EColor ProjectileColor = EColor::Red;
 			const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
-			if (!ColorDeduced)
-			{
+			if (!ColorDeduced) {
 				ImGui::BeginDisabled();
 			}
-			if (UI::ColorDropdown(ProjectileColor))
-			{
+			if (UI::ColorDropdown(ProjectileColor)) {
 				Rifle->SetProjectileColor(FColor::Get(ProjectileColor));
 			}
-			if (!ColorDeduced)
-			{
+			if (!ColorDeduced) {
 				ImGui::EndDisabled();
 			}
 		}
 
 		ImGui::Spacing();
 
-		if (ImGui::TreeNodeEx("Info", ImGuiTreeNodeFlags_SpanAvailWidth))
-		{
+		if (ImGui::TreeNodeEx("Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
 			ImGui::Text("Editor Viewport: (%d, %d)", EditorViewportWidth, EditorViewportHeight);
 			{
@@ -627,8 +593,7 @@ namespace platformer2d {
 			ImGui::Dummy(ImVec2(0, 8));
 
 			glm::vec4 ClearColor = CRenderer::GetClearColor();
-			if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f"))
-			{
+			if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f")) {
 				CRenderer::SetClearColor(ClearColor);
 			}
 
@@ -637,13 +602,10 @@ namespace platformer2d {
 				ImGui::SeparatorText("Mouse");
 				const glm::vec2 MouseViewportPos = GetMouseInViewportSpace();
 				ImGui::Text("Viewport Space: (%.2f, %.2f)", MouseViewportPos.x, MouseViewportPos.y);
-				if (CCamera* Camera = GetActiveCamera(); Camera != nullptr)
-				{
+				if (CCamera* Camera = GetActiveCamera(); Camera != nullptr) {
 					const glm::vec2 MouseWorldPos = GetMouseInWorldSpace(*Camera);
 					ImGui::Text("World Space: (%.2f, %.2f)", MouseWorldPos.x, MouseWorldPos.y);
-				}
-				else
-				{
+				} else {
 					ImGui::Text("World Space: UNKNOWN");
 				}
 			}
@@ -651,13 +613,11 @@ namespace platformer2d {
 			ImGui::Dummy(ImVec2(0, 8));
 			{
 				ImGui::Checkbox("Raycast Scene", &bRaycastScene);
-				if (!bRaycastScene)
-				{
+				if (!bRaycastScene) {
 					ImGui::BeginDisabled();
 				}
 				ImGui::Checkbox("Draw Debug Ray", &Config.Debug.bDrawRayHits);
-				if (!bRaycastScene)
-				{
+				if (!bRaycastScene) {
 					ImGui::EndDisabled();
 				}
 			}
@@ -666,8 +626,7 @@ namespace platformer2d {
 			ImGui::SeparatorText("Selection");
 			{
 				std::string Selected = "None";
-				if (std::shared_ptr<CActor> Actor = SelectedActor.lock(); Actor != nullptr)
-				{
+				if (std::shared_ptr<CActor> Actor = SelectedActor.lock(); Actor != nullptr) {
 					Selected = Actor->GetName();
 				}
 				ImGui::Text("Selected: %s", Selected.c_str());
@@ -677,13 +636,11 @@ namespace platformer2d {
 			ImGui::SeparatorText("Serialization");
 			{
 				UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-				if (ImGui::Button("Serialize"))
-				{
+				if (ImGui::Button("Serialize")) {
 					Serialize(GameSpec.LevelFilepath);
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Deserialize"))
-				{
+				if (ImGui::Button("Deserialize")) {
 					Deserialize(GameSpec.LevelFilepath);
 				}
 			}
@@ -700,8 +657,7 @@ namespace platformer2d {
 		const auto Actors = Scene->GetActors();
 		ImGui::Text("Actors: %d", Actors.size() + 1);
 		UI::Widget::ActorNode(Player, Scene);
-		for (auto& Actor : Actors)
-		{
+		for (auto& Actor : Actors) {
 			UI::Widget::ActorNode(Actor, Scene);
 		}
 
@@ -718,8 +674,7 @@ namespace platformer2d {
 	{
 		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA); /* @todo Dock node alpha. */
 		UI::PrepareLeftSidebar();
-		if (!ImGui::Begin(UI::PanelID::Sidebar1))
-		{
+		if (!ImGui::Begin(UI::PanelID::Sidebar1)) {
 			ImGui::End();
 			return;
 		}
@@ -752,13 +707,11 @@ namespace platformer2d {
 	void CEditor::UI_DrawGizmo()
 	{
 		std::shared_ptr<CActor> SelectedRef = SelectedActor.lock();
-		if (!SelectedRef)
-		{
+		if (!SelectedRef) {
 			return;
 		}
 
-		if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport))
-		{
+		if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport)) {
 			ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
 
 			CCamera& Camera = Player->GetCamera();
@@ -806,16 +759,11 @@ namespace platformer2d {
 		{
 			case EMouseButtonState::Pressed:
 			{
-				if (Data.Button == EMouseButton::Button0)
-				{
-					if (bEditorViewportFocused)
-					{
+				if (Data.Button == EMouseButton::Button0) {
+					if (bEditorViewportFocused) {
 						MousePickScene();
 					}
-				}
-				else if (Data.Button == EMouseButton::Button1)
-				{
-				}
+				} 
 
 				break;
 			}
@@ -834,8 +782,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
 		LK_DEBUG_TAG("Editor", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
-		{
+		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
 			return;
 		}
 
@@ -843,10 +790,8 @@ namespace platformer2d {
 		 * Player is overlapping the sensor.
 		 * Determine the type of sensor.
 		 */
-		if (Event.Visitor == Player.get())
-		{
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>())
-			{
+		if (Event.Visitor == Player.get()) {
+			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
 				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(true);
 
@@ -876,8 +821,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
 		LK_DEBUG_TAG("Editor", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get()))
-		{
+		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
 			return;
 		}
 
@@ -885,10 +829,8 @@ namespace platformer2d {
 		 * Player is overlapping the sensor.
 		 * Determine the type of sensor.
 		 */
-		if (Event.Visitor == Player.get())
-		{
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>())
-			{
+		if (Event.Visitor == Player.get()) {
+			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
 				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(false);
 			}
@@ -899,14 +841,12 @@ namespace platformer2d {
 	{
 		CProjectile* Projectile = static_cast<CProjectile*>(ProjectileActor);
 		/* Do not destroy if the actor hit is the player who shot the projectile. */
-		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor))
-		{
+		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor)) {
 			return;
 		}
 
 		LK_TRACE("Projectile hit: {}", HitActor ? HitActor->GetName() : "NULL");
-		if (Projectile->ExplodesOnImpact())
-		{
+		if (Projectile->ExplodesOnImpact()) {
 			Projectile->Destroy();
 		}
 	};
@@ -915,8 +855,7 @@ namespace platformer2d {
 	{
 		LK_TRACE_TAG("Editor", "OnContactBeginEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
 		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B)
-		{
+		if (!Event.A || !Event.B) {
 			return;
 		}
 
@@ -924,12 +863,9 @@ namespace platformer2d {
 		const EActorType BType = Event.B->GetActorType();
 
 		/* Projectile hit. */
-		if (AType == EActorType::Projectile)
-		{
+		if (AType == EActorType::Projectile) {
 			OnProjectileContact(Event.A, Event.B);
-		}
-		else if (BType == EActorType::Projectile)
-		{
+		} else if (BType == EActorType::Projectile) {
 			OnProjectileContact(Event.B, Event.A);
 		}
 	}
@@ -938,8 +874,7 @@ namespace platformer2d {
 	{
 		LK_TRACE_TAG("Editor", "OnContactEndEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
 		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B)
-		{
+		if (!Event.A || !Event.B) {
 			return;
 		}
 	}
@@ -947,18 +882,15 @@ namespace platformer2d {
 	void CEditor::MousePickScene()
 	{
 		CCamera* Camera = GetActiveCamera();
-		if (!Scene || !Camera)
-		{
+		if (!Scene || !Camera) {
 			return;
 		}
 
 		static std::vector<FHitResult> HitResults;
 		const uint16_t Picked = PickSceneAtMouse(Scene, HitResults);
-		if (Picked > 0)
-		{
+		if (Picked > 0) {
 			const FHitResult& Hit = HitResults.at(0);
-			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr)
-			{
+			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
 				CSelectionContext::Select(Ref->GetHandle());
 				SelectedActor = Ref;
 			}
@@ -968,19 +900,16 @@ namespace platformer2d {
 	void CEditor::RaycastScene()
 	{
 		CCamera* Camera = GetActiveCamera();
-		if (!Scene || !Camera)
-		{
+		if (!Scene || !Camera) {
 			return;
 		}
 
 		static std::vector<FHitResult> HitResults;
 		const uint16_t Hits = RaycastScene(Scene, HitResults);
 #if 0 /* Disable for now since selection is overkill for raycasts */
-		if (Hits > 0)
-		{
+		if (Hits > 0) {
 			const FHitResult& Hit = HitResults.at(0);
-			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr)
-			{
+			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
 				SelectedActor = Ref;
 			}
 		}
@@ -990,19 +919,16 @@ namespace platformer2d {
 	void CEditor::UI_PrepareEditorViewport()
 	{
 		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
-		if (!Window)
-		{
+		if (!Window) {
 			return;
 		}
 
 		ImGuiDockNode* DockNode = Window->DockNode;
-		if (!DockNode)
-		{
+		if (!DockNode) {
 			return;
 		}
 
-		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f))
-		{
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
 			return;
 		}
 
@@ -1024,8 +950,7 @@ namespace platformer2d {
 		const b2ShapeId PlayerShapeID = Player.GetBody()->GetShapeID();
 
 		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
-		if (!InvolvesPlayer)
-		{
+		if (!InvolvesPlayer) {
 			return true; /* Enable normal contacts. */
 		}
 
@@ -1033,16 +958,14 @@ namespace platformer2d {
 		const CActor* ActorB = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
 
 		/* Make normal point from platform to player. */
-		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))
-		{
+		if (B2_ID_EQUALS(ShapeA, PlayerShapeID)) {
 			Normal.x = -Normal.x;
 			Normal.y = -Normal.y;
 		}
 
 		const b2Vec2 Up = { 0.0f, 1.0f };
 		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
-		if (UpDot <= 0.0f)
-		{
+		if (UpDot <= 0.0f) {
 			/* Side/ceiling/backface -> behave as a solid. */
 			return true;
 		}
@@ -1050,8 +973,7 @@ namespace platformer2d {
 		const b2BodyId PlayerBody = Player.GetBody()->GetID();
 		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
 		const float Vn = V.x * Normal.x + V.y * Normal.y;
-		if (Vn > 0.0f)
-		{
+		if (Vn > 0.0f) {
 			/* Moving along the normal (from below toward the platform) -> ignore contact. */
 			return false;
 		}

@@ -21,14 +21,14 @@ namespace platformer2d {
 		virtual void OnDetach() override;
 
 		virtual void Tick(float InDeltaTime) override;
+		virtual void RenderUI() override;
+
 		virtual CCamera* GetActiveCamera() const override;
 		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
 		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
 
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
-
-		virtual void RenderUI() override;
 
 		virtual bool Serialize(const std::filesystem::path& OutFile) const override;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override;
