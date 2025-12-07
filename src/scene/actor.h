@@ -14,10 +14,10 @@ namespace platformer2d {
 
 	class CScene;
 
-	enum EActorFlag : uint32_t
+	enum EActorFlag : uint64_t
 	{
 		EActorFlag_None = 0,
-		EActorFlag_Placeholder = LK_BIT(1),
+		EActorFlag_Damageable = LK_BIT(1),
 	};
 
 	class CActor : public ISerializable<ESerializable::Yaml>
@@ -31,9 +31,48 @@ namespace platformer2d {
 		inline LUUID GetHandle() const { return Handle; }
 		virtual EActorType GetActorType() const { return EActorType::Object; }
 
+		template<typename T>
+		T& As()
+		{
+			static_assert(sizeof(T) > 0, "As<T> failed, incomplete type");
+			return static_cast<T&>(*this);
+		}
+
+		template<typename T>
+		const T& As() const
+		{
+			static_assert(sizeof(T) > 0, "As<T> failed, incomplete type");
+			return static_cast<const T&>(*this);
+		}
+
+		/**
+		 * @brief Check if actor has a specific flag.
+		 */
+		FORCEINLINE bool HasFlag(const EActorFlag Flag) const
+		{
+			return ((ActorFlags & std::to_underlying(Flag)) == std::to_underlying(Flag));
+		}
+
+		/**
+		 * @brief Check if actor has any of the flags.
+		 */
+		FORCEINLINE bool HasAnyFlags(const EActorFlag Flags) const
+		{
+			return static_cast<bool>(ActorFlags & Flags);
+		}
+
+		FORCEINLINE void SetFlag(const EActorFlag Flag, bool Value = true)
+		{
+			if (Value) {
+				ActorFlags |= Flag;
+			} else {
+				ActorFlags &= ~Flag;
+			}
+		}
+
 		glm::vec2 GetSize() const;
 		void SetSize(const glm::vec2& InSize);
-		glm::vec3 GetPosition() const;
+		FORCEINLINE const glm::vec3& GetPosition() const { return TransformComp.Translation; }
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
 		void SetPosition(const glm::vec3& NewPos);
@@ -160,6 +199,7 @@ namespace platformer2d {
 		std::optional<FInteractionComponent> InteractionComp;
 
 		std::string Name;
+		uint64_t ActorFlags = EActorFlag_None;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
 

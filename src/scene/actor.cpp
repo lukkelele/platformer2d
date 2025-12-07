@@ -28,8 +28,7 @@ namespace platformer2d {
 		TransformComp.Translation.y = BodyPos.y;
 		TransformComp.SetRotation2D(Body->GetRotation());
 
-		if (const FPolygon* Polygon = std::get_if<FPolygon>(&BodySpec.Shape); Polygon != nullptr)
-		{
+		if (const FPolygon* Polygon = std::get_if<FPolygon>(&BodySpec.Shape); Polygon != nullptr) {
 			LK_TRACE_TAG("Actor", "[{}] Scaling polygon -> {}", Handle, Polygon->Size);
 			TransformComp.SetScale(Polygon->Size);
 		}
@@ -42,13 +41,11 @@ namespace platformer2d {
 
 	void CActor::Tick(const float DeltaTime)
 	{
-		if (!bTickEnabled)
-		{
+		if (!bTickEnabled) {
 			return;
 		}
 
-		if (Body)
-		{
+		if (Body) {
 			Body->Tick(DeltaTime);
 
 			const glm::vec2 BodyPos = Body->GetPosition();
@@ -57,8 +54,7 @@ namespace platformer2d {
 			TransformComp.SetRotation2D(Body->GetRotation());
 		}
 
-		if (FEffectComponent* EC = TryGetComponent<FEffectComponent>(); EC != nullptr)
-		{
+		if (FEffectComponent* EC = TryGetComponent<FEffectComponent>(); EC != nullptr) {
 			UpdateEffectComponent(*EC);
 		}
 	}
@@ -70,20 +66,12 @@ namespace platformer2d {
 
 	void CActor::SetSize(const glm::vec2 & InSize)
 	{
-		if (Body)
-		{
+		if (Body) {
 			LK_FATAL_TAG("Actor", "Not supported yet: {}", LK_FUNCSIG);
-		}
-		else
-		{
+		} else {
 			TransformComp.Scale.x = InSize.x;
 			TransformComp.Scale.y = InSize.y;
 		}
-	}
-
-	glm::vec3 CActor::GetPosition() const
-	{
-		return TransformComp.Translation;
 	}
 
 	void CActor::SetPosition(const float X, const float Y)
@@ -95,8 +83,7 @@ namespace platformer2d {
 	{
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
-		if (Body)
-		{
+		if (Body) {
 			Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
 		}
 	}
@@ -104,8 +91,7 @@ namespace platformer2d {
 	void CActor::SetPosition(const glm::vec3& NewPos)
 	{
 		TransformComp.Translation = NewPos;
-		if (Body)
-		{
+		if (Body) {
 			Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
 		}
 	}
@@ -117,8 +103,7 @@ namespace platformer2d {
 
 	void CActor::SetRotation(const float AngleRad)
 	{
-		if (Body)
-		{
+		if (Body) {
 			Body->SetRotation(AngleRad);
 		}
 		TransformComp.SetRotation2D(AngleRad);
@@ -126,12 +111,7 @@ namespace platformer2d {
 
 	bool CActor::IsMoving() const
 	{
-		if (!Body)
-		{
-			return false;
-		}
-
-		return (Body->GetLinearVelocity().x > CBody::LINEAR_VELOCITY_X_EPSILON);
+		return (Body ? Body->GetLinearVelocity().x > CBody::LINEAR_VELOCITY_X_EPSILON : false);
 	}
 
 	void CActor::SetTickEnabled(const bool Enabled)
@@ -151,8 +131,7 @@ namespace platformer2d {
 
 	void CActor::SetName(std::string_view InName)
 	{
-		if (Name != InName)
-		{
+		if (Name != InName) {
 			LK_DEBUG_TAG("Actor", "Changed name to \"{}\" from \"{}\"", InName, Name);
 			Name = InName;
 		}
@@ -161,8 +140,7 @@ namespace platformer2d {
 	void CActor::SetTexture(const ETexture InTexture)
 	{
 		LK_DEBUG_TAG("Actor", "Set texture: {}", Enum::ToString(InTexture));
-		if (Texture == InTexture)
-		{
+		if (Texture == InTexture) {
 			LK_TRACE_TAG("Actor", "Same texture, leave unchanged");
 			return;
 		}
@@ -203,21 +181,21 @@ namespace platformer2d {
 		Out << YAML::EndMap;
 
 		/* TransformComponent */
-		const FTransformComponent& TC = GetTransformComponent();
-		Serialization::Serialize(TC, Out);
+		if (HasComponent<FTransformComponent>()) {
+			const auto& TC = GetComponent<FTransformComponent>();
+			Serialization::Serialize(TC, Out);
+		}
 		/* ~TransformComponent */
 
 		/* EffectComponent */
-		if (HasComponent<FEffectComponent>())
-		{
+		if (HasComponent<FEffectComponent>()) {
 			const auto& EC = GetComponent<FEffectComponent>();
 			Serialization::Serialize(EC, Out);
 		}
 		/* ~EffectComponent */
 
 		/* InteractionComponent */
-		if (HasComponent<FInteractionComponent>())
-		{
+		if (HasComponent<FInteractionComponent>()) {
 			const auto& IC = GetComponent<FInteractionComponent>();
 			Serialization::Serialize(IC, Out);
 		}
@@ -226,12 +204,8 @@ namespace platformer2d {
 		/* Body */
 		Out << YAML::Key << "Body";
 		Out << YAML::BeginMap;
-		if (Body)
-		{
+		if (Body) {
 			Body->Serialize(Out);
-		}
-		else
-		{
 		}
 		Out << YAML::EndMap;
 		/* ~Body */
@@ -246,10 +220,8 @@ namespace platformer2d {
 
 	void CActor::UpdateEffectComponent(FEffectComponent& EC)
 	{
-		for (auto& Effect : EC.Effects)
-		{
-			switch (Effect.Type)
-			{
+		for (auto& Effect : EC.Effects) {
+			switch (Effect.Type) {
 				case EEffectType::Rotate:
 				{
 					if (Body)
