@@ -75,9 +75,9 @@ namespace platformer2d {
 		bool bRaycastScene = false;
 
 		/* @todo Remove from here. Just temporary */
-		bool bDrawCircle = true;
-		bool bDrawCircleFilled = true;
-		bool bDrawLine = true;
+		bool bDrawCircle = false;
+		bool bDrawCircleFilled = false;
+		bool bDrawLine = false;
 		glm::vec3 P1 = { 0.30f, -0.40, 0.50f };
 		glm::vec3 DebugRot = { 0.0f, 0.0f, 0.0f };
 		float DebugRadius = 0.05f;
@@ -557,6 +557,12 @@ namespace platformer2d {
 				Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
 			}
 
+			ImGui::SameLine();
+			bool ShootEnabled = Rifle->IsEnabled();
+			if (ImGui::Checkbox("Shooting Enabled", &ShootEnabled)) {
+				Rifle->SetEnabled(ShootEnabled);
+			}
+
 			ImGui::Spacing();
 			EColor ProjectileColor = EColor::Red;
 			const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
@@ -715,8 +721,7 @@ namespace platformer2d {
 			ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
 
 			CCamera& Camera = Player->GetCamera();
-			if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix()))
-			{
+			if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix())) {
 				Player->SetAwake(true);
 			}
 
@@ -845,8 +850,14 @@ namespace platformer2d {
 			return;
 		}
 
-		LK_TRACE("Projectile hit: {}", HitActor ? HitActor->GetName() : "NULL");
+		Projectile->BounceCount++;
+
+		LK_ASSERT(HitActor, "Invalid rojectile hit");
+		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
 		if (Projectile->ExplodesOnImpact()) {
+			Projectile->Destroy();
+		} else if (Projectile->BounceCount >= Projectile->MaxBounceCount) {
+			LK_TRACE("{}: Max bounce reached: {}", Projectile->GetName(), Projectile->BounceCount);
 			Projectile->Destroy();
 		}
 	};
