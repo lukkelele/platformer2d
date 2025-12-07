@@ -430,6 +430,7 @@ namespace platformer2d {
 			LineShader->Unbind();
 		}
 
+		SetDepthFunction(GL_ALWAYS); /* @fixme: Temporary ugly fix for Z-index issue for circles */
 		if (CircleIndexCount > 0) {
 			/* Compute byte count. */
 			const uint32_t DataSize = static_cast<uint32_t>((uint8_t*)CircleVertexBufferPtr - (uint8_t*)CircleVertexBufferBase);
@@ -443,6 +444,7 @@ namespace platformer2d {
 			CameraUniformBuffer->Unbind();
 			CircleShader->Unbind();
 		}
+		SetDepthFunction(GL_LESS); /* @fixme: Temporary ugly fix for Z-index issue for circles */
 
 		Data.ViewportFramebuffer->Unbind();
 	}
@@ -534,7 +536,7 @@ namespace platformer2d {
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
             * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
-            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+            * glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.0f));
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
@@ -550,7 +552,6 @@ namespace platformer2d {
 		QuadIndexCount += 6;
 		DrawStats.QuadCount++;
 	}
-
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, const float RotationDeg, float OutlineThickness, const glm::vec4& OutlineColor)
 	{
@@ -656,7 +657,7 @@ namespace platformer2d {
 	void CRenderer::DrawCircleFilled(const glm::vec3& P0, const float Radius, const glm::vec4& Color, const float Thickness)
 	{
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
-			* glm::scale(glm::mat4(1.0f), { Radius * 2.0f, Radius * 2.0f, 1.0f });
+			* glm::scale(glm::mat4(1.0f), glm::vec3(Radius * 2.0f, Radius * 2.0f, 1.0f));
 
 		for (int Idx = 0; Idx < 4; Idx++) {
 			CircleVertexBufferPtr->WorldPosition = Transform * QuadVertexPositions[Idx];
@@ -707,7 +708,6 @@ namespace platformer2d {
 
 	void CRenderer::SetDepthFunction(const uint32_t DepthFunc)
 	{
-		LK_TRACE_TAG("Renderer", "Depth function: {}", DepthFunc);
 		Data.GL.DepthFunc = DepthFunc;
 		LK_OpenGL_Verify(glDepthFunc(Data.GL.DepthFunc));
 	}
