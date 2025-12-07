@@ -149,6 +149,7 @@ namespace platformer2d::UI {
 
 	void PlayerData(std::shared_ptr<CPlayer> Player);
 	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
+	void PlayerHud(std::shared_ptr<CPlayer> Player);
 
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);
 	void RainbowTextGradient(const char* Text, float Speed = 0.15f);

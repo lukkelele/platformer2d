@@ -5,8 +5,8 @@
 #include "game/instance.h"
 #include "core/selectioncontext.h"
 #include "game/spawner.h"
-#include "renderer/imgui.h"
 #include "renderer/ui/editor_resources.h"
+#include "renderer/ui/imgui.h"
 #include "ui.h"
 #include "scene/scene.h"
 

@@ -406,8 +406,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
 		Changed |= UI::Widget::DragFloat("Jump Impulse", PlayerJumpImpulse, 0.010f, 0.0f, 20.0f, "%.3f");
-		if (Changed)
-		{
+		if (Changed) {
 			Player->SetJumpImpulse(PlayerJumpImpulse);
 		}
 
@@ -415,8 +414,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		float DirForce = Player->GetDirectionForce();
 		Changed |= UI::Widget::DragFloat("Direction Force", DirForce, 0.010f, 0.0f, 10.0f, "%.3f");
-		if (Changed)
-		{
+		if (Changed) {
 			Player->SetDirectionForce(DirForce);
 		}
 
@@ -434,12 +432,10 @@ namespace platformer2d::UI {
 			static float BodyScale = TC.Scale.x;
 			UI::Widget::DragFloat("Body Scale", BodyScale, 0.010f, 0.0f, 2.0f, "%.2f");
 			ImGui::SameLine();
-			if (ImGui::Button("Apply##Scale"))
-			{
+			if (ImGui::Button("Apply##Scale")) {
 				Body->SetScale(BodyScale);
 			}
-			if (ImGui::IsItemHovered())
-			{
+			if (ImGui::IsItemHovered()) {
 				ImGui::SameLine();
 				ImGui::BeginTooltip();
 				ImGui::TextColored(FColor::Convert<ImVec4>(RGBA32::Red), "!! NOT WORKING !!");
@@ -452,8 +448,7 @@ namespace platformer2d::UI {
 		{
 			float Mass = Body->GetMass();
 			Changed |= UI::Widget::DragFloat("Mass", Mass, 0.010f, 0.0f, 10.0f, "%.2f");
-			if (Changed)
-			{
+			if (Changed) {
 				Body->SetMass(Mass);
 			}
 		}
@@ -463,8 +458,7 @@ namespace platformer2d::UI {
 		{
 			float PlayerFriction = Body->GetFriction();
 			Changed |= UI::Widget::DragFloat("Friction", PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
-			if (Changed)
-			{
+			if (Changed) {
 				Body->SetFriction(PlayerFriction);
 			}
 		}
@@ -474,8 +468,7 @@ namespace platformer2d::UI {
 		{
 			float Restitution = Body->GetRestitution();
 			Changed |= UI::Widget::DragFloat("Restitution", Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
-			if (Changed)
-			{
+			if (Changed) {
 				Body->SetRestitution(Restitution);
 			}
 		}
@@ -483,8 +476,7 @@ namespace platformer2d::UI {
 		ImGui::EndTable();
 		ImGui::Dummy(ImVec2(0, 8));
 
-		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth))
-		{
+		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			UI::Widget::ActorNode_Data(Player);
 			ImGui::TreePop();
 		}
@@ -493,8 +485,7 @@ namespace platformer2d::UI {
 	void Statistics(const EWidgetPlacement Placement)
 	{
 		CGameInstance* GameInstance = CGameInstance::Get();
-		if (!GameInstance)
-		{
+		if (!GameInstance) {
 			return;
 		}
 
@@ -518,7 +509,7 @@ namespace platformer2d::UI {
 		CCamera& Camera = Player->GetCamera();
 
 		static constexpr float LabelColumnWidth = 150.0f;
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::BeginTable("##StatisticsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
@@ -557,12 +548,10 @@ namespace platformer2d::UI {
 		
 		ImGui::EndTable();
 
-		if (ImGui::IsWindowHovered())
-		{
+		if (ImGui::IsWindowHovered()) {
 			const ImVec2 Pos = ImGui::GetWindowPos();
 			const ImVec2 Size = ImGui::GetWindowSize();
-			if (ImGui::BeginTooltip())
-			{
+			if (ImGui::BeginTooltip()) {
 				ImGui::Text("Position: (%.1f, %.1f)", Pos.x, Pos.y);
 				ImGui::Text("Size: (%.1f, %.1f)", Size.x, Size.y);
 				ImGui::EndTooltip();
@@ -572,22 +561,118 @@ namespace platformer2d::UI {
 		ImGui::End();
 	}
 
+	void PlayerHud(std::shared_ptr<CPlayer> Player)
+	{
+		if (!Player) {
+			return;
+		}
+
+		const ImGuiStyle& Style = ImGui::GetStyle();
+		ImGuiViewport* Viewport = ImGui::GetMainViewport();
+		static constexpr ImVec2 WindowSize = ImVec2(380, 160);
+		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs;
+
+		const ImVec2 WindowPos = ImGui::GetWindowPos();
+		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
+
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		ImGui::SetNextWindowPos(ImVec2(WindowPos.x + Padding, Viewport->Size.y - (WindowSize.y + Padding)), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(WindowSize, ImGuiCond_Always);
+		ImGui::SetNextWindowBgAlpha(0.40f);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+		if (!ImGui::Begin("##PlayerHud", nullptr, WindowFlags)) {
+			ImGui::PopStyleVar(1);
+			ImGui::End();
+			return;
+		}
+		ImGui::PopStyleVar(1);
+
+		static constexpr float LabelColumnWidth = 210.0f;
+		ImGui::BeginTable("##PlayerHudTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+
+		auto Label = [](std::string_view Str) -> void
+		{
+			UI::FScopedFont Font(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 4.0f);
+			ImGui::Text(Str.data());
+		};
+
+		auto NextColumn = []() -> void
+		{
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 4.0f);
+		};
+
+		/* Health */
+		{
+			static constexpr uint16_t HP = 100; /* @todo */
+			ImGui::TableNextRow();
+			Label("Health");
+
+			NextColumn();
+			UI::FScopedFont Font(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
+			uint32_t Color;
+			if (HP > 50) {
+				Color = RGBA32::LightGreen;
+			} else if (HP > 25) {
+				Color = RGBA32::Yellow;
+			} else {
+				Color = RGBA32::Red;
+			}
+			UI::FScopedColor TextColor(ImGuiCol_Text, Color);
+			ImGui::Text("%d", HP);
+		}
+
+		/* Weapon */
+		{
+			std::shared_ptr<CRifle> Rifle = Player->GetRifle();
+			ImGui::TableNextRow();
+			Label("Weapon");
+
+			NextColumn();
+			UI::FScopedFont Font(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
+			if (Rifle) {
+				ImGui::Text("Rifle");
+			} else {
+				ImGui::Text("None");
+			}
+
+			if (Rifle) {
+				ImGui::TableNextRow();
+				Label("Ammo");
+
+				NextColumn();
+				const uint16_t Ammo = Rifle->GetAmmo();
+				uint32_t Color = RGBA32::White;
+				if (Ammo <= 3) {
+					Color = RGBA32::Red;
+				}
+				UI::FScopedColor TextColor(ImGuiCol_Text, Color);
+				ImGui::Text("%d", Ammo);
+			}
+		}
+
+		ImGui::EndTable();
+		ImGui::End();
+	}
+
 	void PrepareLeftSidebar()
 	{
 		ImGuiWindow* SidebarWindow = ImGui::FindWindowByName(PanelID::Sidebar1);
-		if (SidebarWindow == nullptr)
-		{
+		if (SidebarWindow == nullptr) {
 			return;
 		}
 
 		ImGuiDockNode* DockNode = SidebarWindow->DockNode;
-		if (DockNode == nullptr)
-		{
+		if (DockNode == nullptr) {
 			return;
 		}
 
-		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f))
-		{
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
 			return;
 		}
 
@@ -601,8 +686,7 @@ namespace platformer2d::UI {
 		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDockingSplit;
 
 		/* Dock node has no other windows docked in it. */
-		if (DockNode->Windows.Size <= 1)
-		{
+		if (DockNode->Windows.Size <= 1) {
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 			SidebarWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
@@ -610,9 +694,7 @@ namespace platformer2d::UI {
 			{
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
-		}
-		else if (DockNode->Windows.Size > 1)
-		{
+		} else if (DockNode->Windows.Size > 1) {
 			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoTabBar;
 			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoWindowMenuButton;
 
@@ -626,19 +708,16 @@ namespace platformer2d::UI {
 	void PrepareRightSidebar()
 	{
 		ImGuiWindow* SidebarWindow = ImGui::FindWindowByName(PanelID::Sidebar2);
-		if (SidebarWindow == nullptr)
-		{
+		if (SidebarWindow == nullptr) {
 			return;
 		}
 
 		ImGuiDockNode* DockNode = SidebarWindow->DockNode;
-		if (DockNode == nullptr)
-		{
+		if (DockNode == nullptr) {
 			return;
 		}
 
-		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f))
-		{
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
 			return;
 		}
 
@@ -653,8 +732,7 @@ namespace platformer2d::UI {
 		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDockingSplit;
 
 		/* Dock node has no other windows docked in it. */
-		if (DockNode->Windows.Size <= 1)
-		{
+		if (DockNode->Windows.Size <= 1) {
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 			SidebarWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
@@ -663,9 +741,7 @@ namespace platformer2d::UI {
 			{
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
-		}
-		else if (DockNode->Windows.Size > 1)
-		{
+		} else if (DockNode->Windows.Size > 1) {
 			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoTabBar;
 			SidebarWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 
