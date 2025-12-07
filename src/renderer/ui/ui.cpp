@@ -56,17 +56,14 @@ namespace platformer2d::UI {
 		std::size_t SelectedIdx = std::to_underlying(Selected);
 
 		static const std::string Label = "Color";
-		if (ImGui::GetCurrentTable() != nullptr)
-		{
+		if (ImGui::GetCurrentTable() != nullptr) {
 			ImGui::TableSetColumnIndex(0);
 			UI::ShiftCursor(17.0f, 0.0f);
 			ImGui::Text(Label.c_str());
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursor(7.0f, 0.0f);
-		}
-		else
-		{
+		} else {
 			ImGui::Text(Label.c_str());
 			ImGui::SameLine();
 		}
@@ -75,24 +72,20 @@ namespace platformer2d::UI {
 		ImGui::SetNextItemWidth(ComboItemWidth);
 		if (ImGui::BeginCombo("##Color", Enum::ToString(Selected)))
 		{
-			for (int Idx = 0; Idx < ColorArray.size(); Idx++)
-			{
+			for (int Idx = 0; Idx < ColorArray.size(); Idx++) {
 				const char* Option = Enum::ToString(ColorArray[Idx]);
-				if (Option == nullptr)
-				{
+				if (Option == nullptr) {
 					continue;
 				}
 
 				const bool IsSelected = (SelectedIdx == Idx);
-				if (ImGui::Selectable(Option, IsSelected))
-				{
+				if (ImGui::Selectable(Option, IsSelected)) {
 					SelectedIdx = Idx;
 				}
 			}
-
 			ImGui::EndCombo();
-			if (SelectedIdx != std::to_underlying(Selected))
-			{
+
+			if (SelectedIdx != std::to_underlying(Selected)) {
 				Selected = static_cast<EColor>(SelectedIdx);
 				Updated = true;
 			}
@@ -142,8 +135,7 @@ namespace platformer2d::UI {
 
 	void CreatorMenu(std::shared_ptr<CScene> Scene)
 	{
-		if (!Scene)
-		{
+		if (!Scene) {
 			return;
 		}
 
@@ -154,15 +146,13 @@ namespace platformer2d::UI {
 			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
 			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
 			static constexpr ImVec2 ButtonSize = ImVec2(142, 50);
-			if (ImGui::Button("Add Spawnpoint", ButtonSize))
-			{
+			if (ImGui::Button("Add Spawnpoint", ButtonSize)) {
 				LK_WARN("Add spawnpoint");
 				CSpawner::CreateSpawnpoint("PlayerSpawn", { 0.0f, 0.0f });
 			}
 
 			ImGui::SameLine();
-			if (ImGui::Button("Teleport player", ButtonSize))
-			{
+			if (ImGui::Button("Teleport player", ButtonSize)) {
 				LK_WARN("Teleport player");
 				auto Player = CGameInstance::Get()->GetPlayer(0);
 				CGameplaySystem::Teleport(Player, {0.0f, 0.0f});
@@ -172,8 +162,7 @@ namespace platformer2d::UI {
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
 		const bool CreateMenuOpened = ImGui::TreeNodeEx("Creator", ImGuiTreeNodeFlags_SpanAvailWidth);
-		if (CreateMenuOpened)
-		{
+		if (CreateMenuOpened) {
 			UI::Font::Pop();
 			const ImVec2 Avail = ImGui::GetContentRegionAvail();
 			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
@@ -189,9 +178,7 @@ namespace platformer2d::UI {
 			ActorCreateButtons(Scene);
 
 			ImGui::TreePop();
-		}
-		else
-		{
+		} else {
 			UI::Font::Pop();
 		}
 
@@ -223,14 +210,12 @@ namespace platformer2d::UI {
 			);
 
 			const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
-			if (ActorExists)
-			{
+			if (ActorExists) {
 				ImGui::BeginDisabled();
 			}
 
 			UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
-			if (ImGui::Button("Create", ButtonSize))
-			{
+			if (ImGui::Button("Create", ButtonSize)) {
 				FBodySpecification NewBodySpec;
 				Aggregate(PhysicsBodyData, NewBodySpec);
 				LK_INFO("{}", CBody::ToString(NewBodySpec));
@@ -242,8 +227,8 @@ namespace platformer2d::UI {
 					ActorAttr.Texture
 				);
 			}
-			if (ActorExists)
-			{
+
+			if (ActorExists) {
 				ImGui::EndDisabled();
 			}
 		}
@@ -310,7 +295,7 @@ namespace platformer2d::UI {
 		FTransformComponent& TC = Player->GetTransformComponent();
 
 		static constexpr float LabelColumnWidth = 200.0f;
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::BeginTable("##PlayerDataTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
@@ -636,7 +621,14 @@ namespace platformer2d::UI {
 			NextColumn();
 			UI::FScopedFont Font(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
 			if (Rifle) {
+				const bool Enabled = Rifle->IsEnabled();
+				if (!Enabled) {
+					ImGui::PushStyleColor(ImGuiCol_Text, RGBA32::Gray);
+				}
 				ImGui::Text("Rifle");
+				if (!Enabled) {
+					ImGui::PopStyleColor(1);
+				}
 			} else {
 				ImGui::Text("None");
 			}
