@@ -133,24 +133,34 @@ namespace platformer2d {
 		}
 
 		{
-			FFontConfiguration SourceSansPro_Bold;
-			SourceSansPro_Bold.Font = EFont::SourceSansPro;
-			SourceSansPro_Bold.Size = EFontSize::Regular;
-			SourceSansPro_Bold.Modifier = EFontModifier::Bold;
-			SourceSansPro_Bold.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Bold.ttf";
-
-			AddFont(SourceSansPro_Bold);
+			FFontConfiguration Conf;
+			Conf.Font = EFont::SourceSansPro;
+			Conf.Size = EFontSize::Regular;
+			Conf.Modifier = EFontModifier::Bold;
+			Conf.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Bold.ttf";
+			AddFont(Conf);
 		}
 
+		/* Italic */
 		{
-			FFontConfiguration SourceSansPro_Italic;
-			SourceSansPro_Italic.Font = EFont::SourceSansPro;
-			SourceSansPro_Italic.Size = EFontSize::Regular;
-			SourceSansPro_Italic.Modifier = EFontModifier::Italic;
-			SourceSansPro_Italic.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Italic.ttf";
-
-			AddFont(SourceSansPro_Italic);
+			FFontConfiguration Conf;
+			Conf.Font = EFont::SourceSansPro;
+			Conf.Size = EFontSize::Regular;
+			Conf.Modifier = EFontModifier::Italic;
+			Conf.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-Italic.ttf";
+			AddFont(Conf);
 		}
+
+		/* Bold Italic */
+		{
+			FFontConfiguration Conf;
+			Conf.Font = EFont::SourceSansPro;
+			Conf.Size = EFontSize::Regular;
+			Conf.Modifier = EFontModifier::BoldItalic;
+			Conf.FilePath = FONTS_DIR "/SourceCodePro/SourceSansPro-BoldItalic.ttf";
+			AddFont(Conf);
+		}
+
 
 		/********************
 		 * Roboto

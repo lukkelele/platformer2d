@@ -4,7 +4,7 @@
 
 #include <imgui/imgui.h>
 
-#include "renderer/imgui.h"
+#include "renderer/ui/imgui.h"
 
 struct GLFWwindow;
 
