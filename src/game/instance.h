@@ -48,6 +48,8 @@ namespace platformer2d {
 		virtual void Destroy() = 0;
 
 		virtual void Tick(float InDeltaTime) override = 0;
+		virtual void RenderUI() override = 0;
+
 		virtual CCamera* GetActiveCamera() const = 0;
 		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const = 0;
 		virtual std::shared_ptr<CScene> GetScene() const = 0;
