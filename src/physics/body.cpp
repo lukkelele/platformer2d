@@ -18,16 +18,13 @@ namespace platformer2d {
 		ShapeDef = b2DefaultShapeDef();
 		ShapeDef.userData = Owner;
 
-		if (Spec.Flags & EBodyFlag_PreSolveEvents)
-		{
+		if (Spec.Flags & EBodyFlag_PreSolveEvents) {
 			ShapeDef.enablePreSolveEvents = true;
 		}
-		if (Spec.Flags & EBodyFlag_ContactEvents)
-		{
+		if (Spec.Flags & EBodyFlag_ContactEvents) {
 			ShapeDef.enableContactEvents = true;
-		}
-		if (Spec.Flags & EBodyFlag_SensorEvents)
-		{
+		} 
+		if (Spec.Flags & EBodyFlag_SensorEvents) {
 			ShapeDef.enableSensorEvents = true;
 		}
 
@@ -37,22 +34,17 @@ namespace platformer2d {
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		Shape = Spec.Shape;
 
-		if (std::holds_alternative<FPolygon>(Spec.Shape))
-		{
+		if (std::holds_alternative<FPolygon>(Spec.Shape)) {
 			LK_ASSERT(ShapeType == EShape::Polygon);
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			LK_ASSERT((ShapeRef.Size.x > 0.0f) && (ShapeRef.Size.y > 0.0f), "Invalid size");
 			/* Body-local space. */
 			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
 			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
-		}
-		else if (std::holds_alternative<FLine>(Spec.Shape))
-		{
+		} else if (std::holds_alternative<FLine>(Spec.Shape)) {
 			LK_ASSERT(ShapeType == EShape::Line);
 			LK_ASSERT(false);
-		}
-		else if (std::holds_alternative<FCapsule>(Spec.Shape))
-		{
+		} else if (std::holds_alternative<FCapsule>(Spec.Shape)) {
 			LK_ASSERT(ShapeType == EShape::Capsule);
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
 			/* Body-local space. */
@@ -69,8 +61,7 @@ namespace platformer2d {
 
 	CBody::~CBody()
 	{
-		if (b2Body_IsValid(ID))
-		{
+		if (b2Body_IsValid(ID)) {
 			LK_TRACE_TAG("Body", "Destroy: {}", ID.index1);
 			b2DestroyBody(ID);
 		}
@@ -253,19 +244,14 @@ namespace platformer2d {
 
 	glm::vec2 CBody::GetSize() const
 	{
-		if (ShapeType == EShape::Polygon)
-		{
+		if (ShapeType == EShape::Polygon) {
 			auto& Ref = std::get<FPolygon>(Shape);
 			return Ref.Size;
-		}
-		else if (ShapeType == EShape::Line)
-		{
+		} else if (ShapeType == EShape::Line) {
 			LK_MARK_NOT_IMPLEMENTED();
 			auto& Ref = std::get<FLine>(Shape);
 			return GetBoundingBox(Ref);
-		}
-		else if (ShapeType == EShape::Capsule)
-		{
+		} else if (ShapeType == EShape::Capsule) {
 			auto& Ref = std::get<FCapsule>(Shape);
 			return GetBoundingBox(Ref);
 		}
@@ -366,32 +352,25 @@ namespace platformer2d {
 		 * Should not be needed to check variant twice to make the initial
 		 * body definition rotation be set correctly.
 		 */
-		if (ShapeType == EShape::Polygon)
-		{
+		if (ShapeType == EShape::Polygon) {
 			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			BodyDef.rotation = b2MakeRot(ShapeRef.Rotation);
-		}
-		else if (ShapeType == EShape::Line)
-		{
-		}
-		else if (ShapeType == EShape::Capsule)
-		{
+		} else if (ShapeType == EShape::Line) {
+			LK_MARK_NOT_IMPLEMENTED();
+		} else if (ShapeType == EShape::Capsule) {
+			LK_MARK_NOT_IMPLEMENTED();
 		}
 
-		if (Spec.MotionLock != EMotionLock_None)
-		{
-			if (Spec.MotionLock & EMotionLock_X)
-			{
+		if (Spec.MotionLock != EMotionLock_None) {
+			if (Spec.MotionLock & EMotionLock_X) {
 				BodyDef.motionLocks.linearX = true;
 				LK_TRACE_TAG("Body", "Motion lock: X");
 			}
-			if (Spec.MotionLock & EMotionLock_Y)
-			{
+			if (Spec.MotionLock & EMotionLock_Y) {
 				BodyDef.motionLocks.linearY = true;
 				LK_TRACE_TAG("Body", "Motion lock: Y");
 			}
-			if (Spec.MotionLock & EMotionLock_Z)
-			{
+			if (Spec.MotionLock & EMotionLock_Z) {
 				BodyDef.motionLocks.angularZ = true;
 				LK_TRACE_TAG("Body", "Motion lock: Z");
 			}
@@ -402,8 +381,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(ShapeType == EShape::Polygon);
 		b2Polygon Shape = b2Shape_GetPolygon(ShapeID);
-		for (int Idx = 0; Idx < Shape.count; Idx++)
-		{
+		for (int Idx = 0; Idx < Shape.count; Idx++) {
 			Shape.vertices[Idx].x *= Factor.x;
 			Shape.vertices[Idx].y *= Factor.y;
 			LK_DEBUG_TAG("Body", "Vertex[{}]: ({}, {})", Idx, Shape.vertices[Idx].x, Shape.vertices[Idx].y);
