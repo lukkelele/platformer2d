@@ -67,8 +67,7 @@ namespace platformer2d {
 		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
 
-		if (Name.empty())
-		{
+		if (Name.empty()) {
 			Name = "Player";
 		}
 
@@ -98,8 +97,7 @@ namespace platformer2d {
 
 	CPlayer::~CPlayer()
 	{
-		if (Rifle)
-		{
+		if (Rifle) {
 			LK_TRACE_TAG("Player", "Release rifle");
 			Rifle.reset();
 		}
@@ -111,21 +109,18 @@ namespace platformer2d {
 
 		CheckCollisions();
 		UpdateMovementState();
-		if (bShouldUpdateSprite)
-		{
+		if (bShouldUpdateSprite) {
 			UpdateSprite();
 		}
 
 		HandleInput();
 		SyncTransformComponent();
 
-		if (Rifle)
-		{
+		if (Rifle) {
 			Rifle->Tick();
 		}
 
-		if (bCameraLock)
-		{
+		if (bCameraLock) {
 			Camera->Target(Body->GetPosition(), DeltaTime);
 		}
 		Camera->Update();
@@ -133,8 +128,7 @@ namespace platformer2d {
 
 	void CPlayer::Jump()
 	{
-		if (!Data.bJumping)
-		{
+		if (!Data.bJumping) {
 			Data.bJumping = true;
 			SetMovementState(EMovementState::Airborne);
 			Body->ApplyImpulse({ 0.0f, JumpImpulse });
@@ -174,30 +168,26 @@ namespace platformer2d {
 
 	void CPlayer::HandleInput()
 	{
-		if (CKeyboard::IsKeyDown(EKey::W))
-		{
+		if (CKeyboard::IsKeyDown(EKey::W)) {
 			bWantToClimb = true;
 			LastDirForce = 0.0f;
 			OnInputReceived();
 		}
-		if (CKeyboard::IsKeyDown(EKey::A))
-		{
+		if (CKeyboard::IsKeyDown(EKey::A)) {
 			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({ -DirForce, 0.0f });
 			LookDir = EDirection::Left;
 			LastDirForce = -DirForce;
 			OnInputReceived();
 		}
-		if (CKeyboard::IsKeyDown(EKey::D))
-		{
+		if (CKeyboard::IsKeyDown(EKey::D)) {
 			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({ DirForce, 0.0f });
 			LastDirForce = DirForce;
 			LookDir = EDirection::Right;
 			OnInputReceived();
 		}
-		if (CKeyboard::IsKeyDown(EKey::Space))
-		{
+		if (CKeyboard::IsKeyDown(EKey::Space)) {
 			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::JumpPreparation);
 			Jump();
 			LastDirForce = 0.0f;
@@ -205,8 +195,7 @@ namespace platformer2d {
 		}
 
 		/* Clear movement input flag if needed. */
-		if (bMovementInputLastTick && !CKeyboard::IsAnyKeysDown(MovementKeys))
-		{
+		if (bMovementInputLastTick && !CKeyboard::IsAnyKeysDown(MovementKeys)) {
 			LK_TRACE_TAG("Player", "Clear movement input tick flag");
 			LastDirForce = 0.0f;
 			bMovementInputLastTick = false;
@@ -221,25 +210,21 @@ namespace platformer2d {
 
 	void CPlayer::UpdateMovementState()
 	{
-		if (bJustLanded)
-		{
+		if (bJustLanded) {
 			LK_TRACE_TAG("Player", "Just landed");
 			/* The idle state will get evaluated to idle/running later. */
 			SetMovementState(EMovementState::Idle);
 			bJustLanded = false;
 		}
 
-		if (bWantToClimb)
-		{
-			if (!IsMoving())
-			{
+		if (bWantToClimb) {
+			if (!IsMoving()) {
 				/* @todo: Begin climbing if possible */
 			}
 			bWantToClimb = false;
 		}
 
-		switch (Data.MovementState)
-		{
+		switch (Data.MovementState) {
 			case EMovementState::Idle:
 				MovementState_Idle();
 				break;
@@ -262,25 +247,18 @@ namespace platformer2d {
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
 		/* Movement in X-axis */
-		if (std::abs(LinearVelocity.x) > VelocityThresholdX)
-		{
-			if (MovingByInput)
-			{
+		if (std::abs(LinearVelocity.x) > VelocityThresholdX) {
+			if (MovingByInput) {
 				SetMovementState(EMovementState::Running);
 				WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
-			}
-			else
-			{
+			} else {
 				/* Player is moving because of external forces. */
 				NextSpriteFrame = std::to_underlying(ESpriteFrame::Hit1);
 			}
-		}
-		else
-		{
+		} else {
 			/* Player character is idle. */
 			const auto TimeNow = std::chrono::steady_clock::now();
-			if (TimeNow - LastInputTime > 150ms)
-			{
+			if (TimeNow - LastInputTime > 150ms) {
 				/* Always turn the player character frontward after a brief delay. */
 				WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 				NextSpriteFrame = WalkAnim.StartTileX;
@@ -294,13 +272,10 @@ namespace platformer2d {
 		const uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
-		if (std::abs(LinearVelocity.x) > VelocityThresholdX)
-		{
+		if (std::abs(LinearVelocity.x) > VelocityThresholdX) {
 			const uint16_t AnimFrame = WalkAnim.CalculateAnimFrame(FrameIndex);
 			NextSpriteFrame = AnimFrame;
-		}
-		else if (!MovingByInput && std::abs(LinearVelocity.x) < VelocityThresholdX)
-		{
+		} else if (!MovingByInput && std::abs(LinearVelocity.x) < VelocityThresholdX) {
 			/* Player is idle. */
 			SetMovementState(EMovementState::Idle);
 			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
@@ -313,20 +288,16 @@ namespace platformer2d {
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 
 		/* Check if ascending or descending. */
-		if (LinearVelocity.y > VelocityThresholdY)
-		{
+		if (LinearVelocity.y > VelocityThresholdY) {
 			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpAscend);
-		}
-		else if (LinearVelocity.y < -VelocityThresholdY)
-		{
+		} else if (LinearVelocity.y < -VelocityThresholdY) {
 			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpDescend);
 		}
 	}
 
 	void CPlayer::SetMovementState(const EMovementState State)
 	{
-		if (Data.MovementState == State)
-		{
+		if (Data.MovementState == State) {
 			return;
 		}
 
@@ -343,19 +314,16 @@ namespace platformer2d {
 		bool bCanJump = false;
 		b2ContactData ContactData[MAX_CONTACTS];
 		const int Count = b2Body_GetContactData(BodyID, ContactData, Capacity);
-		for (int Idx = 0; Idx < Count; Idx++)
-		{
+		for (int Idx = 0; Idx < Count; Idx++) {
 			b2BodyId BodyA = b2Shape_GetBody(ContactData[Idx].shapeIdA);
 			const float Sign = (B2_ID_EQUALS(BodyA, BodyID)) ? -1.0f : 1.0f;
-			if (Sign * ContactData[Idx].manifold.normal.y > 0.90f)
-			{
+			if (Sign * ContactData[Idx].manifold.normal.y > 0.90f) {
 				bCanJump = true;
 				break;
 			}
 		}
 
-		if (bCanJump && Data.bJumping)
-		{
+		if (bCanJump && Data.bJumping) {
 			Data.bJumping = false;
 			bJustLanded = true;
 			OnLanded.Broadcast(Data);
@@ -377,8 +345,7 @@ namespace platformer2d {
 
 	void CPlayer::SetSpriteTilePos(const uint16_t X)
 	{
-		if (CurrentSpriteFrame != X)
-		{
+		if (CurrentSpriteFrame != X) {
 			const bool FlipHorizontal = (LookDir == EDirection::Left);
 			Sprite->SetTilePos(X, SPRITE_TILEPOS_Y, FlipHorizontal);
 			CurrentSpriteFrame = X;
@@ -387,8 +354,7 @@ namespace platformer2d {
 
 	void CPlayer::OnWindowResized(const uint16_t Width, const uint16_t Height)
 	{
-		if (Camera)
-		{
+		if (Camera) {
 			LK_TRACE_TAG("Player", "Window resized: ({}, {})", Width, Height);
 			Camera->SetViewportSize(Width, Height);
 			Camera->UpdateView();
@@ -398,8 +364,7 @@ namespace platformer2d {
 
 	void CPlayer::OnKeyPressed(const FKeyData& Data)
 	{
-		switch (Data.Key)
-		{
+		switch (Data.Key) {
 			case EKey::Q:
 				break;
 
@@ -407,8 +372,7 @@ namespace platformer2d {
 				break;
 
 			case EKey::R:
-				if (Rifle)
-				{
+				if (Rifle) {
 					Rifle->Reload();
 				}
 				break;
@@ -417,17 +381,12 @@ namespace platformer2d {
 
 	void CPlayer::OnMouseButtonPressed(const FMouseButtonData& Data)
 	{
-		switch (Data.State)
-		{
-			case EMouseButtonState::Pressed:
-			{
-				if (Data.Button == EMouseButton::Button0)
-				{
-					if (Rifle)
-					{
+		switch (Data.State) {
+			case EMouseButtonState::Pressed: {
+				if (Data.Button == EMouseButton::Button0) {
+					if (Rifle) {
 						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(*Camera);
-						if (Math::IsValid(TargetPos))
-						{
+						if (Math::IsValid(TargetPos)) {
 							Rifle->Fire(TargetPos);
 						}
 					}
@@ -439,10 +398,8 @@ namespace platformer2d {
 	void CPlayer::OnMouseScrolled(const EMouseScrollDirection Direction)
 	{
 		LK_TRACE_TAG("Player", "Mouse scroll: {}", Enum::ToString(Direction));
-		if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl))
-		{
-			if (Camera)
-			{
+		if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl)) {
+			if (Camera) {
 				const float ZoomDiff = (Direction == EMouseScrollDirection::Up)
 					? -CCamera::ZOOM_DIFF
 					: CCamera::ZOOM_DIFF;
