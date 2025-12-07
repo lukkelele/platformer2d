@@ -376,6 +376,15 @@ namespace platformer2d {
 					Rifle->Reload();
 				}
 				break;
+
+			case EKey::V:
+				if (Data.State == EKeyState::Pressed) {
+					/* Toggle rifle. */
+					if (Rifle) {
+						Rifle->SetEnabled(!Rifle->IsEnabled());
+					}
+				}
+				break;
 		}
 	}
 
@@ -384,7 +393,7 @@ namespace platformer2d {
 		switch (Data.State) {
 			case EMouseButtonState::Pressed: {
 				if (Data.Button == EMouseButton::Button0) {
-					if (Rifle) {
+					if (Rifle && Rifle->IsEnabled()) {
 						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(*Camera);
 						if (Math::IsValid(TargetPos)) {
 							Rifle->Fire(TargetPos);
