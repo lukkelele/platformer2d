@@ -1,5 +1,6 @@
 project_library_sources(
 	gamemenu.h
+	imgui.h
 	imguilayer.h
 	imguilayer.cpp
 	editor_resources.h

@@ -10,7 +10,6 @@ project_library_sources(
 	fontawesome.h
 	framebuffer.h
 	framebuffer.cpp
-	imgui.h
 	opengl.h
 	opengl.cpp
 	shader.h
