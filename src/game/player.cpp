@@ -155,6 +155,15 @@ namespace platformer2d {
 		Body->SetAwake(Awake);
 	}
 
+	void CPlayer::SetLookDirection(const EDirection InDirection)
+	{
+		if (LookDir != InDirection) {
+			LK_DEBUG_TAG("Player", "Look direction: {}", Enum::ToString(InDirection));
+			LookDir = InDirection;
+			ForceUpdateSprite();
+		}
+	}
+
 	void CPlayer::SetCameraLock(const bool Locked)
 	{
 		bCameraLock = Locked;
@@ -343,12 +352,22 @@ namespace platformer2d {
 		LK_ASSERT(CurrentSpriteFrame == NextSpriteFrame);
 	}
 
-	void CPlayer::SetSpriteTilePos(const uint16_t X)
+	void CPlayer::ForceUpdateSprite()
 	{
-		if (CurrentSpriteFrame != X) {
+		SetSpriteTilePos(NextSpriteFrame, true);
+		LK_ASSERT(CurrentSpriteFrame == NextSpriteFrame);
+	}
+
+	void CPlayer::SetSpriteTilePos(const uint16_t X, const bool ForceUpdate)
+	{
+		if (ForceUpdate || (CurrentSpriteFrame != X)) {
 			const bool FlipHorizontal = (LookDir == EDirection::Left);
 			Sprite->SetTilePos(X, SPRITE_TILEPOS_Y, FlipHorizontal);
 			CurrentSpriteFrame = X;
+
+			if (Rifle) {
+				Rifle->SetLookDirection(LookDir);
+			}
 		}
 	}
 

@@ -1,5 +1,6 @@
 #include "rifle.h"
 
+#include "game/player.h"
 #include "renderer/renderer.h"
 #include "physics/physicsworld.h"
 
@@ -19,6 +20,8 @@ namespace platformer2d {
 		if (Owner) {
 			Origin = Owner->GetPosition();
 		}
+
+		Render();
 
 		const auto TimeNow = std::chrono::steady_clock::now();
 		for (const auto& Projectile : Fired) {
@@ -41,6 +44,25 @@ namespace platformer2d {
 		}
 	}
 
+	void CRifle::Render()
+	{
+		const std::array<glm::vec2, 4>* TexCoords = &CRenderer::TextureCoords;
+		if (LookDir == EDirection::Left) {
+			TexCoords = &CRenderer::MirroredTextureCoords;
+		} else {
+			TexCoords = &CRenderer::TextureCoords;
+		}
+
+		/* Render rifle. */
+		const float OffsetX = ((LookDir == EDirection::Left) ? -MuzzleOffset.x : MuzzleOffset.x);
+		CRenderer::DrawQuad(
+			glm::vec3(Origin.x + OffsetX + 0.0020f, Origin.y - MuzzleOffset.y - 0.0090f, -0.10f),
+			glm::vec2(0.15f, 0.10f),
+			*CRenderer::GetTexture(ETexture::Rifle),
+			std::span<const glm::vec2, 4>(*TexCoords)
+		);
+	}
+
 	void CRifle::Fire(const glm::vec2& TargetPos)
 	{
 		if (!Owner || (Ammo <= 0)) {
@@ -52,7 +74,7 @@ namespace platformer2d {
 		BodyDef.position = b2Vec2(Origin.x, Origin.y);
 		BodyDef.isBullet = true;
 
-		const glm::vec2 Diff = TargetPos - Origin;
+		const glm::vec2 Diff = TargetPos - glm::vec2(Origin.x, Origin.y);
 		float LenSq = (Diff.x * Diff.x) + (Diff.y * Diff.y);
 		if (LenSq <= 0.0000010f) {
 			return;
@@ -64,14 +86,18 @@ namespace platformer2d {
 
 		/* Offset muzzle based on look direction. */
 		if (BodyDef.linearVelocity.x < 0.0f) {
+			/* Left */
 			BodyDef.position.x -= MuzzleOffset.x;
+			RequestLookDirection(EDirection::Left);
 		} else if (BodyDef.linearVelocity.x > 0.0f) {
+			/* Right */
 			BodyDef.position.x += MuzzleOffset.x;
+			RequestLookDirection(EDirection::Right);
 		}
 
 		FActorSpecification Spec;
 		Spec.Name = LK_FMT("Projectile-{}", Ammo);
-		Spec.Pos = glm::vec3(Origin, -0.10f);
+		Spec.Pos = Origin;
 		Spec.Color = ProjectileColor;
 		std::shared_ptr<CProjectile> Projectile = std::make_shared<CProjectile>(Spec, this, &CRifle::DestroyProjectile);
 		Projectile->ID = CPhysicsWorld::CreateBody(BodyDef);
@@ -114,6 +140,21 @@ namespace platformer2d {
 	void CRifle::SetEnabled(const bool Enabled)
 	{
 		bEnabled = Enabled;
+	}
+
+	void CRifle::SetLookDirection(const EDirection InDirection)
+	{
+		LookDir = InDirection;
+	}
+
+	void CRifle::RequestLookDirection(const EDirection InDirection)
+	{
+		LK_TRACE_TAG("Rifle", "Request direction: {}", Enum::ToString(InDirection));
+		if (Owner && Owner->IsPlayer()) {
+			Owner->As<CPlayer>().SetLookDirection(InDirection);
+		} else {
+			LK_ERROR_TAG("Rifle", "Failed to request direction: {}", Enum::ToString(InDirection));
+		}
 	}
 
 	void CRifle::SetProjectileRadius(const float InRadius)

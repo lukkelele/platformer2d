@@ -14,6 +14,7 @@ namespace platformer2d {
 		~CRifle();
 
 		virtual void Tick() override;
+		void Render();
 
 		/**
 		 * @brief Fire at target position in world space.
@@ -37,6 +38,10 @@ namespace platformer2d {
 		void SetEnabled(bool Enabled);
 		bool IsEnabled() const { return bEnabled; }
 
+		void SetLookDirection(EDirection InDirection);
+		EDirection GetLookDirection() const { return LookDir; }
+		void RequestLookDirection(EDirection InDirection);
+
 		void SetProjectileRadius(float InRadius);
 		float GetProjectileRadius() const { return ProjectileRadius; }
 		void SetProjectileVelocity(float InVelocity);
@@ -58,8 +63,9 @@ namespace platformer2d {
 		static constexpr uint16_t MAGAZINE_SIZE = 30;
 	private:
 		CActor* Owner = nullptr;
-		glm::vec2 Origin{};
+		glm::vec3 Origin{ 0.0f, 0.0f, -0.10f };
 		std::chrono::milliseconds ExpireTimeout = 1000ms;
+		EDirection LookDir = EDirection::Right;
 
 		/** Shooting enabled/disabled. */
 		bool bEnabled = true;
@@ -76,7 +82,7 @@ namespace platformer2d {
 		bool bProjectileExplodeOnImpact = false;
 		uint8_t ProjectileBounceCount = 3;
 
-		glm::vec2 MuzzleOffset = { 0.050f, 0.0f };
+		glm::vec2 MuzzleOffset = { 0.080f, 0.050f };
 		uint16_t Ammo = MAGAZINE_SIZE;
 
 		std::vector<std::shared_ptr<CProjectile>> Fired{};

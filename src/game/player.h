@@ -16,14 +16,6 @@ namespace platformer2d {
 		Airborne,
 	};
 
-	enum class EDirection
-	{
-		Up,
-		Down,
-		Left,
-		Right
-	};
-
 	struct FPlayerData
 	{
 		uint64_t ID = 0;
@@ -57,6 +49,8 @@ namespace platformer2d {
 		EDirection GetLookDirection() const { return LookDir; }
 		void SetAwake(bool Awake) const;
 
+		void SetLookDirection(EDirection InDirection);
+
 		inline CCamera& GetCamera() { return *Camera; }
 		inline const CCamera& GetCamera() const { return *Camera; }
 		bool IsCameraLocked() const { return bCameraLock; }
@@ -82,7 +76,8 @@ namespace platformer2d {
 		void CheckCollisions();
 		void SyncTransformComponent();
 		void UpdateSprite();
-		void SetSpriteTilePos(uint16_t X);
+		void ForceUpdateSprite();
+		void SetSpriteTilePos(uint16_t X, bool ForceUpdate = false);
 
 		void OnWindowResized(uint16_t Width, uint16_t Height);
 		void OnKeyPressed(const FKeyData& Data);
@@ -130,24 +125,6 @@ namespace platformer2d {
 				_(Airborne);
 				default:
 					LK_THROW_ENUM_ERR(State);
-					break;
-			}
-		#undef _
-			return S;
-		}
-
-		inline const char* ToString(const EDirection Direction)
-		{
-			const char* S = "";
-		#define _(EnumValue) case EDirection::EnumValue: S = #EnumValue; break
-			switch (Direction)
-			{
-				_(Up);
-				_(Down);
-				_(Left);
-				_(Right);
-				default:
-					LK_THROW_ENUM_ERR(Direction);
 					break;
 			}
 		#undef _

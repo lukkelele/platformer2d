@@ -21,7 +21,7 @@
 	LK_VERIFY(false, "Not implemented: {}::{}", __FILE__, __LINE__)
 
 #define LK_THROW_ENUM_ERR(EnumValue) \
-	LK_VERIFY(false, "{} failed with value: {}", std::source_location::current().function_name(), ::platformer2d::Enum::AsUnderlying(EnumValue));
+	LK_VERIFY(false, "{} failed with value: {}", std::source_location::current().function_name(), std::to_underlying(EnumValue));
 
 namespace platformer2d {
 
@@ -48,12 +48,31 @@ namespace platformer2d {
 						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
 	}
 
-	namespace Enum
+	enum class EDirection
 	{
-		template<typename TEnum>
-		constexpr std::underlying_type_t<TEnum> AsUnderlying(const TEnum E)
+		Up,
+		Down,
+		Left,
+		Right
+	};
+
+	namespace Enum {
+		inline const char* ToString(const EDirection Direction)
 		{
-			return static_cast<std::underlying_type_t<TEnum>>(E);
+			const char* S = "";
+		#define _(EnumValue) case EDirection::EnumValue: S = #EnumValue; break
+			switch (Direction)
+			{
+				_(Up);
+				_(Down);
+				_(Left);
+				_(Right);
+				default:
+					LK_THROW_ENUM_ERR(Direction);
+					break;
+			}
+		#undef _
+			return S;
 		}
 	}
 
