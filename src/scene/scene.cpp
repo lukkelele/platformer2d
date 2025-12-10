@@ -21,8 +21,7 @@ namespace platformer2d {
 		OnActorDeleted.Add([&](const LUUID Handle)
 		{
 			LK_DEBUG_TAG("Scene", "OnActorDeleted: {}", Handle);
-			if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr)
-			{
+			if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr) {
 				std::shared_ptr<CPlayer> Player = GameInstance->GetPlayer(0);
 				Player->SetAwake(true);
 			}
@@ -37,16 +36,14 @@ namespace platformer2d {
 
 	void CScene::Tick(const float DeltaTime)
 	{
-		for (const auto& Actor : Actors)
-		{
+		for (const auto& Actor : Actors) {
 			Actor->Tick(DeltaTime);
 		}
 	}
 
 	void CScene::Render()
 	{
-		for (const auto& Actor : Actors)
-		{
+		for (const auto& Actor : Actors) {
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
 				Actor->GetPosition(),
@@ -99,8 +96,7 @@ namespace platformer2d {
 		};
 		const std::size_t Erased = std::erase_if(Actors, IsHandleEqual);
 
-		if (Erased > 0)
-		{
+		if (Erased > 0) {
 			LK_ASSERT(Erased == 1, "Erased more than one actor");
 			LK_DEBUG_TAG("Scene", "Successfully deleted: {} (Actors: {})", Handle, Actors.size());
 			OnActorDeleted.Broadcast(Handle);
@@ -113,8 +109,7 @@ namespace platformer2d {
 	{
 		glm::mat4 Transform(1.0f);
 		std::shared_ptr<CActor> Actor = FindActor(ActorHandle);
-		if (Actor == nullptr)
-		{
+		if (!Actor) {
 			return Transform;
 		}
 
@@ -124,8 +119,7 @@ namespace platformer2d {
 	glm::mat4 CScene::GetWorldSpaceTransform(std::shared_ptr<CActor> Actor)
 	{
 		glm::mat4 Transform(1.0f);
-		if (Actor == nullptr)
-		{
+		if (!Actor) {
 			return Transform;
 		}
 
@@ -141,8 +135,7 @@ namespace platformer2d {
 	bool CScene::Serialize(const std::filesystem::path& OutFile) const
 	{
 		std::filesystem::path SceneFile = OutFile;
-		if (SceneFile.empty())
-		{
+		if (SceneFile.empty()) {
 			SceneFile = Path;
 		}
 		LK_DEBUG_TAG("Scene", "Serialize: {}", StringUtils::GetPathRelativeToProject(SceneFile));
@@ -154,8 +147,7 @@ namespace platformer2d {
 		/* Actors */
 		Out << YAML::Key << "Actors";
 		Out << YAML::Value << YAML::BeginSeq;
-		for (const auto& Actor : Actors)
-		{
+		for (const auto& Actor : Actors) {
 			Actor->Serialize(Out);
 		}
 		Out << YAML::EndSeq;
@@ -172,8 +164,7 @@ namespace platformer2d {
 		}
 
 		std::ofstream File(SceneFile);
-		if (!File.is_open())
-		{
+		if (!File.is_open()) {
 			LK_ERROR_TAG("Scene", "File not open");
 			return false;
 		}
@@ -188,8 +179,7 @@ namespace platformer2d {
 		std::filesystem::path AbsFilepath = Core::ProjectDir / InFilepath;
 		LK_TRACE_TAG("Scene", "Absolute filepath: {}", AbsFilepath);
 		LK_ASSERT(std::filesystem::exists(AbsFilepath), "Filepath does not exist: {}", AbsFilepath);
-		if (!std::filesystem::exists(AbsFilepath))
-		{
+		if (!std::filesystem::exists(AbsFilepath)) {
 			LK_ERROR_TAG("Scene", "Filepath does not exist: {}", AbsFilepath);
 			return false;
 		}
@@ -209,8 +199,7 @@ namespace platformer2d {
 
 		const YAML::Node ActorsNode = Data["Actors"];
 		LK_ASSERT(!ActorsNode.IsNull());
-		if (ActorsNode.IsNull())
-		{
+		if (ActorsNode.IsNull()) {
 			LK_ERROR_TAG("Scene", "Missing 'Actors' node in YAML");
 			return false;
 		}
@@ -223,10 +212,8 @@ namespace platformer2d {
 	void CScene::DeserializeActors(const YAML::Node& ActorsNode)
 	{
 		LK_DEBUG_TAG("Scene", "Deserializing actors");
-		for (const YAML::Node& Node : ActorsNode)
-		{
+		for (const YAML::Node& Node : ActorsNode) {
 			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Texture"] && Node["Color"] && Node["TransformComponent"]);
-
 			FActorSpecification ActorSpec;
 			ActorSpec.Handle = Node["ID"].as<LUUID>();
 			const std::string ActorName = Node["Name"].as<std::string>();
@@ -244,38 +231,28 @@ namespace platformer2d {
 			LK_DESERIALIZE_PROPERTY(Color, ActorSpec.OutlineColor, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), OutlineNode);
 
 			FTransformComponent TC;
-			if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined())
-			{
+			if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined()) {
 				Serialization::Deserialize(TC, TCNode);
-			}
-			else
-			{
+			} else {
 				LK_ERROR_TAG("Scene", "TransformComponent missing in YAML");
 			}
 
 			bool HasBody = false;
 			FBodySpecification BodySpec;
-			if (const YAML::Node BodyNode = Node["Body"]; BodyNode.IsDefined())
-			{
-				if (BodyNode["Type"].IsDefined())
-				{
+			if (const YAML::Node BodyNode = Node["Body"]; BodyNode.IsDefined()) {
+				if (BodyNode["Type"].IsDefined()) {
 					HasBody = true;
 					Serialization::Deserialize(BodySpec, BodyNode);
-				}
-				else
-				{
+				} else {
 					LK_DEBUG_TAG("Scene", "Actor {} has no body", ActorName);
 				}
-			}
-			else
-			{
+			} else {
 				LK_ERROR_TAG("Scene", "Body missing in YAML");
 			}
 
 			bool HasEffectComponent = false;
 			FEffectComponent EC;
-			if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined())
-			{
+			if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined()) {
 				HasEffectComponent = true;
 				Serialization::Deserialize(EC, EffectCompNode);
 				LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
@@ -283,28 +260,22 @@ namespace platformer2d {
 
 			bool HasInteractionComponent = false;
 			FInteractionComponent IC;
-			if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined())
-			{
+			if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined()) {
 				HasInteractionComponent = true;
 				Serialization::Deserialize(IC, InteractionCompNode);
 			}
 
-			if (!DoesActorExist(ActorSpec.Handle))
-			{
+			if (!DoesActorExist(ActorSpec.Handle)) {
 				std::shared_ptr<CActor> Actor = nullptr;
-				if (HasBody)
-				{
+				if (HasBody) {
 					Actor = Create<CActor>(ActorSpec, BodySpec);
-				}
-				else
-				{
+				} else {
 					Actor = Create<CActor>(ActorSpec);
 				}
 
 				Actor->GetTransformComponent() = TC;
 
-				if (HasEffectComponent)
-				{
+				if (HasEffectComponent) {
 					Actor->AddComponent<FEffectComponent>(EC);
 				}
 				if (HasInteractionComponent)
