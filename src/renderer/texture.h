@@ -20,6 +20,7 @@ namespace platformer2d {
 		Wood,
 		Swoosh,
 		Cloud,
+		Rifle,
 		COUNT
 	};
 
@@ -86,6 +87,7 @@ namespace platformer2d {
 				case ETexture::Wood:       return "Wood";
 				case ETexture::Swoosh:     return "Swoosh";
 				case ETexture::Cloud:      return "Cloud";
+				case ETexture::Rifle:      return "Rifle";
 				case ETexture::COUNT:      return "COUNT";
 				default: break;
 			}
