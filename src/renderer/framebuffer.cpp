@@ -150,6 +150,7 @@ namespace platformer2d {
 
 	void CFramebuffer::Clear() const
 	{
+		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
 		/* @fixme: Use ClearColor member instead */
 #if 1
 		const glm::vec4& C = CRenderer::GetClearColor();
