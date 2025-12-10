@@ -286,7 +286,7 @@ namespace platformer2d {
 
 	void CRenderer::LoadTextures()
 	{
-		Data.Textures.reserve(MAX_TEXTURES);
+		Data.Textures.reserve(MaxTextures);
 
 		auto LoadTexture = [](std::string_view Path, const ETexture Texture,
 							  const EImageFormat Format = EImageFormat::RGBA8,
@@ -318,6 +318,7 @@ namespace platformer2d {
 		LoadTexture(TEXTURES_DIR "/wood.png", ETexture::Wood, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/swoosh.png", ETexture::Swoosh, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/cloud-1.png", ETexture::Cloud, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/ar15.png", ETexture::Rifle, EImageFormat::RGBA8);
 		Data.WhiteTexture = Data.Textures[ETexture::White];
 	}
 
@@ -486,13 +487,14 @@ namespace platformer2d {
 		QuadIndexCount += 6;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color, const float RotationDeg,
-							 const float OutlineThickness, const glm::vec4& OutlineColor)
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color,
+							 const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
-	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color,
+							 const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
@@ -519,13 +521,13 @@ namespace platformer2d {
 		DrawStats.QuadCount++;
 	}
 
-	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2(& TexCoords)[4], const glm::vec4& Color,
-							 const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
+	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords,
+							 const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, TexCoords, Color, RotationDeg);
+		DrawQuad({ Pos.x, Pos.y, 0.0f }, Size, Texture, TexCoords, Color, RotationDeg);
 	}
 
-	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4],
+	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords,
 							 const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices) {

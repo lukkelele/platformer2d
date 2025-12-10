@@ -87,13 +87,13 @@ namespace platformer2d {
 		static uint16_t GetFrameIndex();
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec2 (&TexCoords)[4], const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
-		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = {1.0f, 1.0f, 1.0f, 0.0f}, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
+		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
 
 		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
 		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
@@ -150,7 +150,19 @@ namespace platformer2d {
 		CRenderer& operator=(CRenderer&&) = delete;
 
 	public:
-		static constexpr int MAX_TEXTURES = 16;
+		static constexpr int MaxTextures = 16;
+		static constexpr std::array<glm::vec2, 4> TextureCoords = {
+			glm::vec2(0, 0), /* Bottom left */
+			glm::vec2(0, 1), /* Top left */
+			glm::vec2(1, 1), /* Top right */
+			glm::vec2(1, 0), /* Bottom right */
+		};
+		static constexpr std::array<glm::vec2, 4> MirroredTextureCoords = {
+			glm::vec2(1, 0), /* Bottom left */
+			glm::vec2(1, 1), /* Top left */
+			glm::vec2(0, 1), /* Top right */
+			glm::vec2(0, 0), /* Bottom right */
+		};
 	private:
 		static inline bool bInitialized = false;
 		static inline FBackendInfo BackendInfo;
