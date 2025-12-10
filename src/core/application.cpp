@@ -54,8 +54,7 @@ namespace platformer2d {
 
 	void CApplication::Shutdown()
 	{
-		if (bRunning)
-		{
+		if (bRunning) {
 			LK_INFO_TAG("Application", "Shutting down");
 			bRunning = false;
 
@@ -83,10 +82,8 @@ namespace platformer2d {
 
 		bRunning = true;
 		Timer.Reset();
-		while (!glfwWindowShouldClose(GlfwWindow))
-		{
-			if (Core::Global.bShouldShutdown)
-			{
+		while (!glfwWindowShouldClose(GlfwWindow)) {
+			if (Core::Global.bShouldShutdown) {
 				break;
 			}
 
@@ -97,31 +94,18 @@ namespace platformer2d {
 
 			CRenderer::BeginFrame();
 			CPhysicsWorld::Update(DeltaTime);
-			for (auto& Layer : LayerStack)
-			{
+			for (auto& Layer : LayerStack) {
 				Layer->Tick(DeltaTime);
 			}
 
 			EffectManager.Tick(DeltaTime);
-
-			/* Render UI. */
-			{
-#if 0
-				CRenderer::Submit([&]() { RenderUI(); });
-				CRenderer::Submit([&]() { UILayer->EndFrame(); });
-#endif
-			}
-
 			CRenderer::EndFrame();
-			CRenderer::Submit([&]() { Window->EndFrame(); });
 
-#define NO_RENDER_SUBMISSION
-#ifdef NO_RENDER_SUBMISSION
 			RenderUI();
 			UILayer->EndFrame();
-#endif
 
 			CKeyboard::TransitionPressedKeys();
+			Window->EndFrame();
 		}
 	}
 
@@ -134,8 +118,7 @@ namespace platformer2d {
 	void CApplication::RenderUI()
 	{
 		UILayer->BeginFrame();
-		for (auto& Layer : LayerStack)
-		{
+		for (auto& Layer : LayerStack) {
 			Layer->RenderUI();
 		}
 	}
