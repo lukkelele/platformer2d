@@ -14,7 +14,7 @@ namespace platformer2d {
 		~CRifle();
 
 		virtual void Tick() override;
-		void Render();
+		virtual void Render() override;
 
 		/**
 		 * @brief Fire at target position in world space.
