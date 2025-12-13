@@ -28,18 +28,14 @@ namespace platformer2d {
 		int ReadWidth, ReadHeight, ReadChannels;
 
 		void* Data = nullptr;
-		if (stbi_is_hdr(Spec.Path.c_str()))
-		{
+		if (stbi_is_hdr(Spec.Path.c_str())) {
 			LK_TRACE_TAG("Texture", "[{}] HDR texture", Path.filename());
 			Data = stbi_loadf(Spec.Path.c_str(), &ReadWidth, &ReadHeight, &ReadChannels, 4);
-		}
-		else
-		{
+		} else {
 			Data = stbi_load(Spec.Path.c_str(), &ReadWidth, &ReadHeight, &ReadChannels, 4);
 		}
 		LK_ASSERT(Data != NULL, "Failed to load texture from: {}", Spec.Path);
-		if ((ReadWidth != Spec.Width) || (ReadHeight != Spec.Height))
-		{
+		if ((ReadWidth != Spec.Width) || (ReadHeight != Spec.Height)) {
 			LK_TRACE("Texture mismatch ({}) between specified and actual size ({}x{} != {}x{})",
 					 Path.filename().generic_string(), Spec.Width, Spec.Height,
 					 ReadWidth, ReadHeight);
@@ -53,8 +49,7 @@ namespace platformer2d {
 		LK_TRACE_TAG("Texture", "[{}] Image size: {} bytes (Channels: {})", std::filesystem::path(Spec.Path).stem().string(), ImageSize, Channels);
 		ImageBuffer = FBuffer::Copy(Data, ImageSize);
 
-		if (Data)
-		{
+		if (Data) {
 			LK_OpenGL_Verify(glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
@@ -73,21 +68,17 @@ namespace platformer2d {
 
 		Mips = Spec.Mips;
 		const bool bMipmap = (Spec.Mips > 1);
-		if (bMipmap)
-		{
+		if (bMipmap) {
 			LK_DEBUG_TAG("Texture", "[{}] Generating mipmap (Mips: {})", Path.filename(), Spec.Mips);
 			LK_OpenGL_Verify(glGenerateTextureMipmap(ID));
-		}
-		else
-		{
+		} else {
 			LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0));
 		}
 
 		OpenGL::SetTextureWrap(Spec.SamplerWrap);
 		OpenGL::SetTextureFilter(Spec.SamplerFilter, bMipmap);
 
-		if (Name.empty())
-		{
+		if (Name.empty()) {
 			Name = LK_FMT("{}", Path.filename());
 		}
 
@@ -108,8 +99,7 @@ namespace platformer2d {
 		DataType = OpenGL::GetFormatDataType(Spec.Format);
 		LK_TRACE_TAG("Texture", "Format: {} (GLFormat={} InternalGLFormat={})", Enum::ToString(Spec.Format), Format, InternalFormat);
 
-		if (Spec.bStorage)
-		{
+		if (Spec.bStorage) {
 			LK_OpenGL_Verify(glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
@@ -121,9 +111,7 @@ namespace platformer2d {
 				DataType,
 				nullptr
 			));
-		}
-		else if (InData.Data)
-		{
+		} else if (InData.Data) {
 			ImageBuffer = FBuffer::Copy(InData);
 			if (ImageBuffer.Data)
 			{
@@ -143,21 +131,17 @@ namespace platformer2d {
 
 		Mips = Spec.Mips;
 		const bool bMipmap = (Spec.Mips > 1);
-		if (bMipmap)
-		{
+		if (bMipmap) {
 			LK_DEBUG_TAG("Texture", "[{}] Generating mipmap (Mips: {})", Path.filename(), Spec.Mips);
 			LK_OpenGL_Verify(glGenerateTextureMipmap(ID));
-		}
-		else
-		{
+		} else {
 			LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0));
 		}
 
 		OpenGL::SetTextureWrap(Spec.SamplerWrap);
 		OpenGL::SetTextureFilter(Spec.SamplerFilter, bMipmap);
 
-		if (Name.empty())
-		{
+		if (Name.empty()) {
 			Name = LK_FMT("{}", Path.filename());
 		}
 		Slot = CreatedTextures++;
@@ -181,8 +165,7 @@ namespace platformer2d {
 		static const GLenum InternalImageFormat = GL_RGBA32F;
 		Channels = 4;
 
-		if (InData)
-		{
+		if (InData) {
 			LK_OpenGL_Verify(glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
