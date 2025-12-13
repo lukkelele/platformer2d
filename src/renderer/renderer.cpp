@@ -686,6 +686,16 @@ namespace platformer2d {
 		DrawLine(P0, P1, Color);
 	}
 
+	const glm::vec4& CRenderer::GetClearColor()
+	{
+		return Data.ViewportFramebuffer->GetClearColor();
+	}
+
+	void CRenderer::SetClearColor(const glm::vec4& InClearColor)
+	{
+		Data.ViewportFramebuffer->SetClearColor(InClearColor);
+	}
+
 	void CRenderer::SetLineWidth(const uint16_t LineWidth)
 	{
 		LineConfig.Width = LineWidth;

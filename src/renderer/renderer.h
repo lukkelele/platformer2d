@@ -106,8 +106,8 @@ namespace platformer2d {
 
 		static void DrawTransform(const glm::mat4& Transform, float Scale = 1.0f, const glm::vec4& Color = FColor::Magenta);
 
-		static glm::vec4 GetClearColor() { return ClearColor; }
-		static void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
+		static const glm::vec4& GetClearColor();
+		static void SetClearColor(const glm::vec4& InClearColor);
 		static void SetLineWidth(uint16_t LineWidth);
 		static void SetDepthTest(bool Enabled);
 		static bool GetDepthTest();
@@ -166,7 +166,6 @@ namespace platformer2d {
 	private:
 		static inline bool bInitialized = false;
 		static inline FBackendInfo BackendInfo;
-		static inline glm::vec4 ClearColor{ 0.20f, 0.20f, 0.20f, 1.0f };
 
 		static inline GLuint QuadVAO = 0;
 		static inline GLuint QuadVBO = 0;
