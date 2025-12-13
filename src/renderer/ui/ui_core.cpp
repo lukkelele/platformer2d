@@ -36,10 +36,8 @@ namespace platformer2d::UI {
         UI::PushID();
         ImGui::Begin(WindowTitle, Open, WindowFlags);
 
-		if (ImGuiWindow* ThisWindow = ImGui::GetCurrentWindow(); ThisWindow != nullptr)
-		{
-			if (ThisWindow->SkipItems)
-			{
+		if (ImGuiWindow* ThisWindow = ImGui::GetCurrentWindow(); ThisWindow != nullptr) {
+			if (ThisWindow->SkipItems) {
 				ImGui::End();
 				UI::PopID();
 				return false;
@@ -57,8 +55,7 @@ namespace platformer2d::UI {
 
 	void BeginViewport(CWindow* Window)
 	{
-		if (UI::DockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
-		{
+		if (UI::DockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode) {
 		    UI::CoreViewportFlags |= ImGuiWindowFlags_NoBackground;
 			UI::HostWindowFlags |= ImGuiWindowFlags_NoBackground;
 		}
@@ -80,8 +77,7 @@ namespace platformer2d::UI {
 		 * for the dock splitting is the same. A 0.04 increment in the right sidebar
 		 * is needed to make the sizes the same.
 		 */
-		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr)
-		{
+		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr) {
 			LK_INFO("Creating dockspace layout");
 
 			/* Remove existing layout. */
@@ -119,8 +115,7 @@ namespace platformer2d::UI {
 			ImGui::DockBuilderFinish(DockspaceID);
 
 			/* Disable splitting over entire viewport. */
-			if (ImGuiDockNode* DockNode = ImGui::DockBuilderGetNode(ImGui::GetID(PanelID::Dockspace)))
-			{
+			if (ImGuiDockNode* DockNode = ImGui::DockBuilderGetNode(ImGui::GetID(PanelID::Dockspace))) {
 				DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe;
 				DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDockingSplit;
 			}
@@ -133,8 +128,7 @@ namespace platformer2d::UI {
 			bDockspaceInitialized = true;
 		}
 
-		if (!bDockspaceInitialized)
-		{
+		if (!bDockspaceInitialized) {
 			LK_DEBUG("Initializing dockspace layout");
 			ImGuiDockNode* DockspaceNode = ImGui::DockBuilderGetNode(DockspaceID);
 			LK_VERIFY(DockspaceNode, "Dockspace node is nullptr");
@@ -162,32 +156,27 @@ namespace platformer2d::UI {
 	ImGuiDockNode* FindCentralNode(const ImGuiID DockspaceID)
 	{
 		ImGuiDockNode* RootNode = ImGui::DockBuilderGetNode(DockspaceID);
-		if (!RootNode)
-		{
+		if (!RootNode) {
 			return nullptr;
 		}
 
 		std::queue<ImGuiDockNode*> NodeQueue;
 		NodeQueue.push(RootNode);
 
-		while (!NodeQueue.empty())
-		{
+		while (!NodeQueue.empty()) {
 			ImGuiDockNode* CurrentNode = NodeQueue.front();
 			NodeQueue.pop();
 
-			if (CurrentNode->IsCentralNode())
-			{
+			if (CurrentNode->IsCentralNode()) {
 				return CurrentNode;
 			}
 
 			/* Add child nodes to the queue to check recursively. */
-			if (CurrentNode->ChildNodes[0])
-			{
+			if (CurrentNode->ChildNodes[0]) {
 				NodeQueue.push(CurrentNode->ChildNodes[0]);
 			}
 
-			if (CurrentNode->ChildNodes[1])
-			{
+			if (CurrentNode->ChildNodes[1]) {
 				NodeQueue.push(CurrentNode->ChildNodes[1]);
 			}
 		}

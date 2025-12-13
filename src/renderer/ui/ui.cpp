@@ -729,16 +729,14 @@ namespace platformer2d::UI {
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 			SidebarWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 
-			if (DockNode->VisibleWindow)
-			{
+			if (DockNode->VisibleWindow) {
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
 		} else if (DockNode->Windows.Size > 1) {
 			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoTabBar;
 			SidebarWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 
-			if (DockNode->VisibleWindow)
-			{
+			if (DockNode->VisibleWindow) {
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
 		}
