@@ -109,8 +109,7 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glCreateTextures(TexTarget, 1, &DepthAttachment));
 			LK_OpenGL_Verify(glBindTexture(TexTarget, DepthAttachment));
 
-			switch (DepthAttachmentSpec.ImageFormat)
-			{
+			switch (DepthAttachmentSpec.ImageFormat) {
 				case EImageFormat::DEPTH24STENCIL8:
 					AttachDepthTexture(
 						DepthAttachment,
@@ -151,13 +150,7 @@ namespace platformer2d {
 	void CFramebuffer::Clear() const
 	{
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
-		/* @fixme: Use ClearColor member instead */
-#if 1
-		const glm::vec4& C = CRenderer::GetClearColor();
-#else
-		const glm::vec4& C = ClearColor;
-#endif
-		LK_OpenGL_Verify(glClearColor(C.r, C.g, C.b, C.a));
+		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
 
@@ -184,19 +177,19 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glReadBuffer(GL_COLOR_ATTACHMENT0 + AttachmentIndex));
 		int PixelData;
 		LK_OpenGL_Verify(glReadPixels(PosX, PosY, 1, 1, GL_RED_INTEGER, GL_INT, &PixelData));
-
 		return PixelData;
 	}
 
-	void CFramebuffer::ClearAttachment(const uint32_t AttachmentIdx, int Value)
+	void CFramebuffer::ClearAttachment(const uint32_t AttachmentIdx, const int Value)
 	{
 		LK_ASSERT(AttachmentIdx < ColorAttachments.size());
 		LK_DEBUG_TAG("Framebuffer", "ClearAttachment: AttachmentIdx={} Value={}", AttachmentIdx, Value);
-		FFramebufferTextureSpecification& FbTextureSpec = ColorAttachmentSpecs[AttachmentIdx];
+		FFramebufferTextureSpecification& TextureSpec = ColorAttachmentSpecs[AttachmentIdx];
+
 		LK_OpenGL_Verify(glClearTexImage(
 			ColorAttachments[AttachmentIdx]->GetID(),
 			0,
-			OpenGL::GetFramebufferTextureFormat(FbTextureSpec.ImageFormat), 
+			OpenGL::GetImageFormat(TextureSpec.ImageFormat),
 			GL_INT,
 			&Value
 		));
@@ -211,8 +204,7 @@ namespace platformer2d {
 
 	static bool IsDepthFormat(const EImageFormat ImageFormat)
 	{
-		switch (ImageFormat)
-		{
+		switch (ImageFormat) {
 			case EImageFormat::DEPTH24STENCIL8: return true;
 		}
 		return false;
@@ -226,14 +218,11 @@ namespace platformer2d {
 	static void AttachDepthTexture(const uint32_t ID, const int Samples, const GLenum Format, const GLenum AttachmentType, const uint32_t Width, const uint32_t Height)
 	{
 		const bool Multisampled = (Samples > 1);
-		if (Multisampled)
-		{
+		if (Multisampled) {
 			LK_OpenGL_Verify(
 				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, Samples, Format, Width, Height, GL_FALSE)
 			);
-		}
-		else
-		{
+		} else {
 			LK_OpenGL_Verify(glTexStorage2D(GL_TEXTURE_2D, 1, Format, Width, Height));
 			LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 			LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
@@ -244,6 +233,5 @@ namespace platformer2d {
 
 		LK_OpenGL_Verify(glFramebufferTexture2D(GL_FRAMEBUFFER, AttachmentType, GetTextureTarget(Multisampled), ID, 0));
 	}
-
 
 }

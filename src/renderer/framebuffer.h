@@ -81,6 +81,9 @@ namespace platformer2d {
 		void Resize(uint32_t InWidth, uint32_t InHeight);
 		int ReadPixel(uint32_t AttachmentIdx, int PosX, int PosY);
 
+		void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
+		const glm::vec4& GetClearColor() const { return ClearColor; }
+
 	private:
 		LRendererID ID = 0;
 		glm::vec4 ClearColor;
@@ -93,8 +96,7 @@ namespace platformer2d {
 		std::vector<FFramebufferTextureSpecification> ColorAttachmentSpecs{};
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
 		inline const char* ToString(const EFramebufferTextureFormat Format)
 		{
 			const char* S = "";
@@ -113,6 +115,5 @@ namespace platformer2d {
 			return S;
 		}
 	}
-
 
 }
