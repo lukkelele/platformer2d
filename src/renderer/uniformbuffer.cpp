@@ -47,9 +47,8 @@ namespace platformer2d {
 	{
 		uint32_t UBIndex;
 		LK_OpenGL_Verify(UBIndex = glGetUniformBlockIndex(Shader->GetRendererID(), UBName.data()));
-		if (UBIndex == BlockIndex)
-		{
-			LK_WARN_TAG("UniformBuffer", "[{}] Already bound to index {} in \"{}\"", Shader->GetFilepath().filename(), BlockIndex, UBName);
+		if (UBIndex == BlockIndex) {
+			LK_TRACE_TAG("UniformBuffer", "[{}] Already bound to index {} in \"{}\"", Shader->GetFilepath().filename(), BlockIndex, UBName);
 			return;
 		}
 
