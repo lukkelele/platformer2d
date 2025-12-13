@@ -12,6 +12,12 @@ namespace platformer2d {
 		All /* File and Yaml. */
 	};
 
+	enum class EExtendableSerializer : uint8_t
+	{
+		No,
+		Yes
+	};
+
 	/**
 	 * @class ISerializable
 	 * @brief Serializer interface.
@@ -27,10 +33,13 @@ namespace platformer2d {
 	public:
 		virtual ~ISerializable() = default;
 
-		virtual bool Serialize(TSink& Sink) const = 0;
+		virtual bool Serialize(TSink& Sink, EExtendableSerializer Extendable = EExtendableSerializer::No) const = 0;
 		/**
 		 * Deserialize is not used for ESerializable::Yaml.
 		 * There are deserializers in the 'Serialization' namespace for this.
+		 * The reason is mainly because the deserialized data is used to construct
+		 * new objects. Using a Deserialize function in the interface will require
+		 * that the object will reconstruct itself, which is kind of missing the point.
 		 */
 	};
 
