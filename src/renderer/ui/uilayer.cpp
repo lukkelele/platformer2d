@@ -12,8 +12,7 @@ namespace platformer2d {
 	static void UI_GameMenu_Default();
 	static void UI_GameMenu_Settings();
 
-	namespace
-	{
+	namespace {
 		FGameMenu GameMenu{};
 		constexpr float LABEL_COLUMN_WIDTH = 190.0f;
 		constexpr float LABEL_INDENT_WIDTH = 24.0f;
@@ -35,11 +34,11 @@ namespace platformer2d {
 	void CUILayer::OnDetach()
 	{
 		LK_TRACE_TAG("UILayer", "OnDetach");
-		if (ImGuiLayer)
-		{
+		if (ImGuiLayer) {
 			LK_DEBUG_TAG("UILayer", "Destroy ImGui layer");
 			ImGuiLayer->Destroy();
 			ImGuiLayer.reset();
+			ImGuiLayer = nullptr;
 		}
 	}
 
@@ -48,10 +47,8 @@ namespace platformer2d {
 		LK_UNUSED(DeltaTime);
 
 		/* Draw dark overlay whenever the pause menu is open. */
-		if (UI::IsGameMenuOpen())
-		{
-			if (CWindow* Window = CWindow::Get(); Window != nullptr)
-			{
+		if (UI::IsGameMenuOpen()) {
+			if (CWindow* Window = CWindow::Get(); Window != nullptr) {
 				const glm::vec2 WindowSize = Window->GetSize();
 				static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.90f };
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
@@ -61,8 +58,7 @@ namespace platformer2d {
 
 	void CUILayer::RenderUI()
 	{
-		if (UI::IsGameMenuOpen())
-		{
+		if (UI::IsGameMenuOpen()) {
 			UI_GameMenu();
 		}
 	}
@@ -80,8 +76,7 @@ namespace platformer2d {
 	void CUILayer::UI_GameMenu()
 	{
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
-		if (Viewport == nullptr)
-		{
+		if (Viewport == nullptr) {
 			return;
 		}
 
@@ -103,8 +98,7 @@ namespace platformer2d {
 			| ImGuiWindowFlags_NoCollapse;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 0.0f));
-		if (!ImGui::Begin("##GameMenu", nullptr, WindowFlags))
-		{
+		if (!ImGui::Begin("##GameMenu", nullptr, WindowFlags)) {
 			return;
 		}
 
@@ -113,8 +107,7 @@ namespace platformer2d {
 		const ImVec2 MenuSize = ImGui::GetWindowSize();
 		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
 
-		switch (GameMenu.View)
-		{
+		switch (GameMenu.View) {
 			case EGameMenuView::Default:
 				UI_GameMenu_Default();
 				break;
@@ -123,8 +116,7 @@ namespace platformer2d {
 				break;
 		}
 
-		if (GameMenu.View != GameMenu.LastView)
-		{
+		if (GameMenu.View != GameMenu.LastView) {
 			LK_TRACE_TAG("UILayer", "View changed");
 		}
 
@@ -162,8 +154,7 @@ namespace platformer2d {
 
 		ImGui::SeparatorText("Camera");
 		CGameInstance* GameInstance = CGameInstance::Get();
-		if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr)
-		{
+		if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr) {
 			ImGui::PushID("UI_CameraOptions");
 			ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 			ImGui::TableSetupColumn("LabelColumn", 0, LABEL_COLUMN_WIDTH);
@@ -179,8 +170,7 @@ namespace platformer2d {
 			ImGui::SetNextItemWidth(COLUMN_ITEM_WIDTH);
 			float Zoom = Camera->GetZoom();
 			ImGui::SliderFloat("##CameraZoom", &Zoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
-			if (ImGui::IsItemActive())
-			{
+			if (ImGui::IsItemActive()) {
 				Camera->SetZoom(Zoom);
 			}
 
@@ -198,8 +188,7 @@ namespace platformer2d {
 			);
 			UI::ShiftCursor(PaddingX, PaddingY);
 			static bool bDepthTest = CRenderer::GetDepthTest();
-			if (ImGui::Checkbox("Depth Test", &bDepthTest))
-			{
+			if (ImGui::Checkbox("Depth Test", &bDepthTest)) {
 				CRenderer::SetDepthTest(bDepthTest);
 			}
 		}
@@ -215,24 +204,20 @@ namespace platformer2d {
 		 *     Menu Options
 		 ************************/
 		ImGui::Dummy(ImVec2(0.0f, 12.0f + PaddingY * 0.50f));
-		if (ImGui::Button("Style Editor", ButtonSize))
-		{
+		if (ImGui::Button("Style Editor", ButtonSize)) {
 			Settings.bStyleEditor = !Settings.bStyleEditor;
 		}
-		if (Settings.bStyleEditor)
-		{
+		if (Settings.bStyleEditor) {
 			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal));
 			ImGui::Begin("##StyleEditor", &Settings.bStyleEditor);
 			ImGui::ShowStyleEditor(&Style);
 			ImGui::End();
 		}
 
-		if (ImGui::Button("ID Tool", ButtonSize))
-		{
+		if (ImGui::Button("ID Tool", ButtonSize)) {
 			Settings.bIDStackTool = !Settings.bIDStackTool;
 		}
-		if (Settings.bIDStackTool)
-		{
+		if (Settings.bIDStackTool) {
 			ImGui::ShowIDStackToolWindow(&Settings.bIDStackTool);
 		}
 
@@ -242,8 +227,7 @@ namespace platformer2d {
 		{
 			UI::ShiftCursorY(ImGui::GetContentRegionAvail().y - ButtonSize.y);
 			UI::FScopedColor ButtonHovered(ImGuiCol_ButtonHovered, RGBA32::Compliment);
-			if (ImGui::Button(LK_ICON_BACKWARD, ButtonSize))
-			{
+			if (ImGui::Button(LK_ICON_BACKWARD, ButtonSize)) {
 				GameMenu.View = EGameMenuView::Default;
 			}
 		}
@@ -284,8 +268,7 @@ namespace platformer2d {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 14.0f);
 		UI::Font::Push(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
-		if (ImGui::Button(LK_ICON_COG " Settings", ButtonSize))
-		{
+		if (ImGui::Button(LK_ICON_COG " Settings", ButtonSize)) {
 			GameMenu.View = EGameMenuView::Settings;
 		}
 		ImGui::PopStyleVar(1); /* FrameRounding */
@@ -300,8 +283,7 @@ namespace platformer2d {
 		ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(255, 45, 45, 200));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 45, 45, 90));
 		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
-		if (ImGui::Button("Quit Game", HalfButtonSize))
-		{
+		if (ImGui::Button("Quit Game", HalfButtonSize)) {
 			Core::Global.bShouldShutdown = true;
 		}
 		ImGui::PopStyleColor(2);
@@ -310,8 +292,7 @@ namespace platformer2d {
 		ImGui::SameLine();
 		ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::NiceGreen);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
-		if (ImGui::Button(LK_ICON_PLAY " Play", HalfButtonSize))
-		{
+		if (ImGui::Button(LK_ICON_PLAY " Play", HalfButtonSize)) {
 			UI::CloseGameMenu();
 		}
 		ImGui::PopStyleColor(2);
@@ -322,10 +303,8 @@ namespace platformer2d {
 
 	void CUILayer::OnKeyPressed(const FKeyData& KeyData)
 	{
-		if (KeyData.State == EKeyState::Pressed)
-		{
-			switch (KeyData.Key)
-			{
+		if (KeyData.State == EKeyState::Pressed) {
+			switch (KeyData.Key) {
 				case EKey::Escape:
 					UI::ToggleGameMenu();
 					break;
@@ -333,8 +312,8 @@ namespace platformer2d {
 		}
 	}
 
-	namespace UI
-	{
+	namespace UI {
+
 		void OpenGameMenu()
 		{
 			GameMenu.bOpen = true;
