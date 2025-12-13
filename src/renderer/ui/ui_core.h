@@ -136,8 +136,7 @@ namespace platformer2d::UI {
 	{
 		static constexpr float WrapPosOffset = 35.0f;
 		ImGui::TextDisabled(HelpSymbol);
-		if (ImGui::IsItemHovered())
-		{
+		if (ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
 			ImGui::TextUnformatted(HelpDesc);
@@ -149,8 +148,7 @@ namespace platformer2d::UI {
 	inline void HoverText(const char* Text)
 	{
 		static constexpr float WrapPosOffset = 35.0f;
-		if (ImGui::IsItemHovered())
-		{
+		if (ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
 			ImGui::TextUnformatted(Text);
@@ -162,8 +160,7 @@ namespace platformer2d::UI {
 	inline void SetTooltip(std::string_view Text, const float DelayInSeconds = 0.10f,
 						   const bool AllowWhenDisabled = true, const ImVec2 Padding = ImVec2(5, 5))
 	{
-		if (IsItemHovered(DelayInSeconds, AllowWhenDisabled ? ImGuiHoveredFlags_AllowWhenDisabled : ImGuiHoveredFlags_None))
-		{
+		if (IsItemHovered(DelayInSeconds, AllowWhenDisabled ? ImGuiHoveredFlags_AllowWhenDisabled : ImGuiHoveredFlags_None)) {
 			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, Padding);
 			UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::Text::Brighter);
 			ImGui::SetTooltip(Text.data());
@@ -209,14 +206,10 @@ namespace platformer2d::UI {
 
 		inline void Underline(bool FullWidth = false, const float OffsetX = 0.0f, const float OffsetY = -1.0f)
 		{
-			if (FullWidth)
-			{
-				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr)
-				{
+			if (FullWidth) {
+				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {
 					ImGui::PushColumnsBackground();
-				}
-				else if (ImGui::GetCurrentTable() != nullptr)
-				{
+				} else if (ImGui::GetCurrentTable() != nullptr) {
 					ImGui::TablePushBackgroundChannel();
 				}
 			}
@@ -230,14 +223,10 @@ namespace platformer2d::UI {
 				1.0f
 			);
 
-			if (FullWidth)
-			{
-				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr)
-				{
+			if (FullWidth) {
+				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {
 					ImGui::PopColumnsBackground();
-				}
-				else if (ImGui::GetCurrentTable() != nullptr)
-				{
+				} else if (ImGui::GetCurrentTable() != nullptr) {
 					ImGui::TablePopBackgroundChannel();
 				}
 			}
