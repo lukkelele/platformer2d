@@ -267,7 +267,7 @@ namespace platformer2d {
 		return FAABB{Min, Max};
 	}
 
-	bool CBody::Serialize(YAML::Emitter& Out) const
+	bool CBody::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
 	{
 		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(BodySpec.Type);
 		Out << YAML::Key << "GravityScale" << YAML::Value << GravityScale;

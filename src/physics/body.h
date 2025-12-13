@@ -122,7 +122,7 @@ namespace platformer2d {
 		glm::vec2 GetSize() const;
 		FAABB GetAABB() const;
 
-		virtual bool Serialize(YAML::Emitter& Out) const override;
+		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
 		static std::string ToString(const FBodySpecification& Spec);
 

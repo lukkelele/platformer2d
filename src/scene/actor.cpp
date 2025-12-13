@@ -163,7 +163,7 @@ namespace platformer2d {
 		Outline.Color = InColor;
 	}
 
-	bool CActor::Serialize(YAML::Emitter& Out) const
+	bool CActor::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
 	{
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
 		Out << YAML::BeginMap; /* Actor */
@@ -172,6 +172,7 @@ namespace platformer2d {
 		Out << YAML::Key << "Name" << YAML::Value << Name;
 		Out << YAML::Key << "Texture" << YAML::Value << std::to_underlying(Texture);
 		Out << YAML::Key << "Color" << YAML::Value << Color;
+		Out << YAML::Key << "Deletable" << YAML::Value << bDeletable;
 
 		Out << YAML::Value << "Outline";
 		Out << YAML::BeginMap;
@@ -180,26 +181,20 @@ namespace platformer2d {
 		Out << YAML::Key << "Color" << YAML::Value << Outline.Color;
 		Out << YAML::EndMap;
 
-		/* TransformComponent */
 		if (HasComponent<FTransformComponent>()) {
 			const auto& TC = GetComponent<FTransformComponent>();
 			Serialization::Serialize(TC, Out);
 		}
-		/* ~TransformComponent */
 
-		/* EffectComponent */
 		if (HasComponent<FEffectComponent>()) {
 			const auto& EC = GetComponent<FEffectComponent>();
 			Serialization::Serialize(EC, Out);
 		}
-		/* ~EffectComponent */
 
-		/* InteractionComponent */
 		if (HasComponent<FInteractionComponent>()) {
 			const auto& IC = GetComponent<FInteractionComponent>();
 			Serialization::Serialize(IC, Out);
 		}
-		/* ~InteractionComponent */
 
 		/* Body */
 		Out << YAML::Key << "Body";
@@ -210,10 +205,9 @@ namespace platformer2d {
 		Out << YAML::EndMap;
 		/* ~Body */
 
-		Out << YAML::Key << "Deletable";
-		Out << YAML::Value << bDeletable;
-
-		Out << YAML::EndMap; /* ~Actor */
+		if (Extendable == EExtendableSerializer::No) {
+			Out << YAML::EndMap; /* ~Actor */
+		}
 
 		return true;
 	}

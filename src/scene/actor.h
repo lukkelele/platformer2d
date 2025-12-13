@@ -110,7 +110,7 @@ namespace platformer2d {
 		void SetOutlineThickness(float InThickness);
 		void SetOutlineColor(const glm::vec4& InColor);
 
-		virtual bool Serialize(YAML::Emitter& Out) const override;
+		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
 		template<typename T>
 		T& AddComponent()
