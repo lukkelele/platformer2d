@@ -36,7 +36,6 @@
 		friend class EventOwner; \
 		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::Broadcast; \
 		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::RemoveAll; \
-		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::Remove; \
 	};
 
 namespace platformer2d::Core {
