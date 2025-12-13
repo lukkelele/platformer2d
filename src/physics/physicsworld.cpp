@@ -60,7 +60,6 @@ namespace platformer2d {
 
 	void CPhysicsWorld::SetPreSolve(const TPreSolveFunc InPreSolve, void* Context)
 	{
-		LK_ASSERT(InPreSolve != nullptr);
 		b2World_SetPreSolveCallback(WorldID, InPreSolve, Context);
 	}
 
