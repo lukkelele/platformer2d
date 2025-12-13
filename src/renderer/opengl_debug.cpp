@@ -18,8 +18,7 @@ namespace platformer2d::OpenGL::Internal {
 
 	static const char* SourceToString(const GLenum Source)
 	{
-		switch (Source)
-		{
+		switch (Source) {
 			case GL_DEBUG_SOURCE_API:             return "API";
 			case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   return "WindowSys";
 			case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader";
@@ -32,8 +31,7 @@ namespace platformer2d::OpenGL::Internal {
 
 	static const char* TypeToString(const GLenum Type)
 	{
-		switch (Type)
-		{
+		switch (Type) {
 			case GL_DEBUG_TYPE_ERROR:               return "Error";
 			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "Deprecated";
 			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "Undef";
@@ -49,8 +47,7 @@ namespace platformer2d::OpenGL::Internal {
 
 	static const char* SeverityToString(const GLenum Severity)
 	{
-		switch (Severity)
-		{
+		switch (Severity) {
 			case GL_DEBUG_SEVERITY_HIGH:         return "HIGH";
 			case GL_DEBUG_SEVERITY_MEDIUM:       return "MED";
 			case GL_DEBUG_SEVERITY_LOW:          return "LOW";
@@ -68,8 +65,7 @@ namespace platformer2d::OpenGL::Internal {
 									   const void* UserParam)
 	{
 		LK_UNUSED(Length, UserParam);
-		if ((Severity == GL_DEBUG_SEVERITY_NOTIFICATION) || (Severity == GL_DEBUG_SEVERITY_MEDIUM))
-		{
+		if ((Severity == GL_DEBUG_SEVERITY_NOTIFICATION) || (Severity == GL_DEBUG_SEVERITY_MEDIUM)) {
 			return;
 		}
 
@@ -83,8 +79,7 @@ namespace platformer2d::OpenGL::Internal {
 					 Message
 		);
 
-		if (Type == GL_DEBUG_TYPE_ERROR)
-		{
+		if (Type == GL_DEBUG_TYPE_ERROR) {
 			LK_DEBUG_BREAK();
 		}
 	}
