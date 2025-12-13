@@ -62,7 +62,7 @@ namespace platformer2d {
 		std::weak_ptr<CActor> SelectedActor;
 		std::weak_ptr<CActor> RotatingPlatform;
 
-		const std::array<const char*, CRenderer::MAX_TEXTURES> TextureNames = {
+		const std::array<const char*, CRenderer::MaxTextures> TextureNames = {
 			Enum::ToString(ETexture::White),
 			Enum::ToString(ETexture::Background),
 			Enum::ToString(ETexture::Player),
@@ -73,6 +73,8 @@ namespace platformer2d {
 
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
+		glm::vec2 PLAYER_SPAWN = { 0.0f, 0.0f };
+		float SCENE_LOAD_CAMERA_ZOOM = 0.30f;
 
 		/* @todo Remove from here. Just temporary */
 		bool bDrawCircle = false;
@@ -85,7 +87,7 @@ namespace platformer2d {
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 
-	static void UpdateInputBuffer(std::size_t Count)
+	static void UpdateInputBuffer(const std::size_t Count)
 	{
 		std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Count + 2);
 	}
@@ -99,9 +101,30 @@ namespace platformer2d {
 	void CEditor::Initialize()
 	{
 		LK_DEBUG_TAG("Editor", "Initialize");
-		LK_ASSERT(Player == nullptr);
+		LK_VERIFY(Player == nullptr);
 
-		Scene = std::make_shared<CScene>("Editor");
+		const FGameSpecification& Spec = GetSpecification();
+		CPhysicsWorld::SetGravity(Spec.Gravity);
+		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
+		CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
+		CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
+		CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
+
+		Deserialize(GameSpec.LevelFilepath);
+		OpenScene();
+		LastSceneFilepath = Scene->GetFilepath();
+		LK_TRACE_TAG("Editor", "Last scene filepath: {}", LastSceneFilepath);
+
+		CWindow::OnResized.Add(this, &CEditor::OnWindowResized);
+		CWindow* Window = CWindow::Get();
+		Window->Maximize();
+		UpdateViewportBounds();
+
+		CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
+		CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
+
+		LK_DEBUG_TAG("Editor", "Initialize editor resources");
+		EditorResources.Initialize();
 
 		CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
@@ -119,22 +142,6 @@ namespace platformer2d {
 			UI::Widget::OnActorDeleted(Handle);
 		});
 
-		const FGameSpecification& Spec = GetSpecification();
-		CPhysicsWorld::SetGravity(Spec.Gravity);
-		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
-		CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
-		CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
-		CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
-
-		CreatePlayer();
-		LK_VERIFY(Player);
-
-		Deserialize(GameSpec.LevelFilepath);
-
-		CCamera* Camera = GetActiveCamera();
-		LK_VERIFY(Camera);
-		Camera->SetZoom(Spec.Zoom);
-
 		UI::OnGameMenuOpened.Add([](const bool Opened)
 		{
 			if (Opened) {
@@ -143,17 +150,6 @@ namespace platformer2d {
 				CPhysicsWorld::Unpause();
 			}
 		});
-
-		CWindow::OnResized.Add(this, &CEditor::OnWindowResized);
-		CWindow* Window = CWindow::Get();
-		Window->Maximize();
-		UpdateViewportBounds();
-
-		CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
-		CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
-
-		LK_DEBUG_TAG("Editor", "Initialize editor resources");
-		EditorResources.Initialize();
 	}
 
 	void CEditor::Destroy()
@@ -163,7 +159,9 @@ namespace platformer2d {
 
 		LK_DEBUG_TAG("Editor", "Release level resources");
 		Player.reset();
+		Player = nullptr;
 		Scene.reset();
+		Scene = nullptr;
 
 		EditorResources.Destroy();
 	}
@@ -183,6 +181,10 @@ namespace platformer2d {
 	void CEditor::Tick(const float InDeltaTime)
 	{
 		DeltaTime = InDeltaTime;
+		if (!Scene) {
+			return;
+		}
+
 		CCamera& Camera = Player->GetCamera();
 		Camera.SetViewportSize(EditorViewportWidth, EditorViewportHeight);
 		CRenderer::BeginScene(Camera);
@@ -236,12 +238,21 @@ namespace platformer2d {
 			UI_ViewportTexture();
 
 			UI_Level();
-			UI_Player();
-			UI::PlayerHud(Player);
 
-			UI::Statistics();
-			UI::SelectionPanel();
-			UI_DrawGizmo();
+			UI::PrepareLeftSidebar();
+			if (UI::Begin(UI::PanelID::Sidebar1)) {
+				if (Player) {
+					UI_Player();
+				}
+				UI::End();
+			}
+
+			if (Scene) {
+				UI::Statistics();
+				UI::PlayerHud(Player);
+				UI::SelectionPanel();
+				UI_DrawGizmo();
+			}
 
 			UI::End(); /* ~EditorViewport */
 		}
@@ -348,9 +359,13 @@ namespace platformer2d {
 		Out << YAML::BeginMap; /* Level */
 		Out << YAML::Key << "Level" << YAML::Value << Name;
 
-		std::filesystem::path ScenePath = Scene->GetFilepath();
-		LK_DEBUG("Scene path: {}", ScenePath);
+		LK_TRACE("LastSceneFilepath: {}", LastSceneFilepath);
+		const std::filesystem::path ScenePath = (Scene ? Scene->GetFilepath() : LastSceneFilepath);
+		LK_DEBUG_TAG("Editor", "Scene path: {}", ScenePath);
 		Out << YAML::Key << "Scene" << YAML::Value << Core::GetRelativeFromProject(ScenePath);
+
+		Out << YAML::Key << "PlayerSpawn" << YAML::Value << PLAYER_SPAWN;
+		Out << YAML::Key << "CameraZoom" << YAML::Value << SCENE_LOAD_CAMERA_ZOOM;
 
 		/* Physics */
 		Out << YAML::Key << "Physics";
@@ -361,12 +376,13 @@ namespace platformer2d {
 
 		Out << YAML::EndMap; /* ~Level */
 
+		/* Save scene to its own file. */
+		if (Scene) {
+			Scene->Serialize(ScenePath);
+		}
+
 		std::ofstream File(OutFile);
 		File << Out.c_str();
-
-		/* Save scene to its own file. */
-		LK_ASSERT(Scene);
-		Scene->Serialize(ScenePath);
 
 		return true;
 	}
@@ -387,6 +403,9 @@ namespace platformer2d {
 
 		const YAML::Node Data = YAML::Load(YamlString);
 
+		LK_DESERIALIZE_PROPERTY(PlayerSpawn, PLAYER_SPAWN, glm::vec2(0.0f, 0.0f), Data);
+		LK_DESERIALIZE_PROPERTY(CameraZoom, SCENE_LOAD_CAMERA_ZOOM, 0.40f, Data);
+
 		/* Load the scene. */
 		const YAML::Node& SceneNode = Data["Scene"];
 		LK_ASSERT(!SceneNode.IsNull());
@@ -396,15 +415,10 @@ namespace platformer2d {
 		}
 
 		const std::filesystem::path SceneFilepath = SceneNode.as<std::filesystem::path>();
-		LK_INFO_TAG("Editor", "Loading scene: {}", StringUtils::GetPathRelativeToProject(SceneFilepath));
-		const bool SceneDeserialized = Scene->Deserialize(SceneFilepath);
-		if (!SceneDeserialized)
-		{
-			LK_FATAL_TAG("Editor", "Failed to deserialize scene");
-			return false;
-		}
+		LK_INFO_TAG("Editor", "Scene to open: {}", StringUtils::GetPathRelativeToProject(SceneFilepath));
+		SceneToOpen = SceneFilepath;
 
-		return true;
+		return !SceneToOpen.empty();
 	}
 
 	void CEditor::UpdateEditorViewportState()
@@ -509,6 +523,8 @@ namespace platformer2d {
 		{
 			LK_TRACE("Player {} landed", PlayerData.ID);
 		});
+
+		CGameplaySystem::Teleport(Player, PLAYER_SPAWN);
 	}
 
 	void CEditor::UI_Level()
@@ -520,6 +536,14 @@ namespace platformer2d {
 		}
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
+
+		ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
+		ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
+		UI::Widget::Vec2Control("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
+
+		UI::HelpMarker("The applied camera zoom when a scene is loaded");
+		ImGui::SameLine();
+		UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
 
 		ImGui::SeparatorText("Editor Viewport");
 		ImGui::Text("Focused: %d", bEditorViewportFocused);
@@ -533,48 +557,62 @@ namespace platformer2d {
 		UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
 		UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
 
-		if (std::shared_ptr<CRifle> Rifle = Player->GetRifle()) {
-			ImGui::Dummy(ImVec2(0, 10));
-			ImGui::Separator();
-			UI::LargeTextCentralized("Rifle");
-			ImGui::Spacing();
+		/* @todo Move this to UI */
+		if (Player) {
+			if (std::shared_ptr<CRifle> Rifle = Player->GetRifle()) {
+				ImGui::Dummy(ImVec2(0, 10));
+				ImGui::Separator();
+				UI::LargeTextCentralized("Rifle");
+				ImGui::Spacing();
 
-			ImGui::Spacing();
-			float ProjectileRadius = Rifle->GetProjectileRadius();
-			if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
-				Rifle->SetProjectileRadius(ProjectileRadius);
-			}
+				ImGui::Spacing();
+				float ProjectileRadius = Rifle->GetProjectileRadius();
+				if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
+					Rifle->SetProjectileRadius(ProjectileRadius);
+				}
 
-			ImGui::Spacing();
-			float ProjectileVelocity = Rifle->GetProjectileVelocity();
-			if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
-				Rifle->SetProjectileVelocity(ProjectileVelocity);
-			}
+				ImGui::Spacing();
+				float ProjectileVelocity = Rifle->GetProjectileVelocity();
+				if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
+					Rifle->SetProjectileVelocity(ProjectileVelocity);
+				}
 
-			ImGui::Spacing();
-			bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
-			if (ImGui::Checkbox("Explode On Impact", &ExplodeOnImpact)) {
-				Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
-			}
+				ImGui::Spacing();
+				bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
+				if (ImGui::Checkbox("Explode On Impact", &ExplodeOnImpact)) {
+					Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
+				}
 
-			ImGui::SameLine();
-			bool ShootEnabled = Rifle->IsEnabled();
-			if (ImGui::Checkbox("Shooting Enabled", &ShootEnabled)) {
-				Rifle->SetEnabled(ShootEnabled);
-			}
+				ImGui::SameLine();
+				bool ShootEnabled = Rifle->IsEnabled();
+				if (ImGui::Checkbox("Shooting Enabled", &ShootEnabled)) {
+					Rifle->SetEnabled(ShootEnabled);
+				}
 
-			ImGui::Spacing();
-			EColor ProjectileColor = EColor::Red;
-			const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
-			if (!ColorDeduced) {
-				ImGui::BeginDisabled();
+				ImGui::Spacing();
+				EColor ProjectileColor = EColor::Red;
+				const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
+				if (!ColorDeduced) {
+					ImGui::BeginDisabled();
+				}
+				if (UI::ColorDropdown(ProjectileColor)) {
+					Rifle->SetProjectileColor(FColor::Get(ProjectileColor));
+				}
+				if (!ColorDeduced) {
+					ImGui::EndDisabled();
+				}
 			}
-			if (UI::ColorDropdown(ProjectileColor)) {
-				Rifle->SetProjectileColor(FColor::Get(ProjectileColor));
-			}
-			if (!ColorDeduced) {
-				ImGui::EndDisabled();
-			}
+		}
+
+		ImGui::Spacing();
+
+		if (ImGui::Button("Close scene")) {
+			CloseScene();
+		}
+
+		ImGui::SameLine(0, 10.0f);
+		if (ImGui::Button("Open scene")) {
+			OpenScene();
 		}
 
 		ImGui::Spacing();
@@ -656,21 +694,23 @@ namespace platformer2d {
 
 		ImGui::Dummy(ImVec2(0, 8));
 
-		/**
-		 * Get vector copy of all actors to not invalidate the iteration
-		 * if an actor is deleted.
-		 */
-		const auto Actors = Scene->GetActors();
-		ImGui::Text("Actors: %d", Actors.size() + 1);
-		UI::Widget::ActorNode(Player, Scene);
-		for (auto& Actor : Actors) {
-			UI::Widget::ActorNode(Actor, Scene);
-		}
+		if (Scene) {
+			/**
+			 * Get vector copy of all actors to not invalidate the iteration
+			 * if an actor is deleted.
+			 */
+			const auto Actors = Scene->GetActors();
+			ImGui::Text("Actors: %d", Actors.size() + 1);
+			UI::Widget::ActorNode(Player, Scene);
+			for (auto& Actor : Actors) {
+				UI::Widget::ActorNode(Actor, Scene);
+			}
 
-		ImGui::Dummy(ImVec2(0, 10));
-		ImGui::Separator();
-		ImGui::Dummy(ImVec2(0, 10));
-		UI::CreatorMenu(Scene);
+			ImGui::Dummy(ImVec2(0, 10));
+			ImGui::Separator();
+			ImGui::Dummy(ImVec2(0, 10));
+			UI::CreatorMenu(Scene);
+		}
 
 		UI::Font::Pop();
 		UI::End();
@@ -678,16 +718,7 @@ namespace platformer2d {
 
 	void CEditor::UI_Player()
 	{
-		ImGui::SetNextWindowBgAlpha(UI_BG_ALPHA); /* @todo Dock node alpha. */
-		UI::PrepareLeftSidebar();
-		if (!ImGui::Begin(UI::PanelID::Sidebar1)) {
-			ImGui::End();
-			return;
-		}
-
 		UI::PlayerData(Player);
-
-		ImGui::End(); /* ~Player */
 	}
 
 	void CEditor::UI_ViewportTexture()
@@ -701,7 +732,7 @@ namespace platformer2d {
 		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
 
 		ImGui::Image(
-			(ImTextureID)ViewportTexture->GetID(),
+			static_cast<ImTextureID>(ViewportTexture->GetID()),
 			WindowSize,
 			ImVec2(0, 1),       /* UV0 */
 			ImVec2(1, 0),       /* UV1 */
@@ -760,10 +791,8 @@ namespace platformer2d {
 
 	void CEditor::OnMouseButtonPressed(const FMouseButtonData& Data)
 	{
-		switch (Data.State)
-		{
+		switch (Data.State) {
 			case EMouseButtonState::Pressed:
-			{
 				if (Data.Button == EMouseButton::Button0) {
 					if (bEditorViewportFocused) {
 						MousePickScene();
@@ -771,15 +800,12 @@ namespace platformer2d {
 				} 
 
 				break;
-			}
+
 			case EMouseButtonState::Released:
-			{
 				break;
-			}
+
 			case EMouseButtonState::Held:
-			{
 				break;
-			}
 		}
 	}
 
@@ -927,6 +953,62 @@ namespace platformer2d {
 #endif
 	}
 
+	void CEditor::OpenScene()
+	{
+		if (SceneToOpen.empty()) {
+			LK_ERROR_TAG("Editor", "No scene to open");
+			return;
+		}
+		if (Scene) {
+			LK_ERROR_TAG("Editor", "A scene is already open");
+			return;
+		}
+
+		Scene = std::make_shared<CScene>("Editor");
+		Scene->Deserialize(SceneToOpen);
+		CreatePlayer();
+		LK_VERIFY(Player);
+
+		CCamera* Camera = GetActiveCamera();
+		LK_VERIFY(Camera);
+		Camera->SetZoom(SCENE_LOAD_CAMERA_ZOOM);
+
+		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
+		Framebuffer->GetImage(0)->Invalidate();
+		Framebuffer->Invalidate();
+
+		/* @todo Should re-init the world here. */
+		CPhysicsWorld::Unpause();
+	}
+
+	void CEditor::CloseScene()
+	{
+		if (!Scene) {
+			LK_WARN_TAG("Editor", "Cannot close scene, none is active");
+			return;
+		}
+
+		CPhysicsWorld::Pause();
+		CPhysicsWorld::SetPreSolve(nullptr, nullptr);
+
+		std::filesystem::path ScenePath = Scene->GetFilepath();
+		LK_INFO_TAG("Editor", "Save scene: {}", ScenePath);
+		LastSceneFilepath = ScenePath;
+		if (SceneToOpen.empty()) {
+			SceneToOpen = LastSceneFilepath;
+		}
+		Scene->Serialize(ScenePath);
+
+		LK_TRACE_TAG("Editor", "Release current scene and player");
+		Scene.reset();
+		Scene = nullptr;
+		Player.reset();
+		Player = nullptr;
+
+		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
+		Framebuffer->GetImage(0)->Invalidate();
+	}
+
 	void CEditor::UI_PrepareEditorViewport()
 	{
 		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
@@ -957,6 +1039,10 @@ namespace platformer2d {
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
 	{
 		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
+		if (!Ctx) {
+			return false;
+		}
+
 		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
 		const b2ShapeId PlayerShapeID = Player.GetBody()->GetShapeID();
 

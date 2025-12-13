@@ -59,11 +59,16 @@ namespace platformer2d {
 		void MousePickScene();
 		void RaycastScene();
 
+		void OpenScene();
+		void CloseScene();
+
 		void UI_PrepareEditorViewport();
 
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
+		std::filesystem::path LastSceneFilepath{};
+		std::filesystem::path SceneToOpen{}; /* Filepath. */
 
 		uint16_t EditorViewportWidth = 0;
 		uint16_t EditorViewportHeight = 0;
