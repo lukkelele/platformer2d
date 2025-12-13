@@ -63,14 +63,11 @@ namespace platformer2d {
 		: CActor(InSpec, BodySpec)
 		, NextSpriteFrame(std::to_underlying(ESpriteFrame::COUNT))
 	{
-		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
-		CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
-		CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
-
 		if (Name.empty()) {
 			Name = "Player";
 		}
 
+		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		SetDeletable(false);
 
 		constexpr glm::vec2 TilePos = { ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y };
@@ -91,12 +88,20 @@ namespace platformer2d {
 		Rifle = std::make_shared<CRifle>();
 		Rifle->Equip(this);
 
-		CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
-		CMouse::OnButtonPressed.Add(this, &CPlayer::OnMouseButtonPressed);
+		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
+		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
+		OnMouseButtonPressedHandle = CMouse::OnButtonPressed.Add(this, &CPlayer::OnMouseButtonPressed);
+		OnMouseScrolledHandle = CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
 	}
 
 	CPlayer::~CPlayer()
 	{
+		LK_DEBUG_TAG("Player", "Release: {}", GetName());
+		CWindow::OnResized.Remove(OnWindowResizedHandle);
+		CKeyboard::OnKeyPressed.Remove(OnKeyPressedHandle);
+		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
+		CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
+
 		if (Rifle) {
 			LK_TRACE_TAG("Player", "Release rifle");
 			Rifle.reset();
@@ -158,7 +163,6 @@ namespace platformer2d {
 	void CPlayer::SetLookDirection(const EDirection InDirection)
 	{
 		if (LookDir != InDirection) {
-			LK_DEBUG_TAG("Player", "Look direction: {}", Enum::ToString(InDirection));
 			LookDir = InDirection;
 			ForceUpdateSprite();
 		}
@@ -169,10 +173,14 @@ namespace platformer2d {
 		bCameraLock = Locked;
 	}
 
-	bool CPlayer::Serialize(YAML::Emitter& Out) const
+	bool CPlayer::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
 	{
+		LK_UNUSED(Extendable);
 		LK_DEBUG_TAG("Player", "Serialize");
-		return CActor::Serialize(Out);
+		CActor::Serialize(Out, EExtendableSerializer::Yes);
+		Out << YAML::EndMap;
+
+		return true;
 	}
 
 	void CPlayer::HandleInput()

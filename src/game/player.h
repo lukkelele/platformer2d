@@ -58,7 +58,7 @@ namespace platformer2d {
 
 		std::pair<uint16_t, uint16_t> GetCurrentAndNextSpriteFrame() const { return std::make_pair(CurrentSpriteFrame, NextSpriteFrame); }
 
-		virtual bool Serialize(YAML::Emitter& Out) const override;
+		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::Yes) const override;
 
 		std::shared_ptr<CRifle> GetRifle() { return Rifle; }
 
@@ -109,6 +109,11 @@ namespace platformer2d {
 		FSpriteAnimation WalkAnim;
 		uint16_t CurrentSpriteFrame = 0;
 		uint16_t NextSpriteFrame = 0;
+
+		Core::FDelegateHandle OnWindowResizedHandle;
+		Core::FDelegateHandle OnKeyPressedHandle;
+		Core::FDelegateHandle OnMouseButtonPressedHandle;
+		Core::FDelegateHandle OnMouseScrolledHandle;
 
 		std::shared_ptr<CRifle> Rifle = nullptr;
 	};
