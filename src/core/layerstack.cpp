@@ -4,8 +4,7 @@ namespace platformer2d {
 
 	CLayerStack::~CLayerStack()
 	{
-		if (!Layers.empty())
-		{
+		if (!Layers.empty()) {
 			Destroy();
 		}
 	}
@@ -15,17 +14,15 @@ namespace platformer2d {
 		LK_DEBUG_TAG("LayerStack", "Releasing {} layers", Layers.size());
 
 		/* Pop overlays first. */
-		for (auto Iter = Layers.begin() + InsertIndex; Iter != Layers.end();)
-		{
-			LK_TRACE_TAG("LayerStack", "Popping overlay \"{}\", {} overlays left", (*Iter)->GetName(), Layers.size() - 1);
+		for (auto Iter = Layers.begin() + InsertIndex; Iter != Layers.end();) {
+			LK_TRACE_TAG("LayerStack", R"(Popping overlay "{}", {} overlays left)", (*Iter)->GetLayerName(), Layers.size() - 1);
 			(*Iter)->OnDetach();
 			Iter = Layers.erase(Iter);
 		}
 
 		/* Pop the rest of the layers. */
-		for (auto Iter = Layers.begin(); Iter != Layers.end();)
-		{
-			LK_TRACE_TAG("LayerStack", "Popping layer \"{}\", {} layers left", (*Iter)->GetName(), Layers.size() - 1);
+		for (auto Iter = Layers.begin(); Iter != Layers.end();) {
+			LK_TRACE_TAG("LayerStack", R"(Popping layer "{}", {} layers left)", (*Iter)->GetLayerName(), Layers.size() - 1);
 			(*Iter)->OnDetach();
 			Iter = Layers.erase(Iter);
 			InsertIndex--;
@@ -35,27 +32,25 @@ namespace platformer2d {
 	bool CLayerStack::PushLayer(std::shared_ptr<CLayer> Layer)
 	{
 		LK_ASSERT(Layer);
-		if (auto Iter = Layers.emplace((Layers.begin() + InsertIndex), Layer); Iter != Layers.end())
-		{
+		if (auto Iter = Layers.emplace((Layers.begin() + InsertIndex), Layer); Iter != Layers.end()) {
 			InsertIndex++;
 			(*Iter)->OnAttach();
 			return true;
 		}
 
-		LK_ASSERT(false, "Failed to emplace \"{}\" on layerstack", Layer->GetName());
+		LK_ASSERT(false, R"(Failed to emplace "{}" on layerstack)", Layer->GetLayerName());
 		return false;
 	}
 
 	bool CLayerStack::PushOverlay(std::shared_ptr<CLayer> Overlay)
 	{
 		LK_ASSERT(Overlay);
-		if (Layers.emplace_back(Overlay))
-		{
+		if (Layers.emplace_back(Overlay)) {
 			Overlay->OnAttach();
 			return true;
 		}
 
-		LK_ASSERT(false, "Failed to emplace \"{}\" as an overlay on layerstack", Overlay->GetName());
+		LK_ASSERT(false, R"(Failed to emplace "{}" as an overlay on layerstack)", Overlay->GetLayerName());
 		return false;
 	}
 
@@ -63,10 +58,8 @@ namespace platformer2d {
 	{
 		LK_ASSERT(Layer);
 		auto Iter = std::find(Layers.begin(), Layers.begin() + InsertIndex, Layer);
-		if (Iter != (Layers.begin() + InsertIndex))
-		{
+		if (Iter != (Layers.begin() + InsertIndex)) {
 			Layer->OnDetach();
-
 			Layers.erase(Iter);
 			InsertIndex--;
 			return true;
@@ -79,8 +72,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(Overlay);
 		auto Iter = std::find(Layers.begin() + InsertIndex, Layers.end(), Overlay);
-		if (Iter != Layers.end())
-		{
+		if (Iter != Layers.end()) {
 			Overlay->OnDetach();
 			Layers.erase(Iter);
 			return true;

@@ -17,7 +17,8 @@ namespace platformer2d {
 		virtual void Tick(float DeltaTime) = 0;
 		virtual void RenderUI() {}
 
-		std::string_view GetName() const { return Name; }
+		void SetLayerName(std::string_view InName) { Name = InName; }
+		std::string_view GetLayerName() const { return Name; }
 
 	protected:
 		std::string Name;
