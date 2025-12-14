@@ -22,6 +22,7 @@ namespace platformer2d {
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
 		CLog::Initialize();
+		CLog::SetLogLevel(ELogLevel::Debug);
 	}
 
 	CApplication::~CApplication()
@@ -36,7 +37,6 @@ namespace platformer2d {
 		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, WindowName);
 		Window->Initialize();
 
-		CPhysicsWorld::Initialize();
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
 		CMouse::Initialize();
@@ -91,18 +91,16 @@ namespace platformer2d {
 
 			Window->BeginFrame();
 			CKeyboard::Update();
-
 			CRenderer::BeginFrame();
+
 			CPhysicsWorld::Update(DeltaTime);
 			for (auto& Layer : LayerStack) {
 				Layer->Tick(DeltaTime);
 			}
-
 			EffectManager.Tick(DeltaTime);
-			CRenderer::EndFrame();
 
+			CRenderer::EndFrame();
 			RenderUI();
-			UILayer->EndFrame();
 
 			CKeyboard::TransitionPressedKeys();
 			Window->EndFrame();
@@ -121,6 +119,7 @@ namespace platformer2d {
 		for (auto& Layer : LayerStack) {
 			Layer->RenderUI();
 		}
+		UILayer->EndFrame();
 	}
 
 }
