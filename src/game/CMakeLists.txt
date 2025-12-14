@@ -4,6 +4,8 @@ project_library_sources(
 	editor.cpp
 	instance.h
 	instance.cpp
+	inventory.h
+	inventory.cpp
 	gameplaysystem.h
 	gameplaysystem.cpp
 	rifle.h
