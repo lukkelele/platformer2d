@@ -5,7 +5,7 @@
 namespace platformer2d {
 
 	CGameInstance::CGameInstance(CGameInstance* InstanceRef, const FGameSpecification& InSpec)
-		: CLayer("GameInstance")
+		: CLayer(InSpec.LevelName)
 		, Spec(InSpec)
 	{
 		Instance = InstanceRef;

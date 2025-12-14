@@ -19,6 +19,7 @@ namespace platformer2d {
 
 	struct FGameSpecification
 	{
+		std::string LevelName;
 		std::filesystem::path LevelFilepath;
 
 		struct

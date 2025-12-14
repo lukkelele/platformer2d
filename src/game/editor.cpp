@@ -32,6 +32,7 @@ namespace platformer2d {
 		 *        GAME SPECIFICATION
 		 *************************************/
 		const FGameSpecification GameSpec = {
+			.LevelName = "TestLevel",
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
 			.Player = {
 				.ActorSpec = FActorSpecification(ETexture::Player),
