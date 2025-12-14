@@ -276,10 +276,8 @@ namespace platformer2d {
 		Out << YAML::Key << "Shape";
 		Out << YAML::BeginMap;
 		Out << YAML::Key << "ShapeType" << YAML::Value << std::to_underlying(ShapeType);
-		switch (ShapeType)
-		{
-			case EShape::Polygon:
-			{
+		switch (ShapeType) {
+			case EShape::Polygon: {
 				const auto& ShapeRef = std::get<FPolygon>(Shape);
 				Out << YAML::Key << "Size" << YAML::Value << ShapeRef.Size;
 				Out << YAML::Key << "Rotation" << YAML::Value << GetRotation();
@@ -287,13 +285,13 @@ namespace platformer2d {
 				LK_TRACE_TAG("Body", "Polygon: Size={} Rotation={} Radius={}", ShapeRef.Size, ShapeRef.Rotation, ShapeRef.Radius);
 				break;
 			}
-			case EShape::Line:
-			{
+
+			case EShape::Line: {
 				LK_MARK_NOT_IMPLEMENTED();
 				break;
 			}
-			case EShape::Capsule:
-			{
+
+			case EShape::Capsule: {
 				const auto& ShapeRef = std::get<FCapsule>(Shape);
 				Out << YAML::Key << "P0" << YAML::Value << ShapeRef.P0;
 				Out << YAML::Key << "P1" << YAML::Value << ShapeRef.P1;
