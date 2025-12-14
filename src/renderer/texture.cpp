@@ -209,8 +209,7 @@ namespace platformer2d {
 
 	void CTexture::Invalidate()
 	{
-		if (ID)
-		{
+		if (ID) {
 			LK_OpenGL_Verify(glDeleteTextures(1, &ID));
 			ID = 0;
 		}
@@ -225,8 +224,7 @@ namespace platformer2d {
 			Height
 		));
 
-		if (ImageBuffer)
-		{
+		if (ImageBuffer) {
 			LK_OpenGL_Verify(glTextureSubImage2D(
 				ID,
 				0,
