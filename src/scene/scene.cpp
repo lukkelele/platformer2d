@@ -176,11 +176,17 @@ namespace platformer2d {
 	bool CScene::Deserialize(const std::filesystem::path& InFilepath)
 	{
 		LK_INFO_TAG("Scene", "Deserialize: {}", InFilepath);
-		std::filesystem::path AbsFilepath = Core::ProjectDir / InFilepath;
-		LK_TRACE_TAG("Scene", "Absolute filepath: {}", AbsFilepath);
-		LK_ASSERT(std::filesystem::exists(AbsFilepath), "Filepath does not exist: {}", AbsFilepath);
+		std::filesystem::path AbsFilepath;
+		if (std::filesystem::exists(InFilepath)) {
+			AbsFilepath = InFilepath;
+		} else {
+			AbsFilepath = Core::ProjectDir / InFilepath;
+		}
+		LK_TRACE_TAG("Scene", R"(Absolute filepath: "{}")", AbsFilepath);
+
+		LK_ASSERT(std::filesystem::exists(AbsFilepath), R"(Filepath does not exist: "{}")", AbsFilepath);
 		if (!std::filesystem::exists(AbsFilepath)) {
-			LK_ERROR_TAG("Scene", "Filepath does not exist: {}", AbsFilepath);
+			LK_ERROR_TAG("Scene", R"(Filepath does not exist: "{}")", AbsFilepath);
 			return false;
 		}
 
@@ -191,6 +197,7 @@ namespace platformer2d {
 		std::stringstream StringStream;
 		StringStream << InputStream.rdbuf();
 		const std::string YamlString = StringStream.str();
+		LK_ASSERT(!YamlString.empty(), R"(No YAML read from: "{}")", AbsFilepath);
 
 		const YAML::Node Data = YAML::Load(YamlString);
 		const std::string SceneName = Data["Name"].as<std::string>();
