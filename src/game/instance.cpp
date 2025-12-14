@@ -5,13 +5,11 @@
 namespace platformer2d {
 
 	CGameInstance::CGameInstance(CGameInstance* InstanceRef, const FGameSpecification& InSpec)
-		: CLayer(InSpec.Name)
+		: CLayer("GameInstance")
 		, Spec(InSpec)
-		, ViewportWidth(InSpec.ViewportWidth)
-		, ViewportHeight(InSpec.ViewportHeight)
 	{
 		Instance = InstanceRef;
-		LK_VERIFY(Instance);
+		LK_VERIFY(Instance, "Invalid game instance reference");
 
 		UpdateViewportBounds();
 	}
@@ -33,16 +31,14 @@ namespace platformer2d {
 	glm::vec2 CGameInstance::GetMouseInWorldSpace(const CCamera& Camera)
 	{
 		const glm::vec2 MousePos = GetMouseInViewportSpace();
-		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f))
-		{
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f)) {
 			return glm::vec2(std::numeric_limits<float>::quiet_NaN());
 		}
 
 		const glm::vec4 ClipPos = glm::vec4(MousePos.x, MousePos.y, 0.0f, 1.0f);
 		const glm::mat4 InvViewProj = glm::inverse(Camera.GetProjectionMatrix() * Camera.GetViewMatrix());
 		glm::vec4 WorldPos = InvViewProj * ClipPos;
-		if (WorldPos.w != 0.0f)
-		{
+		if (WorldPos.w != 0.0f) {
 			WorldPos /= WorldPos.w;
 		}
 
@@ -52,13 +48,10 @@ namespace platformer2d {
 	void CGameInstance::UpdateViewportBounds()
 	{
 		ViewportBounds[0] = { 0.0f, 0.0f };
-		if (CWindow* Window = CWindow::Get(); Window != nullptr)
-		{
+		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
 			ViewportBounds[1] = Window->GetSize();
-		}
-		else
-		{
-			LK_WARN_TAG("GameInstance", "[{}] No window reference", Spec.Name);
+		} else {
+			LK_WARN_TAG("GameInstance", "Cannot update viewport bounds");
 			ViewportBounds[1] = { 0.0f, 0.0f };
 		}
 	}

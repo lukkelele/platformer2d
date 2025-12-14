@@ -19,16 +19,7 @@ namespace platformer2d {
 
 	struct FGameSpecification
 	{
-		enum { VALUE_UNSET = -1 };
-
 		std::filesystem::path LevelFilepath;
-
-		std::string Name;
-		glm::vec2 Gravity = { 0.0f, -9.82f };
-		uint16_t ViewportWidth = SCREEN_WIDTH;
-		uint16_t ViewportHeight = SCREEN_HEIGHT;
-
-		float Zoom = 0.25f; /* Initial zoom. */
 
 		struct
 		{
