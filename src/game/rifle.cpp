@@ -13,6 +13,15 @@ namespace platformer2d {
 	CRifle::~CRifle()
 	{
 		LK_DEBUG_TAG("Rifle", "Release: {}", Enum::ToString(GetType()));
+
+		LK_TRACE_TAG("Rifle", "Destroying {} projectiles", Fired.size());
+		for (const std::shared_ptr<CProjectile> Projectile : Fired) {
+			ExpiredQueue.push(Projectile->ID);
+		}
+
+		DestroyExpiredProjectiles();
+
+		LK_ASSERT(ExpiredQueue.empty(), "ExpiredQueue not empty: {}", ExpiredQueue.size());
 	}
 
 	void CRifle::Tick()
@@ -36,12 +45,7 @@ namespace platformer2d {
 			}
 		}
 
-		/* Remove expired projectiles. */
-		while (!ExpiredQueue.empty()) {
-			b2BodyId& Expired = ExpiredQueue.front();
-			DestroyProjectile(Expired);
-			ExpiredQueue.pop();
-		}
+		DestroyExpiredProjectiles();
 	}
 
 	void CRifle::Render()
@@ -120,10 +124,7 @@ namespace platformer2d {
 	bool CRifle::Reload()
 	{
 		LK_TRACE_TAG("Rifle", "Begin reload with {} left in ammo", Ammo);
-		
-		/** @todo */
 		Ammo = MAGAZINE_SIZE;
-
 		return true;
 	}
 
@@ -187,7 +188,7 @@ namespace platformer2d {
 	{
 		const std::size_t Removed = std::erase_if(Fired, [&ID](std::shared_ptr<CProjectile> Projectile)
 		{
-			if (!B2_ID_EQUALS(ID, Projectile->ID)) {
+			if (!Projectile || !b2Body_IsValid(ID) || B2_IS_NULL(ID) || B2_IS_NULL(Projectile->ID) || !B2_ID_EQUALS(ID, Projectile->ID)) {
 				return false;
 			}
 
@@ -196,6 +197,16 @@ namespace platformer2d {
 		});
 		LK_ASSERT(Removed == 1, "Failed to remove projectile (Removed={})", Removed);
 		return (Removed == 1);
+	}
+
+	void CRifle::DestroyExpiredProjectiles()
+	{
+		/* Remove expired projectiles. */
+		while (!ExpiredQueue.empty()) {
+			b2BodyId& Expired = ExpiredQueue.front();
+			DestroyProjectile(Expired);
+			ExpiredQueue.pop();
+		}
 	}
 
 }

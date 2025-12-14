@@ -58,6 +58,7 @@ namespace platformer2d {
 
 	private:
 		bool DestroyProjectile(const b2BodyId& ID);
+		void DestroyExpiredProjectiles();
 
 	public:
 		static constexpr uint16_t MAGAZINE_SIZE = 30;
