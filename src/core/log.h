@@ -68,8 +68,7 @@ namespace platformer2d {
 
         inline static std::shared_ptr<spdlog::logger>& GetLogger(const ELoggerType LoggerType)
         {
-            switch (LoggerType)
-            {
+            switch (LoggerType) {
 				case ELoggerType::Core: return Logger_Core;
             }
 
@@ -147,21 +146,20 @@ namespace platformer2d {
 			std::fflush(stdout);
 		}
 
+		static void SetLogLevel(ELogLevel Level);
+		static void SetLogLevel(ELoggerType Logger, ELogLevel Level);
         static const char* LevelToString(ELogLevel Level);
         static ELogLevel LevelFromString(std::string_view InString);
         static spdlog::level::level_enum ToSpdlogLevel(ELogLevel Level);
 
-        FORCEINLINE static std::string_view GetLoggerName(const ELoggerType LoggerType)
-        {
-			switch (LoggerType)
-			{
+        FORCEINLINE static std::string_view GetLoggerName(const ELoggerType LoggerType) {
+			switch (LoggerType) {
 				case ELoggerType::Core: return Logger_Core->name();
 			}
 
 			LK_LOG_ASSERT(false, "Unknown logger type: {}", static_cast<int>(LoggerType));
             return "";
         }
-
 
     private:
         inline static std::shared_ptr<spdlog::logger> Logger_Core = nullptr;
@@ -181,11 +179,9 @@ namespace platformer2d {
 	#endif
 	{
 		FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
-		if (TagDetails.Enabled && TagDetails.Filter <= Level)
-		{
+		if (TagDetails.Enabled && TagDetails.Filter <= Level) {
 			auto& Logger = CLog::GetLogger(LoggerType);
-			switch (Level)
-			{
+			switch (Level) {
 				case ELogLevel::Trace:
 					Logger->trace(Format, std::forward<TArgs>(Args)...);
 					break;
@@ -218,8 +214,7 @@ namespace platformer2d {
 	#endif
 	{
 		const FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
-		if (TagDetails.Enabled && (TagDetails.Filter <= Level))
-		{
+		if (TagDetails.Enabled && (TagDetails.Filter <= Level)) {
 		#if defined(LK_COMPILER_MSVC)
 			const std::string FormattedString = std::format(Format, std::forward<TArgs>(Args)...);
 		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
@@ -228,8 +223,7 @@ namespace platformer2d {
 			#error "Unsupported"
 		#endif
 			auto& Logger = CLog::GetLogger(LoggerType);
-			switch (Level)
-			{
+			switch (Level) {
 				case ELogLevel::Trace:
 					Logger->trace("[{0}] {1}", Tag, FormattedString);
 					break;
@@ -256,11 +250,9 @@ namespace platformer2d {
 											 std::string_view Tag, std::string_view Message)
 	{
 		const FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
-		if (TagDetails.Enabled && TagDetails.Filter <= Level)
-		{
+		if (TagDetails.Enabled && TagDetails.Filter <= Level) {
 			auto& Logger = GetLogger(LoggerType);
-			switch (Level)
-			{
+			switch (Level) {
 				case ELogLevel::Trace:
 					Logger->trace("[{0}] {1}", Tag, Message);
 					break;
@@ -297,24 +289,18 @@ namespace platformer2d {
 		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
 			const std::string FormattedString = fmt::format(Format, std::forward<TArgs>(Args)...);
 		#endif
-		if (auto Logger = GetLogger(LoggerType); Logger != nullptr)
-		{
+		if (auto Logger = GetLogger(LoggerType); Logger != nullptr) {
 			Logger->error("{0}: {1}", Prefix, FormattedString);
-		}
-		else
-		{
+		} else {
 			PrintLn("{2}{0}: {1}{3}", Prefix, FormattedString, LK_ANSI_COLOR_BG_BRIGHT_RED, LK_ANSI_COLOR_RESET);
 		}
 	}
 
 	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Message)
 	{
-		if (auto Logger = GetLogger(LoggerType); Logger != nullptr)
-		{
+		if (auto Logger = GetLogger(LoggerType); Logger != nullptr) {
 			GetLogger(LoggerType)->error("{0}", Message);
-		}
-		else
-		{
+		} else {
 			PrintLn("{1}{0}{2}", Message, LK_ANSI_COLOR_BG_BRIGHT_RED, LK_ANSI_COLOR_RESET);
 		}
 	}

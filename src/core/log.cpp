@@ -13,15 +13,13 @@
 
 namespace platformer2d {
 
-	namespace
-	{
+	namespace {
 		std::string Logfile;
 		std::filesystem::path LogDirectory = LOGS_DIR;
 		constexpr const char* FileName = PROJECT_NAME;
 	}
 
-	namespace LogUtility
-	{
+	namespace LogUtility {
 		bool CompareLogFiles(const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B);
 		int CountLogFilesInDir(const std::filesystem::path& InDirectory);
 		void CleanLogDirectory(const std::filesystem::path& InDirectory, int MaxLogFiles);
@@ -58,12 +56,9 @@ namespace platformer2d {
 	void CLog::Initialize(std::string_view InLogfile)
 	{
 		Get(); /* Make sure instance exists. */
-		if (!InLogfile.empty())
-		{
+		if (!InLogfile.empty()) {
 			Logfile = LK_FMT("{}/{}-{}.log", LogDirectory, InLogfile, CurrentTimestamp());
-		}
-		else
-		{
+		} else {
 			Logfile = LK_FMT("{}/{}-{}.log", LogDirectory, FileName, CurrentTimestamp());
 		}
 		LK_LOG_PRINTLN("Log file: {}", Logfile);
@@ -87,10 +82,21 @@ namespace platformer2d {
 		Logger_Core->flush_on(spdlog::level::trace);
 	}
 
+	void CLog::SetLogLevel(const ELogLevel Level)
+	{
+		FTagDetails& TagDetails = EnabledTags[GetLoggerName(ELoggerType::Core).data()];
+		TagDetails.Filter = Level;
+	}
+
+	void CLog::SetLogLevel(const ELoggerType Logger, const ELogLevel Level)
+	{
+		FTagDetails& TagDetails = EnabledTags[GetLoggerName(Logger).data()];
+		TagDetails.Filter = Level;
+	}
+
 	const char* CLog::LevelToString(const ELogLevel Level)
 	{
-		switch (Level)
-		{
+		switch (Level) {
 			case ELogLevel::Trace:   return "Trace";
 			case ELogLevel::Debug:	 return "Debug";
 			case ELogLevel::Info:	 return "Info";
@@ -124,8 +130,7 @@ namespace platformer2d {
 
 	spdlog::level::level_enum CLog::ToSpdlogLevel(const ELogLevel Level)
 	{
-		switch (Level)
-		{
+		switch (Level) {
 			case ELogLevel::Trace:   return spdlog::level::trace;
 			case ELogLevel::Debug:   return spdlog::level::debug;
 			case ELogLevel::Info:	 return spdlog::level::info;
@@ -139,8 +144,8 @@ namespace platformer2d {
 	}
 
 
-	namespace LogUtility
-	{
+	namespace LogUtility {
+
 		/** Assuming the log files are formatted with a timestamp. */
 		bool CompareLogFiles(const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B)
 		{
@@ -150,17 +155,14 @@ namespace platformer2d {
 		int CountLogFilesInDir(const std::filesystem::path& InDirectory)
 		{
 			namespace fs = std::filesystem;
-			if (!fs::exists(InDirectory) || !fs::is_directory(InDirectory))
-			{
+			if (!fs::exists(InDirectory) || !fs::is_directory(InDirectory)) {
 				LK_ASSERT(false, "Invalid directory");
 				return -1;
 			}
 
 			int Files = 0;
-			for (const fs::directory_entry& Entry : fs::directory_iterator(InDirectory))
-			{
-				if (Entry.is_regular_file() && Entry.path().extension() == ".log")
-				{
+			for (const fs::directory_entry& Entry : fs::directory_iterator(InDirectory)) {
+				if (Entry.is_regular_file() && Entry.path().extension() == ".log") {
 					Files++;
 				}
 			}
@@ -171,18 +173,15 @@ namespace platformer2d {
 		void CleanLogDirectory(const std::filesystem::path& InDirectory, const int MaxLogFiles)
 		{
 			namespace fs = std::filesystem;
-			if (!fs::exists(InDirectory) || !fs::is_directory(InDirectory))
-			{
+			if (!fs::exists(InDirectory) || !fs::is_directory(InDirectory)) {
 				LK_ASSERT(false, "Invalid directory");
 				return;
 			}
 
 			std::vector<fs::directory_entry> LogFiles;
 			LogFiles.reserve(MaxLogFiles);
-			for (const auto& Entry : fs::directory_iterator(InDirectory))
-			{
-				if (Entry.is_regular_file() && Entry.path().extension() == ".log")
-				{
+			for (const auto& Entry : fs::directory_iterator(InDirectory)) {
+				if (Entry.is_regular_file() && Entry.path().extension() == ".log") {
 					LogFiles.push_back(Entry);
 				}
 			}
@@ -190,23 +189,17 @@ namespace platformer2d {
 			LK_LOG_PRINTLN("LogFiles={} MaxLogFiles={}", LogFiles.size(), MaxLogFiles);
 
 			/* Sort and remove oldest logfiles. */
-			if (LogFiles.size() > MaxLogFiles)
-			{
+			if (LogFiles.size() > MaxLogFiles) {
 				/* Sort log files based on their names (timestamps in filenames). */
 				std::sort(LogFiles.begin(), LogFiles.end(), CompareLogFiles);
 
 				/* Remove the oldest files, keeping only the most recent ones. */
-				for (std::size_t Index = 0; Index < LogFiles.size() - MaxLogFiles; Index++)
-				{
+				for (std::size_t Index = 0; Index < LogFiles.size() - MaxLogFiles; Index++) {
 					const fs::directory_entry& LogFile = LogFiles[Index];
-					if (LogFile.path().extension() == ".log")
-					{
-						if (std::filesystem::exists(LogFile))
-						{
+					if (LogFile.path().extension() == ".log") {
+						if (std::filesystem::exists(LogFile)) {
 							std::filesystem::remove(LogFile.path());
-						}
-						else
-						{
+						} else {
 							LK_ERROR_TAG("Log", "Logfile does not exist: {}", LogFile.path());
 						}
 					}
