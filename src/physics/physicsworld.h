@@ -24,12 +24,14 @@ namespace platformer2d {
 		~CPhysicsWorld() = delete;
 
 		static void Initialize(const glm::vec2& Gravity = {0.0f, -10.0f});
-		static void Shutdown();
+		static void Destroy();
 
 		static void Update(float DeltaTime);
 		static void Pause();
 		static void Unpause();
+		static bool IsPaused();
 
+		static bool IsValid() { return b2World_IsValid(WorldID); }
 		static inline const b2WorldId& GetID() { return WorldID; }
 		static void SetPreSolve(TPreSolveFunc InPreSolve, void* Context);
 
@@ -38,6 +40,7 @@ namespace platformer2d {
 
 		static glm::vec2 GetGravity();
 		static void SetGravity(const glm::vec2& Gravity);
+		static uint8_t GetSubstep() { return Substep; }
 
 		static void InitDebugDraw(b2DebugDraw& DebugDrawRef);
 
@@ -53,7 +56,7 @@ namespace platformer2d {
 		static inline FOnContactEndEvent OnContactEndEvent;
 	private:
 		static inline b2WorldId WorldID;
-		static inline int Substep = 6;
+		static inline uint8_t Substep = 6;
 
 		static inline std::unique_ptr<b2DebugDraw> DebugDraw = nullptr;
 	};

@@ -6,66 +6,92 @@
 
 namespace platformer2d {
 
-	namespace
-	{
-		bool bInitialized = false;
+	namespace {
 		bool bPaused = false;
 	}
 
 	void CPhysicsWorld::Initialize(const glm::vec2& Gravity)
 	{
-		LK_VERIFY(!bInitialized, "Initialize called multiple times");
+		LK_VERIFY(b2World_IsValid(WorldID) == false, "World already initialized");
 		b2WorldDef WorldDef = b2DefaultWorldDef();
 		WorldDef.gravity = b2Vec2(Gravity.x, Gravity.y);
 		WorldID = b2CreateWorld(&WorldDef);
-		LK_TRACE_TAG("PhysicsWorld", "WorldID={} Substep={}", WorldID.index1, Substep);
-
-		bInitialized = true;
+		bPaused = false;
+		LK_TRACE_TAG("PhysicsWorld", "Initialize world: ID={} Substep={}", WorldID.index1, Substep);
 	}
 
-	void CPhysicsWorld::Shutdown()
+	void CPhysicsWorld::Destroy()
 	{
+		if (!b2World_IsValid(WorldID)) {
+			LK_WARN_TAG("PhysicsWorld", "Cannot destroy world as it is not valid");
+			return;
+		}
+
+		LK_DEBUG_TAG("PhysicsWorld", "Destroying world");
 		b2DestroyWorld(WorldID);
+		WorldID = b2_nullWorldId;
 	}
 
 	void CPhysicsWorld::Update(const float DeltaTime)
 	{
-		if (!bPaused)
-		{
-			b2World_Step(WorldID, DeltaTime, Substep);
-			HandleSensorEvents();
-			HandleContactEvents();
+		if (!b2World_IsValid(WorldID) || bPaused) {
+			return;
 		}
 
-		if (DebugDraw)
-		{
+		b2World_Step(WorldID, DeltaTime, Substep);
+		HandleSensorEvents();
+		HandleContactEvents();
+
+		if (DebugDraw) {
 			CRenderer::Submit([&]()
 			{
-				b2World_Draw(WorldID, DebugDraw.get());
+				if (b2World_IsValid(WorldID) && !bPaused) {
+					b2World_Draw(WorldID, DebugDraw.get());
+				}
 			});
 		}
 	}
 
 	void CPhysicsWorld::Pause()
 	{
+		LK_ASSERT(b2World_IsValid(WorldID));
+		if (!b2World_IsValid(WorldID)) {
+			LK_ERROR_TAG("PhysicsWorld", "Cannot pause, world ID is not valid");
+			return;
+		}
 		LK_DEBUG_TAG("PhysicsWorld", "Pause");
 		bPaused = true;
 	}
 
 	void CPhysicsWorld::Unpause()
 	{
+		LK_ASSERT(b2World_IsValid(WorldID));
+		if (!b2World_IsValid(WorldID)) {
+			LK_ERROR_TAG("PhysicsWorld", "Cannot unpause, world ID is not valid");
+			return;
+		}
 		LK_DEBUG_TAG("PhysicsWorld", "Unpause");
 		bPaused = false;
 	}
 
+	bool CPhysicsWorld::IsPaused()
+	{
+		return bPaused;
+	}
+
 	void CPhysicsWorld::SetPreSolve(const TPreSolveFunc InPreSolve, void* Context)
 	{
+		LK_ASSERT(b2World_IsValid(WorldID));
+		if (!b2World_IsValid(WorldID)) {
+			LK_ERROR_TAG("PhysicsWorld", "Cannot set pre-solver, world ID is not valid");
+			return;
+		}
 		b2World_SetPreSolveCallback(WorldID, InPreSolve, Context);
 	}
 
 	b2BodyId CPhysicsWorld::CreateBody(const b2BodyDef& BodyDef)
 	{
-		LK_ASSERT(bInitialized);
+		LK_ASSERT(B2_IS_NON_NULL(WorldID));
 		return b2CreateBody(WorldID, &BodyDef);
 	}
 
@@ -77,17 +103,19 @@ namespace platformer2d {
 
 	glm::vec2 CPhysicsWorld::GetGravity()
 	{
+		LK_ASSERT(b2World_IsValid(WorldID));
 		return Math::Convert<glm::vec2>(b2World_GetGravity(WorldID));
 	}
 
 	void CPhysicsWorld::SetGravity(const glm::vec2& Gravity)
 	{
+		LK_ASSERT(b2World_IsValid(WorldID));
 		b2World_SetGravity(WorldID, Math::Convert(Gravity));
 	}
 
 	void CPhysicsWorld::InitDebugDraw(b2DebugDraw& DebugDrawRef)
 	{
-		LK_ASSERT(bInitialized);
+		LK_ASSERT(DebugDraw == nullptr);
 		DebugDraw = std::make_unique<b2DebugDraw>(DebugDrawRef);
 	}
 
@@ -98,8 +126,7 @@ namespace platformer2d {
 		const b2ShapeId PlayerShapeID = Player.GetBody()->GetShapeID();
 
 		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
-		if (!InvolvesPlayer)
-		{
+		if (!InvolvesPlayer) {
 			return true; /* Enable normal contacts. */
 		}
 
@@ -107,16 +134,14 @@ namespace platformer2d {
 		const CActor* ActorB = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
 
 		/* Make normal point from platform to player. */
-		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))
-		{
+		if (B2_ID_EQUALS(ShapeA, PlayerShapeID)) {
 			Normal.x = -Normal.x;
 			Normal.y = -Normal.y;
 		}
 
 		const b2Vec2 Up = { 0.0f, 1.0f };
 		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
-		if (UpDot <= 0.0f)
-		{
+		if (UpDot <= 0.0f) {
 			/* Side/ceiling/backface -> behave as a solid. */
 			return true;
 		}
@@ -124,8 +149,7 @@ namespace platformer2d {
 		const b2BodyId PlayerBody = Player.GetBody()->GetID();
 		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
 		const float Vn = V.x * Normal.x + V.y * Normal.y;
-		if (Vn > 0.0f)
-		{
+		if (Vn > 0.0f) {
 			/* Moving along the normal (from below toward the platform) -> ignore contact. */
 			return false;
 		}
@@ -138,13 +162,11 @@ namespace platformer2d {
 		b2SensorEvents Events = b2World_GetSensorEvents(WorldID);
 
 		/* Begin */
-		for (int Idx = 0; Idx < Events.beginCount; Idx++)
-		{
+		for (int Idx = 0; Idx < Events.beginCount; Idx++) {
 			b2SensorBeginTouchEvent* EventRef = Events.beginEvents + Idx;
 			b2ShapeId SensorShape = EventRef->sensorShapeId;
 			b2ShapeId VisitorShape = EventRef->visitorShapeId;
-			if (!b2Shape_IsValid(SensorShape) || !b2Shape_IsValid(VisitorShape))
-			{
+			if (!b2Shape_IsValid(SensorShape) || !b2Shape_IsValid(VisitorShape)) {
 				continue;
 			}
 
@@ -155,13 +177,11 @@ namespace platformer2d {
 		}
 
 		/* End */
-		for (int Idx = 0; Idx < Events.endCount; Idx++)
-		{
+		for (int Idx = 0; Idx < Events.endCount; Idx++) {
 			b2SensorEndTouchEvent* EventRef = Events.endEvents + Idx;
 			b2ShapeId SensorShape = EventRef->sensorShapeId;
 			b2ShapeId VisitorShape = EventRef->visitorShapeId;
-			if (!b2Shape_IsValid(SensorShape) || !b2Shape_IsValid(VisitorShape))
-			{
+			if (!b2Shape_IsValid(SensorShape) || !b2Shape_IsValid(VisitorShape)) {
 				continue;
 			}
 
@@ -177,41 +197,35 @@ namespace platformer2d {
 		b2ContactEvents Events = b2World_GetContactEvents(WorldID);
 
 		/* Begin */
-		for (int Idx = 0; Idx < Events.beginCount; Idx++)
-		{
+		for (int Idx = 0; Idx < Events.beginCount; Idx++) {
 			b2ContactBeginTouchEvent* EventRef = Events.beginEvents + Idx;
 			b2ShapeId ShapeA = EventRef->shapeIdA;
 			b2ShapeId ShapeB = EventRef->shapeIdB;
-			if (!b2Shape_IsValid(ShapeA) || !b2Shape_IsValid(ShapeB))
-			{
+			if (!b2Shape_IsValid(ShapeA) || !b2Shape_IsValid(ShapeB)) {
 				continue;
 			}
 
 			CActor* A = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
 			CActor* B = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
 			CContactBeginEvent Event(A, B);
-			if (!A || !B)
-			{
+			if (!A || !B) {
 				LK_ERROR("A={}  B={}", A ? "OK" : "NULL", B ? "OK" : "NULL");
 			}
 			OnContactBeginEvent.Broadcast(Event);
 		}
 
 		/* End */
-		for (int Idx = 0; Idx < Events.endCount; Idx++)
-		{
+		for (int Idx = 0; Idx < Events.endCount; Idx++) {
 			b2ContactEndTouchEvent* EventRef = Events.endEvents + Idx;
 			b2ShapeId ShapeA = EventRef->shapeIdA;
 			b2ShapeId ShapeB = EventRef->shapeIdB;
-			if (!b2Shape_IsValid(ShapeA) || !b2Shape_IsValid(ShapeB))
-			{
+			if (!b2Shape_IsValid(ShapeA) || !b2Shape_IsValid(ShapeB)) {
 				continue;
 			}
 
 			CActor* A = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
 			CActor* B = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
-			if (!A || !B)
-			{
+			if (!A || !B) {
 				LK_ERROR("A={}  B={}", A ? "OK" : "NULL", B ? "OK" : "NULL");
 			}
 			CContactEndEvent Event(A, B);
