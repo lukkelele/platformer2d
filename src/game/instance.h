@@ -53,6 +53,7 @@ namespace platformer2d {
 		virtual CCamera* GetActiveCamera() const = 0;
 		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const = 0;
 		virtual std::shared_ptr<CScene> GetScene() const = 0;
+		bool HasScene() const { return GetScene() != nullptr; }
 
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
 		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
