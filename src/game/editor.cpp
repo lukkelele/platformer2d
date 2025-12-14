@@ -33,9 +33,6 @@ namespace platformer2d {
 		 *************************************/
 		const FGameSpecification GameSpec = {
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
-			.Name = "TestLevel",
-			.Gravity = { 0.0f, -5.0f },
-			.Zoom = 0.32f,
 			.Player = {
 				.ActorSpec = FActorSpecification(ETexture::Player),
 				.BodySpec = {
@@ -74,6 +71,7 @@ namespace platformer2d {
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
 		glm::vec2 PLAYER_SPAWN = { 0.0f, 0.0f };
+		glm::vec2 GRAVITY = { 0.0f, -5.0f };
 		float SCENE_LOAD_CAMERA_ZOOM = 0.30f;
 
 		/* @todo Remove from here. Just temporary */
@@ -103,8 +101,6 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Editor", "Initialize");
 		LK_VERIFY(Player == nullptr);
 
-		const FGameSpecification& Spec = GetSpecification();
-		CPhysicsWorld::SetGravity(Spec.Gravity);
 		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
 		CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
 		CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
@@ -128,6 +124,9 @@ namespace platformer2d {
 
 		CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
+			if (!Scene) {
+				return;
+			}
 			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr) {
 				LK_TRACE_TAG("Editor", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
 				LK_ASSERT(Scene);
@@ -137,13 +136,21 @@ namespace platformer2d {
 
 		CScene::OnActorDeleted.Add([&](const LUUID Handle)
 		{
+			if (!Scene) {
+				return;
+			}
 			LK_DEBUG_TAG("Editor", "OnActorDeleted: {}", Handle);
 			UpdateInputBuffer(Scene->GetActors().size());
 			UI::Widget::OnActorDeleted(Handle);
 		});
 
-		UI::OnGameMenuOpened.Add([](const bool Opened)
+		UI::OnGameMenuOpened.Add([&](const bool Opened)
 		{
+			if (!Scene) {
+				LK_TRACE_TAG("Editor", "Game menu toggled, no scene active");
+				return;
+			}
+
 			if (Opened) {
 				CPhysicsWorld::Pause();
 			} else {
@@ -182,6 +189,14 @@ namespace platformer2d {
 	{
 		DeltaTime = InDeltaTime;
 		if (!Scene) {
+			if (bOpenSceneNextTick) {
+				OpenScene();
+				bOpenSceneNextTick = false;
+			}
+			return;
+		} else if (bCloseSceneNextTick) {
+			CloseScene();
+			bCloseSceneNextTick = false;
 			return;
 		}
 
@@ -227,6 +242,7 @@ namespace platformer2d {
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags)) {
+			ImGui::PopStyleVar(2);
 			return;
 		}
 
@@ -234,18 +250,16 @@ namespace platformer2d {
 		const bool EditorViewportOpen = UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
 		ImGui::PopStyleVar(2);
 		if (EditorViewportOpen) {
+			UI_LeftSidebar();
+
 			UpdateEditorViewportState();
-			UI_ViewportTexture();
+			if (Scene) {
+				UI_ViewportTexture();
+			} else {
+				UI_LevelLauncher();
+			}
 
 			UI_Level();
-
-			UI::PrepareLeftSidebar();
-			if (UI::Begin(UI::PanelID::Sidebar1)) {
-				if (Player) {
-					UI_Player();
-				}
-				UI::End();
-			}
 
 			if (Scene) {
 				UI::Statistics();
@@ -403,6 +417,7 @@ namespace platformer2d {
 
 		const YAML::Node Data = YAML::Load(YamlString);
 
+		LK_DESERIALIZE_PROPERTY(Gravity, GRAVITY, glm::vec2(0.0f, -5.0f), Data);
 		LK_DESERIALIZE_PROPERTY(PlayerSpawn, PLAYER_SPAWN, glm::vec2(0.0f, 0.0f), Data);
 		LK_DESERIALIZE_PROPERTY(CameraZoom, SCENE_LOAD_CAMERA_ZOOM, 0.40f, Data);
 
@@ -470,7 +485,7 @@ namespace platformer2d {
 		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
 			ViewportBounds[1] = Window->GetSize();
 		} else {
-			LK_WARN_TAG("Editor", "[{}] No window reference", GetSpecification().Name);
+			LK_WARN_TAG("Editor", "Failed to update viewport bounds");
 			ViewportBounds[1] = { 0.0f, 0.0f };
 		}
 	}
@@ -512,7 +527,6 @@ namespace platformer2d {
 		FActorSpecification ActorSpec;
 		ActorSpec.Texture = ETexture::Player;
 		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec , Spec.Player.BodySpec);
-		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)
 		{
@@ -537,25 +551,37 @@ namespace platformer2d {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
+		ImGui::Spacing();
 		ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
+		UI::SetTooltip(LastSceneFilepath.generic_string());
+
 		ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
-		UI::Widget::Vec2Control("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
+		UI::SetTooltip(SceneToOpen.generic_string());
 
-		UI::HelpMarker("The applied camera zoom when a scene is loaded");
-		ImGui::SameLine();
-		UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
+		ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
 
+		ImGui::Spacing();
 		ImGui::SeparatorText("Editor Viewport");
 		ImGui::Text("Focused: %d", bEditorViewportFocused);
 		ImGui::Text("Hovered: %d", bEditorViewportHovered);
 
-		ImGui::Checkbox("Draw Circle", &bDrawCircle);
-		ImGui::SameLine();
-		ImGui::Checkbox("Draw Circle Filled", &bDrawCircleFilled);
-		ImGui::SameLine();
-		ImGui::Checkbox("Draw Line", &bDrawLine);
-		UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
-		UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
+		if (Scene) {
+			ImGui::Spacing();
+			UI::Widget::Vec2Control("Gravity", GRAVITY, 0.0f, 0.010f);
+			UI::Widget::Vec2Control("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
+			UI::HelpMarker("The applied camera zoom when a scene is loaded");
+			ImGui::SameLine();
+			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Spacing();
+			ImGui::Checkbox("Draw Circle", &bDrawCircle);
+			ImGui::SameLine();
+			ImGui::Checkbox("Draw Circle Filled", &bDrawCircleFilled);
+			ImGui::SameLine();
+			ImGui::Checkbox("Draw Line", &bDrawLine);
+			UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
+			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
+		}
 
 		/* @todo Move this to UI */
 		if (Player) {
@@ -607,12 +633,19 @@ namespace platformer2d {
 		ImGui::Spacing();
 
 		if (ImGui::Button("Close scene")) {
-			CloseScene();
+			bCloseSceneNextTick = true;
 		}
-
 		ImGui::SameLine(0, 10.0f);
+
+		const bool HasSceneRef = HasScene();
+		if (HasSceneRef) {
+			ImGui::BeginDisabled();
+		}
 		if (ImGui::Button("Open scene")) {
-			OpenScene();
+			bOpenSceneNextTick = true;
+		}
+		if (HasSceneRef) {
+			ImGui::EndDisabled();
 		}
 
 		ImGui::Spacing();
@@ -628,11 +661,17 @@ namespace platformer2d {
 			const int Gcd = std::gcd(ViewportWidth, ViewportHeight);
 			ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
 
-			const glm::vec2 HalfSize = GetActiveCamera()->GetHalfSize();
-			ImGui::Text("Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
+			if (CCamera* Camera = GetActiveCamera()) {
+				const glm::vec2 HalfSize = Camera->GetHalfSize();
+				ImGui::Text("Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
+			}
 
-			const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
-			ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
+			if (CPhysicsWorld::IsValid()) {
+				const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
+				ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
+			} else {
+				ImGui::Text("Gravity: No world");
+			}
 
 			ImGui::Dummy(ImVec2(0, 8));
 
@@ -757,6 +796,73 @@ namespace platformer2d {
 			}
 
 			ImGui::End();
+		}
+	}
+
+	void CEditor::UI_PrepareEditorViewport()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
+		if (!Window) {
+			return;
+		}
+
+		ImGuiDockNode* DockNode = Window->DockNode;
+		if (!DockNode) {
+			return;
+		}
+
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
+			return;
+		}
+
+		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
+		ImGuiStyle& Style = ImGui::GetStyle();
+
+		/* Modify the size on the y-axis to account for the docking separators. */
+		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
+
+		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
+		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
+	}
+
+	void CEditor::UI_LeftSidebar()
+	{
+		UI::PrepareLeftSidebar();
+		if (!UI::Begin(UI::PanelID::Sidebar1)) {
+			return;
+		}
+
+		if (Scene) {
+			if (Player) {
+				UI_Player();
+			}
+		}
+		UI::End();
+	}
+
+	void CEditor::UI_LevelLauncher()
+	{
+		UI::FScopedStyleStack StyleStack(
+			ImGuiStyleVar_ItemInnerSpacing, ImVec2(12, 12),
+			ImGuiStyleVar_FrameRounding, 12.0f
+		);
+		UI::FScopedFont ButtonFont(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
+
+		static constexpr ImVec2 ButtonSize(260.0f, 68.0f);
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		UI::ShiftCursorY(Avail.y * 0.25f);
+		UI::BannerTextCentralized("Levels", EFont::SourceSansPro, EFontModifier::Bold);
+		UI::ShiftCursorY(Avail.y * 0.15f);
+
+		/* Button: Test Level */
+		{
+			UI::ShiftCursorX((Avail.x * 0.50f) - (ButtonSize.x * 0.50f));
+			UI::FScopedColor ButtonColor(ImGuiCol_Button, RGBA32::DarkCyan);
+			if (ImGui::Button("Test Level", ButtonSize)) {
+				SceneToOpen = std::filesystem::path(SCENES_DIR "/TestLevel.lscene");
+				bOpenSceneNextTick = true;
+			}
 		}
 	}
 
@@ -964,10 +1070,13 @@ namespace platformer2d {
 			return;
 		}
 
+		CPhysicsWorld::Initialize(GRAVITY);
+
 		Scene = std::make_shared<CScene>("Editor");
 		Scene->Deserialize(SceneToOpen);
 		CreatePlayer();
 		LK_VERIFY(Player);
+		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
 
 		CCamera* Camera = GetActiveCamera();
 		LK_VERIFY(Camera);
@@ -976,9 +1085,6 @@ namespace platformer2d {
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
-
-		/* @todo Should re-init the world here. */
-		CPhysicsWorld::Unpause();
 	}
 
 	void CEditor::CloseScene()
@@ -988,8 +1094,7 @@ namespace platformer2d {
 			return;
 		}
 
-		CPhysicsWorld::Pause();
-		CPhysicsWorld::SetPreSolve(nullptr, nullptr);
+		UI::CloseGameMenu();
 
 		std::filesystem::path ScenePath = Scene->GetFilepath();
 		LK_INFO_TAG("Editor", "Save scene: {}", ScenePath);
@@ -1005,35 +1110,13 @@ namespace platformer2d {
 		Player.reset();
 		Player = nullptr;
 
+		CPhysicsWorld::Destroy();
+
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		Framebuffer->GetImage(0)->Invalidate();
-	}
+		Framebuffer->Invalidate();
 
-	void CEditor::UI_PrepareEditorViewport()
-	{
-		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
-		if (!Window) {
-			return;
-		}
-
-		ImGuiDockNode* DockNode = Window->DockNode;
-		if (!DockNode) {
-			return;
-		}
-
-		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
-			return;
-		}
-
-		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
-		ImGuiStyle& Style = ImGui::GetStyle();
-
-		/* Modify the size on the y-axis to account for the docking separators. */
-		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
-
-		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
-		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
+		LK_DEBUG_TAG("Editor", "Scene closed");
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)

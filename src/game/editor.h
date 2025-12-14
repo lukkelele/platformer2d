@@ -46,6 +46,9 @@ namespace platformer2d {
 		void UI_Player();
 		void UI_ViewportTexture();
 		void UI_DrawGizmo();
+		void UI_PrepareEditorViewport();
+		void UI_LeftSidebar();
+		void UI_LevelLauncher();
 
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnKeyPressed(const FKeyData& Data);
@@ -62,13 +65,14 @@ namespace platformer2d {
 		void OpenScene();
 		void CloseScene();
 
-		void UI_PrepareEditorViewport();
-
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
+
 		std::filesystem::path LastSceneFilepath{};
 		std::filesystem::path SceneToOpen{}; /* Filepath. */
+		bool bOpenSceneNextTick = false;
+		bool bCloseSceneNextTick = false;
 
 		uint16_t EditorViewportWidth = 0;
 		uint16_t EditorViewportHeight = 0;
