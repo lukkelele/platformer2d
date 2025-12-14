@@ -20,14 +20,12 @@ namespace platformer2d::UI {
 
 		ImGui::Dummy(ImVec2(0, 12));
 		static ETexture SelectedTexture = ETexture::White;
-		if (TextureDropdown(SelectedTexture))
-		{
+		if (TextureDropdown(SelectedTexture)) {
 			LK_DEBUG("Selected: {}", Enum::ToString(SelectedTexture));
 		}
 
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(SelectedTexture); TextureRef != nullptr)
-		{
+		if (const std::shared_ptr<CTexture> TextureRef = CRenderer::GetTexture(SelectedTexture); TextureRef != nullptr) {
 			/* Texture preview. */
 			ImGui::SameLine(0.0f, 12.0f);
 			UI::ShiftCursorY(-4.0f);
@@ -43,8 +41,7 @@ namespace platformer2d::UI {
 			{
 				const std::string Str = Path.generic_string();
 				const std::size_t Pos = Str.find(Marker);
-				if (Pos != std::string::npos)
-				{
+				if (Pos != std::string::npos) {
 					return Str.substr(Pos);
 				}
 				return Str;
@@ -61,6 +58,7 @@ namespace platformer2d::UI {
 				ImGui::Unindent();
 			}
 		}
+
 		ImGui::Dummy(ImVec2(0, 12));
 
 		{
@@ -76,14 +74,12 @@ namespace platformer2d::UI {
 
 			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Clamp", ButtonSize))
-			{
+			if (ImGui::Button("Clamp", ButtonSize)) {
 				CRenderer::GetTexture(SelectedTexture)->SetWrap(ETextureWrap::Clamp);
 			}
 			ImGui::SameLine(0.0f, ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Repeat", ButtonSize))
-			{
+			if (ImGui::Button("Repeat", ButtonSize)) {
 				CRenderer::GetTexture(SelectedTexture)->SetWrap(ETextureWrap::Repeat);
 			}
 
@@ -94,15 +90,13 @@ namespace platformer2d::UI {
 
 			ImGui::SameLine((Avail.x * 0.50f) - (ItemWidth * 0.50f) + ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Linear", ButtonSize))
-			{
+			if (ImGui::Button("Linear", ButtonSize)) {
 				CRenderer::GetTexture(SelectedTexture)->SetFilter(ETextureFilter::Linear);
 			}
 
 			ImGui::SameLine(0.0f, ButtonPaddingY);
 			UI::ShiftCursorY(-ButtonPaddingY);
-			if (ImGui::Button("Nearest", ButtonSize))
-			{
+			if (ImGui::Button("Nearest", ButtonSize)) {
 				CRenderer::GetTexture(SelectedTexture)->SetFilter(ETextureFilter::Nearest);
 			}
 		}
@@ -116,46 +110,38 @@ namespace platformer2d::UI {
 
 		bool Updated = false;
 		std::size_t SelectedIdx = std::to_underlying(Selected);
-		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < TextureNames.size()));
-		static const char* SelectedTexture = TextureNames[SelectedIdx];
+		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < UI::Array::TextureNames.size()));
+		static const char* SelectedTexture = UI::Array::TextureNames[SelectedIdx];
 
 		static const std::string Label = "Texture";
-		if (ImGui::GetCurrentTable() != nullptr)
-		{
+		if (ImGui::GetCurrentTable() != nullptr) {
 			ImGui::TableSetColumnIndex(0);
 			UI::ShiftCursor(17.0f, 0.0f);
 			ImGui::Text(Label.c_str());
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursor(7.0f, 0.0f);
-		}
-		else
-		{
+		} else {
 			ImGui::Text(Label.c_str());
 			ImGui::SameLine();
 		}
 
 		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
 		ImGui::SetNextItemWidth(ComboItemWidth);
-		if (ImGui::BeginCombo("##Texture", TextureNames[SelectedIdx]))
-		{
-			for (int Idx = 0; Idx < TextureNames.size(); Idx++)
-			{
-				const char* Option = TextureNames[Idx];
-				if (Option == nullptr)
-				{
+		if (ImGui::BeginCombo("##Texture", Array::TextureNames[SelectedIdx])) {
+			for (int Idx = 0; Idx < UI::Array::TextureNames.size(); Idx++) {
+				const char* Option = UI::Array::TextureNames[Idx];
+				if (Option == nullptr) {
 					continue;
 				}
 
 				const bool IsSelected = (SelectedIdx == Idx);
-				if (ImGui::Selectable(Option, IsSelected))
-				{
+				if (ImGui::Selectable(Option, IsSelected)) {
 					SelectedIdx = Idx;
 				}
 			}
 
-			if (SelectedIdx != std::to_underlying(Selected))
-			{
+			if (SelectedIdx != std::to_underlying(Selected)) {
 				Selected = static_cast<ETexture>(SelectedIdx);
 				Updated = true;
 			}
@@ -189,11 +175,9 @@ namespace platformer2d::UI {
 		bool bSetBlendFunc = false;
 
 		static int SelectedSourceBlendFunc = -1;
-		if (SelectedSourceBlendFunc == -1)
-		{
+		if (SelectedSourceBlendFunc == -1) {
 			const int SourceFunc = CRenderer::GetBlendSource();
-			switch (SourceFunc)
-			{
+			switch (SourceFunc) {
 				case GL_SRC_ALPHA:
 					SelectedSourceBlendFunc = 0;
 					break;
@@ -217,11 +201,9 @@ namespace platformer2d::UI {
 		LK_ASSERT(SelectedSourceBlendFunc >= 0);
 
 		static int SelectedDestBlendFunc = -1;
-		if (SelectedDestBlendFunc == -1)
-		{
+		if (SelectedDestBlendFunc == -1) {
 			const int DestFunc = CRenderer::GetBlendDestination();
-			switch (DestFunc)
-			{
+			switch (DestFunc) {
 				case GL_SRC_ALPHA:
 					SelectedDestBlendFunc = 0;
 					break;
@@ -254,13 +236,10 @@ namespace platformer2d::UI {
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursor(0.0f, 4.0f);
 		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Source", SourceBlendFuncs[SelectedSourceBlendFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
-			{
+		if (ImGui::BeginCombo("##Source", SourceBlendFuncs[SelectedSourceBlendFunc].second)) {
+			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++) {
 				const bool bSelected = (SelectedSourceBlendFunc == N);
-				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected))
-				{
+				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected)) {
 					SelectedSourceBlendFunc = N;
 					LK_TRACE_TAG("UI", "Source: {}", SourceBlendFuncs[N].second);
 					bSetBlendFunc = true;
@@ -277,13 +256,10 @@ namespace platformer2d::UI {
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursor(0.0f, 4.0f);
 		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Destination", DestBlendFuncs[SelectedDestBlendFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
-			{
+		if (ImGui::BeginCombo("##Destination", DestBlendFuncs[SelectedDestBlendFunc].second)) {
+			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++) {
 				const bool bSelected = (SelectedDestBlendFunc == N);
-				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected))
-				{
+				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected)) {
 					SelectedDestBlendFunc = N;
 					LK_TRACE_TAG("UI", "Destination: {}", DestBlendFuncs[N].second);
 					bSetBlendFunc = true;
@@ -295,8 +271,7 @@ namespace platformer2d::UI {
 		ImGui::EndTable();
 		ImGui::PopID(); /* ~UI_BlendFunction */
 
-		if (bSetBlendFunc)
-		{
+		if (bSetBlendFunc) {
 			LK_OpenGL_Verify(glBlendFunc(
 				SourceBlendFuncs[SelectedSourceBlendFunc].first,
 				DestBlendFuncs[SelectedDestBlendFunc].first
@@ -324,11 +299,9 @@ namespace platformer2d::UI {
 		bool ShouldUpdate = false;
 
 		static int SelectedDepthFunc = -1;
-		if (SelectedDepthFunc == -1)
-		{
+		if (SelectedDepthFunc == -1) {
 			const int Func = CRenderer::GetDepthFunction();
-			switch (Func)
-			{
+			switch (Func) {
 				case GL_LESS:
 					SelectedDepthFunc = 0;
 					break;
@@ -353,8 +326,7 @@ namespace platformer2d::UI {
 			}
 		}
 
-		if (SelectedDepthFunc == -1)
-		{
+		if (SelectedDepthFunc == -1) {
 			return false;
 		}
 
@@ -371,13 +343,10 @@ namespace platformer2d::UI {
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursor(0.0f, 4.0f);
 		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Depth", Functions[SelectedDepthFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(Functions); N++)
-			{
+		if (ImGui::BeginCombo("##Depth", Functions[SelectedDepthFunc].second)) {
+			for (int N = 0; N < LK_ARRAYSIZE(Functions); N++) {
 				const bool bSelected = (SelectedDepthFunc == N);
-				if (ImGui::Selectable(Functions[N].second, bSelected))
-				{
+				if (ImGui::Selectable(Functions[N].second, bSelected)) {
 					SelectedDepthFunc = N;
 					LK_TRACE_TAG("UI", "Depth: {}", Functions[N].second);
 					ShouldUpdate = true;
@@ -389,13 +358,11 @@ namespace platformer2d::UI {
 		ImGui::EndTable();
 		ImGui::PopID();
 
-		if (ShouldUpdate)
-		{
+		if (ShouldUpdate) {
 			LK_OpenGL_Verify(glDepthFunc(Functions[SelectedDepthFunc].first));
 		}
 
 		return ShouldUpdate;
 	}
-
 
 }

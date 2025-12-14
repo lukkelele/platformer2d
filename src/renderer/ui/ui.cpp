@@ -19,17 +19,6 @@ namespace platformer2d::UI {
 	FActorAttributes ActorAttr;
 	FPhysicsBodyData PhysicsBodyData;
 
-	const std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
-		Enum::ToString(ETexture::White),
-		Enum::ToString(ETexture::Background),
-		Enum::ToString(ETexture::Player),
-		Enum::ToString(ETexture::Metal),
-		Enum::ToString(ETexture::Bricks),
-		Enum::ToString(ETexture::Wood),
-		Enum::ToString(ETexture::Swoosh),
-		Enum::ToString(ETexture::Cloud),
-	};
-
 	namespace {
 		constexpr auto& ColorArray = FColor::GetArray();
 	}

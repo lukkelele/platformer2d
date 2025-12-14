@@ -36,8 +36,6 @@ namespace platformer2d::UI {
 	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
 	extern FOnGameMenuOpened OnGameMenuOpened;
 
-	extern const std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames;
-
 	void BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
 	void EndPropertyGrid();
 
@@ -160,6 +158,17 @@ namespace platformer2d::UI {
 	void PrepareRightSidebar();
 
 	namespace Array {
+		static constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
+			Enum::ToString(ETexture::White),
+			Enum::ToString(ETexture::Background),
+			Enum::ToString(ETexture::Player),
+			Enum::ToString(ETexture::Metal),
+			Enum::ToString(ETexture::Bricks),
+			Enum::ToString(ETexture::Wood),
+			Enum::ToString(ETexture::Swoosh),
+			Enum::ToString(ETexture::Cloud),
+		};
+
 		static constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
 			EPickupKind::Item,
 			EPickupKind::Weapon,

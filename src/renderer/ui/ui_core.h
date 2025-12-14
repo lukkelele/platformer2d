@@ -197,6 +197,21 @@ namespace platformer2d::UI {
 		ImGui::Text("%s", Text.data());
 	}
 
+	inline void BannerText(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
+	{
+		UI::FScopedFont ScopedFont(Font::Get(Font, EFontSize::Banner, Modifier));
+		ImGui::Text("%s", Text.data());
+	}
+
+	inline void BannerTextCentralized(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
+	{
+		UI::FScopedFont ScopedFont(Font::Get(Font, EFontSize::Banner, Modifier));
+		const ImVec2 Size = ImGui::CalcTextSize(Text.data());
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		UI::ShiftCursorX((Avail.x * 0.50f) - (Size.x * 0.50f));
+		ImGui::Text("%s", Text.data());
+	}
+
 	inline void Image(std::shared_ptr<CTexture> Texture, const ImVec2& Size, const ImVec2& UV0 = ImVec2(0, 1), const ImVec2& UV1 = ImVec2(1, 0))
 	{
 		ImGui::Image(static_cast<ImU64>(Texture->GetID()), Size, UV0, UV1);

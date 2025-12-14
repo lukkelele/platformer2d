@@ -127,7 +127,7 @@ namespace platformer2d::UI {
 	{
 	public:
 		FORCEINLINE FScopedFont(ImFont* Font) { ImGui::PushFont(Font); }
-		FORCEINLINE FScopedFont(const EFont Font, const EFontSize Size, const EFontModifier Modifier)
+		FORCEINLINE FScopedFont(const EFont Font, const EFontSize Size = EFontSize::Regular, const EFontModifier Modifier = EFontModifier::Normal)
 		{
 			ImGui::PushFont(UI::Font::Get(Font, Size, Modifier));
 		}

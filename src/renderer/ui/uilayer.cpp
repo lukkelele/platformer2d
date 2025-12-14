@@ -47,17 +47,28 @@ namespace platformer2d {
 		LK_UNUSED(DeltaTime);
 
 		/* Draw dark overlay whenever the pause menu is open. */
-		if (UI::IsGameMenuOpen()) {
-			if (CWindow* Window = CWindow::Get(); Window != nullptr) {
+#if 1
+		if (CGameInstance* GameInstance = CGameInstance::Get()) {
+			CWindow* Window = CWindow::Get();
+			if (Window && GameInstance->HasScene() && UI::IsGameMenuOpen()) {
 				const glm::vec2 WindowSize = Window->GetSize();
 				static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.90f };
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
 			}
 		}
+#endif
 	}
 
 	void CUILayer::RenderUI()
 	{
+#if 0
+		if (CGameInstance* GameInstance = CGameInstance::Get()) {
+			if (GameInstance->HasScene() && UI::IsGameMenuOpen()) {
+				UI_GameMenu();
+			}
+		}
+#endif
+
 		if (UI::IsGameMenuOpen()) {
 			UI_GameMenu();
 		}
@@ -76,7 +87,7 @@ namespace platformer2d {
 	void CUILayer::UI_GameMenu()
 	{
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
-		if (Viewport == nullptr) {
+		if (!Viewport) {
 			return;
 		}
 
@@ -98,11 +109,12 @@ namespace platformer2d {
 			| ImGuiWindowFlags_NoCollapse;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 0.0f));
-		if (!ImGui::Begin("##GameMenu", nullptr, WindowFlags)) {
+		const bool GameMenuWindowOpened = UI::Begin("##GameMenu", nullptr, WindowFlags);
+		ImGui::PopStyleVar(2);
+		if (!GameMenuWindowOpened) {
 			return;
 		}
 
-		ImGui::PopStyleVar(2);
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 MenuSize = ImGui::GetWindowSize();
 		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
@@ -122,7 +134,7 @@ namespace platformer2d {
 
 		GameMenu.LastView = GameMenu.View;
 
-		ImGui::End();
+		UI::End();
 	}
 
 	void UI_GameMenu_Settings()
@@ -153,29 +165,30 @@ namespace platformer2d {
 		}
 
 		ImGui::SeparatorText("Camera");
-		CGameInstance* GameInstance = CGameInstance::Get();
-		if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr) {
-			ImGui::PushID("UI_CameraOptions");
-			ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("LabelColumn", 0, LABEL_COLUMN_WIDTH);
-			ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LABEL_COLUMN_WIDTH);
+		if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr) {
+			if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr) {
+				ImGui::PushID("UI_CameraOptions");
+				ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+				ImGui::TableSetupColumn("LabelColumn", 0, LABEL_COLUMN_WIDTH);
+				ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LABEL_COLUMN_WIDTH);
 
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(LABEL_INDENT_WIDTH, 4.0f);
-			ImGui::Text("Zoom");
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				UI::ShiftCursor(LABEL_INDENT_WIDTH, 4.0f);
+				ImGui::Text("Zoom");
 
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
-			ImGui::SetNextItemWidth(COLUMN_ITEM_WIDTH);
-			float Zoom = Camera->GetZoom();
-			ImGui::SliderFloat("##CameraZoom", &Zoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
-			if (ImGui::IsItemActive()) {
-				Camera->SetZoom(Zoom);
+				ImGui::TableSetColumnIndex(1);
+				UI::ShiftCursor(0.0f, 4.0f);
+				ImGui::SetNextItemWidth(COLUMN_ITEM_WIDTH);
+				float Zoom = Camera->GetZoom();
+				ImGui::SliderFloat("##CameraZoom", &Zoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
+				if (ImGui::IsItemActive()) {
+					Camera->SetZoom(Zoom);
+				}
+
+				ImGui::EndTable();
+				ImGui::PopID();
 			}
-
-			ImGui::EndTable();
-			ImGui::PopID();
 		}
 
 		ImGui::SeparatorText("Renderer");
@@ -209,9 +222,10 @@ namespace platformer2d {
 		}
 		if (Settings.bStyleEditor) {
 			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal));
-			ImGui::Begin("##StyleEditor", &Settings.bStyleEditor);
-			ImGui::ShowStyleEditor(&Style);
-			ImGui::End();
+			if (ImGui::Begin("##StyleEditor", &Settings.bStyleEditor)) {
+				ImGui::ShowStyleEditor(&Style);
+				ImGui::End();
+			}
 		}
 
 		if (ImGui::Button("ID Tool", ButtonSize)) {
@@ -337,6 +351,6 @@ namespace platformer2d {
 		{
 			return GameMenu.bOpen;
 		}
-	}
 
+	}
 }
