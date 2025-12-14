@@ -6,6 +6,7 @@
 #include "core/math/math.h"
 #include "renderer/color.h"
 #include "scene/actor.h"
+#include "item.h"
 
 namespace platformer2d {
 
@@ -15,7 +16,7 @@ namespace platformer2d {
 		COUNT
 	};
 
-	class IWeapon : public CActor
+	class IWeapon : public CActor, public IItem
 	{
 	public:
 		virtual ~IWeapon() = default;
@@ -23,6 +24,8 @@ namespace platformer2d {
 		virtual void Tick() = 0;
 		virtual void Render() = 0;
 		virtual EWeaponType GetType() const = 0;
+
+		virtual EItemType GetItemType() const override { return EItemType::Weapon; }
 	};
 
 	namespace Enum {
@@ -30,8 +33,7 @@ namespace platformer2d {
 		{
 			const char* S = "";
 		#define _(EnumValue) case EWeaponType::EnumValue: S = #EnumValue; break
-			switch (Type)
-			{
+			switch (Type) {
 				_(Rifle);
 				_(COUNT);
 				default:
