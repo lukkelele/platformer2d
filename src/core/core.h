@@ -75,8 +75,7 @@ namespace platformer2d {
 		{
 			const char* S = "";
 		#define _(EnumValue) case EDirection::EnumValue: S = #EnumValue; break
-			switch (Direction)
-			{
+			switch (Direction) {
 				_(Up);
 				_(Down);
 				_(Left);
