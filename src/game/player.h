@@ -5,6 +5,7 @@
 #include "renderer/camera.h"
 #include "renderer/sprite.h"
 #include "scene/actor.h"
+#include "inventory.h"
 #include "rifle.h"
 
 namespace platformer2d {
@@ -92,6 +93,7 @@ namespace platformer2d {
 		CTimer Timer;
 		std::unique_ptr<CCamera> Camera = nullptr;
 		bool bCameraLock = true;
+		std::shared_ptr<CInventory> Inventory;
 
 		EDirection LookDir = EDirection::Right;
 		float JumpImpulse = 3.440f;
@@ -123,8 +125,7 @@ namespace platformer2d {
 		{
 			const char* S = "";
 		#define _(EnumValue) case EMovementState::EnumValue: S = #EnumValue; break
-			switch (State)
-			{
+			switch (State) {
 				_(Idle);
 				_(Running);
 				_(Airborne);

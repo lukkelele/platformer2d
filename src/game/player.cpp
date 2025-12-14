@@ -88,6 +88,9 @@ namespace platformer2d {
 		Rifle = std::make_shared<CRifle>();
 		Rifle->Equip(this);
 
+		Inventory = std::make_shared<CInventory>("PlayerInventory");
+		Inventory->AddItem(Rifle);
+
 		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
 		OnMouseButtonPressedHandle = CMouse::OnButtonPressed.Add(this, &CPlayer::OnMouseButtonPressed);
@@ -101,6 +104,13 @@ namespace platformer2d {
 		CKeyboard::OnKeyPressed.Remove(OnKeyPressedHandle);
 		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
 		CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
+
+		if (Inventory) {
+			LK_TRACE_TAG("Player", "Release inventory");
+			Inventory->Destroy();
+			Inventory.reset();
+			Inventory = nullptr;
+		}
 
 		if (Rifle) {
 			LK_TRACE_TAG("Player", "Release rifle");
