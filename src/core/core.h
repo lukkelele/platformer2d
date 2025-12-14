@@ -29,8 +29,7 @@ namespace platformer2d {
 
 	using namespace std::chrono_literals;
 
-	namespace Core
-	{
+	namespace Core {
 		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
 
 		struct FGlobal
@@ -46,6 +45,21 @@ namespace platformer2d {
 
 		int ParseSvgPath(std::string_view, const glm::vec2& Offset,
 						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
+
+		/**
+		 * @brief Run asynchronously.
+		 */
+		template<typename F, typename... TArgs>
+		static void RunDetachedAfter(const std::chrono::steady_clock::duration& Delay, F&& Func, TArgs&&... Args)
+		{
+			std::thread(
+				[Delay, Func = std::forward<F>(Func), ...Args = std::forward<TArgs>(Args)]()
+				{
+					std::this_thread::sleep_for(Delay);
+					Func(std::forward<TArgs>(Args)...);
+				}
+			).detach();
+		}
 	}
 
 	enum class EDirection
