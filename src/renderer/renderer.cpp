@@ -356,7 +356,7 @@ namespace platformer2d {
 
 	void CRenderer::EndFrame()
 	{
-		Submit([&]() { Flush(); });
+		Flush();
 
 		CommandQueue[GetRenderQueueIndex()]->Execute();
 	}
