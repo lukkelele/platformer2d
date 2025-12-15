@@ -247,12 +247,48 @@ namespace platformer2d {
 			return;
 		}
 
+		UI::PrepareTopBar();
+		UI::Begin(UI::PanelID::TopBar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+		{
+			static constexpr float ButtonSize = 32.0f + 5.0f;
+			static constexpr float EdgeOffset = 4.0f;
+			static constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
+			static constexpr float NumberOfButtons = 3.0f;
+			static constexpr float BackgroundWidth = (EdgeOffset * 6.0f) + (ButtonSize * NumberOfButtons) + EdgeOffset * (NumberOfButtons - 1.0f) * 2.0f;
+
+			auto ToolbarButton = [](const std::shared_ptr<CTexture>& Icon, const ImColor& Tint, float PaddingY = 0.0f)
+			{
+				const float Height = std::min(static_cast<float>(Icon->GetHeight()), ButtonSize) - PaddingY * 2.0f;
+				const float Width = (static_cast<float>(Icon->GetWidth()) / static_cast<float>(Icon->GetHeight()) * Height);
+				const bool Clicked = ImGui::InvisibleButton(UI::GenerateID(), ImVec2(Width, Height));
+				UI::DrawButtonImage(Icon, Tint, Tint, Tint, UI::RectOffset(UI::GetItemRect(), 0.0f, PaddingY));
+				return Clicked;
+			};
+
+			static bool ButtonClicked = false;
+
+			uint32_t Color = 0;
+			if (ButtonClicked) {
+				Color = RGBA32::BrightGreen;
+			} else {
+				Color = RGBA32::Text::Normal;
+			}
+
+			std::shared_ptr<CTexture> ButtonImage = CRenderer::GetWhiteTexture();
+			ImGui::SetCursorPosX((ImGui::GetWindowSize().x * 0.50f) - ButtonSize * 0.50f);
+			if (ToolbarButton(ButtonImage, Color)) {
+				ButtonClicked = !ButtonClicked;
+				LK_DEBUG_TAG("Editor", "Clicked button: {}", ButtonClicked ? "1" : "0");
+			}
+		}
+		UI::End();
+
+		UI_LeftSidebar();
+
 		UI_PrepareEditorViewport();
 		const bool EditorViewportOpen = UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
 		ImGui::PopStyleVar(2);
 		if (EditorViewportOpen) {
-			UI_LeftSidebar();
-
 			UpdateEditorViewportState();
 			if (Scene) {
 				UI_ViewportTexture();
