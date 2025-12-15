@@ -584,50 +584,14 @@ namespace platformer2d {
 			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
 		}
 
-		/* @todo Move this to UI */
 		if (Player) {
 			if (std::shared_ptr<CRifle> Rifle = Player->GetRifle()) {
-				ImGui::Dummy(ImVec2(0, 10));
+				ImGui::Dummy(ImVec2(0, 16));
 				ImGui::Separator();
-				UI::LargeTextCentralized("Rifle");
-				ImGui::Spacing();
-
-				ImGui::Spacing();
-				float ProjectileRadius = Rifle->GetProjectileRadius();
-				if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
-					Rifle->SetProjectileRadius(ProjectileRadius);
-				}
-
-				ImGui::Spacing();
-				float ProjectileVelocity = Rifle->GetProjectileVelocity();
-				if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
-					Rifle->SetProjectileVelocity(ProjectileVelocity);
-				}
-
-				ImGui::Spacing();
-				bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
-				if (ImGui::Checkbox("Explode On Impact", &ExplodeOnImpact)) {
-					Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
-				}
-
-				ImGui::SameLine();
-				bool ShootEnabled = Rifle->IsEnabled();
-				if (ImGui::Checkbox("Shooting Enabled", &ShootEnabled)) {
-					Rifle->SetEnabled(ShootEnabled);
-				}
-
-				ImGui::Spacing();
-				EColor ProjectileColor = EColor::Red;
-				const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
-				if (!ColorDeduced) {
-					ImGui::BeginDisabled();
-				}
-				if (UI::ColorDropdown(ProjectileColor)) {
-					Rifle->SetProjectileColor(FColor::Get(ProjectileColor));
-				}
-				if (!ColorDeduced) {
-					ImGui::EndDisabled();
-				}
+				ImGui::Dummy(ImVec2(0, 8));
+				UI::RifleData(Rifle);
+				ImGui::Dummy(ImVec2(0, 16));
+				ImGui::Separator();
 			}
 		}
 

@@ -10,6 +10,7 @@
 #include "ui_core.h"
 #include "widgets.h"
 #include "game/spawner.h"
+#include "game/rifle.h"
 #include "scene/scene.h"
 
 namespace platformer2d::UI {
@@ -112,7 +113,7 @@ namespace platformer2d::UI {
 		Updated |= UI::Widget::Vec2Control("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
 		ImGui::TableNextRow();
-		Updated |= TextureDropdown(Attr.Texture);
+		Updated |= UI::Widget::Combo::TextureDropdown(Attr.Texture);
 
 		ImGui::TableNextRow();
 		Updated |= ColorDropdown(Attr.Color);
@@ -454,6 +455,58 @@ namespace platformer2d::UI {
 			UI::Widget::ActorNode_Data(Player);
 			ImGui::TreePop();
 		}
+	}
+
+	void RifleData(std::shared_ptr<CRifle> Rifle)
+	{
+		LK_ASSERT(Rifle);
+		UI::HeaderTextCentralized("Rifle");
+		ImGui::Spacing();
+
+		static constexpr float LabelColumnWidth = 180.0f;
+
+		ImGui::BeginTable("##RifleData", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+
+		ImGui::TableNextRow();
+		bool ShootEnabled = Rifle->IsEnabled();
+		if (UI::Checkbox("Enabled", ShootEnabled)) {
+			Rifle->SetEnabled(ShootEnabled);
+		}
+
+		ImGui::TableNextRow();
+		float ProjectileRadius = Rifle->GetProjectileRadius();
+		if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
+			Rifle->SetProjectileRadius(ProjectileRadius);
+		}
+
+		ImGui::TableNextRow();
+		float ProjectileVelocity = Rifle->GetProjectileVelocity();
+		if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
+			Rifle->SetProjectileVelocity(ProjectileVelocity);
+		}
+
+		ImGui::TableNextRow();
+		bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
+		if (UI::Checkbox("Explode On Impact", ExplodeOnImpact)) {
+			Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
+		}
+
+		ImGui::TableNextRow();
+		EColor ProjectileColor = EColor::Red;
+		const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
+		if (!ColorDeduced) {
+			ImGui::BeginDisabled();
+		}
+		if (UI::ColorDropdown(ProjectileColor)) {
+			Rifle->SetProjectileColor(FColor::Get(ProjectileColor));
+		}
+		if (!ColorDeduced) {
+			ImGui::EndDisabled();
+		}
+
+		ImGui::EndTable();
 	}
 
 	void Statistics(const EWidgetPlacement Placement)
