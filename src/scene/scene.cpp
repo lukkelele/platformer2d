@@ -281,17 +281,13 @@ namespace platformer2d {
 				}
 
 				Actor->GetTransformComponent() = TC;
-
 				if (HasEffectComponent) {
 					Actor->AddComponent<FEffectComponent>(EC);
 				}
-				if (HasInteractionComponent)
-				{
+				if (HasInteractionComponent) {
 					Actor->AddComponent<FInteractionComponent>(IC);
 				}
-			}
-			else
-			{
+			} else {
 				LK_ERROR_TAG("Scene", "Duplicate actors found with handle {}", ActorSpec.Handle);
 			}
 		}
