@@ -518,11 +518,15 @@ namespace platformer2d::UI {
 
 		const ImGuiStyle& Style = ImGui::GetStyle();
 
-		/** @todo: Remove docknode tab */
+		float TopBarOffsetY = 0.0f;
+		if (ImGuiWindow* TopBar = ImGui::FindWindowByName(PanelID::TopBar)) {
+			TopBarOffsetY = TopBar->Size.y;
+		}
+
 		ImGui::SetNextWindowBgAlpha(0.25f);
 		const ImVec2 WindowPos = ImGui::GetWindowPos();
 		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
-		ImGui::SetNextWindowPos({ WindowPos.x + Padding, Padding }, ImGuiCond_Always);
+		ImGui::SetNextWindowPos({ WindowPos.x + Padding, Padding + TopBarOffsetY }, ImGuiCond_Always);
 
 		ImGui::SetNextWindowSize(ImVec2(260, 0), ImGuiCond_Always);
 		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration;
@@ -724,16 +728,14 @@ namespace platformer2d::UI {
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
 			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
 			SidebarWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
-			if (DockNode->VisibleWindow)
-			{
+			if (DockNode->VisibleWindow) {
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
 		} else if (DockNode->Windows.Size > 1) {
 			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoTabBar;
 			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoWindowMenuButton;
 
-			if (DockNode->VisibleWindow)
-			{
+			if (DockNode->VisibleWindow) {
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
 		}
@@ -782,6 +784,30 @@ namespace platformer2d::UI {
 				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
 			}
 		}
+	}
+
+	void PrepareTopBar()
+	{
+		ImGuiWindow* TopBarWindow = ImGui::FindWindowByName(PanelID::TopBar);
+		if (TopBarWindow == nullptr) {
+			return;
+		}
+
+		TopBarWindow->Flags |= ImGuiWindowFlags_NoTitleBar;
+		ImGuiDockNode* DockNode = TopBarWindow->DockNode;
+		if (DockNode == nullptr) {
+			return;
+		}
+
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
+			return;
+		}
+
+		DockNode->SizeRef.y = DockNode->Size.y; /* @fixme: Is this needed? */
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoResize;
 	}
 
 }

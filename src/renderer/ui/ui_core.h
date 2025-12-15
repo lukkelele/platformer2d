@@ -66,6 +66,12 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoBackground
 		| ImGuiWindowFlags_NoSavedSettings;
 
+	inline constexpr ImGuiWindowFlags SidebarFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoBringToFrontOnFocus
+		| ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_NoMove;
+
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoDockingInCentralNode;
 
@@ -80,6 +86,7 @@ namespace platformer2d::UI {
 
 	void PushID();
 	void PopID();
+	const char* GenerateID();
 
 	bool Begin(const char* WindowTitle, bool* Open = nullptr, ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None);
 	void End();
@@ -101,6 +108,26 @@ namespace platformer2d::UI {
 	{
 		const ImVec2 Cursor = ImGui::GetCursorPos();
 		ImGui::SetCursorPos(ImVec2(Cursor.x + InX, Cursor.y + InY));
+	}
+
+	inline bool IsItemHovered(const float DelayInSeconds = 0.10f, ImGuiHoveredFlags Flags = ImGuiHoveredFlags_None)
+	{
+		return ImGui::IsItemHovered() && (GImGui->HoveredIdTimer > DelayInSeconds); /* HoveredIdNotActiveTimer. */
+	}
+
+	inline ImRect RectOffset(const ImRect& Rect, const float X, const float Y)
+	{
+		ImRect Result = Rect;
+		Result.Min.x += X;
+		Result.Min.y += Y;
+		Result.Max.x += X;
+		Result.Max.y += Y;
+		return Result;
+	}
+
+	inline ImRect GetItemRect()
+	{
+		return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 	}
 
 	inline ImColor ColorWithMultipliedValue(const ImColor& Color, const float Multiplier)
@@ -125,11 +152,6 @@ namespace platformer2d::UI {
 		float Hue, Saturation, Value;
 		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
 		return ImColor::HSV(std::min(Hue * Multiplier, 1.0f), Saturation, Value);
-	}
-
-	inline bool IsItemHovered(const float DelayInSeconds = 0.10f, ImGuiHoveredFlags Flags = ImGuiHoveredFlags_None)
-	{
-		return ImGui::IsItemHovered() && (GImGui->HoveredIdTimer > DelayInSeconds); /* HoveredIdNotActiveTimer. */
 	}
 
 	inline void HelpMarker(const char* HelpDesc, const char* HelpSymbol = "(?)")
@@ -215,6 +237,42 @@ namespace platformer2d::UI {
 	inline void Image(std::shared_ptr<CTexture> Texture, const ImVec2& Size, const ImVec2& UV0 = ImVec2(0, 1), const ImVec2& UV1 = ImVec2(1, 0))
 	{
 		ImGui::Image(static_cast<ImU64>(Texture->GetID()), Size, UV0, UV1);
+	}
+
+	/**
+	 * @brief Get texture ID as an ImTextureID.
+	 */
+	FORCEINLINE ImTextureID GetTextureID(const std::shared_ptr<CTexture>& Texture)
+	{
+		return static_cast<ImTextureID>(Texture->GetID());
+	};
+
+	inline void DrawButtonImage(const std::shared_ptr<CTexture>& ImageNormal,
+								const std::shared_ptr<CTexture>& ImageHovered,
+								const std::shared_ptr<CTexture>& ImagePressed,
+								const ImU32 TintNormal,
+								const ImU32 TintHovered,
+								const ImU32 TintPressed,
+								const ImVec2& RectMin,
+								const ImVec2& RectMax)
+	{
+		ImDrawList* DrawList = ImGui::GetWindowDrawList();
+		if (ImGui::IsItemActive()) {
+			DrawList->AddImage(GetTextureID(ImagePressed), RectMin, RectMax, ImVec2(0, 0), ImVec2(1, 1), TintPressed);
+		} else if (ImGui::IsItemHovered()) {
+			DrawList->AddImage(GetTextureID(ImageHovered), RectMin, RectMax, ImVec2(0, 0), ImVec2(1, 1), TintHovered);
+		} else {
+			DrawList->AddImage(GetTextureID(ImageNormal), RectMin, RectMax, ImVec2(0, 0), ImVec2(1, 1), TintNormal);
+		}
+	}
+
+	inline void DrawButtonImage(const std::shared_ptr<CTexture>& Image,
+								const ImU32 TintNormal,
+								const ImU32 TintHovered,
+								const ImU32 TintPressed,
+								const ImRect& Rectangle)
+	{
+		DrawButtonImage(Image, Image, Image, TintNormal, TintHovered, TintPressed, Rectangle.Min, Rectangle.Max);
 	}
 
 	namespace Widget {

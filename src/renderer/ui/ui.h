@@ -155,6 +155,7 @@ namespace platformer2d::UI {
 
 	void PrepareLeftSidebar();
 	void PrepareRightSidebar();
+	void PrepareTopBar();
 
 	namespace Array {
 		static constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
