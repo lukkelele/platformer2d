@@ -1,4 +1,6 @@
 project_library_sources(
+	combo.h
+	combo.cpp
 	gamemenu.h
 	imgui.h
 	imguilayer.h
@@ -9,7 +11,6 @@ project_library_sources(
 	selectionpanel.cpp
 	scoped.h
 	text.cpp
-	texture.cpp
 	ui.h
 	ui.cpp
 	ui_core.h
