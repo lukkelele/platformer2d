@@ -3,6 +3,7 @@
 #include "core/core.h"
 #include "serialization/serializable.h"
 #include "item.h"
+#include "rifle.h"
 
 namespace platformer2d {
 
@@ -30,6 +31,7 @@ namespace platformer2d {
 		CInventory() = delete;
 		~CInventory();
 
+		void Tick(float DeltaTime);
 		void Destroy();
 
 		template<typename T>
@@ -78,9 +80,9 @@ namespace platformer2d {
 			}
 
 			LK_INFO_TAG("Inventory", "[{}] Remove {} from slot {}", Name, Enum::ToString(Entry.Type), Idx);
-#ifdef LK_INVENTORY_SANITY_CAST
+		#ifdef LK_INVENTORY_SANITY_CAST
 			std::static_pointer_cast<T>(Entry.ItemRef);
-#endif
+		#endif
 			ClearSlot(Idx);
 			return true;
 		}
@@ -109,9 +111,17 @@ namespace platformer2d {
 			return false;
 		}
 
+		template<typename T>
+		std::shared_ptr<T> FindFirstOf()
+		{
+			static_assert(sizeof(T) == 0, "Not specialized for this type");
+			return nullptr;
+		}
+
 		bool IsFull() const;
 		std::size_t GetFreeSlots() const;
 		bool GetNextFreeIdx(std::size_t& Idx) const;
+		void SetName(std::string_view InName);
 
 		uint8_t GetAssignedPlayerIndex() const { return PlayerIdx; }
 		std::string_view GetName() const { return Name; }
@@ -120,6 +130,10 @@ namespace platformer2d {
 
 	private:
 		void ClearSlot(std::size_t Idx);
+		FORCEINLINE static bool IsSlotValid(const FInventoryItem& Entry)
+		{
+			return (Entry.ItemRef && Entry.bValid);
+		}
 
 		CInventory(const CInventory&) = delete;
 		CInventory(CInventory&&) = delete;
@@ -133,5 +147,24 @@ namespace platformer2d {
 		std::string Name;
 		std::array<FInventoryItem, MAX_ITEMS> Items;
 	};
+
+	template<>
+	inline std::shared_ptr<CRifle> CInventory::FindFirstOf()
+	{
+		for (const auto& Entry : Items) {
+			if (!IsSlotValid(Entry)) {
+				continue;
+			}
+
+			if (Entry.ItemRef->GetItemType() == EItemType::Weapon) {
+				std::shared_ptr<IWeapon> Weapon = std::static_pointer_cast<IWeapon>(Entry.ItemRef);
+				if (Weapon->GetWeaponType() == EWeaponType::Rifle) {
+					return std::static_pointer_cast<CRifle>(Weapon);
+				}
+			}
+		}
+
+		return nullptr;
+	}
 
 }

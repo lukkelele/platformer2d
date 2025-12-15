@@ -13,13 +13,26 @@ namespace platformer2d {
 		LK_ASSERT(!IsFull() && (GetFreeSlots() == Items.size()));
 	}
 
+	void CInventory::Tick(const float DeltaTime)
+	{
+		for (FInventoryItem& Entry : Items) {
+			if (!IsSlotValid(Entry)) {
+				continue;
+			}
+
+			if (Entry.ItemRef->GetItemType() == EItemType::Weapon) {
+				std::static_pointer_cast<IWeapon>(Entry.ItemRef)->Tick();
+			}
+		}
+	}
+
 	void CInventory::Destroy()
 	{
 		LK_DEBUG_TAG("Inventory", "Release: {} (Occupied {}/{})", Name, (Items.size() - GetFreeSlots()), Items.size());
 
 		for (FInventoryItem& Entry : Items) {
 			/* @todo: Serialize every entry */
-			if (!Entry.bValid) {
+			if (!IsSlotValid(Entry)) {
 				continue;
 			}
 
@@ -64,6 +77,11 @@ namespace platformer2d {
 
 		Idx = std::numeric_limits<std::size_t>::max();
 		return false;
+	}
+
+	void CInventory::SetName(std::string_view InName)
+	{
+		Name = InName;
 	}
 
 	bool CInventory::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
