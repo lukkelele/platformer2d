@@ -12,7 +12,7 @@ namespace platformer2d {
 
 	CRifle::~CRifle()
 	{
-		LK_DEBUG_TAG("Rifle", "Release: {}", Enum::ToString(GetType()));
+		LK_DEBUG_TAG("Rifle", "Release: {}", Enum::ToString(GetWeaponType()));
 
 		LK_TRACE_TAG("Rifle", "Destroying {} projectiles", Fired.size());
 		for (const std::shared_ptr<CProjectile> Projectile : Fired) {

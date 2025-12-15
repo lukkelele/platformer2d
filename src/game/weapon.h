@@ -23,7 +23,7 @@ namespace platformer2d {
 
 		virtual void Tick() = 0;
 		virtual void Render() = 0;
-		virtual EWeaponType GetType() const = 0;
+		virtual EWeaponType GetWeaponType() const = 0;
 
 		virtual EItemType GetItemType() const override { return EItemType::Weapon; }
 	};

@@ -54,7 +54,7 @@ namespace platformer2d {
 		const glm::vec4& GetProjectileColor() const { return ProjectileColor; }
 
 		const CActor* GetOwner() const { return Owner; }
-		virtual EWeaponType GetType() const override { return EWeaponType::Rifle; }
+		virtual EWeaponType GetWeaponType() const override { return EWeaponType::Rifle; }
 
 	private:
 		bool DestroyProjectile(const b2BodyId& ID);
