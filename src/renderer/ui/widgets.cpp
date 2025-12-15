@@ -78,8 +78,7 @@ namespace platformer2d::UI::Widget {
 
 			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 2);
-			if (ImGui::Button(LK_ICON_CHECK_CIRCLE))
-			{
+			if (ImGui::Button(LK_ICON_CHECK_CIRCLE)) {
 				LK_DEBUG_TAG("UI", "Rename {} to: {}", Handle, Data.NameBuf.data());
 				Actor->SetName(Data.NameBuf.data());
 			}
@@ -89,8 +88,7 @@ namespace platformer2d::UI::Widget {
 		ImGui::TableNextRow();
 		{
 			ETexture Texture = Actor->GetTexture();
-			if (TextureDropdown(Texture))
-			{
+			if (UI::Widget::Combo::TextureDropdown(Texture)) {
 				LK_INFO_TAG("UI", "Update {} texture: {}", Actor->GetName(), Enum::ToString(Texture));
 				Actor->SetTexture(Texture);
 			}
@@ -102,17 +100,14 @@ namespace platformer2d::UI::Widget {
 			const glm::vec4& ColorRef = Actor->GetColor();
 			EColor Color = EColor::White;
 			const bool ColorDeduced = FColor::DeduceEnum(Color, ColorRef);
-			if (!ColorDeduced)
-			{
+			if (!ColorDeduced) {
 				ImGui::BeginDisabled();
 			}
-			if (ColorDropdown(Color))
-			{
+			if (ColorDropdown(Color)) {
 				LK_INFO_TAG("UI", "Update {} color: {}", Actor->GetName(), Enum::ToString(Color));
 				Actor->SetColor(FColor::Get(Color));
 			}
-			if (!ColorDeduced)
-			{
+			if (!ColorDeduced) {
 				ImGui::EndDisabled();
 			}
 		}
@@ -124,8 +119,7 @@ namespace platformer2d::UI::Widget {
 			NextColumn();
 			bool Enabled = Actor->IsOutlineEnabled();
 			UI::ShiftCursor(7.0f, 0.0f);
-			if (ImGui::Checkbox("##Outline", &Enabled))
-			{
+			if (ImGui::Checkbox("##Outline", &Enabled)) {
 				Actor->SetOutlineEnabled(Enabled);
 			}
 		}
@@ -134,8 +128,7 @@ namespace platformer2d::UI::Widget {
 		ImGui::TableNextRow();
 		{
 			float Thickness = Actor->GetOutlineThickness();
-			if (UI::Widget::DragFloat("Outline Thickness", Thickness, 0.10f, 0.0f, 20.0f))
-			{
+			if (UI::Widget::DragFloat("Outline Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
 				Actor->SetOutlineThickness(Thickness);
 			}
 		}
@@ -145,8 +138,7 @@ namespace platformer2d::UI::Widget {
 		{
 			const glm::vec4& Color = Actor->GetOutlineColor();
 			glm::vec3 C = { Color.x, Color.y, Color.z };
-			if (UI::Widget::Vec3Control("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f))
-			{
+			if (UI::Widget::Vec3Control("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
 				Actor->SetOutlineColor(glm::vec4(C, 1.0f));
 			}
 		}
@@ -232,8 +224,7 @@ namespace platformer2d::UI::Widget {
 	void ActorNode_Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Actor && Scene);
-		if (!Actor || !Scene)
-		{
+		if (!Actor || !Scene) {
 			return;
 		}
 
@@ -267,8 +258,7 @@ namespace platformer2d::UI::Widget {
 
 				const float CursorPosX = 0.50f * ImGui::GetContentRegionAvail().x;
 				UI::ShiftCursorX(CursorPosX - ButtonSize.x);
-				if (ImGui::Button("Create", ButtonSize))
-				{
+				if (ImGui::Button("Create", ButtonSize)) {
 					FBodySpecification NewBodySpec;
 					Aggregate(PhysicsBodyData, NewBodySpec);
 					LK_INFO("{}", CBody::ToString(NewBodySpec));
@@ -279,8 +269,7 @@ namespace platformer2d::UI::Widget {
 						FColor::Get(ActorAttr.Color)
 					);
 				}
-				if (ActorExists)
-				{
+				if (ActorExists) {
 					ImGui::EndDisabled();
 				}
 			}
@@ -296,18 +285,15 @@ namespace platformer2d::UI::Widget {
 
 				UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
 				const bool IsDeletable = Actor->IsDeletable();
-				if (!IsDeletable)
-				{
+				if (!IsDeletable) {
 					ImGui::BeginDisabled();
 				}
-				if (ImGui::Button("Delete", ButtonSize))
-				{
+				if (ImGui::Button("Delete", ButtonSize)) {
 					const LUUID ActorHandle = Actor->GetHandle();
 					LK_INFO("Delete: {} ({})", ActorHandle, Actor->GetName());
 					Scene->DeleteActor(ActorHandle);
 				}
-				if (!IsDeletable)
-				{
+				if (!IsDeletable) {
 					ImGui::EndDisabled();
 				}
 			}
@@ -319,8 +305,7 @@ namespace platformer2d::UI::Widget {
 	void ActorDeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Actor && Scene);
-		if (!Actor || !Scene)
-		{
+		if (!Actor || !Scene) {
 			return;
 		}
 
@@ -338,18 +323,15 @@ namespace platformer2d::UI::Widget {
 
 		UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
 		const bool IsDeletable = Actor->IsDeletable();
-		if (!IsDeletable)
-		{
+		if (!IsDeletable) {
 			ImGui::BeginDisabled();
 		}
-		if (ImGui::Button("Delete Actor", ButtonSize))
-		{
+		if (ImGui::Button("Delete Actor", ButtonSize)) {
 			const LUUID ActorHandle = Actor->GetHandle();
 			LK_INFO("Delete: {} ({})", ActorHandle, Actor->GetName());
 			Scene->DeleteActor(ActorHandle);
 		}
-		if (!IsDeletable)
-		{
+		if (!IsDeletable) {
 			ImGui::EndDisabled();
 		}
 	}
@@ -368,20 +350,16 @@ namespace platformer2d::UI::Widget {
 		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(uint64_t)(uint32_t)Handle);
 		std::string_view Name = Actor->GetName();
 		char NodeName[84];
-		if (Actor->IsPlayer())
-		{
+		if (Actor->IsPlayer()) {
 			/* @fixme: Skip UUID for player until spawning and serialization for player is handled. */
 			std::snprintf(NodeName, sizeof(NodeName), "%s", Name.data());
-		}
-		else
-		{
+		} else {
 			std::snprintf(NodeName, sizeof(NodeName), "%s (%lld)", Name.data(), static_cast<LUUID::SizeType>(Handle));
 		}
 
 		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
 		const bool NodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
-		if (NodeOpened)
-		{
+		if (NodeOpened) {
 			ActorNode_Data(Actor);
 			UI::Widget::DrawComponents(Actor);
 			UI::Widget::ActorDeleteButton(Actor, Scene);
@@ -399,8 +377,7 @@ namespace platformer2d::UI::Widget {
 
 	void DrawComponents(std::shared_ptr<CActor> Actor)
 	{
-		if (!Actor)
-		{
+		if (!Actor) {
 			return;
 		}
 
@@ -413,8 +390,7 @@ namespace platformer2d::UI::Widget {
 			ImGui::TableNextRow();
 			glm::vec3 Translation = TC.GetTranslation();
 			Changed |= UI::Widget::Vec3Control("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
-			if (Changed)
-			{
+			if (Changed) {
 				Actor->SetPosition(Translation);
 			}
 
@@ -422,8 +398,7 @@ namespace platformer2d::UI::Widget {
 			ImGui::TableNextRow();
 			float Rotation = glm::degrees(TC.GetRotation2D());
 			Changed |= UI::Widget::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f");
-			if (Changed)
-			{
+			if (Changed) {
 				Actor->SetRotation(glm::radians(Rotation));
 			}
 
@@ -448,21 +423,16 @@ namespace platformer2d::UI::Widget {
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
 			ImGui::SetNextItemWidth(ComboItemWidth);
-			if (ImGui::BeginCombo("##EffectType", Enum::ToString(InteractionType)))
-			{
-				for (int Idx = 0; Idx < Types.size(); Idx++)
-				{
+			if (ImGui::BeginCombo("##EffectType", Enum::ToString(InteractionType))) {
+				for (int Idx = 0; Idx < Types.size(); Idx++) {
 					const char* Option = Enum::ToString(Types[Idx]);
-					if (Option == nullptr)
-					{
+					if (Option == nullptr) {
 						continue;
 					}
 
 					const bool IsSelected = (SelectedIdx == Idx);
-					if (ImGui::Selectable(Option, IsSelected))
-					{
-						if (SelectedIdx != Idx)
-						{
+					if (ImGui::Selectable(Option, IsSelected)) {
+						if (SelectedIdx != Idx) {
 							Updated = true;
 							SelectedIdx = Idx;
 						}
@@ -470,28 +440,25 @@ namespace platformer2d::UI::Widget {
 				}
 
 				ImGui::EndCombo();
-				if (Updated)
-				{
+				if (Updated) {
 					InteractionType = static_cast<EInteraction>(SelectedIdx);
 					IC.Type = InteractionType;
 					LK_DEBUG_TAG("UI", "Set IC type: {}", Enum::ToString(IC.Type));
 
 					/* Convert to new variant. */
-					switch (IC.Type)
-					{
-						case EInteraction::None:
-						{
+					switch (IC.Type) {
+						case EInteraction::None: {
 							IC.Data = std::monostate{};
 							break;
 						}
-						case EInteraction::Damage:
-						{
+
+						case EInteraction::Damage: {
 							FDamageInteraction Data;
 							IC.Data = Data;
 							break;
 						}
-						case EInteraction::Pickup:
-						{
+
+						case EInteraction::Pickup: {
 							FPickupInteraction Data;
 							IC.Data = Data;
 							break;
@@ -523,17 +490,15 @@ namespace platformer2d::UI::Widget {
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 			UI::BeginPropertyGrid();
-			switch (IC.GetType())
-			{
-				case EInteraction::Damage:
-				{
+			switch (IC.GetType()) {
+				case EInteraction::Damage: {
 					ImGui::TableNextRow();
 					auto& Data = std::get<FDamageInteraction>(IC.GetData());
 					UI::Widget::DragFloat("Damage", Data.Damage, 1.0f, 0.0, 100.0f, "%.1f");
 					break;
 				}
-				case EInteraction::Pickup:
-				{
+
+				case EInteraction::Pickup: {
 					auto& Data = std::get<FPickupInteraction>(IC.GetData());
 					CheckboxInTable("Expire When Picked Up", Data.bExpireWhenPickedUp);
 
@@ -543,8 +508,7 @@ namespace platformer2d::UI::Widget {
 					ImGui::Text("Kind");
 
 					ImGui::TableSetColumnIndex(1);
-					if (UI::Combo("##PickupKind", Array::PickupKind, SelectedKind))
-					{
+					if (UI::Combo("##PickupKind", Array::PickupKind, SelectedKind)) {
 						LK_DEBUG("Set pickup kind: {}", Enum::ToString(SelectedKind));
 						Data.Kind = SelectedKind;
 					}
@@ -565,18 +529,14 @@ namespace platformer2d::UI::Widget {
 		UI::Widget::DrawComponent<FEffectComponent>("Effect", Actor, [Actor](FEffectComponent& EC)
 		{
 			UI::BeginPropertyGrid();
-			for (auto& Effect : EC.Effects)
-			{
+			for (auto& Effect : EC.Effects) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 
-				switch (Effect.Type)
-				{
-					case EEffectType::Rotate:
-					{
+				switch (Effect.Type) {
+					case EEffectType::Rotate: {
 						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-						if (ImGui::TreeNodeEx("Rotate", ImGuiTreeNodeFlags_SpanAllColumns))
-						{
+						if (ImGui::TreeNodeEx("Rotate", ImGuiTreeNodeFlags_SpanAllColumns)) {
 							ImGui::TableNextRow();
 							ImGui::TableSetColumnIndex(1);
 
@@ -596,8 +556,7 @@ namespace platformer2d::UI::Widget {
 			}
 			UI::EndPropertyGrid();
 
-			if (EC.HasAny())
-			{
+			if (EC.HasAny()) {
 				ImGui::Dummy(ImVec2(0, 10));
 				ImGui::Separator();
 				ImGui::Dummy(ImVec2(0, 10));
@@ -625,26 +584,21 @@ namespace platformer2d::UI::Widget {
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 				const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
 				ImGui::SetNextItemWidth(ComboItemWidth);
-				if (ImGui::BeginCombo("##EffectType", Enum::ToString(EffectType)))
-				{
-					for (int Idx = 0; Idx < EffectTypes.size(); Idx++)
-					{
+				if (ImGui::BeginCombo("##EffectType", Enum::ToString(EffectType))) {
+					for (int Idx = 0; Idx < EffectTypes.size(); Idx++) {
 						const char* Option = Enum::ToString(EffectTypes[Idx]);
-						if (Option == nullptr)
-						{
+						if (Option == nullptr) {
 							continue;
 						}
 
 						const bool IsSelected = (SelectedIdx == Idx);
-						if (ImGui::Selectable(Option, IsSelected))
-						{
+						if (ImGui::Selectable(Option, IsSelected)) {
 							SelectedIdx = Idx;
 						}
 					}
 
 					ImGui::EndCombo();
-					if (SelectedIdx != std::to_underlying(EffectType))
-					{
+					if (SelectedIdx != std::to_underlying(EffectType)) {
 						EffectType = static_cast<EEffectType>(SelectedIdx);
 					}
 				}
@@ -654,8 +608,7 @@ namespace platformer2d::UI::Widget {
 				ImGui::TableSetColumnIndex(0);
 				{
 					UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-					switch (EffectType)
-					{
+					switch (EffectType) {
 						case EEffectType::Rotate:
 							UI::Widget::DragFloat<EPlacementPolicy::Auto>("Angular Speed", AngularSpeed, 1.0f, -360.0f, 360.0f);
 							break;
@@ -674,14 +627,11 @@ namespace platformer2d::UI::Widget {
 			const ImVec2 Avail = ImGui::GetContentRegionAvail();
 			UI::ShiftCursorX(Avail.x - (ButtonSize.x + 10));
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-			if (ImGui::Button("Add", ButtonSize))
-			{
+			if (ImGui::Button("Add", ButtonSize)) {
 				FEffectInstance Effect;
 				Effect.Type = EffectType;
-				switch (Effect.Type)
-				{
-					case EEffectType::Rotate:
-					{
+				switch (Effect.Type) {
+					case EEffectType::Rotate: {
 						LK_DEBUG_TAG("UI", "Add rotate effect: AngularSpeed={}", AngularSpeed);
 						FRotateEffect Rotate;
 						Rotate.AngularSpeedDegPerSecond = AngularSpeed;
@@ -708,8 +658,7 @@ namespace platformer2d::UI::Widget {
 
 			const ImVec2 Avail = ImGui::GetContentRegionAvail();
 			UI::ShiftCursorX(Avail.x - (ButtonSize.x + 10));
-			if (ImGui::Button(AddButtonLabel, ButtonSize))
-			{
+			if (ImGui::Button(AddButtonLabel, ButtonSize)) {
 				ImGui::OpenPopup("AddComponent");
 			}
 		}
@@ -717,11 +666,9 @@ namespace platformer2d::UI::Widget {
 		/******************************
 		 * Popup: Add Component
 		 ******************************/
-		if (ImGui::BeginPopup("AddComponent", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking))
-		{
+		if (ImGui::BeginPopup("AddComponent", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking)) {
 			static constexpr float AddCompPanelWidth = 250.0f;
-			if (ImGui::BeginTable("##CompTable", 2, ImGuiTableFlags_SizingStretchSame))
-			{
+			if (ImGui::BeginTable("##CompTable", 2, ImGuiTableFlags_SizingStretchSame)) {
 				ImGui::TableSetupColumn("Icon", ImGuiTableColumnFlags_WidthFixed, AddCompPanelWidth * 0.12f);
 				ImGui::TableSetupColumn("Components", ImGuiTableColumnFlags_WidthFixed, AddCompPanelWidth * 0.88f);
 

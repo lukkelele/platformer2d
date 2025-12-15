@@ -56,31 +56,23 @@ namespace platformer2d::UI {
 			const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
 
 			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
-			if constexpr (Policy == EPlacementPolicy::Auto)
-			{
-				if (ImGui::GetCurrentTable() != nullptr)
-				{
-					if ((LabelSize > 0) && (Label[0] != '#'))
-					{
+			if constexpr (Policy == EPlacementPolicy::Auto) {
+				if (ImGui::GetCurrentTable() != nullptr) {
+					if ((LabelSize > 0) && (Label[0] != '#')) {
 						ImGui::TableSetColumnIndex(0);
-						UI::ShiftCursor(17.0f, 7.0f);
+						UI::ShiftCursor(17.0f, 0.0f);
 						ImGui::Text(Label);
 					}
 
 					ImGui::TableSetColumnIndex(1);
 					UI::ShiftCursor(7.0f, 0.0f);
-				}
-				else
-				{
-					if ((LabelSize > 0) && (Label[0] != '#'))
-					{
+				} else {
+					if ((LabelSize > 0) && (Label[0] != '#')) {
 						ImGui::Text(Label);
 						ImGui::SameLine();
 					}
 				}
-			}
-			else if constexpr (Policy == EPlacementPolicy::InPlace)
-			{
+			} else if constexpr (Policy == EPlacementPolicy::InPlace) {
 				ImGui::Text(Label);
 				ImGui::SameLine();
 			}
@@ -99,8 +91,7 @@ namespace platformer2d::UI {
 				Flags
 			);
 
-			if (ImGui::TempInputIsActive(InputID))
-			{
+			if (ImGui::TempInputIsActive(InputID)) {
 				Modified = false;
 			}
 
