@@ -208,8 +208,8 @@ namespace platformer2d {
 
 		UI::ShiftCursorY(6.0f);
 
-		UI::BlendFunction();
-		UI::DepthFunction();
+		UI::Widget::Combo::BlendFunction();
+		UI::Widget::Combo::DepthFunction();
 
 		ImGui::PopStyleVar(2);
 
