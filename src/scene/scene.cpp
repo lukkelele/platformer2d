@@ -156,8 +156,7 @@ namespace platformer2d {
 		Out << YAML::EndMap; /* ~Scene */
 
 		/* Create scene directory if needed. */
-		if (!std::filesystem::is_directory(SceneFile.parent_path()))
-		{
+		if (!std::filesystem::is_directory(SceneFile.parent_path())) {
 			LK_WARN("Creating scenes directory as it was missing");
 			const bool CreatedDirectory = std::filesystem::create_directories(SceneFile.parent_path());
 			LK_VERIFY(CreatedDirectory, "Failed to create scenes directory");
