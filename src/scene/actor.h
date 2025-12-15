@@ -128,6 +128,7 @@ namespace platformer2d {
 		bool RemoveComponent()
 		{
 			static_assert(sizeof(T) == 0, "RemoveComponent not specialized for this type");
+			return false;
 		}
 
 		template<typename T>
