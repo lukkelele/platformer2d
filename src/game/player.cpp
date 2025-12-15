@@ -85,10 +85,9 @@ namespace platformer2d {
 		/* Set z-index. */
 		TransformComp.Translation.z = -0.010f;
 
-		Rifle = std::make_shared<CRifle>();
-		Rifle->Equip(this);
-
 		Inventory = std::make_shared<CInventory>("PlayerInventory");
+		std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>();
+		Rifle->Equip(this);
 		Inventory->AddItem(Rifle);
 
 		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
@@ -111,11 +110,6 @@ namespace platformer2d {
 			Inventory.reset();
 			Inventory = nullptr;
 		}
-
-		if (Rifle) {
-			LK_TRACE_TAG("Player", "Release rifle");
-			Rifle.reset();
-		}
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
@@ -131,9 +125,7 @@ namespace platformer2d {
 		HandleInput();
 		SyncTransformComponent();
 
-		if (Rifle) {
-			Rifle->Tick();
-		}
+		Inventory->Tick(DeltaTime);
 
 		if (bCameraLock) {
 			Camera->Target(Body->GetPosition(), DeltaTime);
@@ -181,6 +173,16 @@ namespace platformer2d {
 	void CPlayer::SetCameraLock(const bool Locked)
 	{
 		bCameraLock = Locked;
+	}
+
+	bool CPlayer::HasRifle()
+	{
+		return (Inventory->FindFirstOf<CRifle>() != nullptr);
+	}
+
+	std::shared_ptr<CRifle> CPlayer::GetRifle()
+	{
+		return Inventory->FindFirstOf<CRifle>();
 	}
 
 	bool CPlayer::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
@@ -383,7 +385,7 @@ namespace platformer2d {
 			Sprite->SetTilePos(X, SPRITE_TILEPOS_Y, FlipHorizontal);
 			CurrentSpriteFrame = X;
 
-			if (Rifle) {
+			if (std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>()) {
 				Rifle->SetLookDirection(LookDir);
 			}
 		}
@@ -409,7 +411,7 @@ namespace platformer2d {
 				break;
 
 			case EKey::R:
-				if (Rifle) {
+				if (std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>()) {
 					Rifle->Reload();
 				}
 				break;
@@ -417,7 +419,7 @@ namespace platformer2d {
 			case EKey::V:
 				if (Data.State == EKeyState::Pressed) {
 					/* Toggle rifle. */
-					if (Rifle) {
+					if (std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>()) {
 						Rifle->SetEnabled(!Rifle->IsEnabled());
 					}
 				}
@@ -430,6 +432,7 @@ namespace platformer2d {
 		switch (Data.State) {
 			case EMouseButtonState::Pressed: {
 				if (Data.Button == EMouseButton::Button0) {
+					std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>();
 					if (Rifle && Rifle->IsEnabled()) {
 						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(*Camera);
 						if (Math::IsValid(TargetPos)) {
