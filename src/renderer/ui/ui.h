@@ -9,12 +9,15 @@
 #include "renderer/color.h"
 #include "renderer/font.h"
 #include "renderer/texture.h"
+#include "renderer/ui/ui_core.h"
 #include "renderer/ui/scoped.h"
 #include "scene/actor.h"
+#include "combo.h"
 
 namespace platformer2d {
 	class CPlayer;
 	class CScene;
+	class CRifle;
 }
 
 namespace platformer2d::UI {
@@ -36,42 +39,50 @@ namespace platformer2d::UI {
 	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
 	extern FOnGameMenuOpened OnGameMenuOpened;
 
+	FORCEINLINE bool InTable() { return ImGui::GetCurrentTable() != nullptr; }
+
+	namespace Table {
+		FORCEINLINE void Label(std::string_view Str)
+		{
+			ImGui::TableSetColumnIndex(0);
+			UI::ShiftCursor(17.0f, 0.0f);
+			ImGui::Text(Str.data());
+		}
+
+		FORCEINLINE void NextColumn()
+		{
+			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(0.0f, 0.0f);
+		};
+	}
+
+	inline bool Checkbox(std::string_view Str, bool& Value)
+	{
+		bool Active = false;
+
+		char LabelBuf[64] = { 0 };
+		std::snprintf(LabelBuf, sizeof(LabelBuf), "##%s", Str.data());
+
+		if (InTable()) {
+			Table::Label(Str);
+			Table::NextColumn();
+			UI::ShiftCursor(7.0f, 0.0f);
+			if (ImGui::Checkbox(LabelBuf, &Value)) {
+				Active = true;
+			}
+		} else {
+			ImGui::Text(Str.data());
+			ImGui::SameLine();
+			if (ImGui::Checkbox(LabelBuf, &Value)) {
+				Active = true;
+			}
+		}
+
+		return Active;
+	}
+
 	void BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
 	void EndPropertyGrid();
-
-	template<std::size_t N, typename TEnum>
-	inline bool Combo(std::string_view Label, const std::array<TEnum, N>& Options, TEnum& Selected)
-	{
-		char NameBuf[64] = { 0 };
-		std::snprintf(NameBuf, sizeof(NameBuf), "%s", Label.data());
-		if (!ImGui::BeginCombo(NameBuf, Enum::ToString(Selected)))
-		{
-			return false;
-		}
-
-		bool Updated = false;
-		for (std::size_t Idx = 0; Idx < Options.size(); Idx++)
-		{
-			const char* Option = Enum::ToString(Options[Idx]);
-			if (Option == nullptr)
-			{
-				continue;
-			}
-
-			const bool IsSelected = (std::to_underlying(Selected) == Idx);
-			if (ImGui::Selectable(Option, IsSelected))
-			{
-				if (std::to_underlying(Selected) != Idx)
-				{
-					Updated = true;
-					Selected = static_cast<TEnum>(Idx);
-				}
-			}
-		}
-
-		ImGui::EndCombo();
-		return Updated;
-	}
 
 	struct FPhysicsBodyData
 	{
@@ -129,23 +140,11 @@ namespace platformer2d::UI {
 	void ActorCreateButtons(std::shared_ptr<CScene> Scene);
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
-	void TextureModifier();
-	bool TextureDropdown(ETexture& Selected);
-
-	/**
-	 * @brief Combo dropdown.
-	 */
-	bool BlendFunction();
-
-	/**
-	 * @brief Combo dropdown.
-	 */
-	bool DepthFunction();
-
 	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
 	void PlayerData(std::shared_ptr<CPlayer> Player);
+	void RifleData(std::shared_ptr<CRifle> Rifle);
 	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
 	void PlayerHud(std::shared_ptr<CPlayer> Player);
 
