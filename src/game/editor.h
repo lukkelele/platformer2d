@@ -33,6 +33,11 @@ namespace platformer2d {
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
+		virtual void OnSensorBeginEvent(const CSensorBeginEvent& Event) override;
+		virtual void OnSensorEndEvent(const CSensorEndEvent& Event) override;
+		virtual void OnContactBeginEvent(const CContactBeginEvent& Event) override;
+		virtual void OnContactEndEvent(const CContactEndEvent& Event) override;
+
 		virtual bool Serialize(const std::filesystem::path& OutFile) const override;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override;
 
@@ -57,11 +62,6 @@ namespace platformer2d {
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnKeyPressed(const FKeyData& Data);
 		void OnMouseButtonPressed(const FMouseButtonData& Data);
-
-		void OnSensorBeginEvent(const CSensorBeginEvent& Event);
-		void OnSensorEndEvent(const CSensorEndEvent& Event);
-		void OnContactBeginEvent(const CContactBeginEvent& Event);
-		void OnContactEndEvent(const CContactEndEvent& Event);
 
 		void MousePickScene();
 		void RaycastScene();

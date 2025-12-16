@@ -407,6 +407,113 @@ namespace platformer2d {
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
+	void CEditor::OnSensorBeginEvent(const CSensorBeginEvent& Event)
+	{
+		LK_ASSERT(Event.Sensor && Event.Visitor);
+		LK_DEBUG_TAG("Editor", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
+			return;
+		}
+
+		/**
+		 * Player is overlapping the sensor.
+		 * Determine the type of sensor.
+		 */
+		if (Event.Visitor == Player.get()) {
+			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
+				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
+				Event.Sensor->SetOutlineEnabled(true);
+
+				switch (IC->GetType())
+				{
+					case EInteraction::Damage:
+					{
+						auto& Data = std::get<FDamageInteraction>(IC->GetData());
+						LK_WARN("Damage={}", Data.Damage);
+						break;
+					}
+					case EInteraction::Pickup:
+					{
+						auto& Data = std::get<FPickupInteraction>(IC->GetData());
+						LK_WARN("Kind={} ExpireOnPickup={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp);
+						break;
+					}
+
+					default:
+						break;
+				}
+			}
+		}
+	}
+
+	void CEditor::OnSensorEndEvent(const CSensorEndEvent& Event)
+	{
+		LK_ASSERT(Event.Sensor && Event.Visitor);
+		LK_DEBUG_TAG("Editor", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
+			return;
+		}
+
+		/**
+		 * Player is overlapping the sensor.
+		 * Determine the type of sensor.
+		 */
+		if (Event.Visitor == Player.get()) {
+			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
+				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
+				Event.Sensor->SetOutlineEnabled(false);
+			}
+		}
+	}
+
+	static void OnProjectileContact(CActor* ProjectileActor, CActor* HitActor)
+	{
+		CProjectile* Projectile = static_cast<CProjectile*>(ProjectileActor);
+		/* Do not destroy if the actor hit is the player who shot the projectile. */
+		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor)) {
+			return;
+		}
+
+		Projectile->BounceCount++;
+
+		LK_ASSERT(HitActor, "Invalid rojectile hit");
+		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
+		if (Projectile->ExplodesOnImpact()) {
+			Projectile->Destroy();
+		} else if (Projectile->BounceCount >= Projectile->MaxBounceCount) {
+			LK_TRACE("{}: Max bounce reached: {}", Projectile->GetName(), Projectile->BounceCount);
+			Projectile->Destroy();
+		}
+	};
+
+	void CEditor::OnContactBeginEvent(const CContactBeginEvent& Event)
+	{
+		LK_TRACE_TAG("Editor", "OnContactBeginEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
+		LK_ASSERT(Event.A && Event.B, "Invalid event references");
+		if (!Event.A || !Event.B) {
+			return;
+		}
+
+		const EActorType AType = Event.A->GetActorType();
+		const EActorType BType = Event.B->GetActorType();
+
+		/* Projectile hit. */
+		if (AType == EActorType::Projectile) {
+			OnProjectileContact(Event.A, Event.B);
+		} else if (BType == EActorType::Projectile) {
+			OnProjectileContact(Event.B, Event.A);
+		}
+	}
+
+	void CEditor::OnContactEndEvent(const CContactEndEvent& Event)
+	{
+		LK_TRACE_TAG("Editor", "OnContactEndEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
+		LK_ASSERT(Event.A && Event.B, "Invalid event references");
+		if (!Event.A || !Event.B) {
+			return;
+		}
+	}
+
 	bool CEditor::Serialize(const std::filesystem::path& OutFile) const
 	{
 		LK_INFO_TAG("Editor", "Serialize: {}", OutFile);
@@ -976,113 +1083,6 @@ namespace platformer2d {
 
 			case EMouseButtonState::Held:
 				break;
-		}
-	}
-
-	void CEditor::OnSensorBeginEvent(const CSensorBeginEvent& Event)
-	{
-		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("Editor", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
-			return;
-		}
-
-		/**
-		 * Player is overlapping the sensor.
-		 * Determine the type of sensor.
-		 */
-		if (Event.Visitor == Player.get()) {
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
-				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
-				Event.Sensor->SetOutlineEnabled(true);
-
-				switch (IC->GetType())
-				{
-					case EInteraction::Damage:
-					{
-						auto& Data = std::get<FDamageInteraction>(IC->GetData());
-						LK_WARN("Damage={}", Data.Damage);
-						break;
-					}
-					case EInteraction::Pickup:
-					{
-						auto& Data = std::get<FPickupInteraction>(IC->GetData());
-						LK_WARN("Kind={} ExpireOnPickup={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp);
-						break;
-					}
-
-					default:
-						break;
-				}
-			}
-		}
-	}
-
-	void CEditor::OnSensorEndEvent(const CSensorEndEvent& Event)
-	{
-		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("Editor", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
-			return;
-		}
-
-		/**
-		 * Player is overlapping the sensor.
-		 * Determine the type of sensor.
-		 */
-		if (Event.Visitor == Player.get()) {
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
-				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
-				Event.Sensor->SetOutlineEnabled(false);
-			}
-		}
-	}
-
-	static void OnProjectileContact(CActor* ProjectileActor, CActor* HitActor)
-	{
-		CProjectile* Projectile = static_cast<CProjectile*>(ProjectileActor);
-		/* Do not destroy if the actor hit is the player who shot the projectile. */
-		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor)) {
-			return;
-		}
-
-		Projectile->BounceCount++;
-
-		LK_ASSERT(HitActor, "Invalid rojectile hit");
-		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
-		if (Projectile->ExplodesOnImpact()) {
-			Projectile->Destroy();
-		} else if (Projectile->BounceCount >= Projectile->MaxBounceCount) {
-			LK_TRACE("{}: Max bounce reached: {}", Projectile->GetName(), Projectile->BounceCount);
-			Projectile->Destroy();
-		}
-	};
-
-	void CEditor::OnContactBeginEvent(const CContactBeginEvent& Event)
-	{
-		LK_TRACE_TAG("Editor", "OnContactBeginEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
-		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B) {
-			return;
-		}
-
-		const EActorType AType = Event.A->GetActorType();
-		const EActorType BType = Event.B->GetActorType();
-
-		/* Projectile hit. */
-		if (AType == EActorType::Projectile) {
-			OnProjectileContact(Event.A, Event.B);
-		} else if (BType == EActorType::Projectile) {
-			OnProjectileContact(Event.B, Event.A);
-		}
-	}
-
-	void CEditor::OnContactEndEvent(const CContactEndEvent& Event)
-	{
-		LK_TRACE_TAG("Editor", "OnContactEndEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
-		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B) {
-			return;
 		}
 	}
 

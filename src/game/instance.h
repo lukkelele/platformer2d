@@ -3,6 +3,7 @@
 #include "core/core.h"
 #include "core/layer.h"
 #include "player.h"
+#include "physics/events.h"
 #include "physics/ray.h"
 
 namespace platformer2d {
@@ -65,6 +66,11 @@ namespace platformer2d {
 		virtual glm::vec2 GetMouseInWorldSpace(const CCamera& Camera);
 
 		float GetDeltaTime() const { return DeltaTime; }
+
+		virtual void OnSensorBeginEvent(const CSensorBeginEvent& Event) = 0;
+		virtual void OnSensorEndEvent(const CSensorEndEvent& Event) = 0;
+		virtual void OnContactBeginEvent(const CContactBeginEvent& Event) = 0;
+		virtual void OnContactEndEvent(const CContactEndEvent& Event) = 0;
 
 		virtual bool Serialize(const std::filesystem::path& OutFile) const override = 0;
 		virtual bool Deserialize(const std::filesystem::path& InFile) override = 0;
