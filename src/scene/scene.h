@@ -7,10 +7,11 @@ namespace platformer2d {
 
 	enum class ESceneState
 	{
-		Edit,
+		None,
 		Play,
 		Pause,
-		Simulate
+		Edit,
+		COUNT
 	};
 
 	class CScene : public ISerializable<ESerializable::File>
@@ -56,6 +57,8 @@ namespace platformer2d {
 
 		std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
+		void SetState(ESceneState InState);
+		ESceneState GetState() const { return State; }
 		const std::filesystem::path& GetFilepath() const { return Path; }
 
 		virtual bool Serialize(const std::filesystem::path& OutFile = {}) const override;
@@ -71,24 +74,22 @@ namespace platformer2d {
 	private:
 		LUUID ID;
 		std::string Name;
+		ESceneState State = ESceneState::None;
 		std::filesystem::path Path;
 		std::vector<std::shared_ptr<CActor>> Actors{};
-
-		bool bPaused = false;
 	};
 
 	namespace Enum {
-
 		inline const char* ToString(const ESceneState State)
 		{
 			const char* S = "";
 		#define _(EnumValue) case ESceneState::EnumValue: S = #EnumValue; break
-			switch (State)
-			{
-				_(Edit);
+			switch (State) {
+				_(None);
 				_(Play);
 				_(Pause);
-				_(Simulate);
+				_(Edit);
+				_(COUNT);
 				default:
 					LK_THROW_ENUM_ERR(State);
 					break;

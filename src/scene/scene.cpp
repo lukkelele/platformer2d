@@ -132,6 +132,11 @@ namespace platformer2d {
 		Name = InName;
 	}
 
+	void CScene::SetState(const ESceneState InState)
+	{
+		State = InState;
+	}
+
 	bool CScene::Serialize(const std::filesystem::path& OutFile) const
 	{
 		std::filesystem::path SceneFile = OutFile;
