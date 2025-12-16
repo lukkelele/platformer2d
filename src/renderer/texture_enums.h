@@ -72,12 +72,13 @@ namespace platformer2d {
 
 	struct FTextureSpecification
 	{
-		std::string Path{};
+		std::filesystem::path Path{};
 		std::string Name{};
 		uint32_t Width = 1;
 		uint32_t Height = 1;
 		uint8_t Mips = 1;
 		bool bFlipVertical = true;
+		bool bInvert = false;
 
 		EImageFormat Format = EImageFormat::RGBA;
 		ETextureWrap SamplerWrap = ETextureWrap::Clamp;
