@@ -27,6 +27,9 @@ namespace platformer2d {
 		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
 		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
 
+		virtual void PauseGame() override;
+		virtual void ResumeGame() override;
+
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
@@ -47,6 +50,7 @@ namespace platformer2d {
 		void UI_ViewportTexture();
 		void UI_DrawGizmo();
 		void UI_PrepareEditorViewport();
+		void UI_Topbar();
 		void UI_LeftSidebar();
 		void UI_LevelLauncher();
 

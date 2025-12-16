@@ -71,6 +71,7 @@ namespace platformer2d {
 
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
+		bool bSceneStateChanged = false;
 		glm::vec2 PLAYER_SPAWN = { 0.0f, 0.0f };
 		glm::vec2 GRAVITY = { 0.0f, -5.0f };
 		float SCENE_LOAD_CAMERA_ZOOM = 0.30f;
@@ -153,9 +154,9 @@ namespace platformer2d {
 			}
 
 			if (Opened) {
-				CPhysicsWorld::Pause();
+				PauseGame();
 			} else {
-				CPhysicsWorld::Unpause();
+				ResumeGame();
 			}
 		});
 	}
@@ -188,7 +189,14 @@ namespace platformer2d {
 
 	void CEditor::Tick(const float InDeltaTime)
 	{
-		DeltaTime = InDeltaTime;
+		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
+		if (SceneState == ESceneState::Play) {
+			DeltaTime = InDeltaTime;
+		} else {
+			/* Freeze the scene. */
+			DeltaTime = 0.0f;
+		}
+
 		if (!Scene) {
 			if (bOpenSceneNextTick) {
 				OpenScene();
@@ -199,6 +207,15 @@ namespace platformer2d {
 			CloseScene();
 			bCloseSceneNextTick = false;
 			return;
+		}
+
+		if (bSceneStateChanged) {
+			if (SceneState == ESceneState::Play) {
+				CPhysicsWorld::Unpause();
+			} else {
+				CPhysicsWorld::Pause();
+			}
+			bSceneStateChanged = false;
 		}
 
 		CCamera& Camera = Player->GetCamera();
@@ -248,40 +265,10 @@ namespace platformer2d {
 		}
 
 		UI::PrepareTopBar();
-		UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
-		{
-			static constexpr float ButtonSize = 32.0f + 5.0f;
-			static constexpr float EdgeOffset = 4.0f;
-			static constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
-			static constexpr float NumberOfButtons = 3.0f;
-			static constexpr float BackgroundWidth = (EdgeOffset * 6.0f) + (ButtonSize * NumberOfButtons) + EdgeOffset * (NumberOfButtons - 1.0f) * 2.0f;
-
-			auto ToolbarButton = [](const std::shared_ptr<CTexture>& Icon, const ImColor& Tint, float PaddingY = 0.0f)
-			{
-				const float Height = std::min(static_cast<float>(Icon->GetHeight()), ButtonSize) - PaddingY * 2.0f;
-				const float Width = (static_cast<float>(Icon->GetWidth()) / static_cast<float>(Icon->GetHeight()) * Height);
-				const bool Clicked = ImGui::InvisibleButton(UI::GenerateID(), ImVec2(Width, Height));
-				UI::DrawButtonImage(Icon, Tint, Tint, Tint, UI::RectOffset(UI::GetItemRect(), 0.0f, PaddingY));
-				return Clicked;
-			};
-
-			static bool ButtonClicked = false;
-
-			uint32_t Color = 0;
-			if (ButtonClicked) {
-				Color = RGBA32::BrightGreen;
-			} else {
-				Color = RGBA32::Text::Normal;
-			}
-
-			std::shared_ptr<CTexture> ButtonImage = CRenderer::GetWhiteTexture();
-			ImGui::SetCursorPosX((ImGui::GetWindowSize().x * 0.50f) - ButtonSize * 0.50f);
-			if (ToolbarButton(ButtonImage, Color)) {
-				ButtonClicked = !ButtonClicked;
-				LK_DEBUG_TAG("Editor", "Clicked button: {}", ButtonClicked ? "1" : "0");
-			}
+		if (UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
+			UI_Topbar();
+			UI::End();
 		}
-		UI::End();
 
 		UI_LeftSidebar();
 
@@ -320,6 +307,24 @@ namespace platformer2d {
 	{
 		LK_ASSERT(Idx == 0, "Only 1 player supported");
 		return Player;
+	}
+
+	void CEditor::PauseGame()
+	{
+		LK_DEBUG_TAG("Editor", "Game paused");
+		CPhysicsWorld::Pause();
+		if (Scene) {
+			Scene->SetState(ESceneState::Pause);
+		}
+	}
+
+	void CEditor::ResumeGame()
+	{
+		LK_DEBUG_TAG("Editor", "Game resumed");
+		CPhysicsWorld::Unpause();
+		if (Scene) {
+			Scene->SetState(ESceneState::Play);
+		}
 	}
 
 	uint16_t CEditor::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
@@ -827,6 +832,64 @@ namespace platformer2d {
 		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
 	}
 
+	void CEditor::UI_Topbar()
+	{
+		static constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
+		static constexpr float ButtonSize = 42.0f + 5.0f;
+		static constexpr float EdgeOffset = 4.0f;
+		static constexpr float NumberOfButtons = 3.0f;
+		static constexpr float BackgroundWidth = (EdgeOffset * 6.0f) + (ButtonSize * NumberOfButtons) + EdgeOffset * (NumberOfButtons - 1.0f) * 2.0f;
+
+		auto ToolbarButton = [](const std::shared_ptr<CTexture>& Icon, const ImColor& Tint, float PaddingY = 0.0f)
+		{
+			const float Height = std::min(static_cast<float>(Icon->GetHeight()), ButtonSize) - PaddingY * 2.0f;
+			const float Width = (static_cast<float>(Icon->GetWidth()) / static_cast<float>(Icon->GetHeight()) * Height);
+			UI::ShiftCursorY(8);
+			const bool Clicked = ImGui::InvisibleButton(UI::GenerateID(), ImVec2(Width, Height));
+			UI::DrawButtonImage(Icon, Tint, Tint, Tint, UI::RectOffset(UI::GetItemRect(), 0.0f, PaddingY));
+			return Clicked;
+		};
+
+		/* Play Icon */
+		{
+			std::shared_ptr<CTexture> Image;
+			uint32_t Color = 0;
+
+			ESceneState SceneState = ESceneState::None;
+			if (Scene) {
+				SceneState = Scene->GetState();
+				if (SceneState == ESceneState::Play) {
+					Image = EditorResources.PlayIcon;
+					Color = RGBA32::SmoothGreen;
+				} else if (SceneState == ESceneState::Pause) {
+					Image = EditorResources.PauseIcon;
+					Color = RGBA32::Text::Normal;
+				}
+			} else {
+				Image = EditorResources.PlayIcon;
+				Color = RGBA32::Text::Disabled;
+			}
+
+			ImGui::SetCursorPosX((ImGui::GetWindowSize().x * 0.50f) - ButtonSize * 0.50f);
+			if (SceneState == ESceneState::None) {
+				ImGui::BeginDisabled();
+			}
+			if (ToolbarButton(Image, Color)) {
+				LK_ASSERT(Scene); /* Button should only be active if a scene is active. */
+				if (SceneState == ESceneState::Play) {
+					Scene->SetState(ESceneState::Pause);
+					bSceneStateChanged = true;
+				} else if (SceneState == ESceneState::Pause) {
+					Scene->SetState(ESceneState::Play);
+					bSceneStateChanged = true;
+				}
+			}
+			if (SceneState == ESceneState::None) {
+				ImGui::EndDisabled();
+			}
+		}
+	}
+
 	void CEditor::UI_LeftSidebar()
 	{
 		UI::PrepareLeftSidebar();
@@ -1075,6 +1138,7 @@ namespace platformer2d {
 
 		Scene = std::make_shared<CScene>("Editor");
 		Scene->Deserialize(SceneToOpen);
+		Scene->SetState(ESceneState::Play);
 		CreatePlayer();
 		LK_VERIFY(Player);
 		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
