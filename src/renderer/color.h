@@ -74,8 +74,7 @@ namespace platformer2d {
 	{
 		static constexpr float Scale(const float Value)
 		{
-			switch (Range)
-			{
+			switch (Range) {
 				case EColorRange::Normalized: return Value;
 				case EColorRange::Byte:       return (Value * 255.0f);
 				default:                      return Value;
@@ -195,8 +194,7 @@ namespace platformer2d {
 		return ImVec4(R, G, B, A);
 	}
 
-	namespace RGBA32 
-	{
+	namespace RGBA32 {
 		inline constexpr uint32_t White          = IM_COL32(255, 255, 255, 255);
 		inline constexpr uint32_t Black          = IM_COL32(0, 0, 0, 255);
 		inline constexpr uint32_t Gray           = IM_COL32(128, 128, 128, 255);
@@ -222,6 +220,7 @@ namespace platformer2d {
 		inline constexpr uint32_t NiceBlue       = IM_COL32(83, 232, 254, 255);
 		inline constexpr uint32_t NiceGreen      = IM_COL32(0, 205, 15, 192);
 		inline constexpr uint32_t LightGreen     = IM_COL32(14, 156, 54, 255);
+		inline constexpr uint32_t SmoothGreen    = IM_COL32(51, 125, 52, 255);
 		inline constexpr uint32_t WineRed        = IM_COL32(166, 13, 23, 255);
 
 		inline constexpr uint32_t Accent         = IM_COL32(236, 158, 36, 255);
@@ -237,8 +236,7 @@ namespace platformer2d {
 		inline constexpr uint32_t BackgroundDark    = IM_COL32(26, 26, 26, 255);
 		inline constexpr uint32_t BackgroundDarker  = IM_COL32(16, 16, 16, 255);
 
-		namespace Text
-		{
+		namespace Text {
 			inline constexpr uint32_t Normal   = IM_COL32(190, 190, 190, 255);
 			inline constexpr uint32_t Brighter = IM_COL32(204, 204, 204, 255);
 			inline constexpr uint32_t Darker   = IM_COL32(128, 128, 128, 255);
@@ -246,8 +244,7 @@ namespace platformer2d {
 			inline constexpr uint32_t Disabled = IM_COL32(237, 201, 142, 95);
 		}
 
-		namespace Titlebar
-		{
+		namespace Titlebar {
 			inline constexpr uint32_t Default = IM_COL32(30, 30, 30, 255);
 			inline constexpr uint32_t Orange  = IM_COL32(186, 66, 30, 255);
 			inline constexpr uint32_t Green   = IM_COL32(22, 84, 29, 255);
@@ -255,8 +252,7 @@ namespace platformer2d {
 		}
 	}
 
-	namespace _Internal
-	{
+	namespace _Internal {
 		static constexpr std::array<EColor, std::to_underlying(EColor::COUNT)> ColorArray = {
 			EColor::White,
 			EColor::Black,
@@ -281,10 +277,8 @@ namespace platformer2d {
 	template<EColorRange Range>
 	inline constexpr bool TColor<glm::vec4, Range>::DeduceEnum(EColor& Color, const glm::vec4& V)
 	{
-		for (const auto& [ColorEnum, C] : _Internal::TColor4Map)
-		{
-			if ((C.r == V.r) && (C.g == V.g) && (C.b == V.b) && (C.a == V.a))
-			{
+		for (const auto& [ColorEnum, C] : _Internal::TColor4Map) {
+			if ((C.r == V.r) && (C.g == V.g) && (C.b == V.b) && (C.a == V.a)) {
 				Color = ColorEnum;
 				return true;
 			}
