@@ -120,6 +120,7 @@ namespace platformer2d {
 
 		bool IsFull() const;
 		std::size_t GetFreeSlots() const;
+		std::size_t GetUsedSlots() const;
 		bool GetNextFreeIdx(std::size_t& Idx) const;
 		void SetName(std::string_view InName);
 

@@ -66,6 +66,11 @@ namespace platformer2d {
 		return Free;
 	}
 
+	std::size_t CInventory::GetUsedSlots() const
+	{
+		return (MAX_ITEMS - GetFreeSlots());
+	}
+
 	bool CInventory::GetNextFreeIdx(std::size_t& Idx) const
 	{
 		Idx = 0;
