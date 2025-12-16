@@ -256,13 +256,15 @@ namespace platformer2d::UI {
 								const ImVec2& RectMin,
 								const ImVec2& RectMax)
 	{
+		static constexpr ImVec2 UVMin(0, 0);
+		static constexpr ImVec2 UVMax(1, 1);
 		ImDrawList* DrawList = ImGui::GetWindowDrawList();
 		if (ImGui::IsItemActive()) {
-			DrawList->AddImage(GetTextureID(ImagePressed), RectMin, RectMax, ImVec2(0, 0), ImVec2(1, 1), TintPressed);
+			DrawList->AddImage(GetTextureID(ImagePressed), RectMin, RectMax, UVMin, UVMax, TintPressed);
 		} else if (ImGui::IsItemHovered()) {
-			DrawList->AddImage(GetTextureID(ImageHovered), RectMin, RectMax, ImVec2(0, 0), ImVec2(1, 1), TintHovered);
+			DrawList->AddImage(GetTextureID(ImageHovered), RectMin, RectMax, UVMin, UVMax, TintHovered);
 		} else {
-			DrawList->AddImage(GetTextureID(ImageNormal), RectMin, RectMax, ImVec2(0, 0), ImVec2(1, 1), TintNormal);
+			DrawList->AddImage(GetTextureID(ImageNormal), RectMin, RectMax, UVMin, UVMax, TintNormal);
 		}
 	}
 
