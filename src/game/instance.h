@@ -50,6 +50,7 @@ namespace platformer2d {
 
 		virtual void PauseGame() = 0;
 		virtual void ResumeGame() = 0;
+		virtual bool IsGamePaused() = 0;
 
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
 		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;

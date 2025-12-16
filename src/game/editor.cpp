@@ -327,6 +327,11 @@ namespace platformer2d {
 		}
 	}
 
+	bool CEditor::IsGamePaused()
+	{
+		return (Scene ? (Scene->GetState() == ESceneState::Pause) : true);
+	}
+
 	uint16_t CEditor::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
 		static FRayCast RayData;
@@ -1062,6 +1067,16 @@ namespace platformer2d {
 
 			case EKey::R:
 				Gizmo = ImGuizmo::OPERATION::SCALE;
+				break;
+
+			case EKey::P:
+				if (Data.State == EKeyState::Pressed) {
+					if (IsGamePaused()) {
+						ResumeGame();
+					} else {
+						PauseGame();
+					}
+				}
 				break;
 		}
 	}
