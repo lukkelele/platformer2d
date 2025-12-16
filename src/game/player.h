@@ -40,6 +40,8 @@ namespace platformer2d {
 		void Jump();
 
 		inline const FPlayerData& GetData() const { return Data; }
+		inline CInventory& GetInventory() { return Inventory; }
+		inline const CInventory& GetInventory() const { return Inventory; }
 		inline const CSprite& GetSprite() const { return *Sprite; }
 
 		float GetJumpImpulse() const { return JumpImpulse; }
@@ -94,7 +96,7 @@ namespace platformer2d {
 		CTimer Timer;
 		std::unique_ptr<CCamera> Camera = nullptr;
 		bool bCameraLock = true;
-		std::shared_ptr<CInventory> Inventory = nullptr;
+		CInventory Inventory;
 
 		EDirection LookDir = EDirection::Right;
 		float JumpImpulse = 3.440f;

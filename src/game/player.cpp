@@ -61,6 +61,7 @@ namespace platformer2d {
 
 	CPlayer::CPlayer(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
 		: CActor(InSpec, BodySpec)
+		, Inventory("PlayerInventory")
 		, NextSpriteFrame(std::to_underlying(ESpriteFrame::COUNT))
 	{
 		if (Name.empty()) {
@@ -85,10 +86,9 @@ namespace platformer2d {
 		/* Set z-index. */
 		TransformComp.Translation.z = -0.010f;
 
-		Inventory = std::make_shared<CInventory>("PlayerInventory");
 		std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>();
 		Rifle->Equip(this);
-		Inventory->AddItem(Rifle);
+		Inventory.AddItem(Rifle);
 
 		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
@@ -104,31 +104,32 @@ namespace platformer2d {
 		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
 		CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
 
-		if (Inventory) {
-			LK_TRACE_TAG("Player", "Release inventory");
-			Inventory->Destroy();
-			Inventory.reset();
-			Inventory = nullptr;
-		}
+		LK_TRACE_TAG("Player", "Release inventory");
+		Inventory.Destroy();
+		Inventory.~CInventory();
 	}
 
 	void CPlayer::Tick(const float DeltaTime)
 	{
 		CActor::Tick(DeltaTime);
 
-		CheckCollisions();
-		UpdateMovementState();
-		if (bShouldUpdateSprite) {
-			UpdateSprite();
+		if (DeltaTime > 0.0f) {
+			CheckCollisions();
+			UpdateMovementState();
+
+			if (bShouldUpdateSprite) {
+				UpdateSprite();
+			}
+
+			HandleInput();
+			SyncTransformComponent();
 		}
 
-		HandleInput();
-		SyncTransformComponent();
-
-		Inventory->Tick(DeltaTime);
+		Inventory.Tick(DeltaTime);
 
 		if (bCameraLock) {
-			Camera->Target(Body->GetPosition(), DeltaTime);
+			/* Perform a smooth transition for the target lock even if paused. */
+			Camera->Target(Body->GetPosition(), (DeltaTime > 0.0f ? DeltaTime : 0.0060));
 		}
 		Camera->Update();
 	}
@@ -177,12 +178,12 @@ namespace platformer2d {
 
 	bool CPlayer::HasRifle()
 	{
-		return (Inventory->FindFirstOf<CRifle>() != nullptr);
+		return (Inventory.FindFirstOf<CRifle>() != nullptr);
 	}
 
 	std::shared_ptr<CRifle> CPlayer::GetRifle()
 	{
-		return Inventory->FindFirstOf<CRifle>();
+		return Inventory.FindFirstOf<CRifle>();
 	}
 
 	bool CPlayer::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
@@ -385,7 +386,7 @@ namespace platformer2d {
 			Sprite->SetTilePos(X, SPRITE_TILEPOS_Y, FlipHorizontal);
 			CurrentSpriteFrame = X;
 
-			if (std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>()) {
+			if (std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>()) {
 				Rifle->SetLookDirection(LookDir);
 			}
 		}
@@ -411,7 +412,7 @@ namespace platformer2d {
 				break;
 
 			case EKey::R:
-				if (std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>()) {
+				if (std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>()) {
 					Rifle->Reload();
 				}
 				break;
@@ -419,7 +420,7 @@ namespace platformer2d {
 			case EKey::V:
 				if (Data.State == EKeyState::Pressed) {
 					/* Toggle rifle. */
-					if (std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>()) {
+					if (std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>()) {
 						Rifle->SetEnabled(!Rifle->IsEnabled());
 					}
 				}
@@ -432,7 +433,7 @@ namespace platformer2d {
 		switch (Data.State) {
 			case EMouseButtonState::Pressed: {
 				if (Data.Button == EMouseButton::Button0) {
-					std::shared_ptr<CRifle> Rifle = Inventory->FindFirstOf<CRifle>();
+					std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>();
 					if (Rifle && Rifle->IsEnabled()) {
 						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(*Camera);
 						if (Math::IsValid(TargetPos)) {
