@@ -32,16 +32,27 @@ namespace platformer2d {
 
 		Render();
 
-		const auto TimeNow = std::chrono::steady_clock::now();
-		for (const auto& Projectile : Fired) {
-			LK_ASSERT(Projectile && b2Body_IsValid(Projectile->ID));
-			const b2Vec2 Pos = b2Body_GetPosition(Projectile->ID);
-			const float Angle = b2Rot_GetAngle(b2Body_GetRotation(Projectile->ID));
-			const glm::vec3 P0 = { Pos.x, Pos.y, -0.010f };
-			CRenderer::DrawCircleFilled(P0, ProjectileRadius, Projectile->GetColor(), 1.0f);
+		if (DeltaTime > 0.0f) {
+			const auto TimeNow = std::chrono::steady_clock::now();
+			for (const auto& Projectile : Fired) {
+				LK_ASSERT(Projectile && b2Body_IsValid(Projectile->ID));
+				RenderProjectile(Projectile);
 
-			if (TimeNow > (Projectile->TimeFired + ExpireTimeout)) {
-				ExpiredQueue.push(Projectile->ID);
+				if (TimeNow > (Projectile->TimeFired + ExpireTimeout)) {
+					ExpiredQueue.push(Projectile->ID);
+				}
+			}
+		} else {
+			/* Adjust expire time if paused. */
+			using namespace std::chrono;
+			/**
+			 * @todo: The calculated time will never truly match the difference from steady clock.
+			 * Need a better way to handle the timestep if paused.
+			 */
+			const std::chrono::duration<float> DeltaSeconds{ DeltaTime };
+			for (auto& Projectile : Fired) {
+				RenderProjectile(Projectile);
+				Projectile->TimeFired += duration_cast<steady_clock::duration>(DeltaSeconds);
 			}
 		}
 
@@ -182,6 +193,14 @@ namespace platformer2d {
 	void CRifle::SetProjectileColor(const glm::vec4& InColor)
 	{
 		ProjectileColor = InColor;
+	}
+
+	void CRifle::RenderProjectile(const std::shared_ptr<CProjectile>& Projectile) const
+	{
+		const b2Vec2 Pos = b2Body_GetPosition(Projectile->ID);
+		const float Angle = b2Rot_GetAngle(b2Body_GetRotation(Projectile->ID));
+		const glm::vec3 P0 = { Pos.x, Pos.y, -0.010f };
+		CRenderer::DrawCircleFilled(P0, ProjectileRadius, Projectile->GetColor(), 1.0f);
 	}
 
 	bool CRifle::DestroyProjectile(const b2BodyId& ID)

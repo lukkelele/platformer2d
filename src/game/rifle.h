@@ -57,6 +57,7 @@ namespace platformer2d {
 		virtual EWeaponType GetWeaponType() const override { return EWeaponType::Rifle; }
 
 	private:
+		void RenderProjectile(const std::shared_ptr<CProjectile>& Projectile) const;
 		bool DestroyProjectile(const b2BodyId& ID);
 		void DestroyExpiredProjectiles();
 
