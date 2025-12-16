@@ -47,6 +47,9 @@ namespace platformer2d {
 		virtual std::shared_ptr<CScene> GetScene() const = 0;
 		bool HasScene() const { return GetScene() != nullptr; }
 
+		virtual void PauseGame() = 0;
+		virtual void ResumeGame() = 0;
+
 		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
 		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) = 0;
 
