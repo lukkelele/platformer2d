@@ -248,7 +248,7 @@ namespace platformer2d {
 		}
 
 		UI::PrepareTopBar();
-		UI::Begin(UI::PanelID::TopBar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+		UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		{
 			static constexpr float ButtonSize = 32.0f + 5.0f;
 			static constexpr float EdgeOffset = 4.0f;

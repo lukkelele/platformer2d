@@ -19,7 +19,7 @@ namespace platformer2d::UI {
 		inline constexpr const char* const EditorViewport = "##EditorViewport";
 		inline constexpr const char* const Dockspace = "##Dockspace";
 		inline constexpr const char* const HostWindow = "##HostWindow";
-		inline constexpr const char* const TopBar = "##TopBar";
+		inline constexpr const char* const Topbar = "##Topbar";
 		inline constexpr const char* const Sidebar1 = "##Sidebar1";
 		inline constexpr const char* const Sidebar2 = "##Sidebar2";
 		inline constexpr const char* const Selection = "Selection";

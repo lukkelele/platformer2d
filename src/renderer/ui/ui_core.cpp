@@ -130,7 +130,7 @@ namespace platformer2d::UI {
 			ImGui::DockBuilderDockWindow(PanelID::EditorViewport, DockID_Main);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right_Top);
-			ImGui::DockBuilderDockWindow(PanelID::TopBar, DockID_Top);
+			ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
 
 			ImGui::DockBuilderDockWindow(PanelID::ContentBrowser, DockID_Bottom);
 			ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left);

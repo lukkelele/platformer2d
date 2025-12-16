@@ -519,8 +519,8 @@ namespace platformer2d::UI {
 		const ImGuiStyle& Style = ImGui::GetStyle();
 
 		float TopBarOffsetY = 0.0f;
-		if (ImGuiWindow* TopBar = ImGui::FindWindowByName(PanelID::TopBar)) {
-			TopBarOffsetY = TopBar->Size.y;
+		if (ImGuiWindow* Topbar = ImGui::FindWindowByName(PanelID::Topbar)) {
+			TopBarOffsetY = Topbar->Size.y;
 		}
 
 		ImGui::SetNextWindowBgAlpha(0.25f);
@@ -788,7 +788,7 @@ namespace platformer2d::UI {
 
 	void PrepareTopBar()
 	{
-		ImGuiWindow* TopBarWindow = ImGui::FindWindowByName(PanelID::TopBar);
+		ImGuiWindow* TopBarWindow = ImGui::FindWindowByName(PanelID::Topbar);
 		if (TopBarWindow == nullptr) {
 			return;
 		}
