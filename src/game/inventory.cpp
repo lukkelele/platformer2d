@@ -21,7 +21,7 @@ namespace platformer2d {
 			}
 
 			if (Entry.ItemRef->GetItemType() == EItemType::Weapon) {
-				std::static_pointer_cast<IWeapon>(Entry.ItemRef)->Tick();
+				std::static_pointer_cast<IWeapon>(Entry.ItemRef)->Tick(DeltaTime);
 			}
 		}
 	}

@@ -21,7 +21,7 @@ namespace platformer2d {
 	public:
 		virtual ~IWeapon() = default;
 
-		virtual void Tick() = 0;
+		virtual void Tick(float DeltaTime) = 0;
 		virtual void Render() = 0;
 		virtual EWeaponType GetWeaponType() const = 0;
 

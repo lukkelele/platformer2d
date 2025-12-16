@@ -13,7 +13,7 @@ namespace platformer2d {
 		CRifle();
 		~CRifle();
 
-		virtual void Tick() override;
+		virtual void Tick(float DeltaTime) override;
 		virtual void Render() override;
 
 		/**

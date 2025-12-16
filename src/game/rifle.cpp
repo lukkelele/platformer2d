@@ -24,7 +24,7 @@ namespace platformer2d {
 		LK_ASSERT(ExpiredQueue.empty(), "ExpiredQueue not empty: {}", ExpiredQueue.size());
 	}
 
-	void CRifle::Tick()
+	void CRifle::Tick(const float DeltaTime)
 	{
 		if (Owner) {
 			Origin = Owner->GetPosition();
