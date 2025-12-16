@@ -557,14 +557,15 @@ namespace platformer2d::UI {
 			UI::ShiftCursor(0.0f, 4.0f);
 		};
 
-		const float FPS = 1.0f / GameInstance->GetDeltaTime();
 		/* FPS */
+		const float DeltaTime = GameInstance->GetDeltaTime();
+		const float FPS = 1.0f / DeltaTime;
 		ImGui::TableNextRow();
 		Label("FPS");
 		NextColumn();
 		ImGui::Text("%1.f", FPS);
 
-		/* Camera Zoom */
+		/* Camera zoom */
 		ImGui::TableNextRow();
 		Label("Camera Zoom");
 		NextColumn();
@@ -583,6 +584,7 @@ namespace platformer2d::UI {
 			const ImVec2 Pos = ImGui::GetWindowPos();
 			const ImVec2 Size = ImGui::GetWindowSize();
 			if (ImGui::BeginTooltip()) {
+				ImGui::Text("DeltaTime: %.6f", DeltaTime);
 				ImGui::Text("Position: (%.1f, %.1f)", Pos.x, Pos.y);
 				ImGui::Text("Size: (%.1f, %.1f)", Size.x, Size.y);
 				ImGui::EndTooltip();
@@ -600,7 +602,7 @@ namespace platformer2d::UI {
 
 		const ImGuiStyle& Style = ImGui::GetStyle();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
-		static constexpr ImVec2 WindowSize = ImVec2(380, 160);
+		static constexpr ImVec2 WindowSize = ImVec2(380, 200);
 		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs;
 
 		const ImVec2 WindowPos = ImGui::GetWindowPos();
@@ -692,6 +694,17 @@ namespace platformer2d::UI {
 				UI::FScopedColor TextColor(ImGuiCol_Text, Color);
 				ImGui::Text("%d", Ammo);
 			}
+		}
+
+		/* Inventory info */
+		{
+			ImGui::TableNextRow();
+			Label("Inventory");
+			NextColumn();
+			const CInventory& Inventory = Player->GetInventory();
+			const std::size_t UsedSlots = Inventory.GetUsedSlots();
+			UI::FScopedFont Font(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
+			ImGui::Text("%d/%d", UsedSlots, CInventory::MAX_ITEMS);
 		}
 
 		ImGui::EndTable();
