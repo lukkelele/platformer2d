@@ -17,6 +17,8 @@
 #include "core/core.h"
 #include "core/assert.h"
 #include "core/log_formatters.h"
+#include "game/itemtype.h"
+#include "game/weapontype.h"
 
 namespace platformer2d {
 
@@ -161,9 +163,12 @@ namespace platformer2d {
 		COUNT
 	};
 
+	using TPickupObjectType = std::variant<std::monostate, EItemType, EWeaponType>;
+
 	struct FPickupInteraction
 	{
 		EPickupKind Kind = EPickupKind::Item;
+		TPickupObjectType ObjectType;
 		bool bExpireWhenPickedUp = false;
 	};
 
@@ -178,14 +183,12 @@ namespace platformer2d {
 		TInteractionData& GetData() { return Data; }
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
 		inline const char* ToString(const EEffectType Type)
 		{
 			const char* S = "";
 		#define _(EnumValue) case EEffectType::EnumValue: S = #EnumValue; break
-			switch (Type)
-			{
+			switch (Type) {
 				_(None);
 				_(Rotate);
 				default:
@@ -200,8 +203,7 @@ namespace platformer2d {
 		{
 			const char* S = "";
 		#define _(EnumValue) case EInteraction::EnumValue: S = #EnumValue; break
-			switch (Interaction)
-			{
+			switch (Interaction) {
 				_(None);
 				_(Damage);
 				_(Pickup);
@@ -218,8 +220,7 @@ namespace platformer2d {
 		{
 			const char* S = "";
 		#define _(EnumValue) case EPickupKind::EnumValue: S = #EnumValue; break
-			switch (Kind)
-			{
+			switch (Kind) {
 				_(Item);
 				_(Weapon);
 				_(COUNT);
