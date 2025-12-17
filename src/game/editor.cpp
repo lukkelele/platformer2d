@@ -429,21 +429,23 @@ namespace platformer2d {
 				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(true);
 
-				switch (IC->GetType())
-				{
-					case EInteraction::Damage:
-					{
+				switch (IC->GetType()) {
+					case EInteraction::Damage: {
 						auto& Data = std::get<FDamageInteraction>(IC->GetData());
 						LK_WARN("Damage={}", Data.Damage);
 						break;
 					}
-					case EInteraction::Pickup:
-					{
+					case EInteraction::Pickup: {
 						auto& Data = std::get<FPickupInteraction>(IC->GetData());
-						LK_WARN("Kind={} ExpireOnPickup={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp);
+						if (Data.Kind == EPickupKind::Item) {
+							const EItemType ItemType = std::get<EItemType>(Data.ObjectType);
+							LK_WARN("ItemType={} ExpireOnPickup={}", Enum::ToString(ItemType), Data.bExpireWhenPickedUp);
+						} else if (Data.Kind == EPickupKind::Weapon) {
+							const EWeaponType WeaponType = std::get<EWeaponType>(Data.ObjectType);
+							LK_WARN("WeaponType={} ExpireOnPickup={}", Enum::ToString(WeaponType), Data.bExpireWhenPickedUp);
+						}
 						break;
 					}
-
 					default:
 						break;
 				}
