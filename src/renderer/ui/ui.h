@@ -42,37 +42,35 @@ namespace platformer2d::UI {
 	FORCEINLINE bool InTable() { return ImGui::GetCurrentTable() != nullptr; }
 
 	namespace Table {
-		FORCEINLINE void Label(std::string_view Str)
+		FORCEINLINE void Label(std::string_view Str, const float IndentX = 0.0f)
 		{
 			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 0.0f);
+			UI::ShiftCursor(17.0f + IndentX, 0.0f);
 			ImGui::Text(Str.data());
 		}
 
 		FORCEINLINE void NextColumn()
 		{
 			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 0.0f);
 		};
 	}
 
-	inline bool Checkbox(std::string_view Str, bool& Value)
+	inline bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 0.0f)
 	{
 		bool Active = false;
-
 		char LabelBuf[64] = { 0 };
 		std::snprintf(LabelBuf, sizeof(LabelBuf), "##%s", Str.data());
 
 		if (InTable()) {
 			Table::Label(Str);
 			Table::NextColumn();
-			UI::ShiftCursor(7.0f, 0.0f);
+			UI::ShiftCursor(7.0f + IndentX, 0.0f);
 			if (ImGui::Checkbox(LabelBuf, &Value)) {
 				Active = true;
 			}
 		} else {
 			ImGui::Text(Str.data());
-			ImGui::SameLine();
+			ImGui::SameLine(0.0f, IndentX);
 			if (ImGui::Checkbox(LabelBuf, &Value)) {
 				Active = true;
 			}

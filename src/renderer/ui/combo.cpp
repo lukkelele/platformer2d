@@ -152,7 +152,7 @@ namespace platformer2d::UI::Widget::Combo {
 		return Updated;
 	}
 
-	bool BlendFunction()
+	bool BlendFunction(const float IndentX)
 	{
 		#define UI_COMBO_OPTION(Value) { Value, #Value }
 		static constexpr std::pair<GLenum, const char*> SourceBlendFuncs[] = {
@@ -172,7 +172,7 @@ namespace platformer2d::UI::Widget::Combo {
 		};
 		#undef UI_COMBO_OPTION
 
-		bool bSetBlendFunc = false;
+		bool ShouldUpdate = false;
 
 		static int SelectedSourceBlendFunc = -1;
 		if (SelectedSourceBlendFunc == -1) {
@@ -224,64 +224,65 @@ namespace platformer2d::UI::Widget::Combo {
 		LK_ASSERT(SelectedDestBlendFunc >= 0);
 
 		ImGui::PushID("UI_BlendFunction");
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, GAME_MENU_LABEL_COLUMN_WIDTH);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - GAME_MENU_LABEL_COLUMN_WIDTH);
+		if (ImGui::BeginTable("##UI_BlendFunction", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			ImGuiStyle& Style = ImGui::GetStyle();
+			ImGui::TableSetupColumn("L", 0, GAME_MENU_LABEL_COLUMN_WIDTH);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x - GAME_MENU_LABEL_COLUMN_WIDTH);
 
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-		ImGui::Text("Source");
+			ImGui::TableNextRow();
+			UI::Table::Label("Source", IndentX);
 
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Source", SourceBlendFuncs[SelectedSourceBlendFunc].second)) {
-			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++) {
-				const bool bSelected = (SelectedSourceBlendFunc == N);
-				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected)) {
-					SelectedSourceBlendFunc = N;
-					LK_TRACE_TAG("UI", "Source: {}", SourceBlendFuncs[N].second);
-					bSetBlendFunc = true;
+			ImGui::TableSetColumnIndex(1);
+			UI::Font::Push(EFont::Roboto, EFontSize::Large, EFontModifier::Bold);
+			ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH - 12.0f);
+			if (ImGui::BeginCombo("##Source", SourceBlendFuncs[SelectedSourceBlendFunc].second)) {
+				for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++) {
+					const bool bSelected = (SelectedSourceBlendFunc == N);
+					if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected)) {
+						SelectedSourceBlendFunc = N;
+						LK_TRACE_TAG("UI", "Source: {}", SourceBlendFuncs[N].second);
+						ShouldUpdate = true;
+					}
 				}
+				ImGui::EndCombo();
 			}
-			ImGui::EndCombo();
-		}
+			UI::Font::Pop();
 
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-		ImGui::Text("Destination");
+			ImGui::TableNextRow();
+			UI::Table::Label("Destination", IndentX);
 
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Destination", DestBlendFuncs[SelectedDestBlendFunc].second)) {
-			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++) {
-				const bool bSelected = (SelectedDestBlendFunc == N);
-				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected)) {
-					SelectedDestBlendFunc = N;
-					LK_TRACE_TAG("UI", "Destination: {}", DestBlendFuncs[N].second);
-					bSetBlendFunc = true;
+			ImGui::TableSetColumnIndex(1);
+			UI::Font::Push(EFont::Roboto, EFontSize::Large, EFontModifier::Bold);
+			ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH - 12.0f);
+			if (ImGui::BeginCombo("##Destination", DestBlendFuncs[SelectedDestBlendFunc].second)) {
+				for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++) {
+					const bool bSelected = (SelectedDestBlendFunc == N);
+					if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected)) {
+						SelectedDestBlendFunc = N;
+						LK_TRACE_TAG("UI", "Destination: {}", DestBlendFuncs[N].second);
+						ShouldUpdate = true;
+					}
 				}
+				ImGui::EndCombo();
 			}
-			ImGui::EndCombo();
-		}
+			UI::Font::Pop();
 
-		ImGui::EndTable();
+			ImGui::EndTable();
+		}
 		ImGui::PopID(); /* ~UI_BlendFunction */
 
-		if (bSetBlendFunc) {
+		if (ShouldUpdate) {
 			LK_OpenGL_Verify(glBlendFunc(
 				SourceBlendFuncs[SelectedSourceBlendFunc].first,
 				DestBlendFuncs[SelectedDestBlendFunc].first
 			));
 		}
 
-		return bSetBlendFunc;
+		return ShouldUpdate;
 	}
 
-	bool DepthFunction()
+	bool DepthFunction(const float IndentX)
 	{
 		#define UI_COMBO_OPTION(Value) { Value, #Value }
 		static constexpr std::pair<GLenum, const char*> Functions[] = {
@@ -331,31 +332,32 @@ namespace platformer2d::UI::Widget::Combo {
 		}
 
 		ImGui::PushID("UI_DepthFunction");
-		ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("LabelColumn", 0, GAME_MENU_LABEL_COLUMN_WIDTH);
-		ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - GAME_MENU_LABEL_COLUMN_WIDTH);
+		if (ImGui::BeginTable("##UI_DepthFunction", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			ImGui::TableSetupColumn("Label", 0, GAME_MENU_LABEL_COLUMN_WIDTH);
+			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - GAME_MENU_LABEL_COLUMN_WIDTH);
 
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-		UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-		ImGui::Text("Depth");
+			ImGui::TableNextRow();
+			UI::Table::Label("Depth", IndentX);
 
-		ImGui::TableSetColumnIndex(1);
-		UI::ShiftCursor(0.0f, 4.0f);
-		ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH);
-		if (ImGui::BeginCombo("##Depth", Functions[SelectedDepthFunc].second)) {
-			for (int N = 0; N < LK_ARRAYSIZE(Functions); N++) {
-				const bool bSelected = (SelectedDepthFunc == N);
-				if (ImGui::Selectable(Functions[N].second, bSelected)) {
-					SelectedDepthFunc = N;
-					LK_TRACE_TAG("UI", "Depth: {}", Functions[N].second);
-					ShouldUpdate = true;
+			ImGui::TableSetColumnIndex(1);
+			ImGui::SetNextItemWidth(GAME_MENU_COLUMN_ITEM_WIDTH - 12.0f);
+			UI::Font::Push(EFont::Roboto, EFontSize::Large, EFontModifier::Bold);
+			if (ImGui::BeginCombo("##Depth", Functions[SelectedDepthFunc].second)) {
+				for (int N = 0; N < LK_ARRAYSIZE(Functions); N++) {
+					const bool bSelected = (SelectedDepthFunc == N);
+					if (ImGui::Selectable(Functions[N].second, bSelected)) {
+						SelectedDepthFunc = N;
+						LK_TRACE_TAG("UI", "Depth: {}", Functions[N].second);
+						ShouldUpdate = true;
+					}
 				}
+				ImGui::EndCombo();
 			}
-			ImGui::EndCombo();
-		}
+			UI::Font::Pop();
 
-		ImGui::EndTable();
+			ImGui::EndTable();
+		}
 		ImGui::PopID();
 
 		if (ShouldUpdate) {
@@ -364,6 +366,5 @@ namespace platformer2d::UI::Widget::Combo {
 
 		return ShouldUpdate;
 	}
-
 
 }

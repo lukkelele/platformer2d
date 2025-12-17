@@ -1,6 +1,7 @@
 #include "uilayer.h"
 
 #include "core/window.h"
+#include "core/settings.h"
 #include "game/instance.h"
 #include "renderer/renderer.h"
 #include "renderer/ui/ui.h"
@@ -47,7 +48,6 @@ namespace platformer2d {
 		LK_UNUSED(DeltaTime);
 
 		/* Draw dark overlay whenever the pause menu is open. */
-#if 1
 		if (CGameInstance* GameInstance = CGameInstance::Get()) {
 			CWindow* Window = CWindow::Get();
 			if (Window && GameInstance->HasScene() && UI::IsGameMenuOpen()) {
@@ -56,19 +56,10 @@ namespace platformer2d {
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
 			}
 		}
-#endif
 	}
 
 	void CUILayer::RenderUI()
 	{
-#if 0
-		if (CGameInstance* GameInstance = CGameInstance::Get()) {
-			if (GameInstance->HasScene() && UI::IsGameMenuOpen()) {
-				UI_GameMenu();
-			}
-		}
-#endif
-
 		if (UI::IsGameMenuOpen()) {
 			UI_GameMenu();
 		}
@@ -147,6 +138,10 @@ namespace platformer2d {
 		const ImVec2 MenuSize = ImGui::GetContentRegionAvail();
 		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
 
+		UI::ShiftCursorY(12.0f);
+		UI::BannerTextCentralized("Settings", EFont::Roboto, EFontModifier::Bold);
+		ImGui::Dummy(ImVec2(0, 10));
+
 		UI::Font::Push(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
 
 		static constexpr float PaddingX = 12.0f;
@@ -154,23 +149,68 @@ namespace platformer2d {
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 
-		/* Checkbox: Debug */
-		{
-			UI::FScopedFont Font(UI::Font::Get(EFont::Roboto, EFontSize::Large, EFontModifier::Bold));
-			UI::FScopedStyleStack StyleStack(
-				ImGuiStyleVar_ItemInnerSpacing, ImVec2(8.0f, 2.0f)
-			);
-			UI::ShiftCursor(PaddingX, PaddingY);
-			ImGui::Checkbox("Debug", &GameMenu.Settings.bDebug);
+		UI::ShiftCursorX(20);
+		ImGui::PushStyleColor(ImGuiCol_Text, RGBA32::Text::Darker);
+		UI::HeaderText("Window", EFont::Roboto, EFontModifier::Bold);
+		ImGui::PopStyleColor(1);
+		UI::ShiftCursor(44, 10);
+		if (ImGui::BeginTable("##WindowSettings", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
+			FSettings& Settings = FSettings::Get();
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			const float IndentX = Avail.x * 0.35f;
+			ImGui::TableSetupColumn("Label", 0, Avail.x * 0.50f);
+			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x * 0.50f);
+
+			ImGui::TableNextRow();
+			if (UI::Checkbox("VSync", Settings.Window.bVSync, IndentX)) {
+				Window->SetVSync(Settings.Window.bVSync);
+			}
+
+			ImGui::TableNextRow();
+			UI::Checkbox("Start Maximized", Settings.Window.bStartMaximized, IndentX);
+
+			ImGui::TableNextRow();
+			UI::Checkbox("Debug", GameMenu.Settings.bDebug, IndentX);
+
+			ImGui::EndTable();
+		}
+
+		UI::ShiftCursorX(20);
+		ImGui::PushStyleColor(ImGuiCol_Text, RGBA32::Text::Darker);
+		UI::HeaderText("Renderer", EFont::Roboto, EFontModifier::Bold);
+		ImGui::PopStyleColor(1);
+		UI::ShiftCursor(44, 10);
+		if (ImGui::BeginTable("##RenderSettings", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			const float IndentX = Avail.x * 0.35f;
+			ImGui::TableSetupColumn("Label", 0, Avail.x * 0.35f);
+			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x * 0.50f);
+
+			ImGui::TableNextRow();
+			bool bDepthTest = CRenderer::GetDepthTest();
+
+			if (UI::Checkbox("Depth Test", bDepthTest, IndentX)) {
+				CRenderer::SetDepthTest(bDepthTest);
+			}
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			UI::Widget::Combo::BlendFunction();
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			UI::Widget::Combo::DepthFunction();
+
+			ImGui::EndTable();
 		}
 
 		ImGui::SeparatorText("Camera");
 		if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr) {
 			if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr) {
 				ImGui::PushID("UI_CameraOptions");
-				ImGui::BeginTable("##VectorControl", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-				ImGui::TableSetupColumn("LabelColumn", 0, LABEL_COLUMN_WIDTH);
-				ImGui::TableSetupColumn("ValueColumn", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LABEL_COLUMN_WIDTH);
+				ImGui::BeginTable("##CameraOptionsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+				ImGui::TableSetupColumn("Label", 0, LABEL_COLUMN_WIDTH);
+				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LABEL_COLUMN_WIDTH);
 
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
@@ -190,26 +230,6 @@ namespace platformer2d {
 				ImGui::PopID();
 			}
 		}
-
-		ImGui::SeparatorText("Renderer");
-
-		/* Checkbox: Depth Test */
-		{
-			UI::FScopedFont Font(UI::Font::Get(EFont::Roboto, EFontSize::Large, EFontModifier::Bold));
-			UI::FScopedStyleStack StyleStack(
-				ImGuiStyleVar_ItemInnerSpacing, ImVec2(8.0f, 2.0f)
-			);
-			UI::ShiftCursor(PaddingX, PaddingY);
-			static bool bDepthTest = CRenderer::GetDepthTest();
-			if (ImGui::Checkbox("Depth Test", &bDepthTest)) {
-				CRenderer::SetDepthTest(bDepthTest);
-			}
-		}
-
-		UI::ShiftCursorY(6.0f);
-
-		UI::Widget::Combo::BlendFunction();
-		UI::Widget::Combo::DepthFunction();
 
 		ImGui::PopStyleVar(2);
 
@@ -247,6 +267,29 @@ namespace platformer2d {
 		}
 	}
 
+	static void UI_GameMenu_Title(const ImVec2& MenuSize)
+	{
+		ImGui::SetCursorPosY(16.0f);
+		UI::Font::Push(EFont::Roboto, EFontSize::Banner, EFontModifier::BoldItalic);
+		static const std::string Title = "platformer2d";
+		const ImVec2 TitleSize = ImGui::CalcTextSize(Title.c_str());
+		ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (TitleSize.x * 0.50f));
+		UI::ColdTextGradient("platformer2d");
+		UI::Font::Pop();
+
+		UI::Font::Push(EFont::Roboto, EFontSize::Regular, EFontModifier::BoldItalic);
+		static const std::string Desc = "made by lukkelele";
+		const ImVec2 DescSize = ImGui::CalcTextSize(Desc.c_str());
+		ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (DescSize.x * 0.50f));
+		ImGui::TextColored(ImColor(IM_COL32(100, 100, 100, 255)), Desc.c_str());
+		UI::HoverText("Lukas Gunnarsson");
+		UI::Font::Pop();
+
+		/* @todo Versioning info here */
+
+		ImGui::Dummy(ImVec2(0.0f, 52.0f));
+	}
+
 	void UI_GameMenu_Default()
 	{
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
@@ -254,34 +297,14 @@ namespace platformer2d {
 		ImGuiStyle& Style = ImGui::GetStyle();
 
 		/* Menu title. */
-		{
-			ImGui::SetCursorPosY(16.0f);
-			UI::Font::Push(EFont::Roboto, EFontSize::Banner, EFontModifier::BoldItalic);
-			static const std::string Title = "platformer2d";
-			const ImVec2 TitleSize = ImGui::CalcTextSize(Title.c_str());
-			ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (TitleSize.x * 0.50f));
-			UI::ColdTextGradient("platformer2d");
-			UI::Font::Pop();
-
-			UI::Font::Push(EFont::Roboto, EFontSize::Regular, EFontModifier::BoldItalic);
-			static const std::string Desc = "made by lukkelele";
-			const ImVec2 DescSize = ImGui::CalcTextSize(Desc.c_str());
-			ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (DescSize.x * 0.50f));
-			ImGui::TextColored(ImColor(IM_COL32(100, 100, 100, 255)), Desc.c_str());
-			UI::HoverText("Lukas Gunnarsson");
-			UI::Font::Pop();
-
-			/* @todo Versioning info here */
-
-			ImGui::Dummy(ImVec2(0.0f, 52.0f));
-		}
+		UI_GameMenu_Title(MenuSize);
 
 		static constexpr float OptionPercentage = 0.80f;
 		const ImVec2 ButtonSize = { MenuSize.x * OptionPercentage, 62.0f };
 		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 14.0f);
-		UI::Font::Push(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
+		UI::Font::Push(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
 		if (ImGui::Button(LK_ICON_COG " Settings", ButtonSize)) {
 			GameMenu.View = EGameMenuView::Settings;
 		}

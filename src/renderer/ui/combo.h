@@ -40,8 +40,8 @@ namespace platformer2d::UI {
 	namespace Widget::Combo {
 		void TextureModifier();
 		bool TextureDropdown(ETexture& Selected);
-		bool BlendFunction();
-		bool DepthFunction();
+		bool BlendFunction(float IndentX = 0.0f);
+		bool DepthFunction(float IndentX = 0.0f);
 	}
 
 }
