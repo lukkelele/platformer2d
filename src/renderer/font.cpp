@@ -20,8 +20,8 @@ namespace platformer2d::UI {
 
 	const std::unordered_map<EFontSize, float> FontSizeMap = {
 		{ EFontSize::Regular, 22.0f },
-		{ EFontSize::Small,   12.0f },
-		{ EFontSize::Smaller, 16.0f },
+		{ EFontSize::Smaller, 12.0f },
+		{ EFontSize::Small,   20.0f },
 		{ EFontSize::Large,   26.0f },
 		{ EFontSize::Larger,  30.0f },
 		{ EFontSize::Header,  38.0f },
