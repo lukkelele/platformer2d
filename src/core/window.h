@@ -11,6 +11,15 @@
 
 namespace platformer2d {
 
+	struct FWindowSpecification
+	{
+		uint16_t Width = SCREEN_WIDTH;
+		uint16_t Height = SCREEN_HEIGHT;
+		std::string Title = "platformer2d";
+		bool bStartMaximized = true;
+		bool bVSync = true;
+	};
+
 	struct FWindowData
 	{
 		uint16_t Width = 0;
@@ -34,7 +43,7 @@ namespace platformer2d {
 		LK_DECLARE_EVENT(FOnResized, CWindow, uint16_t /* Width */, uint16_t /* Height */);
 		LK_DECLARE_EVENT(FOnFramebufferResized, CWindow, uint32_t, uint32_t);
 	public:
-		CWindow(uint16_t InWidth, uint16_t InHeight, std::string_view InTitle = "platformer2d");
+		CWindow(const FWindowSpecification& InSpec);
 		CWindow() = delete;
 		~CWindow() = default;
 
@@ -68,6 +77,7 @@ namespace platformer2d {
 		static inline FOnResized OnResized;
 		static inline FOnFramebufferResized OnFramebufferResized;
 	private:
+		const FWindowSpecification Spec;
 		GLFWwindow* GlfwWindow = nullptr;
 		FWindowData Data{};
 

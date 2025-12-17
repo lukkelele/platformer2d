@@ -13,8 +13,9 @@
 
 namespace platformer2d {
 
-	CWindow::CWindow(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
-		: Data(InWidth, InHeight, InTitle)
+	CWindow::CWindow(const FWindowSpecification& InSpec)
+		: Spec(InSpec)
+		, Data(InSpec.Width, InSpec.Height, InSpec.Title)
 	{
 		Instance = this;
 	}
@@ -47,7 +48,7 @@ namespace platformer2d {
 		glfwMakeContextCurrent(GlfwWindow);
 		glfwSetWindowUserPointer(GlfwWindow, &Data);
 
-		SetVSync(true);
+		SetVSync(Spec.bVSync);
 
 		glfwSetWindowSizeCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow, int NewWidth, int NewHeight) 
 		{
@@ -66,51 +67,36 @@ namespace platformer2d {
 		{
 			LK_TRACE_TAG("Window", "Key={} Action={} Modifiers={}", Key, Action, Modifiers);
 			FWindowData& WindowDataRef = *((FWindowData*)glfwGetWindowUserPointer(Window));
-			switch (Action)
-			{
+			switch (Action) {
 				case GLFW_PRESS:
-				{
 					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Pressed);
 					break;
-				}
 				case GLFW_RELEASE:
-				{
 					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Released);
 					break;
-				}
 				case GLFW_REPEAT:
-				{
 					CKeyboard::UpdateKeyState(static_cast<EKey>(Key), EKeyState::Held);
 					break;
-				}
 			}
 		});
 
 		glfwSetMouseButtonCallback(GlfwWindow, [](GLFWwindow* Window, int Button, int Action, int Modifiers)
 		{
-			switch (Action)
-			{
+			switch (Action) {
 				case GLFW_PRESS:
-				{
 					CMouse::UpdateButtonState(static_cast<EMouseButton>(Button), EMouseButtonState::Pressed);
 					break;
-				}
 				case GLFW_RELEASE:
-				{
 					CMouse::UpdateButtonState(static_cast<EMouseButton>(Button), EMouseButtonState::Released);
 					break;
-				}
 			}
 		});
 
 		glfwSetScrollCallback(GlfwWindow, [](GLFWwindow* Window, double OffsetX, double OffsetY)
 		{
-			if (OffsetY > 0)
-			{
+			if (OffsetY > 0) {
 				CMouse::UpdateScrollState(EMouseScrollDirection::Up);
-			}
-			else if (OffsetY < 0)
-			{
+			} else if (OffsetY < 0) {
 				CMouse::UpdateScrollState(EMouseScrollDirection::Down);
 			}
 		});
@@ -131,7 +117,9 @@ namespace platformer2d {
 		const std::filesystem::path IconPath = TEXTURES_DIR "/test/test_player.png";
 		SetIcon(IconPath);
 
-		Centralize();
+		if (Spec.bStartMaximized) {
+			Centralize();
+		}
 	}
 
 	void CWindow::Destroy()
@@ -153,8 +141,7 @@ namespace platformer2d {
 
 	void CWindow::SetSize(const uint16_t InWidth, const uint16_t InHeight)
 	{
-		if ((Data.Width != InWidth) || (Data.Height != InHeight))
-		{
+		if ((Data.Width != InWidth) || (Data.Height != InHeight)) {
 			LK_TRACE_TAG("Window", "Resize: ({}, {})", InWidth, InHeight);
 			Data.Width = InWidth;
 			Data.Height = InHeight;
@@ -186,8 +173,7 @@ namespace platformer2d {
 
 	void CWindow::Maximize()
 	{
-		if (GlfwWindow && !IsMaximized())
-		{
+		if (GlfwWindow && !IsMaximized()) {
 			glfwMaximizeWindow(GlfwWindow);
 		}
 	}
