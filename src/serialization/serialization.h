@@ -13,27 +13,18 @@ namespace platformer2d::Serialization {
 	 * Cannot be used with strings as of yet.
 	 */
 	#define LK_DESERIALIZE_PROPERTY(PropertyName, Destination, DefaultValue, Node) \
-		if (Node.IsDefined()) \
-		{ \
-			if (auto NodeRef = Node[#PropertyName]) \
-			{ \
-				try \
-				{ \
+		if (Node.IsDefined()) { \
+			if (auto NodeRef = Node[#PropertyName]) { \
+				try { \
 					Destination = NodeRef.as<decltype(DefaultValue)>(); \
-				} \
-				catch (const std::exception& Exception) \
-				{ \
+				} catch (const std::exception& Exception) { \
 					LK_ERROR_TAG("Deserializer", "Failed to get \"{}\": {}", #PropertyName, Exception.what()); \
 					Destination = DefaultValue; \
 				} \
-			} \
-			else \
-			{ \
+			} else { \
 				LK_WARN_TAG("Deserializer", "Property not found: {}", #PropertyName); \
 			} \
-		} \
-		else \
-		{ \
+		} else { \
 			LK_ERROR_TAG("Deserializer", "Default value used for: {}", #PropertyName); \
 			Destination = DefaultValue; \
 		}
@@ -58,32 +49,28 @@ namespace platformer2d::Serialization {
 	template<>
 	void Serialize(const FEffectComponent& EC, YAML::Emitter& Out)
 	{
-		if (EC.Effects.empty())
-		{
+		if (EC.Effects.empty()) {
 			LK_DEBUG_TAG("Serializer", "EffectComponent has no effects");
 			return;
 		}
 
 		Out << YAML::Key << "EffectComponent";
 		Out << YAML::Value << YAML::BeginSeq;
-		for (std::size_t Index = 0; Index < EC.Effects.size(); Index++)
-		{
+		for (std::size_t Index = 0; Index < EC.Effects.size(); Index++) {
 			const FEffectInstance& Instance = EC.Effects[Index];
 			YAML::Node EffectNode;
 
 			Out << YAML::BeginMap;
 			Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(Instance.Type);
 
-			switch (Instance.Type)
-			{
-				case EEffectType::Rotate:
-				{
+			switch (Instance.Type) {
+				case EEffectType::Rotate: {
 					const FRotateEffect& Rotate = std::get<FRotateEffect>(Instance.Data);
 					Out << YAML::Key << "AngularSpeedDegPerSecond" << YAML::Value << Rotate.AngularSpeedDegPerSecond;
 					break;
 				}
-
-				default: break;
+				default:
+					break;
 			}
 
 			Out << YAML::EndMap;
@@ -98,22 +85,18 @@ namespace platformer2d::Serialization {
 		Out << YAML::Key << "InteractionComponent";
 		Out << YAML::BeginMap;
 		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(IC.GetType());
-		switch (IC.Type)
-		{
-			case EInteraction::Damage:
-			{
+		switch (IC.Type) {
+			case EInteraction::Damage: {
 				const auto& Data = std::get<FDamageInteraction>(IC.Data);
 				Out << YAML::Key << "Damage" << YAML::Value << Data.Damage;
 				break;
 			}
-			case EInteraction::Pickup:
-			{
+			case EInteraction::Pickup: {
 				const auto& Data = std::get<FPickupInteraction>(IC.Data);
 				Out << YAML::Key << "Kind" << YAML::Value << std::to_underlying(Data.Kind);
 				Out << YAML::Key << "ExpireWhenPickedUp" << YAML::Value << Data.bExpireWhenPickedUp;
 				break;
 			}
-
 			default:
 				LK_ERROR_TAG("Serializer", "Interaction {} not supported", Enum::ToString(IC.Type));
 				break;
@@ -145,11 +128,9 @@ namespace platformer2d::Serialization {
 	void Deserialize(FEffectComponent& EC, const YAML::Node& NodeSeq)
 	{
 		LK_ASSERT(NodeSeq && NodeSeq.IsSequence());
-		for (std::size_t Idx = 0; Idx < NodeSeq.size(); Idx++)
-		{
+		for (std::size_t Idx = 0; Idx < NodeSeq.size(); Idx++) {
 			const YAML::Node& EffectNode = NodeSeq[Idx];
-			if (!EffectNode)
-			{
+			if (!EffectNode) {
 				continue;
 			}
 
@@ -158,16 +139,14 @@ namespace platformer2d::Serialization {
 			Instance.Data = std::monostate{};
 
 			const EEffectType Type = static_cast<EEffectType>(EffectNode["Type"].as<std::size_t>());
-			if (Type == EEffectType::Rotate)
-			{
+			if (Type == EEffectType::Rotate) {
 				Instance.Type = EEffectType::Rotate;
 				FRotateEffect Rotate;
 				Rotate.AngularSpeedDegPerSecond = EffectNode["AngularSpeedDegPerSecond"].as<float>();
 				Instance.Data = Rotate;
 			}
 
-			if (Instance.Type != EEffectType::None)
-			{
+			if (Instance.Type != EEffectType::None) {
 				LK_TRACE("Push effect: {}", Enum::ToString(Instance.Type));
 				EC.Effects.push_back(Instance);
 			}
@@ -178,18 +157,15 @@ namespace platformer2d::Serialization {
 	void Deserialize(FInteractionComponent& IC, const YAML::Node& Node)
 	{
 		IC.Type = static_cast<EInteraction>(Node["Type"].as<std::underlying_type_t<EInteraction>>());
-		switch (IC.Type)
-		{
-			case EInteraction::Damage:
-			{
+		switch (IC.Type) {
+			case EInteraction::Damage: {
 				FDamageInteraction Data;
 				LK_DESERIALIZE_PROPERTY(Damage, Data.Damage, 0.0f, Node);
 				IC.Data = Data;
 				LK_DEBUG_TAG("Deserializer", "FDamageInteraction::Damage: {}", Data.Damage);
 				break;
 			}
-			case EInteraction::Pickup:
-			{
+			case EInteraction::Pickup: {
 				FPickupInteraction Data;
 				LK_DESERIALIZE_PROPERTY(Kind, Data.Kind, EPickupKind::Item, Node);
 				LK_DESERIALIZE_PROPERTY(ExpireWhenPickedUp, Data.bExpireWhenPickedUp, false, Node);
@@ -197,7 +173,6 @@ namespace platformer2d::Serialization {
 				LK_DEBUG_TAG("Deserializer", "FPickupInteraction: Kind={} bExpireWhenPickedUp={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp);
 				break;
 			}
-
 			default:
 				LK_ERROR_TAG("Deserializer", "Interaction {} not supported", Enum::ToString(IC.Type));
 				break;
@@ -215,10 +190,8 @@ namespace platformer2d::Serialization {
 		const YAML::Node ShapeNode = Node["Shape"];
 		LK_VERIFY(ShapeNode["ShapeType"], "ShapeType missing in yaml");
 		const EShape ShapeType = static_cast<EShape>(ShapeNode["ShapeType"].as<int>());
-		switch (ShapeType)
-		{
-			case EShape::Polygon:
-			{
+		switch (ShapeType) {
+			case EShape::Polygon: {
 				const glm::vec2 Size = ShapeNode["Size"].as<glm::vec2>();
 				const float Rotation = ShapeNode["Rotation"].as<float>();
 				const float Radius = ShapeNode["Radius"].as<float>();
@@ -232,13 +205,11 @@ namespace platformer2d::Serialization {
 				BodySpec.Shape.emplace<FPolygon>(Polygon);
 				break;
 			}
-			case EShape::Line:
-			{
+			case EShape::Line: {
 				LK_MARK_NOT_IMPLEMENTED();
 				break;
 			}
-			case EShape::Capsule:
-			{
+			case EShape::Capsule: {
 				const glm::vec2 P0 = ShapeNode["Size"].as<glm::vec2>();
 				const glm::vec2 P1 = ShapeNode["Size"].as<glm::vec2>();
 				const float Radius = ShapeNode["Radius"].as<float>();
