@@ -18,6 +18,8 @@ project_library_sources(
 	platform.h
 	selectioncontext.h
 	selectioncontext.cpp
+	settings.h
+	settings.cpp
 	string.h
 	template.h
 	timer.h
