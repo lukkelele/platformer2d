@@ -7,6 +7,7 @@ project_library_sources(
 	inventory.h
 	inventory.cpp
 	item.h
+	itemtype.h
 	gameplaysystem.h
 	gameplaysystem.cpp
 	rifle.h
