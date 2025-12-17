@@ -19,6 +19,10 @@
 
 namespace platformer2d {
 
+	namespace {
+		const std::filesystem::path SettingsFile(CONFIG_DIR "/settings.yaml");
+	}
+
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
 		CLog::Initialize();
@@ -33,8 +37,15 @@ namespace platformer2d {
 	void CApplication::Initialize()
 	{
 		LK_DEBUG_TAG("Application", "Initializing");
-		const char* WindowName = "platformer2d";
-		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, WindowName);
+		FSettings& Settings = FSettings::Get();
+		Settings.Deserialize(SettingsFile);
+
+		FWindowSpecification WindowSpec = {
+			.Title = "platformer2d",
+			.bStartMaximized = Settings.Window.bStartMaximized,
+			.bVSync = Settings.Window.bVSync,
+		};
+		Window = std::make_unique<CWindow>(WindowSpec);
 		Window->Initialize();
 
 		CRenderer::Initialize();
@@ -57,6 +68,9 @@ namespace platformer2d {
 		if (bRunning) {
 			LK_INFO_TAG("Application", "Shutting down");
 			bRunning = false;
+
+			const FSettings& Settings = FSettings::Get();
+			Settings.Serialize(SettingsFile);
 
 			UILayer.reset();
 			LK_TRACE_TAG("Application", "Release layerstack");

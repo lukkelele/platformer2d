@@ -2,6 +2,7 @@
 
 #include "core/window.h"
 #include "core/layerstack.h"
+#include "core/settings.h"
 #include "core/timer.h"
 #include "renderer/renderer.h"
 #include "renderer/ui/uilayer.h"
