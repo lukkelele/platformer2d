@@ -99,13 +99,13 @@ namespace platformer2d::UI {
 
 			/* Wide monitor. */
 			if ((WindowWidth > 1920) || (WindowHeight > 1080)) {
-				LeftSidebarFraction = 0.22f;
-				RightSidebarFraction = 0.18f;
+				LeftSidebarFraction = 0.20f;
+				RightSidebarFraction = 0.24f;
 				TopBarFraction = 0.07f;
 			/* Normal 16:9 monitor. */
 			} else if ((WindowWidth <= 1920) || (WindowHeight <= 1080)) {
-				LeftSidebarFraction = 0.28f;
-				RightSidebarFraction = 0.26f;
+				LeftSidebarFraction = 0.24f;
+				RightSidebarFraction = 0.28f;
 				TopBarFraction = 0.05f;
 			}
 
