@@ -5,6 +5,7 @@
 #define LOGS_DIR       PROJECT_DIR "/logs"
 #define BINARY_DIR     "@LK_BINARY_DIR@"
 
+#define CONFIG_DIR     PROJECT_DIR "/config"
 #define ASSETS_DIR     PROJECT_DIR "/assets"
 #define FONTS_DIR      ASSETS_DIR "/fonts"
 #define LEVELS_DIR     ASSETS_DIR "/levels"
