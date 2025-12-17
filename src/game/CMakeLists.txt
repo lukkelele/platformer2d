@@ -19,6 +19,7 @@ project_library_sources(
 	spawner.h
 	spawner.cpp
 	weapon.h
+	weapontype.h
 )
 
 target_link_libraries(game PUBLIC 

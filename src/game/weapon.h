@@ -7,14 +7,9 @@
 #include "renderer/color.h"
 #include "scene/actor.h"
 #include "item.h"
+#include "weapontype.h"
 
 namespace platformer2d {
-
-	enum class EWeaponType
-	{
-		Rifle,
-		COUNT
-	};
 
 	class IWeapon : public CActor, public IItem
 	{
@@ -27,22 +22,5 @@ namespace platformer2d {
 
 		virtual EItemType GetItemType() const override { return EItemType::Weapon; }
 	};
-
-	namespace Enum {
-		inline const char* ToString(const EWeaponType Type)
-		{
-			const char* S = "";
-		#define _(EnumValue) case EWeaponType::EnumValue: S = #EnumValue; break
-			switch (Type) {
-				_(Rifle);
-				_(COUNT);
-				default:
-					LK_THROW_ENUM_ERR(Type);
-					break;
-			}
-		#undef _
-			return S;
-		}
-	}
 
 }
