@@ -36,7 +36,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	void Serialize(const FTransformComponent& TC, YAML::Emitter& Out)
+	inline void Serialize(const FTransformComponent& TC, YAML::Emitter& Out)
 	{
 		Out << YAML::Key << "TransformComponent";
 		Out << YAML::BeginMap;
@@ -47,7 +47,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	void Serialize(const FEffectComponent& EC, YAML::Emitter& Out)
+	inline void Serialize(const FEffectComponent& EC, YAML::Emitter& Out)
 	{
 		if (EC.Effects.empty()) {
 			LK_DEBUG_TAG("Serializer", "EffectComponent has no effects");
@@ -80,11 +80,11 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	void Serialize(const FInteractionComponent& IC, YAML::Emitter& Out)
+	inline void Serialize(const FInteractionComponent& IC, YAML::Emitter& Out)
 	{
 		Out << YAML::Key << "InteractionComponent";
 		Out << YAML::BeginMap;
-		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(IC.GetType());
+		Out << YAML::Key << "InteractionType" << YAML::Value << std::to_underlying(IC.GetType());
 		switch (IC.Type) {
 			case EInteraction::Damage: {
 				const auto& Data = std::get<FDamageInteraction>(IC.Data);
@@ -93,16 +93,30 @@ namespace platformer2d::Serialization {
 			}
 			case EInteraction::Pickup: {
 				const auto& Data = std::get<FPickupInteraction>(IC.Data);
-				Out << YAML::Key << "Kind" << YAML::Value << std::to_underlying(Data.Kind);
-				Out << YAML::Key << "ObjectType" << YAML::Value << std::visit([](const auto& Value) -> int
-				{
-					using T = std::decay_t<decltype(Value)>;
-					if constexpr (std::is_enum_v<T>) {
-						return std::to_underlying(Value);
-					} else {
-						return -1;
+				Out << YAML::Key << "PickupKind" << YAML::Value << std::to_underlying(Data.Kind);
+
+				Out << YAML::Key << "Object";
+				Out << YAML::BeginMap;
+				int ObjectType = -1;
+				if (const FPickupItem* Object = std::get_if<FPickupItem>(&Data.Object)) {
+					ObjectType = static_cast<int>(Object->Type);
+					LK_FATAL_TAG("Serializer", "PickupItem ObjectType={}", ObjectType);
+				} else if (const FPickupWeapon* Object = std::get_if<FPickupWeapon>(&Data.Object)) {
+					ObjectType = static_cast<int>(Object->Type);
+					LK_DEBUG_TAG("Serializer", "PickupWeapon ObjectType={}", ObjectType);
+					if (Object->Type == EWeaponType::Rifle) {
+						auto& Spec = std::get<FRifleSpecification>(Object->Spec);
+						Out << YAML::Key << "Specification";
+						Out << YAML::BeginMap;
+						Out << YAML::Key << "MagazineSize" << YAML::Value << Spec.MagazineSize;
+						Out << YAML::EndMap;
 					}
-				}, Data.ObjectType);
+				} else {
+					LK_ERROR_TAG("Serializer", "Object data missing for {}", Enum::ToString(Data.Kind));
+				}
+				Out << YAML::EndMap; /* Object */
+				Out << YAML::Key << "ObjectType" << YAML::Value << ObjectType;
+
 				Out << YAML::Key << "ExpireWhenPickedUp" << YAML::Value << Data.bExpireWhenPickedUp;
 				break;
 			}
@@ -121,7 +135,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	void Deserialize(FTransformComponent& TC, const YAML::Node& Node)
+	inline void Deserialize(FTransformComponent& TC, const YAML::Node& Node)
 	{
 		TC.Translation = Node["Position"].as<decltype(TC.Translation)>();
 		const float RotRad = Node["Rotation"].as<float>();
@@ -163,9 +177,9 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	void Deserialize(FInteractionComponent& IC, const YAML::Node& Node)
+	inline void Deserialize(FInteractionComponent& IC, const YAML::Node& Node)
 	{
-		IC.Type = static_cast<EInteraction>(Node["Type"].as<std::underlying_type_t<EInteraction>>());
+		IC.Type = static_cast<EInteraction>(Node["InteractionType"].as<std::underlying_type_t<EInteraction>>());
 		switch (IC.Type) {
 			case EInteraction::Damage: {
 				FDamageInteraction Data;
@@ -176,24 +190,42 @@ namespace platformer2d::Serialization {
 			}
 			case EInteraction::Pickup: {
 				FPickupInteraction Data;
-				LK_DESERIALIZE_PROPERTY(Kind, Data.Kind, EPickupKind::Item, Node);
+				LK_DESERIALIZE_PROPERTY(PickupKind, Data.Kind, EPickupKind::Item, Node);
 				LK_DESERIALIZE_PROPERTY(ExpireWhenPickedUp, Data.bExpireWhenPickedUp, false, Node);
 
 				int ObjectTypeValue = 0;
 				try {
+					/* The actual enum value to the type based on the kind. */
 					ObjectTypeValue = Node["ObjectType"].as<int>();
 				} catch (const std::exception& E) {
-					LK_ERROR_TAG("Deserializer", "Failed to deserialize 'ObjectType'");
-					Data.ObjectType = std::monostate{};
+					LK_ERROR_TAG("Deserializer", "Failed to deserialize 'Object'");
+					Data.Object = std::monostate{};
 					ObjectTypeValue = -1;
 				}
 
 				if (ObjectTypeValue >= 0) {
 					if (Data.Kind == EPickupKind::Item) {
-						Data.ObjectType = static_cast<EItemType>(ObjectTypeValue);
+						FPickupItem Object = {
+							.Type = static_cast<EItemType>(ObjectTypeValue)
+						};
+						Data.Object = Object;
 					} else if (Data.Kind == EPickupKind::Weapon) {
-						Data.ObjectType = static_cast<EWeaponType>(ObjectTypeValue);
+						FPickupWeapon Object = {
+							.Type = static_cast<EWeaponType>(ObjectTypeValue)
+						};
+
+						const YAML::Node& ObjectNode = Node["Object"];
+						LK_ASSERT(ObjectNode.IsDefined(), "Object node not defined");
+						if (Object.Type == EWeaponType::Rifle) {
+							const YAML::Node& SpecNode = ObjectNode["Specification"];
+							FRifleSpecification Spec;
+							LK_DESERIALIZE_PROPERTY(MagazineSize, Spec.MagazineSize, 30, SpecNode);
+							Object.Spec = Spec;
+							Data.Object = Object;
+						}
 					}
+				} else {
+					LK_ERROR_TAG("Deserializer", "Failed to deduce object type from {}", Enum::ToString(Data.Kind));
 				}
 
 				IC.Data = Data;
@@ -207,7 +239,7 @@ namespace platformer2d::Serialization {
 	}
 
 	template<>
-	void Deserialize(FBodySpecification& BodySpec, const YAML::Node& Node)
+	inline void Deserialize(FBodySpecification& BodySpec, const YAML::Node& Node)
 	{
 		LK_ASSERT(Node["Type"] && Node["Shape"]);
 		BodySpec.Type = static_cast<EBodyType>(Node["Type"].as<int>());
