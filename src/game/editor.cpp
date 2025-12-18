@@ -438,11 +438,24 @@ namespace platformer2d {
 					case EInteraction::Pickup: {
 						auto& Data = std::get<FPickupInteraction>(IC->GetData());
 						if (Data.Kind == EPickupKind::Item) {
-							const EItemType ItemType = std::get<EItemType>(Data.ObjectType);
-							LK_WARN("ItemType={} ExpireOnPickup={}", Enum::ToString(ItemType), Data.bExpireWhenPickedUp);
+							const auto& Object = std::get<FPickupItem>(Data.Object);
+							LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
 						} else if (Data.Kind == EPickupKind::Weapon) {
-							const EWeaponType WeaponType = std::get<EWeaponType>(Data.ObjectType);
-							LK_WARN("WeaponType={} ExpireOnPickup={}", Enum::ToString(WeaponType), Data.bExpireWhenPickedUp);
+							const auto& Object = std::get<FPickupWeapon>(Data.Object);
+							if (Object.Type == EWeaponType::Rifle) {
+								const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
+								LK_WARN("Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Data.bExpireWhenPickedUp);
+								CPlayer* PlayerRef = static_cast<CPlayer*>(Event.Visitor);
+								CInventory& Inventory = PlayerRef->GetInventory();
+								if (Inventory.IsEmpty()) {
+									std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, PlayerRef);
+									Inventory.AddItem(Rifle);
+								} else {
+									LK_WARN_TAG("Editor", "Inventory not empty");
+								}
+							} else {
+								LK_FATAL("Weapon={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
+							}
 						}
 						break;
 					}
