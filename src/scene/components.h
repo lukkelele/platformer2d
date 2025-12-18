@@ -163,12 +163,24 @@ namespace platformer2d {
 		COUNT
 	};
 
-	using TPickupObjectType = std::variant<std::monostate, EItemType, EWeaponType>;
+	struct FPickupItem
+	{
+		EItemType Type;
+	};
+
+	using TWeaponSpecification = std::variant<std::monostate, FRifleSpecification>;
+	struct FPickupWeapon
+	{
+		EWeaponType Type;
+		TWeaponSpecification Spec;
+	};
+
+	using TPickupObject = std::variant<std::monostate, FPickupItem, FPickupWeapon>;
 
 	struct FPickupInteraction
 	{
 		EPickupKind Kind = EPickupKind::Item;
-		TPickupObjectType ObjectType;
+		TPickupObject Object;
 		bool bExpireWhenPickedUp = false;
 	};
 
