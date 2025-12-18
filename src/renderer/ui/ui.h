@@ -165,7 +165,9 @@ namespace platformer2d::UI {
 			Enum::ToString(ETexture::Wood),
 			Enum::ToString(ETexture::Swoosh),
 			Enum::ToString(ETexture::Cloud),
+			Enum::ToString(ETexture::Rifle),
 		};
+		static_assert(TextureNames.at(std::to_underlying(ETexture::COUNT) - 1) != nullptr);
 
 		static constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
 			EPickupKind::Item,
