@@ -43,6 +43,17 @@ namespace platformer2d {
 		LK_ASSERT(!IsFull() && (GetFreeSlots() == Items.size()));
 	}
 
+	bool CInventory::IsEmpty() const
+	{
+		for (std::size_t Idx = 0; Idx < Items.size(); Idx++) {
+			if (Items.at(Idx).ItemRef != nullptr) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	bool CInventory::IsFull() const
 	{
 		for (std::size_t Idx = 0; Idx < Items.size(); Idx++) {

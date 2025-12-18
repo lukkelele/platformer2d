@@ -118,6 +118,7 @@ namespace platformer2d {
 			return nullptr;
 		}
 
+		bool IsEmpty() const;
 		bool IsFull() const;
 		std::size_t GetFreeSlots() const;
 		std::size_t GetUsedSlots() const;
