@@ -12,7 +12,7 @@ Actors:
       Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [3.1785767, -0.3435796, 0.1]
-      Rotation: 0.5320619
+      Rotation: 0.47958922
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -20,7 +20,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.5320619
+        Rotation: 0.4795892
         Radius: 0.5
       Position: [3.1785767, -0.3435796]
       Flags: 2
@@ -93,7 +93,7 @@ Actors:
       Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [0.46239638, 0.029140675, 2.6]
-      Rotation: 0.4197415
+      Rotation: -0.10985573
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: 1
@@ -104,7 +104,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: 0.41974154
+        Rotation: -0.10985572
         Radius: 0.5
       Position: [0.46239638, 0.029140675]
       Flags: 2
@@ -195,20 +195,24 @@ Actors:
   - ID: 3228445016720479417
     Type: 0
     Name: PickupSensor
-    Texture: 0
-    Color: [0, 0, 0, 0]
+    Texture: 8
+    Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
       Enabled: false
       Thickness: 8.2
       Color: [1, 0, 0, 1]
     TransformComponent:
-      Position: [0.21088336, -0.43311808, 0.46]
+      Position: [-0.06911661, -0.4831181, 0.46]
       Rotation: 0
       Scale: [0.2, 0.2, 1]
     InteractionComponent:
-      Type: 2
-      Kind: 1
+      InteractionType: 2
+      PickupKind: 1
+      Object:
+        Specification:
+          MagazineSize: 30
+      ObjectType: 0
       ExpireWhenPickedUp: false
     Body:
       Type: 0
@@ -218,7 +222,7 @@ Actors:
         Size: [0.2, 0.2]
         Rotation: 0
         Radius: 0.5
-      Position: [0.21088336, -0.43311808]
+      Position: [-0.06911661, -0.4831181]
       Flags: 10
       Mass: 1
       MotionLock: 0
