@@ -10,6 +10,11 @@ namespace platformer2d {
 		COUNT
 	};
 
+	struct FRifleSpecification
+	{
+		uint16_t MagazineSize = 30;
+	};
+
 	namespace Enum {
 		inline const char* ToString(const EWeaponType Type)
 		{
