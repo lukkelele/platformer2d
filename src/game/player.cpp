@@ -86,9 +86,11 @@ namespace platformer2d {
 		/* Set z-index. */
 		TransformComp.Translation.z = -0.010f;
 
+#ifdef SPAWN_WITH_RIFLE
 		std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>();
 		Rifle->Equip(this);
 		Inventory.AddItem(Rifle);
+#endif
 
 		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
