@@ -10,7 +10,7 @@ namespace platformer2d {
 	class CRifle : public IWeapon
 	{
 	public:
-		CRifle();
+		CRifle(const FRifleSpecification& InSpec = FRifleSpecification(), CActor* InOwner = nullptr);
 		~CRifle();
 
 		virtual void Tick(float DeltaTime) override;
@@ -24,6 +24,7 @@ namespace platformer2d {
 		bool Reload();
 		bool NeedToReload() const { return Ammo <= 0; }
 		uint16_t GetAmmo() const { return Ammo; }
+		uint16_t GetMagazineSize() const { return MagazineSize; }
 
 		void Equip(CActor* Actor);
 
@@ -61,8 +62,6 @@ namespace platformer2d {
 		bool DestroyProjectile(const b2BodyId& ID);
 		void DestroyExpiredProjectiles();
 
-	public:
-		static constexpr uint16_t MAGAZINE_SIZE = 30;
 	private:
 		CActor* Owner = nullptr;
 		glm::vec3 Origin{ 0.0f, 0.0f, -0.10f };
@@ -84,8 +83,9 @@ namespace platformer2d {
 		bool bProjectileExplodeOnImpact = false;
 		uint8_t ProjectileBounceCount = 3;
 
+		uint16_t Ammo;
+		uint16_t MagazineSize;
 		glm::vec2 MuzzleOffset = { 0.080f, 0.050f };
-		uint16_t Ammo = MAGAZINE_SIZE;
 
 		std::vector<std::shared_ptr<CProjectile>> Fired{};
 		std::queue<b2BodyId> ExpiredQueue{};

@@ -6,7 +6,10 @@
 
 namespace platformer2d {
 
-	CRifle::CRifle()
+	CRifle::CRifle(const FRifleSpecification& InSpec, CActor* InOwner)
+		: Owner(InOwner)
+		, MagazineSize(InSpec.MagazineSize)
+		, Ammo(InSpec.MagazineSize)
 	{
 	}
 
@@ -135,7 +138,7 @@ namespace platformer2d {
 	bool CRifle::Reload()
 	{
 		LK_TRACE_TAG("Rifle", "Begin reload with {} left in ammo", Ammo);
-		Ammo = MAGAZINE_SIZE;
+		Ammo = MagazineSize;
 		return true;
 	}
 
