@@ -193,6 +193,7 @@ namespace platformer2d {
 
 		EInteraction GetType() const { return Type; }
 		TInteractionData& GetData() { return Data; }
+		const TInteractionData& GetData() const { return Data; }
 	};
 
 	namespace Enum {
