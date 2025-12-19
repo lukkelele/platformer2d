@@ -185,7 +185,7 @@ namespace platformer2d::Math {
  * Log formatters.
  ************************************/
 template<>
-struct std::formatter<b2Vec2>
+struct LK_FMT_LIB::formatter<b2Vec2>
 {
 	template<typename ParseContext>
     constexpr auto parse(ParseContext& Context)
@@ -196,6 +196,6 @@ struct std::formatter<b2Vec2>
 	template<typename FormatContext>
     auto format(const b2Vec2& Input, FormatContext& Context) const
     {
-		return std::format_to(Context.out(), "({:.2f}, {:.2f})", Input.x, Input.y);
+		return LK_FMT_LIB::format_to(Context.out(), "({:.2f}, {:.2f})", Input.x, Input.y);
     }
 };
