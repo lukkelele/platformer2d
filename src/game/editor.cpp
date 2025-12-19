@@ -436,27 +436,8 @@ namespace platformer2d {
 						break;
 					}
 					case EInteraction::Pickup: {
-						auto& Data = std::get<FPickupInteraction>(IC->GetData());
-						if (Data.Kind == EPickupKind::Item) {
-							const auto& Object = std::get<FPickupItem>(Data.Object);
-							LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
-						} else if (Data.Kind == EPickupKind::Weapon) {
-							const auto& Object = std::get<FPickupWeapon>(Data.Object);
-							if (Object.Type == EWeaponType::Rifle) {
-								const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
-								LK_WARN("Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Data.bExpireWhenPickedUp);
-								CPlayer* PlayerRef = static_cast<CPlayer*>(Event.Visitor);
-								CInventory& Inventory = PlayerRef->GetInventory();
-								if (Inventory.IsEmpty()) {
-									std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, PlayerRef);
-									Inventory.AddItem(Rifle);
-								} else {
-									LK_WARN_TAG("Editor", "Inventory not empty");
-								}
-							} else {
-								LK_FATAL("Weapon={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
-							}
-						}
+						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
+						OnPickupEvent(PlayerRef, *IC);
 						break;
 					}
 					default:
@@ -1212,6 +1193,30 @@ namespace platformer2d {
 		Framebuffer->Invalidate();
 
 		LK_DEBUG_TAG("Editor", "Scene closed");
+	}
+
+	void CEditor::OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC)
+	{
+		const auto& Data = std::get<FPickupInteraction>(IC.GetData());
+		if (Data.Kind == EPickupKind::Item) {
+			const auto& Object = std::get<FPickupItem>(Data.Object);
+			LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
+		} else if (Data.Kind == EPickupKind::Weapon) {
+			const auto& Object = std::get<FPickupWeapon>(Data.Object);
+			if (Object.Type == EWeaponType::Rifle) {
+				const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
+				LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Data.bExpireWhenPickedUp);
+				CInventory& Inventory = InPlayer.GetInventory();
+				if (Inventory.IsEmpty()) {
+					std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &InPlayer);
+					Inventory.AddItem(Rifle);
+				} else {
+					LK_WARN_TAG("Editor", "Inventory not empty");
+				}
+			} else {
+				LK_FATAL("Weapon={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
+			}
+		}
 	}
 
 	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)

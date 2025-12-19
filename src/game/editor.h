@@ -70,6 +70,8 @@ namespace platformer2d {
 		void OpenScene();
 		void CloseScene();
 
+		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
+
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
