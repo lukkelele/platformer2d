@@ -27,14 +27,6 @@ namespace platformer2d {
 		std::string Title{};
 		bool bVSync = false;
 		class CWindow* WindowRef = nullptr;
-
-		FWindowData() = default;
-		FWindowData(const uint16_t InWidth, const uint16_t InHeight, std::string_view InTitle)
-			: Width(InWidth)
-			, Height(InHeight)
-			, Title(InTitle)
-		{
-		}
 	};
 
 	class CWindow
