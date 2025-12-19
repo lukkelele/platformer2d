@@ -155,6 +155,12 @@ namespace platformer2d {
 			CameraUniformBuffer->Destroy();
 			CameraUniformBuffer.reset();
 		}
+
+		if (Data.ViewportFramebuffer) {
+			LK_DEBUG_TAG("Renderer", "Releasing viewport framebuffer");
+			Data.ViewportFramebuffer->Destroy();
+			Data.ViewportFramebuffer.reset();
+		}
 	}
 
 	void CRenderer::CreateFramebuffer()
