@@ -36,6 +36,7 @@ namespace platformer2d {
 
 	void CFramebuffer::Destroy()
 	{
+		LK_TRACE_TAG("Framebuffer", "Destroy: {}", ID);
 		LK_OpenGL_Verify(glDeleteFramebuffers(1, &ID));
 		ID = 0;
 
