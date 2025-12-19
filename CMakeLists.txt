@@ -71,7 +71,6 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 		X11
 	)
-
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	set(LK_COMPILER_CLANG ON)
 	project_add_compile_definitions(LK_COMPILER_CLANG)
