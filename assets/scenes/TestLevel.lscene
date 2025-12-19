@@ -11,8 +11,8 @@ Actors:
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [3.1785767, -0.3435796, 0.1]
-      Rotation: 0.47958922
+      Position: [3.2585766, -0.29357958, 0.1]
+      Rotation: 0.23556189
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -20,9 +20,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.4795892
+        Rotation: 0.23556189
         Radius: 0.5
-      Position: [3.1785767, -0.3435796]
+      Position: [3.2585766, -0.29357958]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -65,7 +65,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-0.5515029, 0.03574916, 2]
+      Position: [-0.63150287, 0.05574916, 2]
       Rotation: 0
       Scale: [0.4, 0.06, 1]
     Body:
@@ -76,7 +76,7 @@ Actors:
         Size: [0.4, 0.06]
         Rotation: 0
         Radius: 0.5
-      Position: [-0.5515029, 0.03574916]
+      Position: [-0.63150287, 0.05574916]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -93,7 +93,7 @@ Actors:
       Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [0.46239638, 0.029140675, 2.6]
-      Rotation: -0.10985573
+      Rotation: 1.7388033
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: 1
@@ -104,7 +104,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -0.10985572
+        Rotation: 1.7388033
         Radius: 0.5
       Position: [0.46239638, 0.029140675]
       Flags: 2
@@ -227,3 +227,84 @@ Actors:
       Mass: 1
       MotionLock: 0
       Sensor: true
+  - ID: 2350798669399496013
+    Type: 0
+    Name: WoodPanel
+    Texture: 5
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [2.46, 0.63, 0]
+      Rotation: 0
+      Scale: [1.31, 0.2, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.31, 0.2]
+        Rotation: 0
+        Radius: 0.5
+      Position: [2.46, 0.63]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 7201945749913721535
+    Type: 0
+    Name: MetalPanel
+    Texture: 3
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [4.61, 1.38, 0]
+      Rotation: -2.8997252
+      Scale: [1.33, 0.15, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.33, 0.15]
+        Rotation: -2.8997252
+        Radius: 0.5
+      Position: [4.61, 1.38]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 15940207248601049079
+    Type: 0
+    Name: Actor-12
+    Texture: 0
+    Color: [0.96, 0.105, 0.83, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [1.5799999, 1.9899999, 0]
+      Rotation: 3.012806
+      Scale: [1.33, 0.15, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.33, 0.15]
+        Rotation: 3.012806
+        Radius: 0.5
+      Position: [1.5799999, 1.9899999]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
