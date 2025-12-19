@@ -55,7 +55,7 @@ git clone --recursive https://github.com/lukkelele/platformer2d
 Make sure to run `git submodule update --init --recursive` if the repo is cloned **without** the `--recursive` flag.
 
 ### Dependencies
-The game is dependent on several external libraries.  
+The project is dependent on several external libraries.  
 Most dependencies are submodules but some need manual installation.
 
 #### glad
