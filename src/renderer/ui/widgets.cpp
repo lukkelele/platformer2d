@@ -358,7 +358,7 @@ namespace platformer2d::UI::Widget {
 		}
 
 		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
-		const bool NodeOpened = ImGui::TreeNodeEx((void*)ActorImGuiID, TreeNodeFlags, NodeName);
+		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName);
 		if (NodeOpened) {
 			ActorNode_Data(Actor);
 			UI::Widget::DrawComponents(Actor);
