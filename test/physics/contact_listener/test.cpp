@@ -28,8 +28,7 @@
 
 namespace platformer2d::test {
 
-	namespace 
-	{
+	namespace {
 		b2WorldId WorldID;
 		bool bPhysicsEnabled = true;
 		bool bMetrics = false;
@@ -99,13 +98,15 @@ namespace platformer2d::test {
 		BodySpec.LinearDamping = 0.50f;
 		BodySpec.MotionLock = EMotionLock_Z;
 		BodySpec.Shape.emplace<FCapsule>(PlayerCapsule);
-		CPlayer Player(BodySpec);
+		FActorSpecification ActorSpec;
+		ActorSpec.Name = "Player";
+		CPlayer Player(ActorSpec, BodySpec);
 
 		const FPlayerData& PlayerData = Player.GetData();
 		FTransformComponent& PlayerTC = Player.GetTransformComponent();
 		glm::vec3& PlayerPos = PlayerTC.Translation;
 		glm::vec3& PlayerScale = PlayerTC.Scale;
-		CBody& PlayerBody = Player.GetBody();
+		CBody* PlayerBody = Player.GetBody();
 		b2World_SetPreSolveCallback(WorldID, PreSolveStatic, &Player /* == Player data */);
 
 		Player.OnJumped.Add([](const FPlayerData& PlayerData)
@@ -129,7 +130,8 @@ namespace platformer2d::test {
 		};
 		PlatformSpec.Shape.emplace<FPolygon>(PlatformPolygon);
 
-		CActor Platform(PlatformSpec);
+		FActorSpecification ActorPlatformSpec;
+		CActor Platform(ActorPlatformSpec, PlatformSpec);
 		FTransformComponent& PlatformTC = Platform.GetTransformComponent();
 		PlatformTC.SetScale(PlatformPolygon.Size);
 #endif
@@ -179,8 +181,7 @@ namespace platformer2d::test {
 		}
 
 		Timer.Reset();
-		while (bRunning)
-		{
+		while (bRunning) {
 			const float DeltaTime = Timer.GetDeltaTime();
 
 			Window.BeginFrame();
@@ -202,8 +203,7 @@ namespace platformer2d::test {
 
 			ImGui::SameLine(0, 20.0f);
 			ImGui::Checkbox("Draw Capsule", &bRendererDrawCapsule);
-			if (bRendererDrawCapsule)
-			{
+			if (bRendererDrawCapsule) {
 				CDebugRenderer::DrawCapsule(PlayerCapsule.P0, PlayerCapsule.P1, PlayerCapsule.Radius, FColor::Green);
 			}
 
@@ -211,8 +211,7 @@ namespace platformer2d::test {
 			float CameraZoom = Camera->GetZoom();
 			ImGui::SetNextItemWidth(300.0f);
 			ImGui::SliderFloat("Camera Zoom", &CameraZoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
-			if (ImGui::IsItemActive())
-			{
+			if (ImGui::IsItemActive()) {
 				Camera->SetZoom(CameraZoom);
 			}
 
@@ -237,14 +236,12 @@ namespace platformer2d::test {
 				CRenderer::DrawQuad(Pos, Size, SmallPlatformColor, 0.0f);
 			}
 
-
 			ImGui::Dummy(ImVec2(0, 12));
 			ImGui::SeparatorText("Physics");
 			ImGui::Text("Physics");
 			ImGui::SameLine();
 			ImGui::Checkbox("##Physics", &bPhysicsEnabled);
-			if (bPhysicsEnabled)
-			{
+			if (bPhysicsEnabled) {
 				CPhysicsWorld::Update(DeltaTime);
 			}
 			ImGui::SameLine(0, 14.0f);
@@ -271,21 +268,19 @@ namespace platformer2d::test {
 			ImGui::PushID(ImGui::GetID("Player"));
 			ImGui::SliderFloat4("Color", &FragColor.x, 0.0f, 1.0f, "%.3f");
 			ImGui::SliderFloat2("Position", &PlayerPos.x, -100.0f, 100.0f, "%.2f");
-			if (ImGui::IsItemActive())
-			{
-				Player.GetBody().SetLinearVelocity({ 0.0f, 0.0f });
+			if (ImGui::IsItemActive()) {
+				Player.GetBody()->SetLinearVelocity({ 0.0f, 0.0f });
 				Player.SetPosition({ PlayerTC.Translation.x, PlayerTC.Translation.y });
 			}
 			ImGui::SliderFloat2("Scale", &PlayerScale.x, 0.01f, 0.30f, "%.2f");
 			float PlayerRot = glm::degrees(PlayerTC.GetRotation2D());
 			ImGui::SliderFloat("Rotation", &PlayerRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
-			if (ImGui::IsItemActive())
-			{
+			if (ImGui::IsItemActive()) {
 				PlayerTC.SetRotation2D(glm::radians(PlayerRot));
 			}
 			ImGui::PopItemWidth();
-			const glm::vec2 PlayerBodyPos = PlayerBody.GetPosition();
-			const glm::vec2 PlayerLinearVelocity = PlayerBody.GetLinearVelocity();
+			const glm::vec2 PlayerBodyPos = PlayerBody->GetPosition();
+			const glm::vec2 PlayerLinearVelocity = PlayerBody->GetLinearVelocity();
 			ImGui::Text("Body Pos: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 			ImGui::Text("Body Linear Velocity: (%.2f, %.2f)", PlayerLinearVelocity.x, PlayerLinearVelocity.y);
 
@@ -299,14 +294,14 @@ namespace platformer2d::test {
 			ImGui::Text("Body Pos: (%.2f, %.2f)", PlayerBodyPos.x, PlayerBodyPos.y);
 			ImGui::Text("Player jumping: %s", PlayerData.bJumping ? "True" : "False");
 
-			float Mass = PlayerBody.GetMass();
+			float Mass = PlayerBody->GetMass();
 			ImGui::SliderFloat("Mass", &Mass, 0.0f, 10.0f, "%.2f");
-			if (ImGui::IsItemActive()) PlayerBody.SetMass(Mass);
+			if (ImGui::IsItemActive()) PlayerBody->SetMass(Mass);
 
 			static float BodyScale = 1.0f;
 			ImGui::SliderFloat("Body Scale", &BodyScale, 0.0f, 2.0f, "%.2f");
 			ImGui::SameLine();
-			if (ImGui::Button("Apply##Scale")) PlayerBody.SetScale(BodyScale);
+			if (ImGui::Button("Apply##Scale")) PlayerBody->SetScale(BodyScale);
 			ImGui::PopItemWidth();
 			ImGui::PopID();
 			/* -- ~Player -- */
@@ -330,8 +325,7 @@ namespace platformer2d::test {
 			ImGui::PushItemWidth(240.0f);
 			static float CameraProj = 1.0f;
 			ImGui::SliderFloat("Camera Projection", &CameraProj, 0.10f, 1.0f);
-			if (ImGui::IsItemActive())
-			{
+			if (ImGui::IsItemActive()) {
 				const glm::mat4 ViewProj(CameraProj);
 				CRenderer::SetCameraViewProjection(ViewProj);
 			}
@@ -355,36 +349,29 @@ namespace platformer2d::test {
 
 	void UI_MenuBar()
 	{
-		if (!ImGui::BeginMenuBar())
-		{
+		if (!ImGui::BeginMenuBar()) {
 			return;
 		}
 
-		if (ImGui::BeginMenu("Settings"))
-		{
+		if (ImGui::BeginMenu("Settings")) {
 			static bool bVSync = CWindow::Get()->GetVSync();
-			if (ImGui::Checkbox("VSync", &bVSync)) 
-			{
+			if (ImGui::Checkbox("VSync", &bVSync)) {
 				CWindow::Get()->SetVSync(bVSync);
 			}
 
 			ImGui::Checkbox("Style Editor", &bStyleEditor);
-			if (ImGui::MenuItem("ID Stack Tool", nullptr))
-			{
+			if (ImGui::MenuItem("ID Stack Tool", nullptr)) {
 				bIdStackTool = !bIdStackTool;
 			}
-			if (ImGui::MenuItem("Metrics", nullptr))
-			{
+			if (ImGui::MenuItem("Metrics", nullptr)) {
 				bMetrics = !bMetrics;
 			}
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Renderer"))
-		{
+		if (ImGui::BeginMenu("Renderer")) {
 			ImGui::Checkbox("Draw Statistics", &bShowDrawStats);
-			if (ImGui::MenuItem("Blend Function", nullptr))
-			{
+			if (ImGui::MenuItem("Blend Function", nullptr)) {
 				bBlendFunc = !bBlendFunc;
 			}
 			ImGui::EndMenu();
@@ -395,22 +382,18 @@ namespace platformer2d::test {
 
 	void UI_ExternalWindows()
 	{
-		if (bIdStackTool)
-		{
+		if (bIdStackTool) {
 			ImGui::ShowIDStackToolWindow(&bIdStackTool);
 		}
-		if (bMetrics)
-		{
+		if (bMetrics) {
 			ImGui::ShowMetricsWindow(&bMetrics);
 		}
-		if (bStyleEditor && ImGui::Begin("Style Editor", &bStyleEditor))
-		{
+		if (bStyleEditor && ImGui::Begin("Style Editor", &bStyleEditor)) {
 			ImGuiStyle& Style = ImGui::GetStyle();
 			ImGui::ShowStyleEditor(&Style);
 			ImGui::End();
 		}
-		if (bBlendFunc && ImGui::Begin("Blend Function", &bBlendFunc))
-		{
+		if (bBlendFunc && ImGui::Begin("Blend Function", &bBlendFunc)) {
 			CTest::UI_BlendFunction();
 			ImGui::End();
 		}
@@ -428,8 +411,7 @@ namespace platformer2d::test {
 		ImGui::SliderFloat("Circle Fill Thickness", &FillThickness, 0.001f, 1.0f);
 		ImGui::SliderFloat4("Circle Color", &CircleColor.x, 0.0f, 1.0f, "%.3f");
 		ImGui::PopItemWidth();
-		if (bRendererDrawCircle)
-		{
+		if (bRendererDrawCircle) {
 			glm::vec3 Rot = glm::vec3(0.0f);
 			CRenderer::DrawCircle(Player.GetPosition(), Rot, Radius, { 0.30f, 1.0f, 0.50f, 1.0f });
 			CRenderer::DrawCircleFilled(Player.GetPosition(), FillRadius, CircleColor, FillThickness);
@@ -442,22 +424,16 @@ namespace platformer2d::test {
 		LK_ASSERT(b2Shape_IsValid(ShapeB));
 
 		float Sign = 0.0f;
-		if (B2_ID_EQUALS(ShapeA, PlayerShapeID))
-		{
+		if (B2_ID_EQUALS(ShapeA, PlayerShapeID)) {
 			Sign = -1.0f;
-		}
-		else if (B2_ID_EQUALS(ShapeB, PlayerShapeID))
-		{
+		} else if (B2_ID_EQUALS(ShapeB, PlayerShapeID)) {
 			Sign = 1.0f;
-		}
-		else
-		{
+		} else {
 			/* Not colliding with the player, enable contact. */
 			return true;
 		}
 
-		if ((Sign * Normal.y) > 0.95f)
-		{
+		if ((Sign * Normal.y) > 0.95f) {
 			return true;
 		}
 

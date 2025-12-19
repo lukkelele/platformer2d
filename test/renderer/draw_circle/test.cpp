@@ -27,7 +27,14 @@ namespace platformer2d::test {
 	{
 		CLog::Initialize();
 
-		Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_NAME);
+		const FWindowSpecification WindowSpec = {
+			.Width = SCREEN_WIDTH,
+			.Height = SCREEN_HEIGHT,
+			.Title = LK_TEST_NAME,
+			.bStartMaximized = true,
+			.bVSync = true
+		};
+		Window = std::make_unique<CWindow>(WindowSpec);
 		Window->Initialize();
 		InitRenderContext(Window->GetGlfwWindow());
 

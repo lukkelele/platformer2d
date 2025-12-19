@@ -22,8 +22,7 @@ using namespace platformer2d;
 using namespace platformer2d::test;
 
 namespace {
-	const GLfloat Vertices_Triangle[] = 
-	{
+	const GLfloat Vertices_Triangle[] = {
 	   -1.0f, -1.0f, 0.0f,
 		1.0f, -1.0f, 0.0f,
 		0.0f,  1.0f, 0.0f,
@@ -41,7 +40,14 @@ int main(int argc, char* argv[])
 {
 	spdlog::info("Running: {}", LK_TEST_STRINGIFY(LK_TEST_SUITE));
 
-	platformer2d::CWindow Window(800, 600, LK_TEST_STRINGIFY(LK_TEST_SUITE));
+	const FWindowSpecification WindowSpec = {
+		.Width = 800,
+		.Height = 600,
+		.Title = LK_TEST_NAME,
+		.bStartMaximized = false,
+		.bVSync = true
+	};
+	platformer2d::CWindow Window(WindowSpec);
 	Window.Initialize();
 	CTestBase::InitRenderContext(Window.GetGlfwWindow());
 	const FWindowData& WindowData = Window.GetData();
@@ -52,8 +58,7 @@ int main(int argc, char* argv[])
 	/* Submit the vertices to OpenGL. */
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Triangle), Vertices_Triangle, GL_STATIC_DRAW);
 
-	while (true)
-	{
+	while (true) {
 		glfwPollEvents();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

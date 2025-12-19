@@ -30,8 +30,7 @@
 
 namespace platformer2d::test {
 
-	namespace
-	{
+	namespace {
 		constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
 			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
@@ -66,21 +65,19 @@ namespace platformer2d::test {
 		};
 	}
 
-	static inline std::filesystem::path GetBinaryDir()
+	static std::filesystem::path GetBinaryDir()
 	{
 #if defined(_WIN32)
 		wchar_t Buffer[MAX_PATH];
 		const DWORD Length = GetModuleFileNameW(nullptr, Buffer, MAX_PATH);
-		if ((Length == 0) || (Length == MAX_PATH))
-		{
+		if ((Length == 0) || (Length == MAX_PATH)) {
 			throw std::runtime_error("Failed to get executable path");
 		}
 		return std::filesystem::path(Buffer).parent_path();
 #elif defined(__linux__)
 		char Buffer[4096];
 		ssize_t Count = readlink("/proc/self/exe", Buffer, sizeof(Buffer) - 1);
-		if (Count == -1)
-		{
+		if (Count == -1) {
 			throw std::runtime_error("Failed to read /proc/self/exe");
 		}
 		Buffer[Count] = '\0';
@@ -94,14 +91,20 @@ namespace platformer2d::test {
 		: Args(Argc, Argv)
 		, BinaryDir(GetBinaryDir())
 	{
-		if (bInit)
-		{
+		if (bInit) {
 			CLog::Initialize();
 			LK_INFO("{}", LK_TEST_NAME);
 			LK_TRACE("Binary dir: {}", BinaryDir.generic_string());
 			LK_TRACE("Assets dir: {}", AssetsDir.generic_string());
 
-			Window = std::make_unique<CWindow>(SCREEN_WIDTH, SCREEN_HEIGHT, LK_TEST_NAME);
+			const FWindowSpecification WindowSpec = {
+				.Width = SCREEN_WIDTH,
+				.Height = SCREEN_HEIGHT,
+				.Title = LK_TEST_NAME,
+				.bStartMaximized = true,
+				.bVSync = true
+			};
+			Window = std::make_unique<CWindow>(WindowSpec);
 			Window->Initialize();
 			CImGuiLayer::AddViewportFlags(ImGuiWindowFlags_MenuBar);
 		}
