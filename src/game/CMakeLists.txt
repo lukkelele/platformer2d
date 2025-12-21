@@ -1,7 +1,10 @@
 project_library(game)
 project_library_sources(
+	controller.h
 	editor.h
 	editor.cpp
+	enemy.h
+	enemy.cpp
 	instance.h
 	instance.cpp
 	inventory.h
@@ -21,6 +24,8 @@ project_library_sources(
 	weapon.h
 	weapontype.h
 )
+
+add_subdirectory(controller)
 
 target_link_libraries(game PUBLIC 
 	core
