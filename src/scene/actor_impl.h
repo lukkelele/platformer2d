@@ -39,12 +39,9 @@ namespace platformer2d {
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>(const FEffectComponent& Other)
 	{
 		LK_DEBUG_TAG("Actor", "{}: Add effect component", Name);
-		if (!EffectComp.has_value())
-		{
+		if (!EffectComp.has_value()) {
 			EffectComp = Other;
-		}
-		else
-		{
+		} else {
 			EffectComp.value() = Other;
 		}
 
@@ -55,8 +52,7 @@ namespace platformer2d {
 	inline FInteractionComponent& CActor::AddComponent<FInteractionComponent>()
 	{
 		LK_DEBUG_TAG("Actor", "{}: Add interaction component", Name);
-		if (!InteractionComp.has_value())
-		{
+		if (!InteractionComp.has_value()) {
 			InteractionComp.emplace();
 		}
 
@@ -67,12 +63,9 @@ namespace platformer2d {
 	inline FInteractionComponent& CActor::AddComponent<FInteractionComponent>(const FInteractionComponent& Other)
 	{
 		LK_DEBUG_TAG("Actor", "{}: Add interaction component", Name);
-		if (!InteractionComp.has_value())
-		{
+		if (!InteractionComp.has_value()) {
 			InteractionComp = Other;
-		}
-		else
-		{
+		} else {
 			InteractionComp.value() = Other;
 		}
 
@@ -89,8 +82,7 @@ namespace platformer2d {
 	inline bool CActor::RemoveComponent<FEffectComponent>()
 	{
 		LK_DEBUG_TAG("Actor", "{}: Remove effect component", Name);
-		if (!EffectComp.has_value())
-		{
+		if (!EffectComp.has_value()) {
 			return false;
 		}
 
@@ -102,8 +94,7 @@ namespace platformer2d {
 	inline bool CActor::RemoveComponent<FInteractionComponent>()
 	{
 		LK_DEBUG_TAG("Actor", "{}: Remove interaction component", Name);
-		if (!InteractionComp.has_value())
-		{
+		if (!InteractionComp.has_value()) {
 			return false;
 		}
 
