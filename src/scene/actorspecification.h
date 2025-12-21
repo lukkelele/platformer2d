@@ -10,6 +10,7 @@ namespace platformer2d {
 	{
 		Object,
 		Player,
+		Enemy,
 		Spawnpoint,
 		Projectile,
 		COUNT
@@ -37,10 +38,10 @@ namespace platformer2d {
 		{
 			const char* S = "";
 		#define _(EnumValue) case EActorType::EnumValue: S = #EnumValue; break
-			switch (Type)
-			{
+			switch (Type) {
 				_(Object);
 				_(Player);
+				_(Enemy);
 				_(Spawnpoint);
 				_(Projectile);
 				_(COUNT);
