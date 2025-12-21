@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "core/core.h"
+#include "game/controller.h"
 #include "scene/components.h"
 
 namespace YAML {
@@ -22,8 +23,7 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, platformer2d::LUUID& Rhs)
 		{
-			if (!YamlNode.IsScalar())
-			{
+			if (!YamlNode.IsScalar()) {
 				return false;
 			}
 
@@ -44,8 +44,7 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, std::filesystem::path& Rhs)
 		{
-			if (YamlNode.IsNull())
-			{
+			if (YamlNode.IsNull()) {
 				return false;
 			}
 
@@ -66,12 +65,34 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, platformer2d::EPickupKind& Rhs)
 		{
-			if (!YamlNode.IsScalar())
-			{
+			using T = platformer2d::EPickupKind;
+			if (!YamlNode.IsScalar()) {
 				return false;
 			}
 
-			Rhs = static_cast<platformer2d::EPickupKind>(YamlNode.as<std::underlying_type_t<platformer2d::EPickupKind>>());
+			Rhs = static_cast<T>(YamlNode.as<std::underlying_type_t<T>>());
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<platformer2d::EControllerType>
+	{
+		static Node encode(const platformer2d::EControllerType Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(std::to_underlying(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, platformer2d::EControllerType& Rhs)
+		{
+			using T = platformer2d::EControllerType;
+			if (!YamlNode.IsScalar()) {
+				return false;
+			}
+
+			Rhs = static_cast<T>(YamlNode.as<std::underlying_type_t<T>>());
 			return true;
 		}
 	};
@@ -89,8 +110,7 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, glm::vec2& Rhs)
 		{
-			if (!YamlNode.IsSequence() || YamlNode.size() != 2)
-			{
+			if (!YamlNode.IsSequence() || (YamlNode.size() != 2)) {
 				return false;
 			}
 
@@ -114,8 +134,7 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, glm::vec3& Rhs)
 		{
-			if (!YamlNode.IsSequence() || YamlNode.size() != 3)
-			{
+			if (!YamlNode.IsSequence() || (YamlNode.size() != 3)) {
 				return false;
 			}
 
@@ -141,8 +160,7 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, glm::vec4& Rhs)
 		{
-			if (!YamlNode.IsSequence() || YamlNode.size() != 4)
-			{
+			if (!YamlNode.IsSequence() || (YamlNode.size() != 4)) {
 				return false;
 			}
 
@@ -169,8 +187,7 @@ namespace YAML {
 
 		static bool decode(const Node& YamlNode, glm::quat& Rhs)
 		{
-			if (!YamlNode.IsSequence() || YamlNode.size() != 4)
-			{
+			if (!YamlNode.IsSequence() || (YamlNode.size() != 4)) {
 				return false;
 			}
 
@@ -188,8 +205,7 @@ namespace YAML {
 		static Node encode(const std::vector<uint32_t>& Value)
 		{
 			Node YamlNode;
-			for (uint32_t Element : Value)
-			{
+			for (uint32_t Element : Value) {
 				YamlNode.push_back(Element);
 			}
 
@@ -198,15 +214,13 @@ namespace YAML {
 
 		static bool decode(const Node& NodeRef, std::vector<uint32_t>& Result)
 		{
-			if (!NodeRef.IsSequence())
-			{
+			if (!NodeRef.IsSequence()) {
 				return false;
 			}
 
 			Result.resize(NodeRef.size());
-			for (std::size_t i = 0; i < NodeRef.size(); i++)
-			{
-				Result[i] = NodeRef[i].as<uint32_t>();
+			for (std::size_t Idx = 0; Idx < NodeRef.size(); Idx++) {
+				Result[Idx] = NodeRef[Idx].as<uint32_t>();
 			}
 
 			return true;
@@ -225,8 +239,7 @@ namespace YAML {
 
 		static bool decode(const Node& InNode, std::chrono::seconds& Rhs)
 		{
-			if (!InNode.IsScalar())
-			{
+			if (!InNode.IsScalar()) {
 				return false;
 			}
 
@@ -269,8 +282,7 @@ namespace platformer2d {
 	{
 		Out << YAML::Flow;
 		Out << YAML::BeginSeq;
-		for (const uint32_t Element : Value)
-		{
+		for (const uint32_t Element : Value) {
 			Out << Element;
 		}
 		Out << YAML::EndSeq;
