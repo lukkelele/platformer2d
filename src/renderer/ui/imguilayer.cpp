@@ -24,6 +24,12 @@ namespace platformer2d {
 		IO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		IO.ConfigDockingAlwaysTabBar = false;
 
+#define GAMEPAD_ENABLED 1
+#if GAMEPAD_ENABLED
+		IO.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+		IO.BackendFlags |= ImGuiBackendFlags_HasGamepad;
+#endif
+
 		/** @fixme: Need to sort out the initial dock node placements */
 #define NO_IMGUI_CONFIG 1
 #if NO_IMGUI_CONFIG
