@@ -18,7 +18,7 @@ if (LK_ENABLE_ASSERT)
 	project_add_compile_definitions(LK_ENABLE_ASSERT)
 endif()
 
-option(LK_ENABLE_VERIFY "Enable verify" OFF)
+option(LK_ENABLE_VERIFY "Enable verify" ON)
 if (LK_ENABLE_VERIFY)
 	project_add_compile_definitions(LK_ENABLE_VERIFY)
 endif()
