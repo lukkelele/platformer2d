@@ -21,6 +21,8 @@ namespace platformer2d {
 		Swoosh,
 		Cloud,
 		Rifle,
+		Enemy1,
+		Enemy2,
 		COUNT
 	};
 
@@ -73,12 +75,10 @@ namespace platformer2d {
 		static_assert(std::is_same_v<LRendererID, GLuint>, "LRendererID type mismatch");
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
 		inline constexpr const char* ToString(const ETexture Texture)
 		{
-			switch (Texture)
-			{
+			switch (Texture) {
 				case ETexture::White:      return "White";
 				case ETexture::Background: return "Background";
 				case ETexture::Player:     return "Player";
@@ -88,6 +88,8 @@ namespace platformer2d {
 				case ETexture::Swoosh:     return "Swoosh";
 				case ETexture::Cloud:      return "Cloud";
 				case ETexture::Rifle:      return "Rifle";
+				case ETexture::Enemy1:     return "Enemy1";
+				case ETexture::Enemy2:     return "Enemy2";
 				case ETexture::COUNT:      return "COUNT";
 				default: break;
 			}

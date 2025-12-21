@@ -325,6 +325,8 @@ namespace platformer2d {
 		LoadTexture(TEXTURES_DIR "/swoosh.png", ETexture::Swoosh, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/cloud-1.png", ETexture::Cloud, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/ar15.png", ETexture::Rifle, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Enemy1, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Enemy2, EImageFormat::RGBA8);
 		Data.WhiteTexture = Data.Textures[ETexture::White];
 	}
 
