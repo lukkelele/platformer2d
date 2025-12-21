@@ -4,7 +4,7 @@
 
 namespace platformer2d {
 
-	bool CGameplaySystem::Teleport(std::shared_ptr<CActor> Source, const glm::vec2& Destination)
+	bool CGameplaySystem::Teleport(CActor* Source, const glm::vec2& Destination)
 	{
 		if (!Source)
 		{
@@ -19,6 +19,11 @@ namespace platformer2d {
 		}
 
 		return true;
+	}
+
+	bool CGameplaySystem::Teleport(std::shared_ptr<CActor> Source, const glm::vec2& Destination)
+	{
+		return Teleport(Source.get(), Destination);
 	}
 
 	bool CGameplaySystem::Teleport(std::shared_ptr<CActor> Source, std::shared_ptr<CActor> Destination)

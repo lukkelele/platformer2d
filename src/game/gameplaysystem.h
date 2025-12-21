@@ -14,6 +14,7 @@ namespace platformer2d {
 		CGameplaySystem(CGameplaySystem&&) = delete;
 		CGameplaySystem(const CGameplaySystem&) = delete;
 
+		static bool Teleport(CActor* Source, const glm::vec2& Destination);
 		static bool Teleport(std::shared_ptr<CActor> Source, const glm::vec2& Destination);
 		static bool Teleport(std::shared_ptr<CActor> Source, std::shared_ptr<CActor> Destination);
 	};
