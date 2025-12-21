@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdint.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include "core/core.h"
 #include "core/assert.h"
@@ -101,7 +102,35 @@ namespace platformer2d {
 		RightControl = 345,
 		RightAlt = 346,
 		RightSuper = 347,
-		Menu = 348
+		Menu = 348,
+
+#if 0
+		GamepadStart = GLFW_GAMEPAD_BUTTON_START,
+		GamepadBack = GLFW_GAMEPAD_BUTTON_BACK,
+		GamepadL1 = GLFW_GAMEPAD_BUTTON_LEFT_BUMPER,
+		GamepadL2 = GLFW_GAMEPAD_AXIS_LEFT_TRIGGER,
+		GamepadR1 = GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER,
+		GamepadR2 = GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER,
+
+		GamepadLStickUp = 370,
+		GamepadLStickDown = 371,
+		GamepadLStickLeft = 372,
+		GamepadLStickRight = 373,
+		GamepadRStickUp = 374,
+		GamepadRStickDown = 375,
+		GamepadRStickLeft = 376,
+		GamepadRStickRight = 377,
+
+		GamepadDPadUp = 379,
+		GamepadDPadDown = 380,
+		GamepadDPadLeft = 381,
+		GamepadDPadRight = 382,
+
+		GamepadFaceUp,
+		GamepadFaceDown,
+		GamepadFaceLeft,
+		GamepadFaceRight,
+#endif
 	};
 
 	/**
