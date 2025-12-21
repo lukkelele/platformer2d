@@ -6,6 +6,7 @@
 #include "core/core.h"
 #include "core/delegate.h"
 #include "core/math/math.h"
+#include "game/enemy.h"
 #include "renderer/color.h"
 #include "renderer/font.h"
 #include "renderer/texture.h"
@@ -166,6 +167,8 @@ namespace platformer2d::UI {
 			Enum::ToString(ETexture::Swoosh),
 			Enum::ToString(ETexture::Cloud),
 			Enum::ToString(ETexture::Rifle),
+			Enum::ToString(ETexture::Enemy1),
+			Enum::ToString(ETexture::Enemy2),
 		};
 		static_assert(TextureNames.at(std::to_underlying(ETexture::COUNT) - 1) != nullptr);
 
@@ -173,6 +176,16 @@ namespace platformer2d::UI {
 			EPickupKind::Item,
 			EPickupKind::Weapon,
 		};
+
+		static constexpr std::array<EEnemyState, std::to_underlying(EEnemyState::COUNT)> EnemyStates = {
+			EEnemyState::Idle,
+			EEnemyState::Patrolling,
+		};
+		static constexpr std::array<const char*, std::to_underlying(EEnemyState::COUNT)> EnemyStateStrings = {
+			Enum::ToString(EEnemyState::Idle),
+			Enum::ToString(EEnemyState::Patrolling),
+		};
+		static_assert(EnemyStateStrings.at(std::to_underlying(EEnemyState::COUNT) - 1) != nullptr);
 	}
 
 }
