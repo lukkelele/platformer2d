@@ -12,8 +12,10 @@
 #include "core/input/mouse.h"
 #include "core/math/math.h"
 #include "game/gameplaysystem.h"
+#include "game/enemy.h"
 #include "game/player.h"
 #include "game/spawner.h"
+#include "game/controller/patrolcontroller.h"
 #include "renderer/renderer.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/ui/editor_resources.h"
@@ -709,6 +711,65 @@ namespace platformer2d {
 		UI::SetTooltip(SceneToOpen.generic_string());
 
 		ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
+
+		ImGui::Spacing();
+		{
+			if (ImGui::Button("Spawn Enemy")) {
+				FEnemySpecification EnemySpec;
+
+				FActorSpecification ActorSpec;
+				ActorSpec.Name = "Enemy";
+				ActorSpec.Texture = ETexture::Enemy1;
+
+				FBodySpecification BodySpec;
+				BodySpec.Type = EBodyType::Dynamic;
+				BodySpec.Position = glm::vec2(0.0f, 0.0f);
+				BodySpec.Flags = EBodyFlag_PreSolveEvents;
+				FPolygon Polygon = {
+					.Size = glm::vec2(0.20f, 0.20f),
+				};
+				BodySpec.Shape.emplace<FPolygon>(Polygon);
+
+				if (Scene) {
+					LK_INFO_TAG("Editor", "Spawning enemy");
+					std::shared_ptr<CEnemy> Enemy = Scene->Create<CEnemy>(EnemySpec, ActorSpec, BodySpec);
+				}
+			}
+
+			std::shared_ptr<CEnemy> Enemy = Scene->FindActor<CEnemy>("Enemy");
+			IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
+
+			if (!Enemy) {
+				ImGui::BeginDisabled();
+			}
+
+			ImGui::SameLine();
+
+			EEnemyState EnemyState = Enemy ? Enemy->GetState() : EEnemyState::Idle;
+			ImGui::SetNextItemWidth(240.0f);
+			if (UI::Combo("Enemy State", UI::Array::EnemyStates, EnemyState)) {
+				if (Enemy) {
+					Enemy->SetState(EnemyState);
+				}
+			}
+
+			if (Controller && (Controller->GetControllerType() == EControllerType::Patrol)) {
+				auto* C = static_cast<CPatrolController*>(Controller);
+				ImGui::Text("Patrol Direction: %s", Enum::ToString(C->GetPatrolDirection()));
+
+				if (ImGui::Button("Patrol Direction: Left")) {
+					C->SetPatrolDirection(EDirection::Left);
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Patrol Direction: Right")) {
+					C->SetPatrolDirection(EDirection::Right);
+				}
+			}
+
+			if (!Enemy) {
+				ImGui::EndDisabled();
+			}
+		}
 
 		ImGui::Spacing();
 		ImGui::SeparatorText("Editor Viewport");
