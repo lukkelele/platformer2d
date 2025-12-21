@@ -5,7 +5,9 @@
 #include <istream>
 
 #include "core/string.h"
+#include "game/enemy.h"
 #include "game/instance.h"
+#include "game/controller/patrolcontroller.h"
 #include "renderer/renderer.h"
 #include "serialization/serialization.h"
 
@@ -55,26 +57,6 @@ namespace platformer2d {
 				Actor->GetOutlineColor()
 			);
 		}
-	}
-
-	std::shared_ptr<CActor> CScene::FindActor(const LUUID Handle)
-	{
-		auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
-		{
-			return (Handle == Actor->GetHandle());
-		};
-		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsHandleEqual);
-		return (Iter != Actors.end()) ? *Iter : nullptr;
-	}
-
-	std::shared_ptr<CActor> CScene::FindActor(std::string_view Name)
-	{
-		auto IsNameEqual = [Name](const std::shared_ptr<CActor>& Actor)
-		{
-			return (Name == Actor->GetName());
-		};
-		auto Iter = std::find_if(Actors.begin(), Actors.end(), IsNameEqual);
-		return (Iter != Actors.end()) ? *Iter : nullptr;
 	}
 
 	bool CScene::DoesActorExist(const LUUID Handle)
@@ -241,19 +223,19 @@ namespace platformer2d {
 			LK_DESERIALIZE_PROPERTY(Thickness, ActorSpec.OutlineThickness, 1.0f, OutlineNode);
 			LK_DESERIALIZE_PROPERTY(Color, ActorSpec.OutlineColor, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), OutlineNode);
 
-			FTransformComponent TC;
+			std::optional<FTransformComponent> TC;
 			if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined()) {
-				Serialization::Deserialize(TC, TCNode);
+				TC.emplace();
+				Serialization::Deserialize(*TC, TCNode);
 			} else {
 				LK_ERROR_TAG("Scene", "TransformComponent missing in YAML");
 			}
 
-			bool HasBody = false;
-			FBodySpecification BodySpec;
+			std::optional<FBodySpecification> BodySpec;
 			if (const YAML::Node BodyNode = Node["Body"]; BodyNode.IsDefined()) {
 				if (BodyNode["Type"].IsDefined()) {
-					HasBody = true;
-					Serialization::Deserialize(BodySpec, BodyNode);
+					BodySpec.emplace();
+					Serialization::Deserialize(*BodySpec, BodyNode);
 				} else {
 					LK_DEBUG_TAG("Scene", "Actor {} has no body", ActorName);
 				}
@@ -261,35 +243,81 @@ namespace platformer2d {
 				LK_ERROR_TAG("Scene", "Body missing in YAML");
 			}
 
-			bool HasEffectComponent = false;
-			FEffectComponent EC;
+			std::optional<FEffectComponent> EC;
 			if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined()) {
-				HasEffectComponent = true;
-				Serialization::Deserialize(EC, EffectCompNode);
+				EC.emplace();
+				Serialization::Deserialize(*EC, EffectCompNode);
 				LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
 			}
 
-			bool HasInteractionComponent = false;
-			FInteractionComponent IC;
+			std::optional<FInteractionComponent> IC;
 			if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined()) {
-				HasInteractionComponent = true;
-				Serialization::Deserialize(IC, InteractionCompNode);
+				IC.emplace();
+				Serialization::Deserialize(*IC, InteractionCompNode);
+			}
+
+			std::optional<FEnemySpecification> EnemySpec;
+			if (ActorType == EActorType::Enemy) {
+				const YAML::Node& ControllerNode = Node["Controller"];
+				LK_ASSERT(ControllerNode.IsDefined(), "Controller node missing");
+				auto& Spec = EnemySpec.emplace();
+				LK_DESERIALIZE_PROPERTY(ControllerType, Spec.ControllerType, EControllerType::None, ControllerNode);
 			}
 
 			if (!DoesActorExist(ActorSpec.Handle)) {
 				std::shared_ptr<CActor> Actor = nullptr;
-				if (HasBody) {
-					Actor = Create<CActor>(ActorSpec, BodySpec);
+				if (BodySpec.has_value()) {
+					switch (ActorType) {
+						case EActorType::Object:
+							[[fallthrough]];
+						case EActorType::Player:
+							[[fallthrough]];
+						case EActorType::Spawnpoint:
+							Actor = Create<CActor>(ActorSpec, *BodySpec);
+							break;
+						case EActorType::Enemy: {
+							LK_VERIFY(EnemySpec.has_value(), "Enemy specification missing for {} ({})", ActorSpec.Handle, ActorSpec.Name);
+							Actor = Create<CEnemy>(*EnemySpec, ActorSpec, *BodySpec);
+							const FEnemySpecification& Spec = *EnemySpec;
+							if (Spec.ControllerType == EControllerType::Patrol) {
+								const YAML::Node& ControllerNode = Node["Controller"];
+								float HalfDistance = 0.0f;
+								float StartDelayInSeconds = 0.0f;
+								LK_DESERIALIZE_PROPERTY(HalfDistance, HalfDistance, 0.0f, ControllerNode);
+								LK_DESERIALIZE_PROPERTY(StartDelayInSeconds, StartDelayInSeconds, 0.0f, ControllerNode);
+								Actor->As<CEnemy>().SetController(std::make_unique<CPatrolController>(1.0f, 1.0f));
+							}
+							break;
+						}
+						default:
+							break;
+					}
 				} else {
-					Actor = Create<CActor>(ActorSpec);
+					switch (ActorType) {
+						case EActorType::Object:
+							[[fallthrough]];
+						case EActorType::Spawnpoint:
+							Actor = Create<CActor>(ActorSpec);
+							break;
+						case EActorType::Player:
+							[[fallthrough]];
+						case EActorType::Enemy:
+							LK_VERIFY(false, "Body is expected for {}: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
+							break;
+						default:
+							break;
+					}
 				}
 
-				Actor->GetTransformComponent() = TC;
-				if (HasEffectComponent) {
-					Actor->AddComponent<FEffectComponent>(EC);
+				LK_VERIFY(Actor, "{} not supported: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
+				if (TC.has_value()) {
+					Actor->AddComponent<FTransformComponent>(*TC);
 				}
-				if (HasInteractionComponent) {
-					Actor->AddComponent<FInteractionComponent>(IC);
+				if (EC.has_value()) {
+					Actor->AddComponent<FEffectComponent>(*EC);
+				}
+				if (IC.has_value()) {
+					Actor->AddComponent<FInteractionComponent>(*IC);
 				}
 			} else {
 				LK_ERROR_TAG("Scene", "Duplicate actors found with handle {}", ActorSpec.Handle);

@@ -43,8 +43,32 @@ namespace platformer2d {
 			return Actor;
 		}
 
-		std::shared_ptr<CActor> FindActor(LUUID Handle);
-		std::shared_ptr<CActor> FindActor(std::string_view Name);
+		template<typename T = CActor>
+		std::shared_ptr<T> FindActor(const LUUID Handle)
+		{
+			auto IsHandleEqual = [Handle](const std::shared_ptr<CActor>& Actor)
+			{
+				return (Handle == Actor->GetHandle());
+			};
+			auto Iter = std::find_if(Actors.begin(), Actors.end(), IsHandleEqual);
+			if constexpr (std::is_same_v<T, CActor>) {
+				return (Iter != Actors.end()) ? *Iter : nullptr;
+			} else {
+				return (Iter != Actors.end()) ? std::static_pointer_cast<T>(*Iter) : nullptr;
+			}
+		}
+
+		template<typename T = CActor>
+		std::shared_ptr<T> FindActor(std::string_view Name)
+		{
+			auto IsNameEqual = [Name](const std::shared_ptr<CActor>& Actor)
+			{
+				return (Name == Actor->GetName());
+			};
+			auto Iter = std::find_if(Actors.begin(), Actors.end(), IsNameEqual);
+			return (Iter != Actors.end()) ? std::static_pointer_cast<T>(*Iter) : nullptr;
+		}
+
 		bool DoesActorExist(LUUID Handle);
 		bool DoesActorExist(std::string_view Name);
 		bool DeleteActor(LUUID Handle);
