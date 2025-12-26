@@ -26,12 +26,17 @@ namespace platformer2d::UI {
 
 	const FViewportData& GetViewportData() { return ViewportData; }
 
-	void BeginPropertyGrid(const std::size_t LabelColumnWidth)
+	bool BeginPropertyGrid(const std::size_t LabelColumnWidth)
 	{
 		UI::PushID();
-		ImGui::BeginTable("##PropertyGrid", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+		if (ImGui::BeginTable("##PropertyGrid", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
+			ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+			return true;
+		} else {
+			UI::PopID();
+			return false;
+		}
 	}
 
 	void EndPropertyGrid()

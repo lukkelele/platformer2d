@@ -80,7 +80,7 @@ namespace platformer2d::UI {
 		return Active;
 	}
 
-	void BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
+	bool BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
 	void EndPropertyGrid();
 
 	struct FPhysicsBodyData
@@ -157,7 +157,14 @@ namespace platformer2d::UI {
 	void PrepareTopBar();
 
 	namespace Array {
-		static constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
+		inline constexpr std::array<EDirection, std::to_underlying(EDirection::COUNT)> Direction = {
+			EDirection::Up,
+			EDirection::Down,
+			EDirection::Left,
+			EDirection::Right
+		};
+
+		inline constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
 			Enum::ToString(ETexture::White),
 			Enum::ToString(ETexture::Background),
 			Enum::ToString(ETexture::Player),
@@ -172,16 +179,16 @@ namespace platformer2d::UI {
 		};
 		static_assert(TextureNames.at(std::to_underlying(ETexture::COUNT) - 1) != nullptr);
 
-		static constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
+		inline constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
 			EPickupKind::Item,
 			EPickupKind::Weapon,
 		};
 
-		static constexpr std::array<EEnemyState, std::to_underlying(EEnemyState::COUNT)> EnemyStates = {
+		inline constexpr std::array<EEnemyState, std::to_underlying(EEnemyState::COUNT)> EnemyStates = {
 			EEnemyState::Idle,
 			EEnemyState::Patrolling,
 		};
-		static constexpr std::array<const char*, std::to_underlying(EEnemyState::COUNT)> EnemyStateStrings = {
+		inline constexpr std::array<const char*, std::to_underlying(EEnemyState::COUNT)> EnemyStateStrings = {
 			Enum::ToString(EEnemyState::Idle),
 			Enum::ToString(EEnemyState::Patrolling),
 		};
