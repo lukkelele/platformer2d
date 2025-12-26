@@ -161,6 +161,28 @@ namespace platformer2d {
 				ResumeGame();
 			}
 		});
+
+		/**
+		 * Target player 0 by default.
+		 * Has to be done here because the scene serialization does not
+		 * guarantee the player instance is valid by the time the controller instance
+		 * is constructed and OnPossess is invoked.
+		 *
+		 * In the future a better approach would be to ensure player instances are
+		 * created first.
+		 */
+		const auto EnemyActors = Scene->GetAllOfType<CEnemy>();
+		for (const auto& EnemyActor : EnemyActors) {
+			IEnemyController* Controller = EnemyActor->GetController();
+			if (!Controller) {
+				continue;
+			}
+
+			const EControllerType ControllerType = Controller->GetControllerType();
+			if (ControllerType == EControllerType::Patrol) {
+				static_cast<CPatrolController*>(Controller)->SetTarget(GetPlayer(0));
+			}
+		}
 	}
 
 	void CEditor::Destroy()
@@ -743,10 +765,8 @@ namespace platformer2d {
 				ImGui::BeginDisabled();
 			}
 
-			ImGui::SameLine();
-
 			EEnemyState EnemyState = Enemy ? Enemy->GetState() : EEnemyState::Idle;
-			ImGui::SetNextItemWidth(240.0f);
+			ImGui::SetNextItemWidth(180.0f);
 			if (UI::Combo("Enemy State", UI::Array::EnemyStates, EnemyState)) {
 				if (Enemy) {
 					Enemy->SetState(EnemyState);
@@ -755,15 +775,30 @@ namespace platformer2d {
 
 			if (Controller && (Controller->GetControllerType() == EControllerType::Patrol)) {
 				auto* C = static_cast<CPatrolController*>(Controller);
-				ImGui::Text("Patrol Direction: %s", Enum::ToString(C->GetPatrolDirection()));
 
-				if (ImGui::Button("Patrol Direction: Left")) {
-					C->SetPatrolDirection(EDirection::Left);
+				UI::BeginPropertyGrid();
+
+				ImGui::TableNextRow();
+				EDirection PatrolDir = C->GetPatrolDirection();
+				if (UI::Combo("Patrol Direction", UI::Array::Direction, PatrolDir)) {
+					C->SetPatrolDirection(PatrolDir);
 				}
-				ImGui::SameLine();
-				if (ImGui::Button("Patrol Direction: Right")) {
-					C->SetPatrolDirection(EDirection::Right);
+
+				ImGui::TableNextRow();
+				float DetectRadius = C->GetDetectRadius();
+				if (UI::Widget::DragFloat("Detect Radius", DetectRadius, 0.010f, 0.0f, 5.0f)) {
+					C->SetDetectRadius(DetectRadius);
 				}
+
+				ImGui::TableNextRow();
+				float StopRadius = C->GetStopRadius();
+				if (UI::Widget::DragFloat("Stop Radius", StopRadius, 0.010f, 0.0f, 5.0f)) {
+					C->SetStopRadius(StopRadius);
+				}
+
+				UI::EndPropertyGrid();
+
+				ImGui::Text("Has Target: %s", (C->HasTarget() ? "Yes" : "No"));
 			}
 
 			if (!Enemy) {
