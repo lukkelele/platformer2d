@@ -67,7 +67,8 @@ namespace platformer2d {
 		Up,
 		Down,
 		Left,
-		Right
+		Right,
+		COUNT
 	};
 
 	namespace Enum {
