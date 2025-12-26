@@ -69,6 +69,35 @@ namespace platformer2d {
 			return (Iter != Actors.end()) ? std::static_pointer_cast<T>(*Iter) : nullptr;
 		}
 
+		template<typename T>
+		std::size_t GetAllOfType(std::vector<std::shared_ptr<T>>& Container)
+		{
+			Container.clear();
+			Container.reserve(Actors.size());
+
+			for (const auto& Actor : Actors) {
+				if (!Actor) {
+					continue;
+				}
+
+				/* @todo: Use dynamic casting until derived class type can be used for runtime checks */
+				if (const auto Casted = std::dynamic_pointer_cast<T>(Actor)) {
+					Container.push_back(Casted);
+				}
+			}
+
+			return Container.size();
+		}
+
+		template<typename T>
+		std::vector<std::shared_ptr<T>> GetAllOfType()
+		{
+			std::vector<std::shared_ptr<T>> Result;
+			GetAllOfType<T>(Result);
+
+			return Result;
+		}
+
 		bool DoesActorExist(LUUID Handle);
 		bool DoesActorExist(std::string_view Name);
 		bool DeleteActor(LUUID Handle);

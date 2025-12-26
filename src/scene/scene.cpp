@@ -264,6 +264,7 @@ namespace platformer2d {
 				LK_DESERIALIZE_PROPERTY(ControllerType, Spec.ControllerType, EControllerType::None, ControllerNode);
 			}
 
+			/* @todo: Fix this awful code somehow. Should merge the double switch-case */
 			if (!DoesActorExist(ActorSpec.Handle)) {
 				std::shared_ptr<CActor> Actor = nullptr;
 				if (BodySpec.has_value()) {
