@@ -256,6 +256,12 @@ namespace platformer2d {
 				Serialization::Deserialize(*IC, InteractionCompNode);
 			}
 
+			std::optional<FHealthComponent> HC;
+			if (const YAML::Node HealthCompNode = Node["HealthComponent"]; HealthCompNode.IsDefined()) {
+				HC.emplace();
+				Serialization::Deserialize(*HC, HealthCompNode);
+			}
+
 			std::optional<FEnemySpecification> EnemySpec;
 			if (ActorType == EActorType::Enemy) {
 				const YAML::Node& ControllerNode = Node["Controller"];
@@ -279,6 +285,8 @@ namespace platformer2d {
 						case EActorType::Enemy: {
 							LK_VERIFY(EnemySpec.has_value(), "Enemy specification missing for {} ({})", ActorSpec.Handle, ActorSpec.Name);
 							Actor = Create<CEnemy>(*EnemySpec, ActorSpec, *BodySpec);
+
+							/* Create controller for the enemy. */
 							const FEnemySpecification& Spec = *EnemySpec;
 							if (Spec.ControllerType == EControllerType::Patrol) {
 								const YAML::Node& ControllerNode = Node["Controller"];
@@ -319,6 +327,9 @@ namespace platformer2d {
 				}
 				if (IC.has_value()) {
 					Actor->AddComponent<FInteractionComponent>(*IC);
+				}
+				if (HC.has_value()) {
+					Actor->AddComponent<FHealthComponent>(*HC);
 				}
 			} else {
 				LK_ERROR_TAG("Scene", "Duplicate actors found with handle {}", ActorSpec.Handle);
