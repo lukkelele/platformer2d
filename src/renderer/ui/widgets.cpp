@@ -5,6 +5,7 @@
 #include "game/instance.h"
 #include "core/selectioncontext.h"
 #include "game/spawner.h"
+#include "game/controller/patrolcontroller.h"
 #include "renderer/ui/editor_resources.h"
 #include "renderer/ui/imgui.h"
 #include "ui.h"
@@ -680,6 +681,41 @@ namespace platformer2d::UI::Widget {
 			}
 
 			ImGui::EndPopup();
+		}
+	}
+
+	void DrawController(IController* Controller)
+	{
+		LK_ASSERT(Controller);
+		if (Controller->GetControllerType() == EControllerType::Patrol) {
+			auto* C = static_cast<CPatrolController*>(Controller);
+
+			UI::BeginPropertyGrid();
+
+			ImGui::TableNextRow();
+			EDirection PatrolDir = C->GetPatrolDirection();
+			if (UI::Combo("Patrol Direction", UI::Array::Direction, PatrolDir)) {
+				C->SetPatrolDirection(PatrolDir);
+			}
+
+			ImGui::TableNextRow();
+			float DetectRadius = C->GetDetectRadius();
+			if (UI::Widget::DragFloat("Detect Radius", DetectRadius, 0.010f, 0.0f, 5.0f)) {
+				C->SetDetectRadius(DetectRadius);
+			}
+
+			ImGui::TableNextRow();
+			float StopRadius = C->GetStopRadius();
+			if (UI::Widget::DragFloat("Stop Radius", StopRadius, 0.010f, 0.0f, 5.0f)) {
+				C->SetStopRadius(StopRadius);
+			}
+
+			ImGui::TableNextRow();
+			UI::Table::Label("Has Target");
+			UI::Table::NextColumn();
+			ImGui::Text("%s", (C->HasTarget() ? "Yes" : "No"));
+
+			UI::EndPropertyGrid();
 		}
 	}
 
