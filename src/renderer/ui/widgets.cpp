@@ -407,6 +407,7 @@ namespace platformer2d::UI::Widget {
 			}
 
 			UI::EndPropertyGrid();
+			ImGui::Dummy(ImVec2(0, 4));
 		});
 
 		/***********************************
@@ -439,6 +440,7 @@ namespace platformer2d::UI::Widget {
 			}
 
 			UI::EndPropertyGrid();
+			ImGui::Dummy(ImVec2(0, 4));
 		});
 
 		/***********************************
@@ -555,8 +557,10 @@ namespace platformer2d::UI::Widget {
 				default:
 					break;
 			}
+
 			UI::EndPropertyGrid();
 			ImGui::PopStyleVar(2);
+			ImGui::Dummy(ImVec2(0, 4));
 		});
 
 		/**********************************
@@ -676,6 +680,8 @@ namespace platformer2d::UI::Widget {
 					}
 				}
 			}
+
+			ImGui::Dummy(ImVec2(0, 4));
 		});
 
 		ImGui::Dummy(ImVec2(0, 30));
