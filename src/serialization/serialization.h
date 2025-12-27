@@ -128,6 +128,17 @@ namespace platformer2d::Serialization {
 		Out << YAML::EndMap;
 	}
 
+	template<>
+	inline void Serialize(const FHealthComponent& HC, YAML::Emitter& Out)
+	{
+		Out << YAML::Key << "HealthComponent";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "Health" << YAML::Value << HC.Health;
+		Out << YAML::Key << "MaxHealth" << YAML::Value << HC.MaxHealth;
+		Out << YAML::Key << "Damageable" << YAML::Value << HC.bDamageable;
+		Out << YAML::EndMap;
+	}
+
 	template<typename T>
 	static void Deserialize(T& Target, const YAML::Node& Node)
 	{
@@ -236,6 +247,14 @@ namespace platformer2d::Serialization {
 				LK_ERROR_TAG("Deserializer", "Interaction {} not supported", Enum::ToString(IC.Type));
 				break;
 		}
+	}
+
+	template<>
+	inline void Deserialize(FHealthComponent& HC, const YAML::Node& Node)
+	{
+		HC.Health = Node["Health"].as<decltype(HC.Health)>();
+		HC.MaxHealth = Node["MaxHealth"].as<decltype(HC.MaxHealth)>();
+		HC.bDamageable = Node["Damageable"].as<bool>();
 	}
 
 	template<>
