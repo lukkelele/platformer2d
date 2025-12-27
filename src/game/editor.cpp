@@ -765,41 +765,25 @@ namespace platformer2d {
 				ImGui::BeginDisabled();
 			}
 
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 0));
+			UI::BeginPropertyGrid();
+
+			ImGui::TableNextRow();
+			UI::Table::Label("Enemy State");
+			UI::Table::NextColumn();
 			EEnemyState EnemyState = Enemy ? Enemy->GetState() : EEnemyState::Idle;
 			ImGui::SetNextItemWidth(180.0f);
-			if (UI::Combo("Enemy State", UI::Array::EnemyStates, EnemyState)) {
+			if (UI::Combo("##EnemyState", UI::Array::EnemyStates, EnemyState)) {
 				if (Enemy) {
 					Enemy->SetState(EnemyState);
 				}
 			}
 
-			if (Controller && (Controller->GetControllerType() == EControllerType::Patrol)) {
-				auto* C = static_cast<CPatrolController*>(Controller);
+			UI::EndPropertyGrid();
+			ImGui::PopStyleVar(1);
 
-				UI::BeginPropertyGrid();
-
-				ImGui::TableNextRow();
-				EDirection PatrolDir = C->GetPatrolDirection();
-				if (UI::Combo("Patrol Direction", UI::Array::Direction, PatrolDir)) {
-					C->SetPatrolDirection(PatrolDir);
-				}
-
-				ImGui::TableNextRow();
-				float DetectRadius = C->GetDetectRadius();
-				if (UI::Widget::DragFloat("Detect Radius", DetectRadius, 0.010f, 0.0f, 5.0f)) {
-					C->SetDetectRadius(DetectRadius);
-				}
-
-				ImGui::TableNextRow();
-				float StopRadius = C->GetStopRadius();
-				if (UI::Widget::DragFloat("Stop Radius", StopRadius, 0.010f, 0.0f, 5.0f)) {
-					C->SetStopRadius(StopRadius);
-				}
-
-				UI::EndPropertyGrid();
-
-				ImGui::Text("Has Target: %s", (C->HasTarget() ? "Yes" : "No"));
-			}
+			UI::ShiftCursorY(-2.0f);
+			UI::Widget::DrawController(Controller);
 
 			if (!Enemy) {
 				ImGui::EndDisabled();
@@ -813,20 +797,38 @@ namespace platformer2d {
 
 		if (Scene) {
 			ImGui::Spacing();
+
+			UI::BeginPropertyGrid();
+
+			ImGui::TableNextRow();
 			UI::Widget::DragFloat2("Gravity", GRAVITY, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
 			UI::Widget::DragFloat2("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
-			UI::HelpMarker("The applied camera zoom when a scene is loaded");
-			ImGui::SameLine();
+
+			ImGui::TableNextRow();
 			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
 
+			ImGui::TableNextRow();
 			ImGui::Spacing();
-			ImGui::Checkbox("Draw Circle", &bDrawCircle);
-			ImGui::SameLine();
-			ImGui::Checkbox("Draw Circle Filled", &bDrawCircleFilled);
-			ImGui::SameLine();
-			ImGui::Checkbox("Draw Line", &bDrawLine);
+			UI::Checkbox("Draw Circle", bDrawCircle);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
+			UI::Checkbox("Draw Circle Filled", bDrawCircleFilled);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
+			UI::Checkbox("Draw Line", bDrawLine);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
 			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
 			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
+
+			UI::EndPropertyGrid();
 		}
 
 		if (Player) {
