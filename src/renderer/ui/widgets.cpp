@@ -686,7 +686,9 @@ namespace platformer2d::UI::Widget {
 
 	void DrawController(IController* Controller)
 	{
-		LK_ASSERT(Controller);
+		if (!Controller) {
+			return;
+		}
 		if (Controller->GetControllerType() == EControllerType::Patrol) {
 			auto* C = static_cast<CPatrolController*>(Controller);
 
@@ -708,6 +710,19 @@ namespace platformer2d::UI::Widget {
 			float StopRadius = C->GetStopRadius();
 			if (UI::Widget::DragFloat("Stop Radius", StopRadius, 0.010f, 0.0f, 5.0f)) {
 				C->SetStopRadius(StopRadius);
+			}
+
+			ImGui::TableNextRow();
+			const bool bHasTarget = C->HasTarget();
+			bool bTargetPlayer = bHasTarget;
+			if (UI::Checkbox("Target Player", bTargetPlayer)) {
+				if (!bHasTarget && bTargetPlayer) {
+					if (CGameInstance* GameInstance = CGameInstance::Get()) {
+						C->SetTarget(GameInstance->GetPlayer(0));
+					}
+				} else if (!bTargetPlayer) {
+					C->SetTarget(nullptr);
+				}
 			}
 
 			ImGui::TableNextRow();
