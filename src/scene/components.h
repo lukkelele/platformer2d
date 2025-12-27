@@ -196,6 +196,23 @@ namespace platformer2d {
 		const TInteractionData& GetData() const { return Data; }
 	};
 
+	struct FHealthComponent
+	{
+		float MaxHealth = 100.0f;
+		float Health = MaxHealth;
+		bool bDamageable = true;
+
+		FORCEINLINE float GetHealth() const { return Health; }
+		FORCEINLINE void SetHealth(const float InHealth) { Health = InHealth; }
+
+		FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+		FORCEINLINE void SetMaxHealth(const float InMaxHealth) { MaxHealth = InMaxHealth; }
+
+		FORCEINLINE bool IsDamageable() const { return bDamageable; }
+		FORCEINLINE void SetDamageable(const bool Enabled) { bDamageable = Enabled; }
+		FORCEINLINE bool IsDead() const { return (Health <= 0.0f); }
+	};
+
 	namespace Enum {
 		inline const char* ToString(const EEffectType Type)
 		{
