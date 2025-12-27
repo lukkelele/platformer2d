@@ -151,7 +151,7 @@ namespace platformer2d::UI {
 					{
 						UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(FramePadding, 0.0f));
 						UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 1.0f);
-						UI::FScopedColorStack ButtonColours(
+						UI::FScopedColorStack ButtonColors(
 							ImGuiCol_Button, InColorNormal,
 							ImGuiCol_ButtonHovered, InColorHover,
 							ImGuiCol_ButtonActive, InColorPressed
@@ -266,7 +266,7 @@ namespace platformer2d::UI {
 					{
 						UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(FramePadding, 0.0f));
 						UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 1.0f);
-						UI::FScopedColorStack ButtonColours(
+						UI::FScopedColorStack ButtonColors(
 							ImGuiCol_Button, InColorNormal,
 							ImGuiCol_ButtonHovered, InColorHover,
 							ImGuiCol_ButtonActive, InColorPressed
