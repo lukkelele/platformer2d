@@ -382,6 +382,9 @@ namespace platformer2d::UI::Widget {
 			return;
 		}
 
+		/***********************************
+		 * Transform Component
+		 **********************************/
 		UI::Widget::DrawComponent<FTransformComponent>("Transform", Actor, [Actor](const FTransformComponent& TC)
 		{
 			UI::BeginPropertyGrid();
@@ -401,6 +404,38 @@ namespace platformer2d::UI::Widget {
 			Changed |= UI::Widget::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f");
 			if (Changed) {
 				Actor->SetRotation(glm::radians(Rotation));
+			}
+
+			UI::EndPropertyGrid();
+		});
+
+		/***********************************
+		 * Health Component
+		 **********************************/
+		UI::Widget::DrawComponent<FHealthComponent>("Health", Actor, [Actor](FHealthComponent& HC)
+		{
+			UI::BeginPropertyGrid();
+
+			ImGui::TableNextRow();
+			float Health = HC.GetHealth();
+			if (UI::Widget::DragFloat("Health", Health, 1.0f, 1.0f, HC.GetMaxHealth(), "%1.f")) {
+				HC.SetHealth(Health);
+			}
+
+			ImGui::TableNextRow();
+			float MaxHealth = HC.GetMaxHealth();
+			if (UI::Widget::DragFloat("Max Health", MaxHealth, 1.0f, 1.0f, 1000.0f, "%1.f")) {
+				HC.SetMaxHealth(MaxHealth);
+				/* Clamp the health if max health is less than current health. */
+				if (MaxHealth < HC.GetHealth()) {
+					HC.SetHealth(MaxHealth);
+				}
+			}
+
+			ImGui::TableNextRow();
+			bool bDamageable = HC.IsDamageable();
+			if (UI::Checkbox("Damageable", bDamageable)) {
+				HC.SetDamageable(bDamageable);
 			}
 
 			UI::EndPropertyGrid();
@@ -676,6 +711,7 @@ namespace platformer2d::UI::Widget {
 				UI::Widget::DrawAddComponentButton<FTransformComponent>("Transform", EditorResources.PlusIcon, Actor);
 				UI::Widget::DrawAddComponentButton<FEffectComponent>("Effect", EditorResources.PlusIcon, Actor);
 				UI::Widget::DrawAddComponentButton<FInteractionComponent>("Interaction", EditorResources.PlusIcon, Actor);
+				UI::Widget::DrawAddComponentButton<FHealthComponent>("Health", EditorResources.PlusIcon, Actor);
 
 				ImGui::EndTable();
 			}
