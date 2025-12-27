@@ -99,9 +99,9 @@ namespace platformer2d::UI {
 		}
 
 		template<EVectorSemantic VecSemantic = EVectorSemantic::XYZ, typename VectorType = glm::vec2>
-		inline bool Vec2Control(const std::string& Label, VectorType& Values, const float ResetValue = 0.0f,
-								const float ValueSpeed = 0.10f, const float ValueMin = 0.0f, const float ValueMax = 0.0f,
-								const float ColumnWidth = 100.0f, const char* Format = "%.2f")
+		inline bool DragFloat2(const std::string& Label, VectorType& Values, const float ResetValue = 0.0f,
+							   const float ValueSpeed = 0.10f, const float ValueMin = 0.0f, const float ValueMax = 0.0f,
+							   const float ColumnWidth = 100.0f, const char* Format = "%.2f")
 		{
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
@@ -109,17 +109,14 @@ namespace platformer2d::UI {
 
 			bool Modified = false;
 
-			if (ImGui::GetCurrentTable() != nullptr)
-			{
+			if (ImGui::GetCurrentTable() != nullptr) {
 				ImGui::TableSetColumnIndex(0);
 				UI::ShiftCursor(17.0f, 7.0f);
 				ImGui::Text(Label.c_str());
 
 				ImGui::TableSetColumnIndex(1);
 				UI::ShiftCursor(7.0f, 0.0f);
-			}
-			else
-			{
+			} else {
 				ImGui::Text(Label.c_str());
 				ImGui::SameLine();
 			}
@@ -161,8 +158,7 @@ namespace platformer2d::UI {
 							ImGuiCol_ButtonActive, InColorPressed
 						);
 
-						if (ImGui::Button(InLabel.c_str(), ButtonSize))
-						{
+						if (ImGui::Button(InLabel.c_str(), ButtonSize)) {
 							InValue = ResetValue;
 							Modified = true;
 						}
@@ -177,15 +173,14 @@ namespace platformer2d::UI {
 					const bool WasTempInputActive = ImGui::TempInputIsActive(InputID);
 					Modified |= ImGui::DragFloat(("##" + InLabel).c_str(), &InValue, ValueSpeed, ValueMin, ValueMax, Format, 0);
 
-					if (ImGui::TempInputIsActive(InputID))
-					{
+					if (ImGui::TempInputIsActive(InputID)) {
 						Modified = false;
 					}
 				};
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
-				/* Draw: V1 (first vector). */
+				/* Draw: V1 */
 				static constexpr float Diff = 0.08f;
 				static const ImVec4 ColorX = FColor::Convert<ImVec4>(RGBA32::DarkCyan);
 				DrawControl(
@@ -196,7 +191,7 @@ namespace platformer2d::UI {
 					{ ColorX.x - Diff, ColorX.y - Diff, ColorX.z - Diff, ColorX.w }
 				);
 
-				/* Draw: V2 (second vector). */
+				/* Draw: V2 */
 				ImGui::SameLine(0.0f, OutlineSpacing);
 				static const ImVec4 ColorY = FColor::Convert<ImVec4>(RGBA32::BrightGreen);
 				DrawControl(
@@ -217,10 +212,10 @@ namespace platformer2d::UI {
 
 
 		template<EVectorSemantic VecSemantic = EVectorSemantic::XYZ, typename VectorType = glm::vec3>
-		inline bool Vec3Control(const std::string& Label, VectorType& Values, const float ResetValue = 0.0f,
-								const float ValueSpeed = 0.10f, const float ValueMin = 0.0f, 
-								const float ValueMax = 0.0f, const float ColumnWidth = 100.0f, 
-								const char* Format = "%.2f")
+		inline bool DragFloat3(const std::string& Label, VectorType& Values, const float ResetValue = 0.0f,
+							   const float ValueSpeed = 0.10f, const float ValueMin = 0.0f,
+							   const float ValueMax = 0.0f, const float ColumnWidth = 100.0f,
+							   const char* Format = "%.2f")
 		{
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
@@ -229,17 +224,14 @@ namespace platformer2d::UI {
 
 			bool Modified = false;
 
-			if (ImGui::GetCurrentTable() != nullptr)
-			{
+			if (ImGui::GetCurrentTable() != nullptr) {
 				ImGui::TableSetColumnIndex(0);
 				UI::ShiftCursor(17.0f, 7.0f);
 				ImGui::Text(Label.c_str());
 
 				ImGui::TableSetColumnIndex(1);
 				UI::ShiftCursor(7.0f, 0.0f);
-			}
-			else
-			{
+			} else {
 				ImGui::Text(Label.c_str());
 				ImGui::SameLine();
 			}
@@ -298,15 +290,14 @@ namespace platformer2d::UI {
 					const bool WasTempInputActive = ImGui::TempInputIsActive(InputID);
 					Modified |= ImGui::DragFloat(("##" + InLabel).c_str(), &InValue, ValueSpeed, ValueMin, ValueMax, Format, 0);
 
-					if (ImGui::TempInputIsActive(InputID))
-					{
+					if (ImGui::TempInputIsActive(InputID)) {
 						Modified = false;
 					}
 				};
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
-				/* Draw: V1 (first vector). */
+				/* Draw: V1 */
 				DrawControl(
 					V1,
 					Values.x,
@@ -315,7 +306,7 @@ namespace platformer2d::UI {
 					ImVec4(0.80f, 0.10f, 0.15f, 1.0f)  /* Pressed */
 				);
 
-				/* Draw: V2 (second vector). */
+				/* Draw: V2 */
 				ImGui::SameLine(0.0f, OutlineSpacing);
 				DrawControl(
 					V2,
@@ -325,7 +316,7 @@ namespace platformer2d::UI {
 					ImVec4(0.20f, 0.70f, 0.20f, 1.0f)
 				);
 
-				/* Draw: V3 (third vector). */
+				/* Draw: V3 */
 				ImGui::SameLine(0.0f, OutlineSpacing);
 				DrawControl(
 					V3,
@@ -345,8 +336,7 @@ namespace platformer2d::UI {
 		template<typename TComponent, typename TUIFunction>
 		inline void DrawComponent(const std::string& ComponentName, std::shared_ptr<CActor> Actor, TUIFunction UIFunction)
 		{
-			if (!Actor || !Actor->HasComponent<TComponent>())
-			{
+			if (!Actor || !Actor->HasComponent<TComponent>()) {
 				return;
 			}
 
@@ -363,32 +353,26 @@ namespace platformer2d::UI {
 			const ImVec2 ContentRegionAvailable = ImGui::GetContentRegionAvail();
 			const bool Open = ImGui::TreeNodeEx((void*)typeid(TComponent).hash_code(), TreeNodeFlags, ComponentName.c_str());
 			ImGui::SameLine(ContentRegionAvailable.x - LineHeight * 0.50f);
-			if (ImGui::Button("+", ImVec2(LineHeight, LineHeight)))
-			{
+			if (ImGui::Button("+", ImVec2(LineHeight, LineHeight))) {
 				ImGui::OpenPopup("ComponentSettings");
 			}
 
 			bool RemoveComponent = false;
-			if (ImGui::BeginPopup("ComponentSettings"))
-			{
-				if (ImGui::MenuItem("Remove Component"))
-				{
+			if (ImGui::BeginPopup("ComponentSettings")) {
+				if (ImGui::MenuItem("Remove Component")) {
 					RemoveComponent = true;
 				}
 				ImGui::EndPopup();
 			}
 
-			if (Open)
-			{
+			if (Open) {
 				UIFunction(Comp);
 				ImGui::TreePop();
 			}
 
-			if (RemoveComponent)
-			{
+			if (RemoveComponent) {
 				LK_DEBUG_TAG("UI", "Removing component from: {}", Actor->GetName());
-				if (!Actor->RemoveComponent<TComponent>())
-				{
+				if (!Actor->RemoveComponent<TComponent>()) {
 					LK_ERROR_TAG("UI", "Failed to remove component from {}", Actor->GetName());
 				}
 			}
@@ -422,14 +406,12 @@ namespace platformer2d::UI {
 
 			auto FillRowWithColor = [](const ImColor& Color)
 			{
-				for (int Column = 0; Column < ImGui::TableGetColumnCount(); Column++)
-				{
+				for (int Column = 0; Column < ImGui::TableGetColumnCount(); Column++) {
 					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, Color, Column);
 				}
 			};
 
-			if (IsRowHovered)
-			{
+			if (IsRowHovered) {
 				FillRowWithColor(RGBA32::Background);
 				ImGui::SetTooltip("Clicked: %d RowAreaMin=(%.2f, %.2f) RowAreaMax=(%.2f, %.2f)", IsRowClicked, RowAreaMin.x,
 								  RowAreaMin.y, RowAreaMax.x, RowAreaMax.y);
@@ -440,20 +422,15 @@ namespace platformer2d::UI {
 			ImGui::SetNextItemWidth(-1);
 			ImGui::TextUnformatted(Name.data());
 
-			if (IsRowClicked)
-			{
-				if ((sizeof...(TIncompatible) > 0) && Actor->HasAny<TIncompatible...>())
-				{
+			if (IsRowClicked) {
+				if ((sizeof...(TIncompatible) > 0) && Actor->HasAny<TIncompatible...>()) {
 					return;
 				}
 
-				if (!Actor->HasComponent<TComponent>())
-				{
+				if (!Actor->HasComponent<TComponent>()) {
 					LK_INFO_TAG("UI", "Add component to {}", Actor->GetName());
 					Actor->AddComponent<TComponent>();
-				}
-				else
-				{
+				} else {
 					LK_INFO_TAG("UI", "Actor {} already has that component", Actor->GetName());
 				}
 

@@ -129,7 +129,7 @@ namespace platformer2d::test {
 			ImGui::SameLine();
 			ImGui::Checkbox("Draw Line", &bDrawLine);
 
-			UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
+			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
 			UI::Widget::DragFloat("Radius", RADIUS, 0.010f, 0.0f, 10.0f);
 
 			ImGui::End();

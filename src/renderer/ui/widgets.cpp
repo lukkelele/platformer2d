@@ -138,7 +138,7 @@ namespace platformer2d::UI::Widget {
 		{
 			const glm::vec4& Color = Actor->GetOutlineColor();
 			glm::vec3 C = { Color.x, Color.y, Color.z };
-			if (UI::Widget::Vec3Control("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
+			if (UI::Widget::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
 				Actor->SetOutlineColor(glm::vec4(C, 1.0f));
 			}
 		}
@@ -389,7 +389,7 @@ namespace platformer2d::UI::Widget {
 			/* Translation */
 			ImGui::TableNextRow();
 			glm::vec3 Translation = TC.GetTranslation();
-			Changed |= UI::Widget::Vec3Control("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
+			Changed |= UI::Widget::DragFloat3("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
 			if (Changed) {
 				Actor->SetPosition(Translation);
 			}

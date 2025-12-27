@@ -131,7 +131,7 @@ namespace platformer2d::UI {
 
 			ImGui::TableNextRow();
 			static glm::vec2 LinearVelocity = { 0.0f, 0.0f };
-			UI::Widget::Vec2Control("Linear Velocity", LinearVelocity, 0.10f, 0.010f, 0.010f);
+			UI::Widget::DragFloat2("Linear Velocity", LinearVelocity, 0.10f, 0.010f, 0.010f);
 
 			ImGui::TableNextRow();
 			static float AngularVelocity = 0.0f;

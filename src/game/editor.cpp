@@ -813,8 +813,8 @@ namespace platformer2d {
 
 		if (Scene) {
 			ImGui::Spacing();
-			UI::Widget::Vec2Control("Gravity", GRAVITY, 0.0f, 0.010f);
-			UI::Widget::Vec2Control("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
+			UI::Widget::DragFloat2("Gravity", GRAVITY, 0.0f, 0.010f);
+			UI::Widget::DragFloat2("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
 			UI::HelpMarker("The applied camera zoom when a scene is loaded");
 			ImGui::SameLine();
 			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
@@ -825,7 +825,7 @@ namespace platformer2d {
 			ImGui::Checkbox("Draw Circle Filled", &bDrawCircleFilled);
 			ImGui::SameLine();
 			ImGui::Checkbox("Draw Line", &bDrawLine);
-			UI::Widget::Vec3Control("P0", P1, 0.0f, 0.010f);
+			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
 			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
 		}
 

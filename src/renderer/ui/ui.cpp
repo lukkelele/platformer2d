@@ -112,10 +112,10 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::TableNextRow();
-		Updated |= UI::Widget::Vec2Control("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
+		Updated |= UI::Widget::DragFloat2("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
 
 		ImGui::TableNextRow();
-		Updated |= UI::Widget::Vec2Control("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
+		Updated |= UI::Widget::DragFloat2("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
 		ImGui::TableNextRow();
 		Updated |= UI::Widget::Combo::TextureDropdown(Attr.Texture);
