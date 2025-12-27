@@ -758,7 +758,7 @@ namespace platformer2d {
 				}
 			}
 
-			std::shared_ptr<CEnemy> Enemy = Scene->FindActor<CEnemy>("Enemy");
+			std::shared_ptr<CEnemy> Enemy = Scene ? Scene->FindActor<CEnemy>("Enemy") : nullptr;
 			IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
 
 			if (!Enemy) {
@@ -772,7 +772,7 @@ namespace platformer2d {
 			UI::Table::Label("Enemy State");
 			UI::Table::NextColumn();
 			EEnemyState EnemyState = Enemy ? Enemy->GetState() : EEnemyState::Idle;
-			ImGui::SetNextItemWidth(180.0f);
+			ImGui::SetNextItemWidth(200);
 			if (UI::Combo("##EnemyState", UI::Array::EnemyStates, EnemyState)) {
 				if (Enemy) {
 					Enemy->SetState(EnemyState);
