@@ -196,6 +196,11 @@ namespace platformer2d {
 			Serialization::Serialize(IC, Out);
 		}
 
+		if (HasComponent<FHealthComponent>()) {
+			const auto& HC = GetComponent<FHealthComponent>();
+			Serialization::Serialize(HC, Out);
+		}
+
 		/* Body */
 		Out << YAML::Key << "Body";
 		Out << YAML::BeginMap;
@@ -216,10 +221,8 @@ namespace platformer2d {
 	{
 		for (auto& Effect : EC.Effects) {
 			switch (Effect.Type) {
-				case EEffectType::Rotate:
-				{
-					if (Body)
-					{
+				case EEffectType::Rotate: {
+					if (Body) {
 						const FRotateEffect& Rotate = std::get<FRotateEffect>(Effect.Data);
 						Body->SetAngularVelocity(glm::radians(Rotate.AngularSpeedDegPerSecond));
 					}

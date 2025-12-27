@@ -198,6 +198,7 @@ namespace platformer2d {
 		FTransformComponent TransformComp{}; /* @todo Make optional */
 		std::optional<FEffectComponent> EffectComp;
 		std::optional<FInteractionComponent> InteractionComp;
+		std::optional<FHealthComponent> HealthComp;
 
 		std::string Name;
 		uint64_t ActorFlags = EActorFlag_None;

@@ -73,6 +73,30 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FHealthComponent& CActor::AddComponent<FHealthComponent>()
+	{
+		LK_DEBUG_TAG("Actor", "{}: Add health component", Name);
+		if (!HealthComp.has_value()) {
+			HealthComp.emplace();
+		}
+
+		return HealthComp.value();
+	}
+
+	template<>
+	inline FHealthComponent& CActor::AddComponent<FHealthComponent>(const FHealthComponent& Other)
+	{
+		LK_DEBUG_TAG("Actor", "{}: Add health component", Name);
+		if (!HealthComp.has_value()) {
+			HealthComp = Other;
+		} else {
+			HealthComp.value() = Other;
+		}
+
+		return HealthComp.value();
+	}
+
+	template<>
 	inline bool CActor::RemoveComponent<FTransformComponent>()
 	{
 		return false;
@@ -99,6 +123,18 @@ namespace platformer2d {
 		}
 
 		InteractionComp.reset();
+		return true;
+	}
+
+	template<>
+	inline bool CActor::RemoveComponent<FHealthComponent>()
+	{
+		LK_DEBUG_TAG("Actor", "{}: Remove health component", Name);
+		if (!HealthComp.has_value()) {
+			return false;
+		}
+
+		HealthComp.reset();
 		return true;
 	}
 
@@ -142,6 +178,19 @@ namespace platformer2d {
 		return InteractionComp.value();
 	}
 
+	template<>
+	inline FHealthComponent& CActor::GetComponent<FHealthComponent>()
+	{
+		LK_ASSERT_GET_COMP(HealthComp.has_value());
+		return HealthComp.value();
+	}
+
+	template<>
+	inline const FHealthComponent& CActor::GetComponent<FHealthComponent>() const
+	{
+		LK_ASSERT_GET_COMP(HealthComp.has_value());
+		return HealthComp.value();
+	}
 
 	template<>
 	inline FTransformComponent* CActor::TryGetComponent<FTransformComponent>()
@@ -180,6 +229,18 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FHealthComponent* CActor::TryGetComponent<FHealthComponent>()
+	{
+		return (HealthComp.has_value() ? std::addressof(HealthComp.value()) : nullptr);
+	}
+
+	template<>
+	inline const FHealthComponent* CActor::TryGetComponent<FHealthComponent>() const
+	{
+		return (HealthComp.has_value() ? std::addressof(HealthComp.value()) : nullptr);
+	}
+
+	template<>
 	inline bool CActor::HasComponent<FTransformComponent>() const
 	{
 		return true;
@@ -195,6 +256,12 @@ namespace platformer2d {
 	inline bool CActor::HasComponent<FInteractionComponent>() const
 	{
 		return InteractionComp.has_value();
+	}
+
+	template<>
+	inline bool CActor::HasComponent<FHealthComponent>() const
+	{
+		return HealthComp.has_value();
 	}
 
 }
