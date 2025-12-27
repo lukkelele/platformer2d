@@ -12,7 +12,7 @@ Actors:
       Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [3.2585766, -0.29357958, 0.1]
-      Rotation: 0.27266744
+      Rotation: 0.352101
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -20,7 +20,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.2726674
+        Rotation: 0.352101
         Radius: 0.5
       Position: [3.2585766, -0.29357958]
       Flags: 2
@@ -93,7 +93,7 @@ Actors:
       Color: [0, 0, 0, 1]
     TransformComponent:
       Position: [0.46239638, 0.029140675, 2.6]
-      Rotation: -0.50490654
+      Rotation: 1.0378565
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: 1
@@ -104,7 +104,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: -0.50490654
+        Rotation: 1.0378566
         Radius: 0.5
       Position: [0.46239638, 0.029140675]
       Flags: 2
@@ -266,7 +266,7 @@ Actors:
       Color: [0, 0, 0, 0]
     TransformComponent:
       Position: [4.61, 1.38, 0]
-      Rotation: -2.8628964
+      Rotation: -2.7845328
       Scale: [1.33, 0.15, 1]
     Body:
       Type: 0
@@ -274,7 +274,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [1.33, 0.15]
-        Rotation: -2.8628964
+        Rotation: -2.7845328
         Radius: 0.5
       Position: [4.61, 1.38]
       Flags: 2
@@ -293,7 +293,7 @@ Actors:
       Color: [0, 0, 0, 0]
     TransformComponent:
       Position: [1.5799999, 1.9899999, 0]
-      Rotation: 2.9775374
+      Rotation: 2.8873322
       Scale: [1.33, 0.15, 1]
     Body:
       Type: 0
@@ -301,7 +301,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [1.33, 0.15]
-        Rotation: 2.9775374
+        Rotation: 2.8873322
         Radius: 0.5
       Position: [1.5799999, 1.9899999]
       Flags: 2
@@ -319,9 +319,13 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [2.3109171, -1.4076247, -0.06]
+      Position: [0.53865993, -1.4076246, -0.06]
       Rotation: -3.1415925
       Scale: [0.2, 0.2, 1]
+    HealthComponent:
+      Health: 100
+      MaxHealth: 100
+      Damageable: true
     Body:
       Type: 1
       GravityScale: 1
@@ -330,7 +334,7 @@ Actors:
         Size: [0.2, 0.2]
         Rotation: 3.1415927
         Radius: 0.5
-      Position: [2.3109171, -1.4076247]
+      Position: [0.53865993, -1.4076246]
       Flags: 2
       Mass: 1
       MotionLock: 0
