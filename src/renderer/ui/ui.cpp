@@ -29,11 +29,13 @@ namespace platformer2d::UI {
 	bool BeginPropertyGrid(const std::size_t LabelColumnWidth)
 	{
 		UI::PushID();
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 0));
 		if (ImGui::BeginTable("##PropertyGrid", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
 			ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 			return true;
 		} else {
+			ImGui::PopStyleVar(1);
 			UI::PopID();
 			return false;
 		}
@@ -42,6 +44,7 @@ namespace platformer2d::UI {
 	void EndPropertyGrid()
 	{
 		ImGui::EndTable();
+		ImGui::PopStyleVar(1); /* ItemSpacing */
 		UI::PopID();
 	}
 

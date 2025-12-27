@@ -53,6 +53,7 @@ namespace platformer2d::UI {
 		FORCEINLINE void NextColumn()
 		{
 			ImGui::TableSetColumnIndex(1);
+			UI::ShiftCursor(7.0f, 0.0f);
 		};
 	}
 
@@ -65,7 +66,7 @@ namespace platformer2d::UI {
 		if (InTable()) {
 			Table::Label(Str);
 			Table::NextColumn();
-			UI::ShiftCursor(7.0f + IndentX, 0.0f);
+			ShiftCursorX(IndentX);
 			if (ImGui::Checkbox(LabelBuf, &Value)) {
 				Active = true;
 			}
