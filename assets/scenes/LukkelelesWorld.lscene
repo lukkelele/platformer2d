@@ -1,0 +1,415 @@
+Name: Lukkelele's World
+Actors:
+  - ID: 5128418
+    Type: 0
+    Name: SpawnPlatform
+    Texture: 5
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 1
+      Color: [0, 0, 0, 1]
+    TransformComponent:
+      Position: [-0.33467484, -1.4974396, 0]
+      Rotation: -3.1415925
+      Scale: [2, 0.08, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [2, 0.08]
+        Rotation: 3.1415927
+        Radius: 0.5
+      Position: [-0.33467484, -1.4974396]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 3228445016720479417
+    Type: 0
+    Name: PickupSensor
+    Texture: 8
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: false
+      Thickness: 8.2
+      Color: [1, 0, 0, 1]
+    TransformComponent:
+      Position: [2.5408833, -1.283118, 0.89]
+      Rotation: 0
+      Scale: [0.2, 0.2, 1]
+    InteractionComponent:
+      InteractionType: 2
+      PickupKind: 1
+      Object:
+        Specification:
+          MagazineSize: 30
+      ObjectType: 0
+      ExpireWhenPickedUp: false
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.2, 0.2]
+        Rotation: 0
+        Radius: 0.5
+      Position: [2.5408833, -1.283118]
+      Flags: 10
+      Mass: 1
+      MotionLock: 0
+      Sensor: true
+  - ID: 15990891867282018781
+    Type: 0
+    Name: SpawnPlatform_L
+    Texture: 0
+    Color: [0, 0, 0, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-1.3699999, -0.78999996, 0]
+      Rotation: 0
+      Scale: [0.08, 1.03, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.08, 1.03]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-1.3699999, -0.78999996]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 701761141178170648
+    Type: 0
+    Name: SpawnPlatform_L2
+    Texture: 0
+    Color: [0, 0, 0, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-1.37, -1.8399999, 0]
+      Rotation: 0
+      Scale: [0.08, 1.0699638, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [3.2767998e-06, 1.3541201]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-1.37, -1.8399999]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 9256023951461460780
+    Type: 0
+    Name: Actor-7
+    Texture: 4
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 9
+      Color: [0, 0, 0, 1]
+    TransformComponent:
+      Position: [0.82192916, -1.93, 0]
+      Rotation: 0
+      Scale: [0.32, 0.95, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.32, 0.95]
+        Rotation: 0
+        Radius: 0.5
+      Position: [0.82192916, -1.93]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 53049546525723785
+    Type: 0
+    Name: Actor-8
+    Texture: 4
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 9
+      Color: [0, 0, 0, 1]
+    TransformComponent:
+      Position: [1.56, -1.93, 0]
+      Rotation: 0
+      Scale: [0.32, 0.95, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.32, 0.95]
+        Rotation: 0
+        Radius: 0.5
+      Position: [1.56, -1.93]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 14273804503324569173
+    Type: 0
+    Name: Actor-9
+    Texture: 5
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [2.45, -1.52, 0]
+      Rotation: 0
+      Scale: [1.46, 0.12, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.46, 0.12]
+        Rotation: 0
+        Radius: 0.5
+      Position: [2.45, -1.52]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 10201305046586675725
+    Type: 0
+    Name: Polygon31377
+    Texture: 3
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [5.0121603, -1.4375356, 0]
+      Rotation: -0.039886143
+      Scale: [2.24, 0.11, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [2.24, 0.11]
+        Rotation: -0.039886147
+        Radius: 0.5
+      Position: [5.0121603, -1.4375356]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 12630086009550323143
+    Type: 0
+    Name: Polygon25906
+    Texture: 0
+    Color: [0, 1, 0, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [7.209999, -1.48, 0]
+      Rotation: 0
+      Scale: [2.24, 0.11, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [2.24, 0.11]
+        Rotation: 0
+        Radius: 0.5
+      Position: [7.209999, -1.48]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 14264624605002909565
+    Type: 0
+    Name: Polygon26886
+    Texture: 0
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [9.430001, -1.3100003, 0]
+      Rotation: 0.15473466
+      Scale: [2.24, 0.11, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [2.24, 0.11]
+        Rotation: 0.15473466
+        Radius: 0.5
+      Position: [9.430001, -1.3100003]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 13353547355279602666
+    Type: 0
+    Name: Polygon45790
+    Texture: 0
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [11.64, -1.1449133, 0]
+      Rotation: 0
+      Scale: [2.24, 0.11, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [2.24, 0.11]
+        Rotation: 0
+        Radius: 0.5
+      Position: [11.64, -1.1449133]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 13892995572850106145
+    Type: 0
+    Name: Polygon43494
+    Texture: 0
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [13.88, -1.1445726, 0]
+      Rotation: 0
+      Scale: [2.24, 0.11, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [2.24, 0.11]
+        Rotation: 0
+        Radius: 0.5
+      Position: [13.88, -1.1445726]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 17012789572163169277
+    Type: 0
+    Name: Polygon35057
+    Texture: 7
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-2.8600001, -0.24999997, 0]
+      Rotation: 0
+      Scale: [0.33, 0.5, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.33, 0.5]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-2.8600001, -0.24999997]
+      Flags: 0
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 9243632943422268573
+    Type: 0
+    Name: Actor-15
+    Texture: 7
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-2.14, -0.6999999, 0]
+      Rotation: 0
+      Scale: [1.17, 0.92, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.17, 0.92]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-2.14, -0.6999999]
+      Flags: 0
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 2039619565334997909
+    Type: 0
+    Name: Polygon21644
+    Texture: 0
+    Color: [0, 0, 0, 0]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [1.2199998, -2.4899998, 0]
+      Rotation: 0
+      Scale: [1.46, 0.11, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.46, 0.11]
+        Rotation: 0
+        Radius: 0.5
+      Position: [1.2199998, -2.4899998]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
