@@ -8,6 +8,7 @@ namespace platformer2d {
 	struct FEnemySpecification
 	{
 		EControllerType ControllerType = EControllerType::None;
+		glm::vec2 SpawnPoint{};
 	};
 
 	class CEnemy : public CActor
@@ -36,6 +37,12 @@ namespace platformer2d {
 		void MoveLeft();
 		void MoveRight();
 		void StopMovement();
+
+		void DeathBegin();
+		void DeathEnd();
+
+		void SetSpawnPoint(const glm::vec2& InPoint);
+		const glm::vec2& GetSpawnPoint() const { return Data.SpawnPoint; }
 
 		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 

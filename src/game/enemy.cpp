@@ -1,7 +1,6 @@
 #include "enemy.h"
 
 #include "gameplaysystem.h"
-
 #include "game/controller/patrolcontroller.h"
 
 namespace platformer2d {
@@ -11,6 +10,9 @@ namespace platformer2d {
 	{
 		Data.State = EEnemyState::Idle;
 		Data.LookDirection = EDirection::Right;
+
+		SetSpawnPoint(InSpec.SpawnPoint);
+		CGameplaySystem::Teleport(this, InSpec.SpawnPoint);
 	}
 
 	CEnemy::~CEnemy()
@@ -68,6 +70,22 @@ namespace platformer2d {
 		ApplyMoveVelocityX(0.0f);
 	}
 
+	void CEnemy::DeathBegin()
+	{
+		LK_DEBUG_TAG("Enemy", "DeathBegin");
+	}
+
+	void CEnemy::DeathEnd()
+	{
+		LK_DEBUG_TAG("Enemy", "DeathEnd");
+	}
+
+	void CEnemy::SetSpawnPoint(const glm::vec2& InPoint)
+	{
+		LK_DEBUG_TAG("Enemy", "Spawn point: {}", InPoint);
+		Data.SpawnPoint = InPoint;
+	}
+
 	bool CEnemy::Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable) const
 	{
 		LK_WARN_TAG("Enemy", "Serializing");
@@ -83,6 +101,8 @@ namespace platformer2d {
 			Out << YAML::Key << "StartDelayInSeconds" << YAML::Value << ControllerRef->GetStartDelayInSeconds();
 		}
 		Out << YAML::EndMap; /* ~Controller */
+
+		Out << YAML::Key << "SpawnPoint" << YAML::Value << Data.SpawnPoint;
 		Out << YAML::EndMap; /* ~Actor */
 
 		return true;
