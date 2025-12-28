@@ -22,7 +22,7 @@ namespace platformer2d {
 	{
 		glm::vec2 Size = { 1.0f, 1.0f };
 		float Radius = 0.50f;
-		float Rotation = glm::pi<float>(); /* Radians */
+		float Rotation = 0.0f;
 	};
 
 	struct FCapsule

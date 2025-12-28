@@ -7,6 +7,18 @@ namespace platformer2d::Core {
 
 	FGlobal Global{};
 
+	const char* GetPlatformName()
+	{
+	#ifdef _WIN32
+		return "Windows";
+	#elif __linux__
+		return "Linux";
+	#else
+	#error "Unknown platform"
+		return nullptr;
+	#endif
+	}
+
 	std::filesystem::path GetRelativeFromProject(const std::filesystem::path& Input)
 	{
 		const std::filesystem::path AbsInput = std::filesystem::weakly_canonical(Input);

@@ -38,6 +38,8 @@ namespace platformer2d {
 		};
 		extern FGlobal Global;
 
+		const char* GetPlatformName();
+
 		/**
 		 * @brief Get relative path from the project directory.
 		 */
