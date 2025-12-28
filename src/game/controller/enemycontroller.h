@@ -18,6 +18,7 @@ namespace platformer2d {
 		LUUID ID = 0;
 		EEnemyState State = EEnemyState::Idle;
 		EDirection LookDirection = EDirection::Right;
+		glm::vec2 SpawnPoint{};
 	};
 
 	class IEnemyController : public IController
