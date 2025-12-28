@@ -66,7 +66,9 @@ namespace platformer2d {
 		inline const b2ShapeId& GetShapeID() const { return ShapeID; }
 		EBodyType GetType() const;
 
-		inline bool IsDirty() const { return bDirty; }
+		bool IsEnabled() const;
+		void SetEnabled(bool Enabled) const;
+		bool IsDirty() const { return bDirty; }
 		void SetDirty(bool Dirty);
 		bool IsAwake() const;
 		void SetAwake(bool Awake) const;

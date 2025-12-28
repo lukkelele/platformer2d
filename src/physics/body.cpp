@@ -77,6 +77,20 @@ namespace platformer2d {
 		return DetermineBodyType(b2Body_GetType(ID));
 	}
 
+	bool CBody::IsEnabled() const
+	{
+		return b2Body_IsEnabled(ID);
+	}
+
+	void CBody::SetEnabled(const bool Enabled) const
+	{
+		if (Enabled) {
+			b2Body_Enable(ID);
+		} else {
+			b2Body_Disable(ID);
+		}
+	}
+
 	void CBody::SetDirty(const bool Dirty)
 	{
 		bDirty = Dirty;
