@@ -104,12 +104,8 @@ namespace platformer2d::UI {
 		/* Actor Name. */
 		ImGui::TableNextRow();
 		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 7.0f);
-			ImGui::Text("Name");
-
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
+			UI::Table::Label("Name");
+			UI::Table::NextColumn();
 			ImGui::SetNextItemWidth((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
 			ImGui::InputText("##ActorName", Attr.NameBuf.data(), Attr.NameBuf.size());
 		}
@@ -150,11 +146,31 @@ namespace platformer2d::UI {
 			}
 
 			ImGui::SameLine();
-			if (ImGui::Button("Teleport player", ButtonSize)) {
-				LK_WARN("Teleport player");
+			if (ImGui::Button("Teleport Player", ButtonSize)) {
 				auto Player = CGameInstance::Get()->GetPlayer(0);
 				CGameplaySystem::Teleport(Player, {0.0f, 0.0f});
 			}
+
+			ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::Orange);
+			if (ImGui::Button("Template: Floor", { ButtonSize.x + 64, ButtonSize.y })) {
+				auto Player = CGameInstance::Get()->GetPlayer(0);
+				ActorAttr.Size = glm::vec2(1.46, 0.11);
+				const glm::vec3 PlayerPos = Player->GetPosition();
+				ActorAttr.Position = { PlayerPos.x, PlayerPos.y + 0.15f};
+				PhysicsBodyData.Position = glm::vec3(ActorAttr.Position, 0.0f);
+			}
+			ImGui::PopStyleColor(1);
+
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::Orange);
+			if (ImGui::Button("Template: Large Floor", { ButtonSize.x + 64, ButtonSize.y })) {
+				auto Player = CGameInstance::Get()->GetPlayer(0);
+				ActorAttr.Size = glm::vec2(2.24, 0.11);
+				const glm::vec3 PlayerPos = Player->GetPosition();
+				ActorAttr.Position = { PlayerPos.x, PlayerPos.y + 0.15f};
+			}
+			ImGui::PopStyleColor(1);
+
 		}
 
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -242,8 +258,7 @@ namespace platformer2d::UI {
 
 		bool ShouldNotSnapValues = CKeyboard::IsKeyDown(EKey::LeftControl);
 		float SnapValue = 0.010f;
-		if (Operation == ImGuizmo::OPERATION::ROTATE)
-		{
+		if (Operation == ImGuizmo::OPERATION::ROTATE) {
 			SnapValue = 1.0f;
 		}
 		const float SnapValues[3] = { SnapValue, SnapValue, SnapValue };
@@ -261,24 +276,34 @@ namespace platformer2d::UI {
 			ShouldNotSnapValues ? nullptr : SnapValues
 		);
 
-		if (ImGuizmo::IsUsing())
-		{
+		const bool IsUsing = ImGuizmo::IsUsing();
+		if (IsUsing) {
 			glm::vec3 Translation;
 			glm::vec3 Scale;
 			glm::quat Rotation;
 			Math::DecomposeTransform(TransformMatrix, Translation, Rotation, Scale);
-			LK_UNUSED(Scale);
 
-			if (Actor.GetPosition() != Translation)
-			{
+			if (Actor.GetPosition() != Translation) {
 				Actor.SetPosition(Translation);
 			}
 
 			const float RotRad = Math::GetAngleRad(Rotation);
-			if (Actor.GetRotation() != RotRad)
-			{
+			if (Actor.GetRotation() != RotRad) {
 				Actor.SetRotation(RotRad);
 			}
+
+#if 0 /* SCALING NEEDS TO BE SUPPORTED */
+			if (TC.GetScale() != Scale) {
+				if (CBody* Body = Actor.GetBody()) {
+					glm::vec2 BodySize = Body->GetSize();
+					FPolygon& Shape = Body->GetShape<EShape::Polygon>();
+					BodySize.x *= Scale.x;
+					BodySize.y *= Scale.y;
+					Shape.Size = BodySize;
+					TC.Scale = Scale;
+				}
+			}
+#endif
 		}
 
 		return Manipulated;
@@ -412,11 +437,15 @@ namespace platformer2d::UI {
 		/* Body scale. */
 		ImGui::TableNextRow();
 		{
-			static float BodyScale = TC.Scale.x;
-			UI::Widget::DragFloat("Body Scale", BodyScale, 0.010f, 0.0f, 2.0f, "%.2f");
+			glm::vec2 BodySize = Body->GetSize();
+			if (UI::Widget::DragFloat2("Body Size", BodySize, 0.10f, 0.010f, 0.10f, 2.0f)) {
+				FPolygon& Shape = Body->GetShape<EShape::Polygon>();
+				Shape.Size = BodySize;
+			}
+
 			ImGui::SameLine();
-			if (ImGui::Button("Apply##Scale")) {
-				Body->SetScale(BodyScale);
+			if (ImGui::Button("Rebuild##Body")) {
+				Body->Rebuild();
 			}
 			if (ImGui::IsItemHovered()) {
 				ImGui::SameLine();
@@ -537,9 +566,10 @@ namespace platformer2d::UI {
 		ImGui::SetNextWindowPos({ WindowPos.x + Padding, Padding + TopBarOffsetY }, ImGuiCond_Always);
 
 		ImGui::SetNextWindowSize(ImVec2(260, 0), ImGuiCond_Always);
-		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration;
-		if (!ImGui::Begin("##Statistics", nullptr, WindowFlags))
-		{
+		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration
+			| ImGuiWindowFlags_NoDocking
+			| ImGuiWindowFlags_NoBringToFrontOnFocus;
+		if (!ImGui::Begin("##Statistics", nullptr, WindowFlags)) {
 			ImGui::End();
 			return;
 		}

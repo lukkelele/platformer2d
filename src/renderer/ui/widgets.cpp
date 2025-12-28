@@ -52,20 +52,18 @@ namespace platformer2d::UI::Widget {
 
 		/* Actor name */
 		auto Iter = ActorDataMap.find(Handle);
-		if (Iter != ActorDataMap.end())
-		{
+		if (Iter != ActorDataMap.end()) {
 			ImGui::TableNextRow();
 			FActorDataEntry& Data = Iter->second;
 			UI::Table::Label("Name");
 			UI::Table::NextColumn();
-			UI::ShiftCursor(7.0f, 0.0f);
 
-			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 			ImGui::InputText("##Name", Data.NameBuf.data(), Data.NameBuf.size());
 			ImGui::SameLine();
 
 			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 2);
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 3);
 			if (ImGui::Button(LK_ICON_CHECK_CIRCLE)) {
 				LK_DEBUG_TAG("UI", "Rename {} to: {}", Handle, Data.NameBuf.data());
 				Actor->SetName(Data.NameBuf.data());
@@ -100,19 +98,18 @@ namespace platformer2d::UI::Widget {
 			}
 		}
 
-		/* Outline enabled */
+		/* Outline enabled. */
 		ImGui::TableNextRow();
 		{
 			UI::Table::Label("Outline");
 			UI::Table::NextColumn();
 			bool Enabled = Actor->IsOutlineEnabled();
-			UI::ShiftCursor(7.0f, 0.0f);
 			if (ImGui::Checkbox("##Outline", &Enabled)) {
 				Actor->SetOutlineEnabled(Enabled);
 			}
 		}
 
-		/* Outline thickness */
+		/* Outline thickness. */
 		ImGui::TableNextRow();
 		{
 			float Thickness = Actor->GetOutlineThickness();
@@ -121,7 +118,7 @@ namespace platformer2d::UI::Widget {
 			}
 		}
 
-		/* Outline color */
+		/* Outline color. */
 		ImGui::TableNextRow();
 		{
 			const glm::vec4& Color = Actor->GetOutlineColor();
@@ -139,8 +136,7 @@ namespace platformer2d::UI::Widget {
 			ImGui::Text("%s", Actor->IsTickEnabled() ? "Enabled" : "Disabled");
 		}
 
-		if (Body)
-		{
+		if (Body) {
 			/* Body Type. */
 			ImGui::TableNextRow();
 			{
@@ -248,8 +244,7 @@ namespace platformer2d::UI::Widget {
 				);
 
 				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
-				if (ActorExists)
-				{
+				if (ActorExists) {
 					ImGui::BeginDisabled();
 				}
 
@@ -376,7 +371,7 @@ namespace platformer2d::UI::Widget {
 		/***********************************
 		 * Transform Component
 		 **********************************/
-		UI::Widget::DrawComponent<FTransformComponent>("Transform", Actor, [Actor](const FTransformComponent& TC)
+		UI::Widget::DrawComponent<FTransformComponent>("Transform", Actor, [Actor](FTransformComponent& TC)
 		{
 			UI::BeginPropertyGrid();
 			bool Changed = false;
@@ -384,18 +379,29 @@ namespace platformer2d::UI::Widget {
 			/* Translation */
 			ImGui::TableNextRow();
 			glm::vec3 Translation = TC.GetTranslation();
-			Changed |= UI::Widget::DragFloat3("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f);
-			if (Changed) {
+			if (UI::Widget::DragFloat3("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f)) {
 				Actor->SetPosition(Translation);
 			}
 
 			/* Rotation */
 			ImGui::TableNextRow();
 			float Rotation = glm::degrees(TC.GetRotation2D());
-			Changed |= UI::Widget::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f");
-			if (Changed) {
+			if (UI::Widget::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f")) {
 				Actor->SetRotation(glm::radians(Rotation));
 			}
+
+#if 0 /* SCALING NEEDS TO BE SUPPORTED */
+			/* Scale */
+			ImGui::TableNextRow();
+			glm::vec3& Scale = TC.Scale;
+			UI::Widget::DragFloat3("Scale", Scale, 1.0f, 0.010f, 0.010f);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			if (ImGui::Button("Rebuild")) {
+				Actor->GetBody()->Rebuild();
+			}
+#endif
 
 			UI::EndPropertyGrid();
 			ImGui::Dummy(ImVec2(0, 4));
@@ -772,6 +778,7 @@ namespace platformer2d::UI::Widget {
 		if (!Enemy) {
 			return;
 		}
+
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 0));
 		UI::BeginPropertyGrid();
 
