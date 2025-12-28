@@ -40,15 +40,23 @@ namespace platformer2d {
 				.ActorSpec = FActorSpecification(ETexture::Player),
 				.BodySpec = {
 					.Type = EBodyType::Dynamic,
+#if USE_POLYGON_HITBOX
 					.Shape = FPolygon{
 						.Size = { 0.20f, 0.24f },
 						.Radius = 0.12f,
 						.Rotation = glm::radians(0.0f),
 					},
+#else
+					.Shape = FCapsule{
+						.P0 = { 0.0f, -0.02f },
+						.P1 = { 0.0f,  0.02f },
+						.Radius = 0.10f,
+					},
+#endif
 					.Position = { 0.0f, 0.50f },
-					.Friction = 0.750f,
+					.Friction = 0.620f,
 					.Density = 0.60f,
-					.LinearDamping = 0.50f,
+					.LinearDamping = 0.560f,
 					.Flags = EBodyFlag::EBodyFlag_SensorEvents,
 					.MotionLock = EMotionLock_Z,
 				},
