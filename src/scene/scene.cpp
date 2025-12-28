@@ -46,6 +46,10 @@ namespace platformer2d {
 	void CScene::Render()
 	{
 		for (const auto& Actor : Actors) {
+			if (Actor->HasAnyFlags(EActorFlag_Transparent)) {
+				continue;
+			}
+
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
 				Actor->GetPosition(),
@@ -268,6 +272,7 @@ namespace platformer2d {
 				LK_ASSERT(ControllerNode.IsDefined(), "Controller node missing");
 				auto& Spec = EnemySpec.emplace();
 				LK_DESERIALIZE_PROPERTY(ControllerType, Spec.ControllerType, EControllerType::None, ControllerNode);
+				LK_DESERIALIZE_PROPERTY(SpawnPoint, Spec.SpawnPoint, glm::vec2(0.0f, 0.0f), Node);
 			}
 
 			/* @todo: Fix this awful code somehow. Should merge the double switch-case */
