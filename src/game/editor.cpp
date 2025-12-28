@@ -503,6 +503,24 @@ namespace platformer2d {
 
 		LK_ASSERT(HitActor, "Invalid rojectile hit");
 		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
+
+		if (HitActor->HasComponent<FHealthComponent>()) {
+			auto& HC = HitActor->GetComponent<FHealthComponent>();
+			if (HC.IsDamageable()) {
+				if (HitActor->GetActorType() == EActorType::Enemy) {
+					CEnemy& EnemyRef = HitActor->As<CEnemy>();
+					const float Damage = Projectile->GetDamage();
+					HC.SetHealth(HC.GetHealth() - Damage);
+					if (HC.IsDead()) {
+						LK_INFO_TAG("Editor", "Killed {}", HitActor->GetName());
+						EnemyRef.Kill();
+					}
+				}
+			} else {
+				LK_DEBUG_TAG("Editor", "Hit actor {} has health component but is not damageable", HitActor->GetName());
+			}
+		}
+
 		if (Projectile->ExplodesOnImpact()) {
 			Projectile->Destroy();
 		} else if (Projectile->BounceCount >= Projectile->MaxBounceCount) {
