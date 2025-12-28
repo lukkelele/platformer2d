@@ -203,7 +203,13 @@ namespace platformer2d {
 		bool bDamageable = true;
 
 		FORCEINLINE float GetHealth() const { return Health; }
-		FORCEINLINE void SetHealth(const float InHealth) { Health = InHealth; }
+		FORCEINLINE void SetHealth(const float InHealth)
+		{
+			Health = InHealth;
+			if (Health < 0.0f) {
+				Health = 0.0f;
+			}
+		}
 
 		FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 		FORCEINLINE void SetMaxHealth(const float InMaxHealth) { MaxHealth = InMaxHealth; }
