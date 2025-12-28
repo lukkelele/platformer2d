@@ -758,7 +758,8 @@ namespace platformer2d {
 				FEnemySpecification EnemySpec;
 
 				FActorSpecification ActorSpec;
-				ActorSpec.Name = "Enemy";
+				auto Enemies = Scene->GetAllOfType<CEnemy>();
+				ActorSpec.Name = LK_FMT("Enemy-{}", Enemies.size() + 1);
 				ActorSpec.Texture = ETexture::Enemy1;
 
 				FBodySpecification BodySpec;
@@ -771,15 +772,23 @@ namespace platformer2d {
 				BodySpec.Shape.emplace<FPolygon>(Polygon);
 
 				if (Scene) {
-					LK_INFO_TAG("Editor", "Spawning enemy");
+					LK_INFO_TAG("Editor", "Creating enemy: {}", ActorSpec.Name);
 					std::shared_ptr<CEnemy> Enemy = Scene->Create<CEnemy>(EnemySpec, ActorSpec, BodySpec);
+					Enemy->SetController(std::make_unique<CPatrolController>(1.0f, 1.0f));
+					Enemy->AddComponent<FHealthComponent>();
 				}
 			}
 
-			std::shared_ptr<CEnemy> Enemy = Scene ? Scene->FindActor<CEnemy>("Enemy") : nullptr;
-			IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
-
-			UI::Widget::DrawEnemy(Enemy);
+			if (Scene) {
+				UI::HeaderTextCentralized("Enemies");
+				auto Enemies = Scene->GetAllOfType<CEnemy>();
+				for (auto& Enemy : Enemies) {
+					UI::LargeText(Enemy->GetName());
+					ImGui::Dummy(ImVec2(0, 4));
+					UI::Widget::DrawEnemy(Enemy);
+					ImGui::Dummy(ImVec2(0, 10));
+				}
+			}
 		}
 
 		ImGui::Spacing();
@@ -1111,7 +1120,7 @@ namespace platformer2d {
 		);
 		UI::FScopedFont ButtonFont(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
 
-		static constexpr ImVec2 ButtonSize(260.0f, 68.0f);
+		static constexpr ImVec2 ButtonSize(292.0f, 74.0f);
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
 		UI::ShiftCursorY(Avail.y * 0.25f);
 		UI::BannerTextCentralized("Levels", EFont::SourceSansPro, EFontModifier::Bold);
@@ -1126,6 +1135,16 @@ namespace platformer2d {
 				bOpenSceneNextTick = true;
 			}
 		}
+
+		/* Button: Lukkelele's World */
+		{
+			UI::ShiftCursorX((Avail.x * 0.50f) - (ButtonSize.x * 0.50f));
+			UI::FScopedColor ButtonColor(ImGuiCol_Button, RGBA32::DarkCyan);
+			if (ImGui::Button("Lukkelele's World", ButtonSize)) {
+				SceneToOpen = std::filesystem::path(SCENES_DIR "/LukkelelesWorld.lscene");
+				bOpenSceneNextTick = true;
+			}
+		}
 	}
 
 	void CEditor::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
@@ -1137,24 +1156,21 @@ namespace platformer2d {
 
 	void CEditor::OnKeyPressed(const FKeyData& Data)
 	{
-		switch (Data.Key)
-		{
+		switch (Data.Key) {
 			case EKey::Q:
 				Gizmo = -1;
 				break;
-
 			case EKey::W:
 				Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 				break;
-
 			case EKey::E:
 				Gizmo = ImGuizmo::OPERATION::ROTATE;
 				break;
-
+#if 0 /* SCALING NEEDS TO BE SUPPORTED */
 			case EKey::R:
 				Gizmo = ImGuizmo::OPERATION::SCALE;
 				break;
-
+#endif
 			case EKey::P:
 				if (Data.State == EKeyState::Pressed) {
 					if (IsGamePaused()) {
@@ -1251,6 +1267,9 @@ namespace platformer2d {
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
+
+		CWindow::Get()->SetTitle(LK_FMT("platformer2d - {} ({})", Scene->GetName(), Core::GetPlatformName()));
+		SceneToOpen.clear();
 	}
 
 	void CEditor::CloseScene()
@@ -1282,6 +1301,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
+		CWindow::Get()->SetTitle(LK_FMT("platformer2d ({})", Core::GetPlatformName()));
 		LK_DEBUG_TAG("Editor", "Scene closed");
 	}
 
