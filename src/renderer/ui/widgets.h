@@ -438,6 +438,7 @@ namespace platformer2d::UI {
 
 		void DrawComponents(std::shared_ptr<CActor> Actor);
 		void DrawController(IController* Controller);
+		void DrawEnemy(std::shared_ptr<CEnemy> Enemy);
 
 	}
 }

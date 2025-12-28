@@ -34,19 +34,6 @@ namespace platformer2d::UI::Widget {
 
 		bool Changed = false;
 
-		auto Label = [](std::string_view Str) -> void
-		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text(Str.data());
-		};
-
-		auto NextColumn = []() -> void
-		{
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
-		};
-
 		/* Cache the actor. */
 		if (!ActorDataMap.contains(Handle))
 		{
@@ -69,8 +56,8 @@ namespace platformer2d::UI::Widget {
 		{
 			ImGui::TableNextRow();
 			FActorDataEntry& Data = Iter->second;
-			Label("Name");
-			NextColumn();
+			UI::Table::Label("Name");
+			UI::Table::NextColumn();
 			UI::ShiftCursor(7.0f, 0.0f);
 
 			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
@@ -116,8 +103,8 @@ namespace platformer2d::UI::Widget {
 		/* Outline enabled */
 		ImGui::TableNextRow();
 		{
-			Label("Outline");
-			NextColumn();
+			UI::Table::Label("Outline");
+			UI::Table::NextColumn();
 			bool Enabled = Actor->IsOutlineEnabled();
 			UI::ShiftCursor(7.0f, 0.0f);
 			if (ImGui::Checkbox("##Outline", &Enabled)) {
@@ -147,8 +134,8 @@ namespace platformer2d::UI::Widget {
 		/* Tick info. */
 		ImGui::TableNextRow();
 		{
-			Label("Tick");
-			NextColumn();
+			UI::Table::Label("Tick");
+			UI::Table::NextColumn();
 			ImGui::Text("%s", Actor->IsTickEnabled() ? "Enabled" : "Disabled");
 		}
 
@@ -157,16 +144,16 @@ namespace platformer2d::UI::Widget {
 			/* Body Type. */
 			ImGui::TableNextRow();
 			{
-				Label("Body Type");
-				NextColumn();
+				UI::Table::Label("Body Type");
+				UI::Table::NextColumn();
 				ImGui::Text("%s", Enum::ToString(Body->GetType()));
 			}
 
 			/* Body Size. */
 			ImGui::TableNextRow();
 			{
-				Label("Body Size");
-				NextColumn();
+				UI::Table::Label("Body Size");
+				UI::Table::NextColumn();
 				const glm::vec2 Size = Body->GetSize();
 				ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
 			}
@@ -174,8 +161,8 @@ namespace platformer2d::UI::Widget {
 			/* Linear Velocity. */
 			ImGui::TableNextRow();
 			{
-				Label("Linear Velocity");
-				NextColumn();
+				UI::Table::Label("Linear Velocity");
+				UI::Table::NextColumn();
 				const glm::vec2 V = Body->GetLinearVelocity();
 				ImGui::Text("(%.2f, %.2f)", V.x, V.y);
 			}
@@ -183,8 +170,8 @@ namespace platformer2d::UI::Widget {
 			/* Angular Velocity. */
 			ImGui::TableNextRow();
 			{
-				Label("Angular Velocity");
-				NextColumn();
+				UI::Table::Label("Angular Velocity");
+				UI::Table::NextColumn();
 				const float V = Body->GetAngularVelocity();
 				ImGui::Text("%.2f", V);
 			}
@@ -192,27 +179,36 @@ namespace platformer2d::UI::Widget {
 			/* AABB. */
 			ImGui::TableNextRow();
 			{
-				Label("AABB");
-				NextColumn();
+				UI::Table::Label("AABB");
+				UI::Table::NextColumn();
 				const FAABB AABB = Body->GetAABB();
 				ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
 				ImGui::SameLine(0.0f, 16.0f);
 				ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
 			}
 
+			/* Enabled. */
+			ImGui::TableNextRow();
+			{
+				bool Enabled = Body->IsEnabled();
+				if (UI::Checkbox("Body Enabled", Enabled)) {
+					Body->SetEnabled(Enabled);
+				}
+			}
+
 			/* Awake. */
 			ImGui::TableNextRow();
 			{
-				Label("Awake");
-				NextColumn();
+				UI::Table::Label("Awake");
+				UI::Table::NextColumn();
 				ImGui::Text("%s", Body->IsAwake() ? "Yes" : "No");
 			}
 
 			/* Sensor. */
 			ImGui::TableNextRow();
 			{
-				Label("Sensor");
-				NextColumn();
+				UI::Table::Label("Sensor");
+				UI::Table::NextColumn();
 				ImGui::Text("%s", Body->IsSensor() ? "Yes" : "No");
 			}
 		}
@@ -351,12 +347,7 @@ namespace platformer2d::UI::Widget {
 		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(uint64_t)(uint32_t)Handle);
 		std::string_view Name = Actor->GetName();
 		char NodeName[84];
-		if (Actor->IsPlayer()) {
-			/* @fixme: Skip UUID for player until spawning and serialization for player is handled. */
-			std::snprintf(NodeName, sizeof(NodeName), "%s", Name.data());
-		} else {
-			std::snprintf(NodeName, sizeof(NodeName), "%s (%lld)", Name.data(), static_cast<LUUID::SizeType>(Handle));
-		}
+		std::snprintf(NodeName, sizeof(NodeName), "%s", Name.data());
 
 		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
 		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName);
@@ -774,6 +765,56 @@ namespace platformer2d::UI::Widget {
 
 			UI::EndPropertyGrid();
 		}
+	}
+
+	void DrawEnemy(std::shared_ptr<CEnemy> Enemy)
+	{
+		if (!Enemy) {
+			return;
+		}
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 0));
+		UI::BeginPropertyGrid();
+
+		ImGui::TableNextRow();
+		UI::Table::Label("Enemy State");
+		UI::Table::NextColumn();
+		EEnemyState EnemyState = Enemy->GetState();
+		ImGui::SetNextItemWidth(200);
+		if (UI::Combo("##EnemyState", UI::Array::EnemyStates, EnemyState)) {
+			Enemy->SetState(EnemyState);
+		}
+
+		ImGui::Dummy(ImVec2(0, 4));
+		ImGui::TableNextRow();
+		FEnemyData& Data = Enemy->GetData();
+		UI::Widget::DragFloat2("Spawn Point", Data.SpawnPoint, 0.0f, 0.010f);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
+
+		static constexpr ImVec2 ButtonSize(86, 32);
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(1);
+		UI::ShiftCursorX(20.0f);
+		if (ImGui::Button("Kill", ButtonSize)) {
+			Enemy->GetBody()->SetEnabled(false);
+			Enemy->SetFlag(EActorFlag_Transparent, 1);
+		}
+
+		ImGui::SameLine(0.0f, 8.0f);
+		if (ImGui::Button("Revive", ButtonSize)) {
+			Enemy->GetBody()->SetEnabled(true);
+			Enemy->SetFlag(EActorFlag_Transparent, 0);
+		}
+
+		ImGui::PopStyleVar(1);
+		ImGui::Dummy(ImVec2(0, 12));
+
+		UI::EndPropertyGrid();
+		ImGui::PopStyleVar(1);
+
+		UI::ShiftCursorY(-12);
+		IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
+		UI::Widget::DrawController(Controller);
 	}
 
 }
