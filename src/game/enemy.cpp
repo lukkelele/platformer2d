@@ -70,14 +70,37 @@ namespace platformer2d {
 		ApplyMoveVelocityX(0.0f);
 	}
 
-	void CEnemy::DeathBegin()
+	void CEnemy::Kill()
 	{
-		LK_DEBUG_TAG("Enemy", "DeathBegin");
+		LK_DEBUG_TAG("Enemy", "[{}] Killed", GetName());
+		auto& HC = GetComponent<FHealthComponent>();
+		HC.Health = 0.0f;
+
+		SetFlag(EActorFlag_Transparent, 1);
+		if (Body) {
+			Body->SetEnabled(false);
+		}
 	}
 
-	void CEnemy::DeathEnd()
+	void CEnemy::Revive(const EReviveVariant Variant)
 	{
-		LK_DEBUG_TAG("Enemy", "DeathEnd");
+		LK_DEBUG_TAG("Enemy", "[{}] Revive: {}", GetName(), Enum::ToString(Variant));
+		if (Variant == EReviveVariant::AtSpawn) {
+			CGameplaySystem::Teleport(this, Data.SpawnPoint);
+		}
+
+		auto& HC = GetComponent<FHealthComponent>();
+		HC.Health = HC.GetMaxHealth();
+
+		SetFlag(EActorFlag_Transparent, 0);
+		if (Body) {
+			Body->SetEnabled(true);
+		}
+	}
+
+	bool CEnemy::IsDead() const
+	{
+		return GetComponent<FHealthComponent>().IsDead();
 	}
 
 	void CEnemy::SetSpawnPoint(const glm::vec2& InPoint)

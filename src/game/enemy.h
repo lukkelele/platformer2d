@@ -38,8 +38,15 @@ namespace platformer2d {
 		void MoveRight();
 		void StopMovement();
 
-		void DeathBegin();
-		void DeathEnd();
+		enum class EReviveVariant
+		{
+			AtSpawn,
+			AtLastLocation
+		};
+
+		void Kill();
+		void Revive(EReviveVariant Variant = EReviveVariant::AtSpawn);
+		bool IsDead() const;
 
 		void SetSpawnPoint(const glm::vec2& InPoint);
 		const glm::vec2& GetSpawnPoint() const { return Data.SpawnPoint; }
@@ -56,5 +63,22 @@ namespace platformer2d {
 
 		float MoveSpeed = 1.20f;
 	};
+
+	namespace Enum {
+		inline const char* ToString(const CEnemy::EReviveVariant Variant)
+		{
+			const char* S = "";
+		#define _(EnumValue) case CEnemy::EReviveVariant::EnumValue: S = #EnumValue; break
+			switch (Variant) {
+				_(AtSpawn);
+				_(AtLastLocation);
+				default:
+					LK_THROW_ENUM_ERR(Variant);
+					break;
+			}
+		#undef _
+			return S;
+		}
+	}
 
 }
