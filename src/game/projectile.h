@@ -21,6 +21,7 @@ namespace platformer2d {
 
 		void Destroy();
 		bool ExplodesOnImpact() const { return bExplodeOnImpact; }
+		float GetDamage() const { return Damage; }
 
 		const CRifle* GetOwner() const { return Owner; }
 		virtual EActorType GetActorType() const override { return EActorType::Projectile; }
@@ -36,6 +37,7 @@ namespace platformer2d {
 		std::chrono::steady_clock::time_point TimeFired;
 
 		bool bExplodeOnImpact = true;
+		float Damage = 10.0f;
 
 		friend class CRifle;
 	};

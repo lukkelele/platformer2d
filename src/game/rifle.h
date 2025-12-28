@@ -82,6 +82,7 @@ namespace platformer2d {
 		 */
 		bool bProjectileExplodeOnImpact = false;
 		uint8_t ProjectileBounceCount = 3;
+		float ProjectileDamage = 10.0f;
 
 		uint16_t Ammo;
 		uint16_t MagazineSize;

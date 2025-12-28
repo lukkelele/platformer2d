@@ -121,6 +121,7 @@ namespace platformer2d {
 		Projectile->ID = CPhysicsWorld::CreateBody(BodyDef);
 		Projectile->bExplodeOnImpact = bProjectileExplodeOnImpact;
 		Projectile->MaxBounceCount = ProjectileBounceCount;
+		Projectile->Damage = ProjectileDamage;
 
 		b2Circle Circle = { { 0.0f, 0.0f }, ProjectileRadius };
 		b2ShapeDef ShapeDef = b2DefaultShapeDef();
