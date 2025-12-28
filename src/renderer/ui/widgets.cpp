@@ -795,15 +795,27 @@ namespace platformer2d::UI::Widget {
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursorX(20.0f);
+		bool EnemyDead = Enemy->IsDead();
+		if (EnemyDead) {
+			ImGui::BeginDisabled();
+		}
 		if (ImGui::Button("Kill", ButtonSize)) {
-			Enemy->GetBody()->SetEnabled(false);
-			Enemy->SetFlag(EActorFlag_Transparent, 1);
+			Enemy->Kill();
+		}
+		if (EnemyDead) {
+			ImGui::EndDisabled();
 		}
 
 		ImGui::SameLine(0.0f, 8.0f);
+		EnemyDead = Enemy->IsDead();
+		if (!EnemyDead) {
+			ImGui::BeginDisabled();
+		}
 		if (ImGui::Button("Revive", ButtonSize)) {
-			Enemy->GetBody()->SetEnabled(true);
-			Enemy->SetFlag(EActorFlag_Transparent, 0);
+			Enemy->Revive();
+		}
+		if (!EnemyDead) {
+			ImGui::EndDisabled();
 		}
 
 		ImGui::PopStyleVar(1);
