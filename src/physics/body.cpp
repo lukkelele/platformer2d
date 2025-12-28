@@ -56,6 +56,7 @@ namespace platformer2d {
 			ShapeID = b2CreateCapsuleShape(ID, &ShapeDef, &Capsule);
 		}
 
+		/* @fixme: Ugly fix since no scaling system is used between box2d scaling and pixels. */
 		SetMass(1.0f); /* @todo: Use body spec */
 	}
 
@@ -208,6 +209,26 @@ namespace platformer2d {
 		b2Shape_SetSegment(ShapeID, &Line);
 	}
 
+	bool CBody::Rebuild()
+	{
+		bool Ret = false;
+		switch (ShapeType) {
+			case EShape::Polygon:
+				RebuildPolygon();
+				Ret = true;
+				break;
+			case EShape::Line:
+				break;
+			case EShape::Capsule:
+				break;
+			case EShape::None:
+				LK_ASSERT(false);
+				break;
+		}
+
+		return Ret;
+	}
+
 	void CBody::SetScale(const float Factor)
 	{
 		SetScale({ Factor, Factor });
@@ -216,23 +237,23 @@ namespace platformer2d {
 	void CBody::SetScale(const glm::vec2& Factor)
 	{
 		bDirty = true;
-		switch (ShapeType)
-		{
+		switch (ShapeType) {
 			case EShape::Polygon:
 				ScalePolygon(Factor);
 				break;
-
 			case EShape::Line:
 				ScaleLine(Factor);
 				break;
-
 			case EShape::Capsule:
 				ScaleCapsule(Factor);
 				break;
-
 			case EShape::None:
 				LK_ASSERT(false);
 				break;
+		}
+
+		if (b2Body_GetType(ID) == b2_dynamicBody) {
+			b2Body_ApplyMassFromShapes(ID);
 		}
 	}
 
@@ -412,6 +433,7 @@ namespace platformer2d {
 		Shape.point1.y *= Factor.y;
 		Shape.point2.x *= Factor.x;
 		Shape.point2.y *= Factor.y;
+		b2Shape_SetSegment(ShapeID, &Shape);
 	}
 
 	void CBody::ScaleCapsule(const glm::vec2& Factor) const
@@ -426,6 +448,26 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Body", "New capsule radius: {}", Shape.radius);
 
 		b2Shape_SetCapsule(ShapeID, &Shape);
+	}
+
+	void CBody::RebuildPolygon()
+	{
+		LK_ASSERT(ShapeType == EShape::Polygon);
+		FPolygon& ShapeRef = std::get<FPolygon>(Shape);
+
+		const float HalfX = ShapeRef.Size.x * 0.50f;
+		const float HalfY = ShapeRef.Size.y * 0.50f;
+
+		b2Polygon Polygon = b2MakeBox(HalfX, HalfY);
+		Polygon.radius = ShapeRef.Radius;
+
+		b2Shape_SetPolygon(ShapeID, &Polygon);
+
+		if (b2Body_GetType(ID) == b2_dynamicBody) {
+			b2Body_ApplyMassFromShapes(ID);
+		}
+
+		bDirty = true;
 	}
 
 	EBodyType CBody::DetermineBodyType(const b2BodyType Type)

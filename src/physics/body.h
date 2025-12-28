@@ -95,6 +95,7 @@ namespace platformer2d {
 		void SetShape(const b2Polygon& Polygon);
 		void SetShape(const b2Capsule& Capsule);
 		void SetShape(const b2Segment& Line);
+		bool Rebuild();
 
 		void SetScale(float Factor);
 		void SetScale(const glm::vec2& Factor);
@@ -112,6 +113,13 @@ namespace platformer2d {
 		const TShapeType<T>* TryGetShape() const noexcept
 		{
 			return std::get_if<TShapeType<T>>(&Shape);
+		}
+
+		template<EShape T>
+		TShapeType<T>& GetShape()
+		{
+			using ShapeClass = TShapeType<T>;
+			return std::get<ShapeClass>(Shape);
 		}
 
 		template<EShape T>
@@ -137,6 +145,7 @@ namespace platformer2d {
 		void ScalePolygon(const glm::vec2& Factor) const;
 		void ScaleLine(const glm::vec2& Factor) const;
 		void ScaleCapsule(const glm::vec2& Factor) const;
+		void RebuildPolygon();
 
 		static EBodyType DetermineBodyType(b2BodyType Type);
 
