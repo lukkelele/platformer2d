@@ -2,6 +2,7 @@
 
 #include "gameplaysystem.h"
 #include "game/controller/patrolcontroller.h"
+#include "scene/effectmanager.h"
 
 namespace platformer2d {
 
@@ -76,6 +77,7 @@ namespace platformer2d {
 		auto& HC = GetComponent<FHealthComponent>();
 		HC.Health = 0.0f;
 
+		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
 		SetFlag(EActorFlag_Transparent, 1);
 		if (Body) {
 			Body->SetEnabled(false);
@@ -92,6 +94,7 @@ namespace platformer2d {
 		auto& HC = GetComponent<FHealthComponent>();
 		HC.Health = HC.GetMaxHealth();
 
+		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
 		SetFlag(EActorFlag_Transparent, 0);
 		if (Body) {
 			Body->SetEnabled(true);
