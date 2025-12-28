@@ -17,7 +17,7 @@ namespace platformer2d {
 	enum EActorFlag : uint64_t
 	{
 		EActorFlag_None = 0,
-		EActorFlag_Damageable = LK_BIT(1),
+		EActorFlag_Transparent = LK_BIT(1),
 	};
 
 	class CActor : public ISerializable<ESerializable::Yaml>
