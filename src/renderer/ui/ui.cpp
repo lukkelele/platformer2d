@@ -233,13 +233,31 @@ namespace platformer2d::UI {
 				FBodySpecification NewBodySpec;
 				Aggregate(PhysicsBodyData, NewBodySpec);
 				LK_INFO("{}", CBody::ToString(NewBodySpec));
-				CSpawner::CreatePolygon(
-					ActorAttr.NameBuf.data(),
-					NewBodySpec,
-					ActorAttr.Size,
-					FColor::Get(ActorAttr.Color),
-					ActorAttr.Texture
-				);
+
+				if (NewBodySpec.Type == EBodyType::Static) {
+					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreateStaticPolygon(
+						ActorAttr.NameBuf.data(),
+						ActorAttr.Position,
+						ActorAttr.Size,
+						FColor::Get(ActorAttr.Color)
+					);
+
+					auto Player = CGameInstance::Get()->GetPlayer(0);
+					const glm::vec3 PlayerPos = Player->GetPosition();
+					CGameplaySystem::Teleport(SpawnedPolygon, { PlayerPos.x, PlayerPos.y + 0.50f });
+				} else if (NewBodySpec.Type == EBodyType::Dynamic) {
+					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreatePolygon(
+						ActorAttr.NameBuf.data(),
+						NewBodySpec,
+						ActorAttr.Size,
+						FColor::Get(ActorAttr.Color),
+						ActorAttr.Texture
+					);
+
+					auto Player = CGameInstance::Get()->GetPlayer(0);
+					const glm::vec3 PlayerPos = Player->GetPosition();
+					CGameplaySystem::Teleport(SpawnedPolygon, { PlayerPos.x, PlayerPos.y + 0.50f });
+				}
 			}
 
 			if (ActorExists) {
