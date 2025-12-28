@@ -386,12 +386,14 @@ namespace platformer2d {
 		 * body definition rotation be set correctly.
 		 */
 		if (ShapeType == EShape::Polygon) {
-			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
+			const auto& ShapeRef = std::get<FPolygon>(Spec.Shape);
 			BodyDef.rotation = b2MakeRot(ShapeRef.Rotation);
 		} else if (ShapeType == EShape::Line) {
 			LK_MARK_NOT_IMPLEMENTED();
 		} else if (ShapeType == EShape::Capsule) {
-			LK_MARK_NOT_IMPLEMENTED();
+			const auto& ShapeRef = std::get<FCapsule>(Spec.Shape);
+			LK_UNUSED(ShapeRef);
+			BodyDef.rotation = b2MakeRot(0);
 		}
 
 		if (Spec.MotionLock != EMotionLock_None) {
