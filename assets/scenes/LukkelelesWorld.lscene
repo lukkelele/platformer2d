@@ -209,7 +209,7 @@ Actors:
       Color: [0, 0, 0, 0]
     TransformComponent:
       Position: [5.0121603, -1.4375356, 0]
-      Rotation: -0.039886143
+      Rotation: -0.041180175
       Scale: [2.24, 0.11, 1]
     Body:
       Type: 0
@@ -217,7 +217,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [2.24, 0.11]
-        Rotation: -0.039886147
+        Rotation: -0.041180175
         Radius: 0.5
       Position: [5.0121603, -1.4375356]
       Flags: 2
@@ -263,7 +263,7 @@ Actors:
       Color: [0, 0, 0, 0]
     TransformComponent:
       Position: [9.430001, -1.3100003, 0]
-      Rotation: 0.15473466
+      Rotation: 0.1578816
       Scale: [2.24, 0.11, 1]
     Body:
       Type: 0
@@ -271,7 +271,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [2.24, 0.11]
-        Rotation: 0.15473466
+        Rotation: 0.1578816
         Radius: 0.5
       Position: [9.430001, -1.3100003]
       Flags: 2
@@ -332,33 +332,6 @@ Actors:
       Mass: 1
       MotionLock: 0
       Sensor: false
-  - ID: 17012789572163169277
-    Type: 0
-    Name: Polygon35057
-    Texture: 7
-    Color: [1, 1, 1, 1]
-    Deletable: true
-    Outline:
-      Enabled: true
-      Thickness: 0
-      Color: [0, 0, 0, 0]
-    TransformComponent:
-      Position: [-2.8600001, -0.24999997, 0]
-      Rotation: 0
-      Scale: [0.33, 0.5, 1]
-    Body:
-      Type: 0
-      GravityScale: 1
-      Shape:
-        ShapeType: 2
-        Size: [0.33, 0.5]
-        Rotation: 0
-        Radius: 0.5
-      Position: [-2.8600001, -0.24999997]
-      Flags: 0
-      Mass: 1
-      MotionLock: 0
-      Sensor: false
   - ID: 9243632943422268573
     Type: 0
     Name: Actor-15
@@ -370,7 +343,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [-2.14, -0.6999999, 0]
+      Position: [-2.9, -0.7299999, 0]
       Rotation: 0
       Scale: [1.17, 0.92, 1]
     Body:
@@ -381,7 +354,7 @@ Actors:
         Size: [1.17, 0.92]
         Rotation: 0
         Radius: 0.5
-      Position: [-2.14, -0.6999999]
+      Position: [-2.9, -0.7299999]
       Flags: 0
       Mass: 1
       MotionLock: 0
@@ -409,6 +382,33 @@ Actors:
         Rotation: 0
         Radius: 0.5
       Position: [1.2199998, -2.4899998]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 8048995373038793859
+    Type: 0
+    Name: Cloud1
+    Texture: 7
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-2.3001232, 0.12159873, 0]
+      Rotation: 0
+      Scale: [1.4, 1.4, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [1.4, 1.4]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-2.3001232, 0.12159873]
       Flags: 2
       Mass: 1
       MotionLock: 0
