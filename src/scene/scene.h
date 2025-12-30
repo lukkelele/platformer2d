@@ -97,12 +97,10 @@ namespace platformer2d {
 		bool DoesActorExist(LUUID Handle);
 		bool DoesActorExist(std::string_view Name);
 		bool DeleteActor(LUUID Handle);
+		const std::vector<std::shared_ptr<CActor>>& GetActors() const { return Actors; }
 
 		glm::mat4 GetWorldSpaceTransform(LUUID ActorHandle);
 		glm::mat4 GetWorldSpaceTransform(std::shared_ptr<CActor> Actor);
-
-		/* @fixme: Temporary fix until rendering is supported entirely from within the class. */
-		FORCEINLINE const std::vector<std::shared_ptr<CActor>>& GetActors() const { return Actors; }
 
 		std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
