@@ -1,0 +1,6 @@
+Level: Editor
+Scene: assets/scenes/LukkelelesWorld.lscene
+PlayerSpawn: [-0.43, -0.48]
+CameraZoom: 0.35
+Physics:
+  Gravity: [0, -5]
