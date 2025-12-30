@@ -10,7 +10,6 @@ namespace platformer2d::Serialization {
 	/**
 	 * @def LK_DESERIALIZE_PROPERTY
 	 * @brief Get a value from a node with a fallback value incase it doesn't exist.
-	 * Cannot be used with strings as of yet.
 	 */
 	#define LK_DESERIALIZE_PROPERTY(PropertyName, Destination, DefaultValue, Node) \
 		if (Node.IsDefined()) { \
@@ -28,6 +27,29 @@ namespace platformer2d::Serialization {
 			LK_ERROR_TAG("Deserializer", "Default value used for: {}", #PropertyName); \
 			Destination = DefaultValue; \
 		}
+
+	template<typename TDest, typename TDefault>
+	static void DeserializeProperty(std::string_view PropertyName, TDest& Destination, const TDefault& DefaultValue, const YAML::Node& Node)
+	{
+		if (!Node.IsDefined()) {
+			LK_ERROR_TAG("Deserializer", R"(Default value used for: "{}")", PropertyName);
+			Destination = static_cast<TDest>(DefaultValue);
+			return;
+		}
+
+		const YAML::Node& NodeRef = Node[PropertyName];
+		if (!NodeRef.IsDefined()) {
+			LK_ERROR_TAG("Deserializer", R"(Property not found: "{}")", PropertyName);
+			return;
+		}
+
+		try {
+			Destination = NodeRef.as<std::remove_cvref_t<TDefault>>();
+		} catch (const std::exception& Exception) {
+			LK_ERROR_TAG("Deserializer", R"(Failed to get "{}": {})", PropertyName, Exception.what());
+			Destination = static_cast<TDest>(DefaultValue);
+		}
+	}
 
 	template<typename T>
 	static void Serialize(const T& Target, YAML::Emitter& Out)
