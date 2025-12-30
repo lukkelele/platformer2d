@@ -209,7 +209,7 @@ namespace platformer2d {
 		{
 			bool bEnabled = true;
 			float Thickness = 0.0f;
-			glm::vec4 Color = FColor::Transparent;
+			glm::vec4 Color = FColor::Black;
 		};
 		FOutline Outline;
 
