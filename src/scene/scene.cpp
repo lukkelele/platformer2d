@@ -305,8 +305,8 @@ namespace platformer2d {
 						const YAML::Node& ControllerNode = Node["Controller"];
 						float HalfDistance = 0.0f;
 						float StartDelayInSeconds = 0.0f;
-						LK_DESERIALIZE_PROPERTY(HalfDistance, HalfDistance, 0.0f, ControllerNode);
-						LK_DESERIALIZE_PROPERTY(StartDelayInSeconds, StartDelayInSeconds, 0.0f, ControllerNode);
+						Serialization::DeserializeProperty("HalfDistance", HalfDistance, 0.0f, ControllerNode);
+						Serialization::DeserializeProperty("StartDelayInSeconds", StartDelayInSeconds, 0.0f, ControllerNode);
 						Actor->As<CEnemy>().SetController(std::make_unique<CPatrolController>(1.0f, 1.0f));
 					}
 					break;
