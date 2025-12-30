@@ -239,6 +239,13 @@ namespace platformer2d::UI {
 		ImGui::Image(static_cast<ImU64>(Texture->GetID()), Size, UV0, UV1);
 	}
 
+	inline void SeparatorPadded(const float YPadding)
+	{
+		ImGui::Dummy(ImVec2(0, YPadding));
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0, YPadding));
+	}
+
 	/**
 	 * @brief Get texture ID as an ImTextureID.
 	 */
