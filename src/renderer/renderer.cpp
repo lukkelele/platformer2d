@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "renderer.h"
 
 #include <array>
 #include <atomic>
@@ -169,7 +170,7 @@ namespace platformer2d {
 		Spec.Attachments = { EImageFormat::RGBA32F, EImageFormat::DEPTH24STENCIL8 };
 		Spec.Samples = 1;
 		Spec.ClearColorOnLoad = false;
-		Spec.ClearColor = { 0.10f, 0.50f, 0.50f, 1.0f };
+		Spec.ClearColor = FColor::Convert(RGBA32::DarkerGray);
 		Spec.Name = "fb-viewport";
 		Spec.Width = CWindow::Get()->GetWidth();
 		Spec.Height = CWindow::Get()->GetHeight();
@@ -355,7 +356,6 @@ namespace platformer2d {
 		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
 		SwapQueues();
 
-		Data.ViewportFramebuffer->Bind();
 		Data.ViewportFramebuffer->Clear();
 
 		QuadShader->Bind();
@@ -385,7 +385,13 @@ namespace platformer2d {
 	{
 		CameraData.ViewProjection = Camera.GetViewProjection() * glm::inverse(Transform);
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
+		StartBatch();
+	}
 
+	void CRenderer::BeginScene(const glm::mat4& ViewProj, const glm::mat4& Transform)
+	{
+		CameraData.ViewProjection = ViewProj * glm::inverse(Transform);
+		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 		StartBatch();
 	}
 

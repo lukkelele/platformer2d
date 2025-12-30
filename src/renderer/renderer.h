@@ -64,6 +64,7 @@ namespace platformer2d {
 
 		static void BeginScene(const CCamera& Camera);
 		static void BeginScene(const CCamera& Camera, const glm::mat4& Transform);
+		static void BeginScene(const glm::mat4& ViewProj, const glm::mat4& Transform);
 
 		static void StartBatch();
 		static void NextBatch();
