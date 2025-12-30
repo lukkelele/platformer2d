@@ -28,10 +28,12 @@ namespace platformer2d::UI {
 
 	namespace Widget {
 
-		void ActorNode_Data(std::shared_ptr<CActor> Actor);
-		void ActorDeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
-		void ActorNode_Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
-		void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
+		namespace ActorNode {
+			void DeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
+			void Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
+			void Data(std::shared_ptr<CActor> Actor);
+			void Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
+		}
 
 		/**
 		 * @brief Update the actor cache.
@@ -439,6 +441,9 @@ namespace platformer2d::UI {
 		void DrawComponents(std::shared_ptr<CActor> Actor);
 		void DrawController(IController* Controller);
 		void DrawEnemy(std::shared_ptr<CEnemy> Enemy);
+		void Rifle(std::shared_ptr<CRifle> InRifle);
+		void SceneManagerPanel(std::shared_ptr<CScene> InScene);
+		void EditorViewportInfo(bool Focused, bool Hovered);
 
 	}
 }

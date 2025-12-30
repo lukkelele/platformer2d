@@ -507,7 +507,7 @@ namespace platformer2d::UI {
 		ImGui::Dummy(ImVec2(0, 8));
 
 		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			UI::Widget::ActorNode_Data(Player);
+			UI::Widget::ActorNode::Data(Player);
 			ImGui::TreePop();
 		}
 	}
@@ -515,9 +515,6 @@ namespace platformer2d::UI {
 	void RifleData(std::shared_ptr<CRifle> Rifle)
 	{
 		LK_ASSERT(Rifle);
-		UI::HeaderTextCentralized("Rifle");
-		ImGui::Spacing();
-
 		static constexpr float LabelColumnWidth = 180.0f;
 
 		ImGui::BeginTable("##RifleData", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
@@ -765,6 +762,25 @@ namespace platformer2d::UI {
 
 		ImGui::EndTable();
 		ImGui::End();
+	}
+
+	void EnemiesInfo(std::shared_ptr<CScene> Scene)
+	{
+		if (!Scene) {
+			return;
+		}
+
+		const std::vector<std::shared_ptr<CEnemy>> Enemies = Scene->GetAllOfType<CEnemy>();
+		if (Enemies.empty()) {
+			return;
+		}
+		UI::HeaderTextCentralized("Enemies");
+		for (auto& Enemy : Enemies) {
+			UI::LargeText(Enemy->GetName());
+			ImGui::Dummy(ImVec2(0, 4));
+			UI::Widget::DrawEnemy(Enemy);
+			ImGui::Dummy(ImVec2(0, 10));
+		}
 	}
 
 	void PrepareLeftSidebar()

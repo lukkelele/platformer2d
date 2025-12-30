@@ -147,6 +147,7 @@ namespace platformer2d::UI {
 	void RifleData(std::shared_ptr<CRifle> Rifle);
 	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
 	void PlayerHud(std::shared_ptr<CPlayer> Player);
+	void EnemiesInfo(std::shared_ptr<CScene> Scene);
 
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);
 	void RainbowTextGradient(const char* Text, float Speed = 0.15f);

@@ -22,7 +22,121 @@ namespace platformer2d::UI::Widget {
 		std::unordered_map<LUUID, FActorDataEntry> ActorDataMap;
 	}
 
-	void ActorNode_Data(std::shared_ptr<CActor> Actor)
+	void ActorNode::Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	{
+		LK_ASSERT(Actor && Scene);
+		if (!Actor || !Scene) {
+			return;
+		}
+
+		/* Button: Create */
+		{
+			static const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
+
+			ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+			ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
+			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(1);
+
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+			{
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_Button, RGBA32::LightGreen,
+					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+					ImGuiCol_ButtonActive, RGBA32::NiceGreen
+				);
+
+				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
+				if (ActorExists) {
+					ImGui::BeginDisabled();
+				}
+
+				const float CursorPosX = 0.50f * ImGui::GetContentRegionAvail().x;
+				UI::ShiftCursorX(CursorPosX - ButtonSize.x);
+				if (ImGui::Button("Create", ButtonSize)) {
+					FBodySpecification NewBodySpec;
+					Aggregate(PhysicsBodyData, NewBodySpec);
+					LK_INFO("{}", CBody::ToString(NewBodySpec));
+					CSpawner::CreatePolygon(
+						ActorAttr.NameBuf.data(),
+						NewBodySpec,
+						ActorAttr.Size,
+						FColor::Get(ActorAttr.Color)
+					);
+				}
+				if (ActorExists) {
+					ImGui::EndDisabled();
+				}
+			}
+
+			/* Button: Delete */
+			{
+				ImGui::SameLine();
+				UI::FScopedColorStack ButtonColours(
+					ImGuiCol_Button, RGBA32::WineRed,
+					ImGuiCol_ButtonHovered, RGBA32::DarkRed,
+					ImGuiCol_ButtonActive, RGBA32::Red
+				);
+
+				UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
+				const bool IsDeletable = Actor->IsDeletable();
+				if (!IsDeletable) {
+					ImGui::BeginDisabled();
+				}
+				if (ImGui::Button("Delete", ButtonSize)) {
+					const LUUID ActorHandle = Actor->GetHandle();
+					LK_INFO("Delete: {} ({})", ActorHandle, Actor->GetName());
+					Scene->DeleteActor(ActorHandle);
+				}
+				if (!IsDeletable) {
+					ImGui::EndDisabled();
+				}
+			}
+
+			ImGui::EndTable();
+		}
+	}
+
+	void ActorNode::DeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	{
+		LK_ASSERT(Actor && Scene);
+		if (!Actor || !Scene) {
+			return;
+		}
+
+		static const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		static constexpr ImVec2 ButtonSize = ImVec2(138, 50);
+
+		UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+		UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+		UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
+		UI::FScopedColorStack ButtonColours(
+			ImGuiCol_Button, RGBA32::WineRed,
+			ImGuiCol_ButtonHovered, RGBA32::DarkRed,
+			ImGuiCol_ButtonActive, RGBA32::Red
+		);
+
+		UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
+		const bool IsDeletable = Actor->IsDeletable();
+		if (!IsDeletable) {
+			ImGui::BeginDisabled();
+		}
+		if (ImGui::Button("Delete Actor", ButtonSize)) {
+			const LUUID ActorHandle = Actor->GetHandle();
+			LK_INFO("Delete: {} ({})", ActorHandle, Actor->GetName());
+			Scene->DeleteActor(ActorHandle);
+		}
+		if (!IsDeletable) {
+			ImGui::EndDisabled();
+		}
+	}
+
+	void ActorNode::Data(std::shared_ptr<CActor> Actor)
 	{
 		const LUUID Handle = Actor->GetHandle();
 		ImGui::PushID(Handle);
@@ -32,15 +146,13 @@ namespace platformer2d::UI::Widget {
 		ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
-		bool Changed = false;
-
-		/* Cache the actor. */
-		if (!ActorDataMap.contains(Handle))
-		{
+		/**
+		 * Cache the actor, done to be able to rename it.
+		 */
+		if (!ActorDataMap.contains(Handle)) {
 			LK_TRACE_TAG("UI", "Caching handle {}", Handle);
 			auto [Iter, Inserted] = ActorDataMap.emplace(Handle, FActorDataEntry{});
-			if (Inserted)
-			{
+			if (Inserted) {
 				/* Populate the buffer with the actor name. */
 				FActorDataEntry& Data = Iter->second;
 				std::snprintf(Data.NameBuf.data(), Data.NameBuf.size(), "%s", Actor->GetName().data());
@@ -95,36 +207,6 @@ namespace platformer2d::UI::Widget {
 			}
 			if (!ColorDeduced) {
 				ImGui::EndDisabled();
-			}
-		}
-
-		/* Outline enabled. */
-		ImGui::TableNextRow();
-		{
-			UI::Table::Label("Outline");
-			UI::Table::NextColumn();
-			bool Enabled = Actor->IsOutlineEnabled();
-			if (ImGui::Checkbox("##Outline", &Enabled)) {
-				Actor->SetOutlineEnabled(Enabled);
-			}
-		}
-
-		/* Outline thickness. */
-		ImGui::TableNextRow();
-		{
-			float Thickness = Actor->GetOutlineThickness();
-			if (UI::Widget::DragFloat("Outline Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
-				Actor->SetOutlineThickness(Thickness);
-			}
-		}
-
-		/* Outline color. */
-		ImGui::TableNextRow();
-		{
-			const glm::vec4& Color = Actor->GetOutlineColor();
-			glm::vec3 C = { Color.x, Color.y, Color.z };
-			if (UI::Widget::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
-				Actor->SetOutlineColor(glm::vec4(C, 1.0f));
 			}
 		}
 
@@ -211,124 +293,48 @@ namespace platformer2d::UI::Widget {
 
 		ImGui::EndTable();
 
+		/* Node: Outline */
+		if (ImGui::TreeNodeEx("Outline", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			UI::BeginPropertyGrid();
+
+			/* Outline enabled. */
+			ImGui::TableNextRow();
+			{
+				UI::Table::Label("Enabled");
+				UI::Table::NextColumn();
+				bool Enabled = Actor->IsOutlineEnabled();
+				if (ImGui::Checkbox("##Enabled", &Enabled)) {
+					Actor->SetOutlineEnabled(Enabled);
+				}
+			}
+
+			/* Outline thickness. */
+			ImGui::TableNextRow();
+			{
+				float Thickness = Actor->GetOutlineThickness();
+				if (UI::Widget::DragFloat("Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
+					Actor->SetOutlineThickness(Thickness);
+				}
+			}
+
+			/* Outline color. */
+			ImGui::TableNextRow();
+			{
+				const glm::vec4& Color = Actor->GetOutlineColor();
+				glm::vec3 C = { Color.x, Color.y, Color.z };
+				if (UI::Widget::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
+					Actor->SetOutlineColor(glm::vec4(C, 1.0f));
+				}
+			}
+			UI::EndPropertyGrid();
+
+			ImGui::TreePop();
+		}
+
 		ImGui::PopID();
 	}
 
-	void ActorNode_Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
-	{
-		LK_ASSERT(Actor && Scene);
-		if (!Actor || !Scene) {
-			return;
-		}
-
-		/* Button: Create */
-		{
-			static const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
-
-			ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
-			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(1);
-
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
-			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
-			{
-				UI::FScopedColorStack ButtonColours(
-					ImGuiCol_Button, RGBA32::LightGreen,
-					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-					ImGuiCol_ButtonActive, RGBA32::NiceGreen
-				);
-
-				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
-				if (ActorExists) {
-					ImGui::BeginDisabled();
-				}
-
-				const float CursorPosX = 0.50f * ImGui::GetContentRegionAvail().x;
-				UI::ShiftCursorX(CursorPosX - ButtonSize.x);
-				if (ImGui::Button("Create", ButtonSize)) {
-					FBodySpecification NewBodySpec;
-					Aggregate(PhysicsBodyData, NewBodySpec);
-					LK_INFO("{}", CBody::ToString(NewBodySpec));
-					CSpawner::CreatePolygon(
-						ActorAttr.NameBuf.data(),
-						NewBodySpec,
-						ActorAttr.Size,
-						FColor::Get(ActorAttr.Color)
-					);
-				}
-				if (ActorExists) {
-					ImGui::EndDisabled();
-				}
-			}
-
-			/* Button: Delete */
-			{
-				ImGui::SameLine();
-				UI::FScopedColorStack ButtonColours(
-					ImGuiCol_Button, RGBA32::WineRed,
-					ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-					ImGuiCol_ButtonActive, RGBA32::Red
-				);
-
-				UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
-				const bool IsDeletable = Actor->IsDeletable();
-				if (!IsDeletable) {
-					ImGui::BeginDisabled();
-				}
-				if (ImGui::Button("Delete", ButtonSize)) {
-					const LUUID ActorHandle = Actor->GetHandle();
-					LK_INFO("Delete: {} ({})", ActorHandle, Actor->GetName());
-					Scene->DeleteActor(ActorHandle);
-				}
-				if (!IsDeletable) {
-					ImGui::EndDisabled();
-				}
-			}
-
-			ImGui::EndTable();
-		}
-	}
-
-	void ActorDeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
-	{
-		LK_ASSERT(Actor && Scene);
-		if (!Actor || !Scene) {
-			return;
-		}
-
-		static const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		static constexpr ImVec2 ButtonSize = ImVec2(138, 50);
-
-		UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
-		UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-		UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
-		UI::FScopedColorStack ButtonColours(
-			ImGuiCol_Button, RGBA32::WineRed,
-			ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-			ImGuiCol_ButtonActive, RGBA32::Red
-		);
-
-		UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
-		const bool IsDeletable = Actor->IsDeletable();
-		if (!IsDeletable) {
-			ImGui::BeginDisabled();
-		}
-		if (ImGui::Button("Delete Actor", ButtonSize)) {
-			const LUUID ActorHandle = Actor->GetHandle();
-			LK_INFO("Delete: {} ({})", ActorHandle, Actor->GetName());
-			Scene->DeleteActor(ActorHandle);
-		}
-		if (!IsDeletable) {
-			ImGui::EndDisabled();
-		}
-	}
-
-	void ActorNode(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	void ActorNode::Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Actor && Scene);
 		const LUUID Handle = Actor->GetHandle();
@@ -347,9 +353,9 @@ namespace platformer2d::UI::Widget {
 		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
 		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName);
 		if (NodeOpened) {
-			ActorNode_Data(Actor);
+			ActorNode::Data(Actor);
 			UI::Widget::DrawComponents(Actor);
-			UI::Widget::ActorDeleteButton(Actor, Scene);
+			UI::Widget::ActorNode::DeleteButton(Actor, Scene);
 			ImGui::TreePop();
 		}
 
@@ -834,6 +840,55 @@ namespace platformer2d::UI::Widget {
 		UI::ShiftCursorY(-12);
 		IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
 		UI::Widget::DrawController(Controller);
+	}
+
+	void Rifle(std::shared_ptr<CRifle> InRifle)
+	{
+		if (!InRifle) {
+			return;
+		}
+
+		FScopedFont Font(EFont::SourceSansPro, EFontSize::Large);
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		if (ImGui::TreeNodeEx("Rifle", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			UI::RifleData(InRifle);
+			ImGui::TreePop();
+		}
+	}
+
+	void SceneManagerPanel(std::shared_ptr<CScene> InScene)
+	{
+		if (!InScene) {
+			return;
+		}
+
+		UI::HeaderTextCentralized("Scene");
+		const auto Actors = InScene->GetActors();
+
+		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large);
+		UI::BeginPropertyGrid(100);
+		ImGui::TableNextRow();
+		UI::Table::Label("Actors");
+		UI::Table::NextColumn();
+		ImGui::Text("%d", Actors.size() + 1); /* +1 for player */
+		UI::EndPropertyGrid();
+		UI::Font::Pop();
+
+		ImGui::Dummy(ImVec2(0, 4));
+
+		if (std::shared_ptr<CPlayer> Player = CGameInstance::Get()->GetPlayer(0)) {
+			UI::Widget::ActorNode::Entry(Player, InScene);
+		}
+		for (auto& Actor : Actors) {
+			UI::Widget::ActorNode::Entry(Actor, InScene);
+		}
+	}
+
+	void EditorViewportInfo(bool Focused, bool Hovered)
+	{
+		ImGui::SeparatorText("Editor Viewport");
+		ImGui::Text("Focused: %s", Focused ? "Yes" : "No");
+		ImGui::Text("Hovered: %s", Hovered ? "Yes" : "No");
 	}
 
 }
