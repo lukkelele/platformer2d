@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <source_location>
 #include <span>
+#include <queue>
 
 #include "assert.h"
 #include "log.h"
@@ -25,6 +26,8 @@
 
 namespace platformer2d {
 
+	class CApplication;
+
 	using LRendererID = uint32_t;
 
 	using namespace std::chrono_literals;
@@ -32,10 +35,27 @@ namespace platformer2d {
 	namespace Core {
 		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
 
+		enum class ELayer
+		{
+			Editor,
+			COUNT
+		};
+
 		struct FGlobal
 		{
 			bool bShouldShutdown = false;
+
+			void AddLayer(const ELayer Layer) { LayerAddQueue.push(Layer); }
+			void RemoveLayer(const ELayer Layer) { LayerRemoveQueue.push(Layer); }
+
+		private:
+			/* Layers to add/remove to the application layerstack. */
+			std::queue<ELayer> LayerAddQueue;
+			std::queue<ELayer> LayerRemoveQueue;
+
+			friend class CApplication;
 		};
+
 		extern FGlobal Global;
 
 		const char* GetPlatformName();
@@ -74,6 +94,21 @@ namespace platformer2d {
 	};
 
 	namespace Enum {
+		inline const char* ToString(const Core::ELayer Layer)
+		{
+			const char* S = "";
+		#define _(EnumValue) case Core::ELayer::EnumValue: S = #EnumValue; break
+			switch (Layer) {
+				_(Editor);
+				_(COUNT);
+				default:
+					LK_THROW_ENUM_ERR(Layer);
+					break;
+			}
+		#undef _
+			return S;
+		}
+
 		inline const char* ToString(const EDirection Direction)
 		{
 			const char* S = "";
