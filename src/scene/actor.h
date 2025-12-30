@@ -28,7 +28,7 @@ namespace platformer2d {
 		virtual ~CActor();
 
 		virtual void Tick(float DeltaTime);
-		inline LUUID GetHandle() const { return Handle; }
+		LUUID GetHandle() const { return Handle; }
 		virtual EActorType GetActorType() const { return EActorType::Object; }
 
 		template<typename T>
@@ -83,24 +83,24 @@ namespace platformer2d {
 		float GetRotation() const;
 		void SetRotation(float AngleRad);
 
-		inline FTransformComponent& GetTransformComponent() { return TransformComp; }
-		inline const FTransformComponent& GetTransformComponent() const { return TransformComp; }
+		FORCEINLINE FTransformComponent& GetTransformComponent() { return TransformComp; }
+		FORCEINLINE const FTransformComponent& GetTransformComponent() const { return TransformComp; }
 		FORCEINLINE CBody* GetBody() { return Body ? Body.get() : nullptr; }
 		FORCEINLINE const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
 		bool IsMoving() const;
 
-		inline bool IsTickEnabled() const { return bTickEnabled; }
+		bool IsTickEnabled() const { return bTickEnabled; }
 		void SetTickEnabled(bool Enabled);
-		inline bool IsDeletable() const { return bDeletable; }
+		bool IsDeletable() const { return bDeletable; }
 		void SetDeletable(bool Deletable);
 		bool IsPlayer() const { return GetActorType() == EActorType::Player; }
 		bool IsSensor() const { return (Body ? Body->IsSensor() : false); }
 
-		inline ETexture GetTexture() const { return Texture; }
-		inline const glm::vec4& GetColor() const { return Color; }
+		ETexture GetTexture() const { return Texture; }
+		const glm::vec4& GetColor() const { return Color; }
 		void SetColor(const glm::vec4& InColor);
 
-		inline std::string_view GetName() const { return Name; }
+		std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
 		void SetTexture(ETexture InTexture);
 		bool IsOutlineEnabled() const { return Outline.bEnabled; }
@@ -162,25 +162,22 @@ namespace platformer2d {
 		}
 
 		template<typename... T>
-		bool HasAny() const
+		bool HasAnyComponents() const
 		{
 			return (HasComponent<T>() || ...);
 		}
 
 		template<typename... TExcluded>
-		bool HasAnyExcept() const
+		bool HasAnyComponentsExcept() const
 		{
 			bool Ret = false;
-			if constexpr (!IsOneOf<FTransformComponent, TExcluded...>)
-			{
+			if constexpr (!IsComponentOneOf<FTransformComponent, TExcluded...>) {
 				Ret = (Ret || HasComponent<FTransformComponent>());
 			}
-			if constexpr (!IsOneOf<FEffectComponent, TExcluded...>)
-			{
+			if constexpr (!IsComponentOneOf<FEffectComponent, TExcluded...>) {
 				Ret = (Ret || HasComponent<FEffectComponent>());
 			}
-			if constexpr (!IsOneOf<FInteractionComponent, TExcluded...>)
-			{
+			if constexpr (!IsComponentOneOf<FInteractionComponent, TExcluded...>) {
 				Ret = (Ret || HasComponent<FEffectComponent>());
 			}
 
@@ -191,11 +188,11 @@ namespace platformer2d {
 		void UpdateEffectComponent(FEffectComponent& EC);
 
 		template<typename T, typename... Ts>
-		static constexpr bool IsOneOf = (std::is_same_v<T, Ts> || ...);
+		static constexpr bool IsComponentOneOf = (std::is_same_v<T, Ts> || ...);
 
 	protected:
 		std::unique_ptr<CBody> Body;
-		FTransformComponent TransformComp{}; /* @todo Make optional */
+		FTransformComponent TransformComp{};
 		std::optional<FEffectComponent> EffectComp;
 		std::optional<FInteractionComponent> InteractionComp;
 		std::optional<FHealthComponent> HealthComp;

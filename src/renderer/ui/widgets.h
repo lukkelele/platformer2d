@@ -423,7 +423,7 @@ namespace platformer2d::UI {
 			ImGui::TextUnformatted(Name.data());
 
 			if (IsRowClicked) {
-				if ((sizeof...(TIncompatible) > 0) && Actor->HasAny<TIncompatible...>()) {
+				if ((sizeof...(TIncompatible) > 0) && Actor->HasAnyComponents<TIncompatible...>()) {
 					return;
 				}
 
