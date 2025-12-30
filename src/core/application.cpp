@@ -2,6 +2,7 @@
 
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
+#include "game/editor.h"
 #include "game/player.h"
 #include "physics/physicsworld.h"
 #include "physics/body.h"
@@ -11,11 +12,7 @@
 #include "renderer/ui/uilayer.h"
 #include "scene/effectmanager.h"
 
-/** @todo: Level loading from a main menu */
-#define LOAD_EDITOR_ON_STARTUP 1
-#if LOAD_EDITOR_ON_STARTUP
-#include "game/editor.h"
-#endif
+#define LOAD_EDITOR_ON_STARTUP 0
 
 namespace platformer2d {
 
@@ -56,7 +53,7 @@ namespace platformer2d {
 		UILayer = std::make_shared<CUILayer>();
 		LayerStack.PushOverlay(UILayer);
 
-#ifdef LOAD_EDITOR_ON_STARTUP
+#if LOAD_EDITOR_ON_STARTUP
 		LK_TRACE_TAG("Application", "Adding testlevel to layerstack");
 		std::shared_ptr<CEditor> Editor = std::make_shared<CEditor>();
 		LayerStack.PushLayer(Editor);
@@ -101,6 +98,8 @@ namespace platformer2d {
 				break;
 			}
 
+			CheckLayerQueues();
+
 			const float DeltaTime = Timer.GetDeltaTime();
 
 			Window->BeginFrame();
@@ -134,6 +133,54 @@ namespace platformer2d {
 			Layer->RenderUI();
 		}
 		UILayer->EndFrame();
+	}
+
+	void CApplication::CheckLayerQueues()
+	{
+		/* Queue: Layer addition */
+		while (!Core::Global.LayerAddQueue.empty()) {
+			const Core::ELayer LayerType = Core::Global.LayerAddQueue.front();
+			LK_TRACE_TAG("Application", "Adding layer: {}", Enum::ToString(LayerType));
+			switch (LayerType) {
+				case Core::ELayer::Editor: {
+					LK_VERIFY(!LayerStack.HasLayer("Editor"), "Editor layer already present");
+					LK_INFO_TAG("Application", "Creating editor");
+					std::shared_ptr<CEditor> Editor = std::make_shared<CEditor>();
+					LayerStack.PushLayer(Editor);
+					break;
+				}
+				default:
+					LK_VERIFY(false);
+					break;
+			}
+
+			Core::Global.LayerAddQueue.pop();
+		}
+
+		/* Queue: Layer removal */
+		while (!Core::Global.LayerRemoveQueue.empty()) {
+			const Core::ELayer LayerType = Core::Global.LayerRemoveQueue.front();
+			LK_TRACE_TAG("Application", "Removing layer: {}", Enum::ToString(LayerType));
+			switch (LayerType) {
+				case Core::ELayer::Editor: {
+					if (LayerStack.HasLayer("Editor")) {
+						if (std::shared_ptr<CLayer> Layer = LayerStack.GetLayer("Editor")) {
+							LK_DEBUG_TAG("Application", "Removing editor layer");
+							LayerStack.PopLayer(Layer);
+							CRenderer::SetClearColor(FColor::Convert(RGBA32::DarkerGray));
+						} else {
+							LK_ERROR_TAG("Application", "Failed to get editor from layerstack");
+						}
+					}
+					break;
+				}
+				default:
+					LK_VERIFY(false);
+					break;
+			}
+
+			Core::Global.LayerRemoveQueue.pop();
+		}
 	}
 
 }

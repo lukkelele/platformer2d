@@ -24,6 +24,9 @@ namespace platformer2d {
 		bool PushLayer(std::shared_ptr<CLayer> Layer);
 		void RenderUI();
 
+	private:
+		void CheckLayerQueues();
+
 	protected:
 		bool bRunning = false;
 		std::unique_ptr<CWindow> Window;
