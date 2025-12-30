@@ -18,6 +18,9 @@ namespace platformer2d {
 		bool PopLayer(std::shared_ptr<CLayer> Layer);
 		bool PopOverlay(std::shared_ptr<CLayer> Layer);
 
+		std::shared_ptr<CLayer> GetLayer(std::string_view LayerName);
+		bool HasLayer(std::string_view LayerName);
+
 		std::size_t Count() const { return Layers.size(); }
 
 		std::shared_ptr<CLayer> operator[](const std::size_t Idx)

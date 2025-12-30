@@ -1,4 +1,6 @@
 #include "layerstack.h"
+#include "layerstack.h"
+#include "layerstack.h"
 
 namespace platformer2d {
 
@@ -79,6 +81,26 @@ namespace platformer2d {
 		}
 
 		return false;
+	}
+
+	std::shared_ptr<CLayer> CLayerStack::GetLayer(std::string_view LayerName)
+	{
+		auto IsNameEqual = [LayerName](const std::shared_ptr<CLayer> Layer) -> bool
+		{
+			return Layer->GetLayerName() == LayerName;
+		};
+		auto Iter = std::find_if(Layers.begin(), Layers.end(), IsNameEqual);
+		return (Iter != Layers.end()) ? *Iter : nullptr;
+	}
+
+	bool CLayerStack::HasLayer(std::string_view LayerName)
+	{
+		auto IsNameEqual = [LayerName](const std::shared_ptr<CLayer> Layer) -> bool
+		{
+			return Layer->GetLayerName() == LayerName;
+		};
+		auto Iter = std::find_if(Layers.begin(), Layers.end(), IsNameEqual);
+		return (Iter != Layers.end());
 	}
 
 }
