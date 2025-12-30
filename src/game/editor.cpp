@@ -35,8 +35,7 @@ namespace platformer2d {
 		 *************************************/
 		const FGameSpecification GameSpec = {
 			.InstanceName = "Editor",
-			.LevelName = "TestLevel",
-			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
+			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/editor.yaml"),
 			.Player = {
 				.ActorSpec = FActorSpecification(ETexture::Player),
 				.BodySpec = {
