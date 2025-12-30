@@ -584,7 +584,7 @@ namespace platformer2d {
 		YAML::Emitter Out;
 
 		Out << YAML::BeginMap; /* Level */
-		Out << YAML::Key << "Level" << YAML::Value << Name;
+		Out << YAML::Key << "Level" << YAML::Value << LayerName;
 
 		LK_TRACE("LastSceneFilepath: {}", LastSceneFilepath);
 		const std::filesystem::path ScenePath = (Scene ? Scene->GetFilepath() : LastSceneFilepath);
