@@ -751,13 +751,15 @@ namespace platformer2d {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
+		UI::Widget::SceneManagerPanel(Scene);
+
+		ImGui::Separator();
 		ImGui::Spacing();
+
 		ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
 		UI::SetTooltip(LastSceneFilepath.generic_string());
-
 		ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
 		UI::SetTooltip(SceneToOpen.generic_string());
-
 		ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
 
 		ImGui::Spacing();
@@ -787,22 +789,11 @@ namespace platformer2d {
 				}
 			}
 
-			if (Scene) {
-				UI::HeaderTextCentralized("Enemies");
-				auto Enemies = Scene->GetAllOfType<CEnemy>();
-				for (auto& Enemy : Enemies) {
-					UI::LargeText(Enemy->GetName());
-					ImGui::Dummy(ImVec2(0, 4));
-					UI::Widget::DrawEnemy(Enemy);
-					ImGui::Dummy(ImVec2(0, 10));
-				}
-			}
+			UI::EnemiesInfo(Scene);
 		}
 
 		ImGui::Spacing();
-		ImGui::SeparatorText("Editor Viewport");
-		ImGui::Text("Focused: %d", bEditorViewportFocused);
-		ImGui::Text("Hovered: %d", bEditorViewportHovered);
+		UI::Widget::EditorViewportInfo(bEditorViewportFocused, bEditorViewportHovered);
 
 		if (Scene) {
 			ImGui::Spacing();
@@ -841,14 +832,7 @@ namespace platformer2d {
 		}
 
 		if (Player) {
-			if (std::shared_ptr<CRifle> Rifle = Player->GetRifle()) {
-				ImGui::Dummy(ImVec2(0, 16));
-				ImGui::Separator();
-				ImGui::Dummy(ImVec2(0, 8));
-				UI::RifleData(Rifle);
-				ImGui::Dummy(ImVec2(0, 16));
-				ImGui::Separator();
-			}
+			UI::Widget::Rifle(Player->GetRifle());
 		}
 
 		ImGui::Spacing();
@@ -952,23 +936,7 @@ namespace platformer2d {
 			ImGui::TreePop();
 		}
 
-		ImGui::Dummy(ImVec2(0, 8));
-
 		if (Scene) {
-			/**
-			 * Get vector copy of all actors to not invalidate the iteration
-			 * if an actor is deleted.
-			 */
-			const auto Actors = Scene->GetActors();
-			ImGui::Text("Actors: %d", Actors.size() + 1);
-			UI::Widget::ActorNode(Player, Scene);
-			for (auto& Actor : Actors) {
-				UI::Widget::ActorNode(Actor, Scene);
-			}
-
-			ImGui::Dummy(ImVec2(0, 10));
-			ImGui::Separator();
-			ImGui::Dummy(ImVec2(0, 10));
 			UI::CreatorMenu(Scene);
 		}
 
