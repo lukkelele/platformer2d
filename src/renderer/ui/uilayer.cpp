@@ -60,8 +60,12 @@ namespace platformer2d {
 
 	void CUILayer::RenderUI()
 	{
-		if (UI::IsGameMenuOpen()) {
-			UI_GameMenu();
+		if (CGameInstance::Get()) {
+			if (UI::IsGameMenuOpen()) {
+				UI_GameMenu();
+			}
+		} else {
+			UI::StartMenu();
 		}
 	}
 
@@ -350,6 +354,112 @@ namespace platformer2d {
 	}
 
 	namespace UI {
+
+		void StartMenu()
+		{
+			ImGuiViewport* Viewport = ImGui::GetMainViewport();
+			if (!Viewport) {
+				return;
+			}
+
+			static constexpr float XFactor = 0.65f;
+			static constexpr float YFactor = 0.80f;
+			static constexpr float LabelColumnWidth = 180.0f;
+
+			const ImVec2 ViewportSize = ImVec2(
+				(std::clamp(Viewport->Size.x * XFactor, 620.0f, 940.0f)),
+				(Viewport->Size.y * YFactor)
+			);
+			const ImVec2 WindowPos = ImVec2(
+				(Viewport->Size.x * 0.50f) - (ViewportSize.x * 0.50f),
+				((Viewport->Size.y * (1.0f - YFactor)) * 0.50f)
+			);
+
+			ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ViewportSize, ImGuiCond_Always);
+			static constexpr int WindowFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 8);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 24);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_WindowBg, RGBA32::DarkGray);
+			ImGui::PushStyleColor(ImGuiCol_Border, RGBA32::BackgroundDark);
+			const bool WindowOpened = UI::Begin("##MainMenu", nullptr, WindowFlags);
+			ImGui::PopStyleVar(4);
+			ImGui::PopStyleColor(2);
+			if (!WindowOpened) {
+				return;
+			}
+
+			const ImVec2 StartCursorPos = ImGui::GetCursorPos();
+			const ImVec2 WindowSize = ImGui::GetWindowSize();
+			const ImVec2 ButtonSize = { WindowSize.x * 0.40f, 72.0f };
+			UI_GameMenu_Title(WindowSize);
+
+			auto NextButtonEntry = []() -> void
+			{
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+			};
+
+			UI::Font::Push(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
+			if (ImGui::BeginTable("##Menu", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
+				ImGui::TableSetupColumn("L", 0, ImGui::GetContentRegionAvail().x);
+
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
+
+				NextButtonEntry();
+				{
+					UI::FScopedColorStack ColorStack(
+						ImGuiCol_Button, RGBA32::SmoothGreen
+					);
+
+					UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
+					if (ImGui::Button("Levels", ButtonSize)) {
+						LK_WARN("TODO");
+					}
+
+					ImGui::Dummy(ImVec2(0, 16));
+				}
+
+				NextButtonEntry();
+				{
+					UI::FScopedColorStack ColorStack(
+						ImGuiCol_Button, RGBA32::DarkCyan
+					);
+
+					UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
+					if (ImGui::Button("Editor", ButtonSize)) {
+						Core::Global.AddLayer(Core::ELayer::Editor);
+					}
+
+					ImGui::Dummy(ImVec2(0, 16));
+				}
+
+				ImGui::EndTable();
+			}
+
+			/* Button: Quit */
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(255, 45, 45, 200));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 45, 45, 90));
+				const ImVec2 Avail = ImGui::GetContentRegionAvail();
+				UI::ShiftCursor(
+					(Avail.x * 0.50f) - (ButtonSize.x * 0.50f),
+					(Avail.y - ButtonSize.y - 40.0f)
+				);
+				if (ImGui::Button("Quit", ButtonSize)) {
+					Core::Global.bShouldShutdown = true;
+				}
+				ImGui::PopStyleColor(2);
+			}
+
+			ImGui::PopStyleVar(1); /* FrameRounding */
+
+			UI::Font::Pop();
+
+			UI::End();
+		}
 
 		void OpenGameMenu()
 		{

@@ -117,6 +117,7 @@ namespace platformer2d::UI {
 	extern FPhysicsBodyData PhysicsBodyData;
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec);
 
+	void StartMenu();
 	void OpenGameMenu();
 	void CloseGameMenu();
 	void ToggleGameMenu();
