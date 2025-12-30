@@ -65,12 +65,12 @@ namespace platformer2d {
 
 	bool CScene::DoesActorExist(const LUUID Handle)
 	{
-		return FindActor(Handle) != nullptr;
+		return GetActor(Handle) != nullptr;
 	}
 
 	bool CScene::DoesActorExist(std::string_view Name)
 	{
-		return FindActor(Name) != nullptr;
+		return GetActor(Name) != nullptr;
 	}
 
 	bool CScene::DeleteActor(const LUUID Handle)
@@ -94,7 +94,7 @@ namespace platformer2d {
 	glm::mat4 CScene::GetWorldSpaceTransform(const LUUID ActorHandle)
 	{
 		glm::mat4 Transform(1.0f);
-		std::shared_ptr<CActor> Actor = FindActor(ActorHandle);
+		std::shared_ptr<CActor> Actor = GetActor(ActorHandle);
 		if (!Actor) {
 			return Transform;
 		}
