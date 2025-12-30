@@ -12,7 +12,7 @@ namespace platformer2d {
 	{
 	public:
 		CEditor();
-		virtual ~CEditor() = default;
+		~CEditor();
 
 		virtual void Initialize() override;
 		virtual void Destroy() override;
@@ -69,6 +69,7 @@ namespace platformer2d {
 
 		void OpenScene();
 		void CloseScene();
+		void SaveScene();
 
 		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
 
@@ -86,6 +87,17 @@ namespace platformer2d {
 		std::array<glm::vec2, 2> EditorViewportBounds{};
 		bool bEditorViewportHovered = false;
 		bool bEditorViewportFocused = true;
+
+		Core::FDelegateHandle OnWindowResizedHandle;
+		Core::FDelegateHandle OnKeyPressedHandle;
+		Core::FDelegateHandle OnMouseButtonPressedHandle;
+		Core::FDelegateHandle OnSensorBeginEventHandle;
+		Core::FDelegateHandle OnSensorEndEventHandle;
+		Core::FDelegateHandle OnContactBeginEventHandle;
+		Core::FDelegateHandle OnContactEndEventHandle;
+		Core::FDelegateHandle OnActorCreatedHandle;
+		Core::FDelegateHandle OnActorDeletedHandle;
+		Core::FDelegateHandle OnGameMenuOpenedHandle;
 	};
 
 }

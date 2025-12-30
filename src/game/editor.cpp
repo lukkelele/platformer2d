@@ -34,25 +34,18 @@ namespace platformer2d {
 		 *        GAME SPECIFICATION
 		 *************************************/
 		const FGameSpecification GameSpec = {
+			.InstanceName = "Editor",
 			.LevelName = "TestLevel",
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
 			.Player = {
 				.ActorSpec = FActorSpecification(ETexture::Player),
 				.BodySpec = {
 					.Type = EBodyType::Dynamic,
-#if USE_POLYGON_HITBOX
-					.Shape = FPolygon{
-						.Size = { 0.20f, 0.24f },
-						.Radius = 0.12f,
-						.Rotation = glm::radians(0.0f),
-					},
-#else
 					.Shape = FCapsule{
 						.P0 = { 0.0f, -0.02f },
 						.P1 = { 0.0f,  0.02f },
 						.Radius = 0.10f,
 					},
-#endif
 					.Position = { 0.0f, 0.50f },
 					.Friction = 0.620f,
 					.Density = 0.60f,
@@ -108,15 +101,20 @@ namespace platformer2d {
 		CRenderer::SetClearColor(FColor::SkyBlue);
 	}
 
+	CEditor::~CEditor()
+	{
+		LK_TRACE_TAG("Editor", "Destructor");
+	}
+
 	void CEditor::Initialize()
 	{
 		LK_DEBUG_TAG("Editor", "Initialize");
 		LK_VERIFY(Player == nullptr);
 
-		CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
-		CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
-		CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
-		CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
+		OnSensorBeginEventHandle = CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
+		OnSensorEndEventHandle = CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
+		OnContactBeginEventHandle = CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
+		OnContactEndEventHandle = CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
 
 		Deserialize(GameSpec.LevelFilepath);
 		OpenScene();
@@ -128,13 +126,13 @@ namespace platformer2d {
 		Window->Maximize();
 		UpdateViewportBounds();
 
-		CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
-		CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
+		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
+		OnMouseButtonPressedHandle = CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
 
 		LK_DEBUG_TAG("Editor", "Initialize editor resources");
 		EditorResources.Initialize();
 
-		CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
+		OnActorCreatedHandle = CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
 			if (!Scene) {
 				return;
@@ -146,7 +144,7 @@ namespace platformer2d {
 			}
 		});
 
-		CScene::OnActorDeleted.Add([&](const LUUID Handle)
+		OnActorDeletedHandle = CScene::OnActorDeleted.Add([&](const LUUID Handle)
 		{
 			if (!Scene) {
 				return;
@@ -156,7 +154,7 @@ namespace platformer2d {
 			UI::Widget::OnActorDeleted(Handle);
 		});
 
-		UI::OnGameMenuOpened.Add([&](const bool Opened)
+		OnGameMenuOpenedHandle = UI::OnGameMenuOpened.Add([&](const bool Opened)
 		{
 			if (!Scene) {
 				LK_TRACE_TAG("Editor", "Game menu toggled, no scene active");
@@ -197,6 +195,19 @@ namespace platformer2d {
 	{
 		LK_TRACE_TAG("Editor", "Destroy");
 		Serialize(GameSpec.LevelFilepath);
+		CloseScene();
+
+		/* Release bound delegates. */
+		CWindow::OnResized.Remove(OnWindowResizedHandle);
+		CKeyboard::OnKeyPressed.Remove(OnKeyPressedHandle);
+		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
+		CPhysicsWorld::OnSensorBeginEvent.Remove(OnSensorBeginEventHandle);
+		CPhysicsWorld::OnSensorEndEvent.Remove(OnSensorEndEventHandle);
+		CPhysicsWorld::OnContactBeginEvent.Remove(OnContactBeginEventHandle);
+		CPhysicsWorld::OnContactEndEvent.Remove(OnContactEndEventHandle);
+		CScene::OnActorCreated.Remove(OnActorCreatedHandle);
+		CScene::OnActorDeleted.Remove(OnActorDeletedHandle);
+		UI::OnGameMenuOpened.Remove(OnGameMenuOpenedHandle);
 
 		LK_DEBUG_TAG("Editor", "Release level resources");
 		Player.reset();
@@ -205,6 +216,8 @@ namespace platformer2d {
 		Scene = nullptr;
 
 		EditorResources.Destroy();
+
+		LK_VERIFY(!CPhysicsWorld::IsValid(), "Physics world still active");
 	}
 
 	void CEditor::OnAttach()
@@ -751,6 +764,11 @@ namespace platformer2d {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
+		/* @fixme: Temporary, remove */
+		if (ImGui::Button("Close Editor")) {
+			Core::Global.RemoveLayer(Core::ELayer::Editor);
+		}
+
 		UI::Widget::SceneManagerPanel(Scene);
 
 		ImGui::Separator();
@@ -1256,14 +1274,7 @@ namespace platformer2d {
 		}
 
 		UI::CloseGameMenu();
-
-		std::filesystem::path ScenePath = Scene->GetFilepath();
-		LK_INFO_TAG("Editor", "Save scene: {}", ScenePath);
-		LastSceneFilepath = ScenePath;
-		if (SceneToOpen.empty()) {
-			SceneToOpen = LastSceneFilepath;
-		}
-		Scene->Serialize(ScenePath);
+		SaveScene();
 
 		LK_TRACE_TAG("Editor", "Release current scene and player");
 		Scene.reset();
@@ -1279,6 +1290,22 @@ namespace platformer2d {
 
 		CWindow::Get()->SetTitle(LK_FMT("platformer2d ({})", Core::GetPlatformName()));
 		LK_DEBUG_TAG("Editor", "Scene closed");
+	}
+
+	void CEditor::SaveScene()
+	{
+		if (!Scene) {
+			LK_WARN_TAG("Editor", "Cannot save scene, none is active");
+			return;
+		}
+
+		std::filesystem::path ScenePath = Scene->GetFilepath();
+		LK_INFO_TAG("Editor", "Save scene: {}", ScenePath);
+		LastSceneFilepath = ScenePath;
+		if (SceneToOpen.empty()) {
+			SceneToOpen = LastSceneFilepath;
+		}
+		Scene->Serialize(ScenePath);
 	}
 
 	void CEditor::OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC)
