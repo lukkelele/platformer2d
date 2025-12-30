@@ -5,13 +5,18 @@
 namespace platformer2d {
 
 	CGameInstance::CGameInstance(CGameInstance* InstanceRef, const FGameSpecification& InSpec)
-		: CLayer(InSpec.LevelName)
+		: CLayer(InSpec.InstanceName)
 		, Spec(InSpec)
 	{
 		Instance = InstanceRef;
 		LK_VERIFY(Instance, "Invalid game instance reference");
 
 		UpdateViewportBounds();
+	}
+
+	CGameInstance::~CGameInstance()
+	{
+		Instance = nullptr;
 	}
 
 	glm::vec2 CGameInstance::GetMouseInViewportSpace()

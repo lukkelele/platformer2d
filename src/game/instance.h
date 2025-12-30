@@ -20,6 +20,7 @@ namespace platformer2d {
 
 	struct FGameSpecification
 	{
+		std::string InstanceName;
 		std::string LevelName;
 		std::filesystem::path LevelFilepath;
 
@@ -35,7 +36,7 @@ namespace platformer2d {
 	public:
 		CGameInstance(CGameInstance* InstanceRef, const FGameSpecification& InSpec);
 		CGameInstance() = delete;
-		virtual ~CGameInstance() = default;
+		virtual ~CGameInstance();
 
 		virtual void Initialize() = 0;
 		virtual void Destroy() = 0;
