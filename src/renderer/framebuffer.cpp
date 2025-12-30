@@ -25,6 +25,7 @@ namespace platformer2d {
 		}
 
 		Invalidate();
+		SetClearColor(ClearColor);
 	}
 
 	CFramebuffer::~CFramebuffer()
@@ -150,6 +151,9 @@ namespace platformer2d {
 
 	void CFramebuffer::Clear() const
 	{
+		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
+		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
