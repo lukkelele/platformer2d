@@ -156,7 +156,7 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
+	inline constexpr glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
 	{
 		const float R = static_cast<float>((InColor >>  0) & 0xFF) / 255.0f;
 		const float G = static_cast<float>((InColor >>  8) & 0xFF) / 255.0f;
@@ -167,7 +167,7 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline uint32_t TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
+	inline constexpr uint32_t TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
 	{
 		const uint32_t R = static_cast<uint32_t>(InColor.r * 255.0f);
 		const uint32_t G = static_cast<uint32_t>(InColor.g * 255.0f);
@@ -178,14 +178,14 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
+	inline constexpr ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
 	{
 		return ImVec4(InColor.r, InColor.g, InColor.b, InColor.a);
 	}
 
 	template<>
 	template<>
-	inline ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
+	inline constexpr ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
 	{
 		const float R = static_cast<float>((InColor >>  0) & 0xFF) / 255.0f;
 		const float G = static_cast<float>((InColor >>  8) & 0xFF) / 255.0f;
@@ -197,6 +197,8 @@ namespace platformer2d {
 	namespace RGBA32 {
 		inline constexpr uint32_t White          = IM_COL32(255, 255, 255, 255);
 		inline constexpr uint32_t Black          = IM_COL32(0, 0, 0, 255);
+		inline constexpr uint32_t DarkGray       = IM_COL32(42, 42, 42, 255);
+		inline constexpr uint32_t DarkerGray     = IM_COL32(29, 29, 29, 255);
 		inline constexpr uint32_t Gray           = IM_COL32(128, 128, 128, 255);
 		inline constexpr uint32_t LightGray      = IM_COL32(165, 165, 165, 255);
 		inline constexpr uint32_t LighterGray    = IM_COL32(190, 190, 190, 255);
