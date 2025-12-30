@@ -38,7 +38,7 @@ Actors:
       Thickness: 8.2
       Color: [1, 0, 0, 1]
     TransformComponent:
-      Position: [2.5408833, -1.283118, 0.89]
+      Position: [0.21088333, -1.303118, 0.89]
       Rotation: 0
       Scale: [0.2, 0.2, 1]
     InteractionComponent:
@@ -57,7 +57,7 @@ Actors:
         Size: [0.2, 0.2]
         Rotation: 0
         Radius: 0.5
-      Position: [2.5408833, -1.283118]
+      Position: [0.21088333, -1.303118]
       Flags: 10
       Mass: 1
       MotionLock: 0
@@ -71,9 +71,9 @@ Actors:
     Outline:
       Enabled: true
       Thickness: 0
-      Color: [0, 0, 0, 0]
+      Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-1.3699999, -0.78999996, 0]
+      Position: [-1.3699999, -0.79999995, 0]
       Rotation: 0
       Scale: [0.08, 1.03, 1]
     Body:
@@ -84,7 +84,7 @@ Actors:
         Size: [0.08, 1.03]
         Rotation: 0
         Radius: 0.5
-      Position: [-1.3699999, -0.78999996]
+      Position: [-1.3699999, -0.79999995]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -208,8 +208,8 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [5.0121603, -1.4375356, 0]
-      Rotation: -0.041180175
+      Position: [5.0121603, -1.4475356, 0]
+      Rotation: -0.1341271
       Scale: [2.24, 0.11, 1]
     Body:
       Type: 0
@@ -217,9 +217,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [2.24, 0.11]
-        Rotation: -0.041180175
+        Rotation: -0.13412711
         Radius: 0.5
-      Position: [5.0121603, -1.4375356]
+      Position: [5.0121603, -1.4475356]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -235,7 +235,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [7.209999, -1.48, 0]
+      Position: [7.209999, -1.5500001, 0]
       Rotation: 0
       Scale: [2.24, 0.11, 1]
     Body:
@@ -246,7 +246,7 @@ Actors:
         Size: [2.24, 0.11]
         Rotation: 0
         Radius: 0.5
-      Position: [7.209999, -1.48]
+      Position: [7.209999, -1.5500001]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -263,7 +263,7 @@ Actors:
       Color: [0, 0, 0, 0]
     TransformComponent:
       Position: [9.430001, -1.3100003, 0]
-      Rotation: 0.1578816
+      Rotation: 0.26585814
       Scale: [2.24, 0.11, 1]
     Body:
       Type: 0
@@ -271,7 +271,7 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [2.24, 0.11]
-        Rotation: 0.1578816
+        Rotation: 0.26585817
         Radius: 0.5
       Position: [9.430001, -1.3100003]
       Flags: 2
@@ -343,7 +343,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [-2.9, -0.7299999, 0]
+      Position: [-2.7200003, -0.96999985, 0]
       Rotation: 0
       Scale: [1.17, 0.92, 1]
     Body:
@@ -354,7 +354,7 @@ Actors:
         Size: [1.17, 0.92]
         Rotation: 0
         Radius: 0.5
-      Position: [-2.9, -0.7299999]
+      Position: [-2.7200003, -0.96999985]
       Flags: 0
       Mass: 1
       MotionLock: 0
@@ -397,7 +397,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [-2.3001232, 0.12159873, 0]
+      Position: [-2.2101233, -0.17840134, 0]
       Rotation: 0
       Scale: [1.4, 1.4, 1]
     Body:
@@ -408,7 +408,7 @@ Actors:
         Size: [1.4, 1.4]
         Rotation: 0
         Radius: 0.5
-      Position: [-2.3001232, 0.12159873]
+      Position: [-2.2101233, -0.17840134]
       Flags: 2
       Mass: 1
       MotionLock: 0
