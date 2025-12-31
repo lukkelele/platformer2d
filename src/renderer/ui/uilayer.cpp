@@ -303,15 +303,24 @@ namespace platformer2d {
 		/* Menu title. */
 		UI_GameMenu_Title(MenuSize);
 
+		/* @todo: Use a table for all the menu options */
+
 		static constexpr float OptionPercentage = 0.80f;
 		const ImVec2 ButtonSize = { MenuSize.x * OptionPercentage, 62.0f };
-		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 14.0f);
 		UI::Font::Push(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
+
+		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
+		if (ImGui::Button(LK_ICON_BOOK " Main Menu", ButtonSize)) {
+			Core::Global.RemoveAllLayers();
+		}
+
+		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
 		if (ImGui::Button(LK_ICON_COG " Settings", ButtonSize)) {
 			GameMenu.View = EGameMenuView::Settings;
 		}
+
 		ImGui::PopStyleVar(1); /* FrameRounding */
 
 		/* Place Quit and Play buttons at the bottom. */
@@ -408,6 +417,7 @@ namespace platformer2d {
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
 
+				/* Button: Levels */
 				NextButtonEntry();
 				{
 					UI::FScopedColorStack ColorStack(
@@ -422,6 +432,7 @@ namespace platformer2d {
 					ImGui::Dummy(ImVec2(0, 16));
 				}
 
+				/* Button: Editor */
 				NextButtonEntry();
 				{
 					UI::FScopedColorStack ColorStack(
@@ -431,6 +442,22 @@ namespace platformer2d {
 					UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 					if (ImGui::Button("Editor", ButtonSize)) {
 						Core::Global.AddLayer(Core::ELayer::Editor);
+					}
+
+					ImGui::Dummy(ImVec2(0, 16));
+				}
+
+				/* Button: Test Runtime Layer */
+				NextButtonEntry();
+				{
+					UI::FScopedColorStack ColorStack(
+						ImGuiCol_Button, RGBA32::Orange
+					);
+
+					UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
+					if (ImGui::Button("Test: Runtime Layer", ButtonSize)) {
+						LK_FATAL("Testing runtime layer");
+						Core::Global.AddLayer(Core::ELayer::Runtime);
 					}
 
 					ImGui::Dummy(ImVec2(0, 16));
