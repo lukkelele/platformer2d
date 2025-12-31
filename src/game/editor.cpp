@@ -97,6 +97,7 @@ namespace platformer2d {
 	CEditor::CEditor()
 		: CGameInstance(this, GameSpec)
 	{
+		LK_TRACE_TAG("Editor", "Instance created");
 		CRenderer::SetClearColor(FColor::SkyBlue);
 	}
 
@@ -110,10 +111,10 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Editor", "Initialize");
 		LK_VERIFY(Player == nullptr);
 
-		OnSensorBeginEventHandle = CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
-		OnSensorEndEventHandle = CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
-		OnContactBeginEventHandle = CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
-		OnContactEndEventHandle = CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
+		DelegateHandles.OnSensorBeginEvent = CPhysicsWorld::OnSensorBeginEvent.Add(this, &CEditor::OnSensorBeginEvent);
+		DelegateHandles.OnSensorEndEvent = CPhysicsWorld::OnSensorEndEvent.Add(this, &CEditor::OnSensorEndEvent);
+		DelegateHandles.OnContactBeginEvent = CPhysicsWorld::OnContactBeginEvent.Add(this, &CEditor::OnContactBeginEvent);
+		DelegateHandles.OnContactEndEvent = CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
 
 		Deserialize(GameSpec.LevelFilepath);
 		OpenScene();
@@ -125,13 +126,13 @@ namespace platformer2d {
 		Window->Maximize();
 		UpdateViewportBounds();
 
-		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
-		OnMouseButtonPressedHandle = CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
+		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
+		DelegateHandles.OnMouseButtonPressed = CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
 
 		LK_DEBUG_TAG("Editor", "Initialize editor resources");
 		EditorResources.Initialize();
 
-		OnActorCreatedHandle = CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
+		DelegateHandles.OnActorCreated = CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
 			if (!Scene) {
 				return;
@@ -143,7 +144,7 @@ namespace platformer2d {
 			}
 		});
 
-		OnActorDeletedHandle = CScene::OnActorDeleted.Add([&](const LUUID Handle)
+		DelegateHandles.OnActorDeleted = CScene::OnActorDeleted.Add([&](const LUUID Handle)
 		{
 			if (!Scene) {
 				return;
@@ -153,7 +154,7 @@ namespace platformer2d {
 			UI::Widget::OnActorDeleted(Handle);
 		});
 
-		OnGameMenuOpenedHandle = UI::OnGameMenuOpened.Add([&](const bool Opened)
+		DelegateHandles.OnGameMenuOpened = UI::OnGameMenuOpened.Add([&](const bool Opened)
 		{
 			if (!Scene) {
 				LK_TRACE_TAG("Editor", "Game menu toggled, no scene active");
@@ -192,21 +193,21 @@ namespace platformer2d {
 
 	void CEditor::Destroy()
 	{
-		LK_TRACE_TAG("Editor", "Destroy");
+		LK_DEBUG_TAG("Editor", "Destroy");
+		/* Release bound delegates. */
+		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
+		CKeyboard::OnKeyPressed.Remove(DelegateHandles.OnKeyPressed);
+		CMouse::OnButtonPressed.Remove(DelegateHandles.OnMouseButtonPressed);
+		CPhysicsWorld::OnSensorBeginEvent.Remove(DelegateHandles.OnSensorBeginEvent);
+		CPhysicsWorld::OnSensorEndEvent.Remove(DelegateHandles.OnSensorEndEvent);
+		CPhysicsWorld::OnContactBeginEvent.Remove(DelegateHandles.OnContactBeginEvent);
+		CPhysicsWorld::OnContactEndEvent.Remove(DelegateHandles.OnContactEndEvent);
+		CScene::OnActorCreated.Remove(DelegateHandles.OnActorCreated);
+		CScene::OnActorDeleted.Remove(DelegateHandles.OnActorDeleted);
+		UI::OnGameMenuOpened.Remove(DelegateHandles.OnGameMenuOpened);
+
 		Serialize(GameSpec.LevelFilepath);
 		CloseScene();
-
-		/* Release bound delegates. */
-		CWindow::OnResized.Remove(OnWindowResizedHandle);
-		CKeyboard::OnKeyPressed.Remove(OnKeyPressedHandle);
-		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
-		CPhysicsWorld::OnSensorBeginEvent.Remove(OnSensorBeginEventHandle);
-		CPhysicsWorld::OnSensorEndEvent.Remove(OnSensorEndEventHandle);
-		CPhysicsWorld::OnContactBeginEvent.Remove(OnContactBeginEventHandle);
-		CPhysicsWorld::OnContactEndEvent.Remove(OnContactEndEventHandle);
-		CScene::OnActorCreated.Remove(OnActorCreatedHandle);
-		CScene::OnActorDeleted.Remove(OnActorDeletedHandle);
-		UI::OnGameMenuOpened.Remove(OnGameMenuOpenedHandle);
 
 		LK_DEBUG_TAG("Editor", "Release level resources");
 		Player.reset();
@@ -215,7 +216,6 @@ namespace platformer2d {
 		Scene = nullptr;
 
 		EditorResources.Destroy();
-
 		LK_VERIFY(!CPhysicsWorld::IsValid(), "Physics world still active");
 	}
 
@@ -317,7 +317,7 @@ namespace platformer2d {
 		UI_LeftSidebar();
 
 		UI_PrepareEditorViewport();
-		const bool EditorViewportOpen = UI::Begin(UI::PanelID::EditorViewport, nullptr, UI::EditorViewportFlags);
+		const bool EditorViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
 		ImGui::PopStyleVar(2);
 		if (EditorViewportOpen) {
 			UpdateEditorViewportState();
@@ -336,10 +336,10 @@ namespace platformer2d {
 				UI_DrawGizmo();
 			}
 
-			UI::End(); /* ~EditorViewport */
+			UI::End(); /* ~Viewport */
 		}
 
-		UI::End(); /* ~Viewport */
+		UI::End(); /* ~CoreViewport */
 	}
 
 	CCamera* CEditor::GetActiveCamera() const
@@ -404,12 +404,10 @@ namespace platformer2d {
 			const glm::vec2 BoxMax = Pos + HalfSize;
 
 			float T = 0.0f;
-			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T))
-			{
+			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T)) {
 				HitResults.push_back(FHitResult{ Actor->GetHandle(), Actor, T });
 
-				if (Config.Debug.bDrawRayHits)
-				{
+				if (Config.Debug.bDrawRayHits) {
 					CDebugRenderer::DrawRayHit(RayData, T);
 				}
 			}
@@ -993,7 +991,7 @@ namespace platformer2d {
 			return;
 		}
 
-		if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport)) {
+		if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::Viewport)) {
 			ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
 
 			CCamera& Camera = Player->GetCamera();
@@ -1007,7 +1005,7 @@ namespace platformer2d {
 
 	void CEditor::UI_PrepareEditorViewport()
 	{
-		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::EditorViewport);
+		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::Viewport);
 		if (!Window) {
 			return;
 		}
@@ -1185,12 +1183,9 @@ namespace platformer2d {
 						MousePickScene();
 					}
 				} 
-
 				break;
-
 			case EMouseButtonState::Released:
 				break;
-
 			case EMouseButtonState::Held:
 				break;
 		}
@@ -1261,7 +1256,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(LK_FMT("platformer2d - {} ({})", Scene->GetName(), Core::GetPlatformName()));
+		CWindow::Get()->SetTitle(LK_FMT("platformer2d - Editor - {} ({})", Scene->GetName(), Core::GetPlatformName()));
 		SceneToOpen.clear();
 	}
 
@@ -1310,24 +1305,33 @@ namespace platformer2d {
 	void CEditor::OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC)
 	{
 		const auto& Data = std::get<FPickupInteraction>(IC.GetData());
-		if (Data.Kind == EPickupKind::Item) {
-			const auto& Object = std::get<FPickupItem>(Data.Object);
-			LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
-		} else if (Data.Kind == EPickupKind::Weapon) {
-			const auto& Object = std::get<FPickupWeapon>(Data.Object);
-			if (Object.Type == EWeaponType::Rifle) {
-				const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
-				LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Data.bExpireWhenPickedUp);
-				CInventory& Inventory = InPlayer.GetInventory();
-				if (Inventory.IsEmpty()) {
-					std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &InPlayer);
-					Inventory.AddItem(Rifle);
-				} else {
-					LK_WARN_TAG("Editor", "Inventory not empty");
-				}
-			} else {
-				LK_FATAL("Weapon={} ExpireOnPickup={}", Enum::ToString(Object.Type), Data.bExpireWhenPickedUp);
-			}
+		switch (Data.Kind) {
+			case EPickupKind::Item:
+				OnPickupEvent_Item(Data, InPlayer);
+				break;
+			case EPickupKind::Weapon:
+				OnPickupEvent_Rifle(Data, InPlayer);
+				break;
+		}
+	}
+
+	void CEditor::OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer)
+	{
+		const auto& Object = std::get<FPickupItem>(Interaction.Object);
+		LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Interaction.bExpireWhenPickedUp);
+	}
+
+	void CEditor::OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer)
+	{
+		const auto& Object = std::get<FPickupWeapon>(Interaction.Object);
+		const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
+		LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Interaction.bExpireWhenPickedUp);
+		CInventory& Inventory = InPlayer.GetInventory();
+		if (Inventory.IsEmpty()) {
+			std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &InPlayer);
+			Inventory.AddItem(Rifle);
+		} else {
+			LK_WARN_TAG("Editor", "Inventory not empty");
 		}
 	}
 

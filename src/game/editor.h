@@ -72,13 +72,15 @@ namespace platformer2d {
 		void SaveScene();
 
 		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
+		void OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer);
+		void OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer);
 
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
 
 		std::filesystem::path LastSceneFilepath{};
-		std::filesystem::path SceneToOpen{}; /* Filepath. */
+		std::filesystem::path SceneToOpen{};
 		bool bOpenSceneNextTick = false;
 		bool bCloseSceneNextTick = false;
 
@@ -87,17 +89,6 @@ namespace platformer2d {
 		std::array<glm::vec2, 2> EditorViewportBounds{};
 		bool bEditorViewportHovered = false;
 		bool bEditorViewportFocused = true;
-
-		Core::FDelegateHandle OnWindowResizedHandle;
-		Core::FDelegateHandle OnKeyPressedHandle;
-		Core::FDelegateHandle OnMouseButtonPressedHandle;
-		Core::FDelegateHandle OnSensorBeginEventHandle;
-		Core::FDelegateHandle OnSensorEndEventHandle;
-		Core::FDelegateHandle OnContactBeginEventHandle;
-		Core::FDelegateHandle OnContactEndEventHandle;
-		Core::FDelegateHandle OnActorCreatedHandle;
-		Core::FDelegateHandle OnActorDeletedHandle;
-		Core::FDelegateHandle OnGameMenuOpenedHandle;
 	};
 
 }
