@@ -27,6 +27,7 @@
 namespace platformer2d {
 
 	class CApplication;
+	class CLayerStack;
 
 	using LRendererID = uint32_t;
 
@@ -48,13 +49,26 @@ namespace platformer2d {
 
 			void AddLayer(const ELayer Layer) { LayerAddQueue.push(Layer); }
 			void RemoveLayer(const ELayer Layer) { LayerRemoveQueue.push(Layer); }
+			void RemoveAllLayers()
+			{
+				for (std::size_t EnumValue = 0; EnumValue < std::to_underlying(ELayer::COUNT); EnumValue++) {
+					LayerRemoveQueue.push(static_cast<ELayer>(EnumValue));
+				}
+			}
+
+			/**
+			 * @brief Get the number of layers in the layerstack.
+			 */
+			int GetLayerStackSize() const { return LayerStackSize; }
 
 		private:
 			/* Layers to add/remove to the application layerstack. */
 			std::queue<ELayer> LayerAddQueue;
 			std::queue<ELayer> LayerRemoveQueue;
+			int LayerStackSize = 0; /* Managed by CLayerStack. */
 
 			friend class CApplication;
+			friend class CLayerStack;
 		};
 
 		extern FGlobal Global;
