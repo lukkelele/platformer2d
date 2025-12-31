@@ -37,6 +37,7 @@ namespace platformer2d {
 
 		enum class ELayer
 		{
+			Runtime,
 			Editor,
 			COUNT
 		};
@@ -99,6 +100,7 @@ namespace platformer2d {
 			const char* S = "";
 		#define _(EnumValue) case Core::ELayer::EnumValue: S = #EnumValue; break
 			switch (Layer) {
+				_(Runtime);
 				_(Editor);
 				_(COUNT);
 				default:
