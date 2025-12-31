@@ -13,6 +13,8 @@ project_library_sources(
 	itemtype.h
 	gameplaysystem.h
 	gameplaysystem.cpp
+	runtimelayer.h
+	runtimelayer.cpp
 	rifle.h
 	rifle.cpp
 	player.h
