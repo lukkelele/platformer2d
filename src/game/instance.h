@@ -90,6 +90,20 @@ namespace platformer2d {
 		uint16_t ViewportWidth = 0;
 		uint16_t ViewportHeight = 0;
 		std::array<glm::vec2, 2> ViewportBounds;
+
+		struct
+		{
+			Core::FDelegateHandle OnWindowResized;
+			Core::FDelegateHandle OnKeyPressed;
+			Core::FDelegateHandle OnMouseButtonPressed;
+			Core::FDelegateHandle OnSensorBeginEvent;
+			Core::FDelegateHandle OnSensorEndEvent;
+			Core::FDelegateHandle OnContactBeginEvent;
+			Core::FDelegateHandle OnContactEndEvent;
+			Core::FDelegateHandle OnActorCreated;
+			Core::FDelegateHandle OnActorDeleted;
+			Core::FDelegateHandle OnGameMenuOpened;
+		} DelegateHandles;
 	private:
 		FGameSpecification Spec{};
 
