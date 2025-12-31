@@ -1,6 +1,4 @@
 #include "layerstack.h"
-#include "layerstack.h"
-#include "layerstack.h"
 
 namespace platformer2d {
 
@@ -20,6 +18,7 @@ namespace platformer2d {
 			LK_TRACE_TAG("LayerStack", R"(Popping overlay "{}", {} overlays left)", (*Iter)->GetLayerName(), Layers.size() - 1);
 			(*Iter)->OnDetach();
 			Iter = Layers.erase(Iter);
+			Core::Global.LayerStackSize--;
 		}
 
 		/* Pop the rest of the layers. */
@@ -28,6 +27,7 @@ namespace platformer2d {
 			(*Iter)->OnDetach();
 			Iter = Layers.erase(Iter);
 			InsertIndex--;
+			Core::Global.LayerStackSize--;
 		}
 	}
 
@@ -37,6 +37,7 @@ namespace platformer2d {
 		if (auto Iter = Layers.emplace((Layers.begin() + InsertIndex), Layer); Iter != Layers.end()) {
 			InsertIndex++;
 			(*Iter)->OnAttach();
+			Core::Global.LayerStackSize++;
 			return true;
 		}
 
@@ -49,6 +50,7 @@ namespace platformer2d {
 		LK_ASSERT(Overlay);
 		if (Layers.emplace_back(Overlay)) {
 			Overlay->OnAttach();
+			Core::Global.LayerStackSize++;
 			return true;
 		}
 
@@ -64,6 +66,7 @@ namespace platformer2d {
 			Layer->OnDetach();
 			Layers.erase(Iter);
 			InsertIndex--;
+			Core::Global.LayerStackSize--;
 			return true;
 		}
 
@@ -77,6 +80,7 @@ namespace platformer2d {
 		if (Iter != Layers.end()) {
 			Overlay->OnDetach();
 			Layers.erase(Iter);
+			Core::Global.LayerStackSize--;
 			return true;
 		}
 
