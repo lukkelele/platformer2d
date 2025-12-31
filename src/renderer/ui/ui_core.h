@@ -16,7 +16,7 @@ namespace platformer2d::UI {
 
 	namespace PanelID {
 		inline constexpr const char* const CoreViewport = "##CoreViewport";
-		inline constexpr const char* const EditorViewport = "##EditorViewport";
+		inline constexpr const char* const Viewport = "##Viewport";
 		inline constexpr const char* const Dockspace = "##Dockspace";
 		inline constexpr const char* const HostWindow = "##HostWindow";
 		inline constexpr const char* const Topbar = "##Topbar";
@@ -44,27 +44,7 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoMove
 		| ImGuiWindowFlags_NoScrollbar
 		| ImGuiWindowFlags_NoScrollWithMouse
-		| ImGuiWindowFlags_NoResize
-		| ImGuiWindowFlags_NoBackground
-		| ImGuiWindowFlags_NoBringToFrontOnFocus
-		| ImGuiWindowFlags_NoDocking;
-
-	inline constexpr ImGuiWindowFlags EditorViewportFlags = ImGuiWindowFlags_NoTitleBar
-		| ImGuiWindowFlags_NoCollapse
-		| ImGuiWindowFlags_NoMove
-		| ImGuiWindowFlags_NoScrollbar
-		| ImGuiWindowFlags_NoScrollWithMouse
 		| ImGuiWindowFlags_NoResize;
-
-	inline ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
-		| ImGuiWindowFlags_NoCollapse
-		| ImGuiWindowFlags_NoResize
-		| ImGuiWindowFlags_NoMove
-		| ImGuiWindowFlags_NoNavFocus
-		| ImGuiWindowFlags_NoInputs
-		| ImGuiWindowFlags_NoBringToFrontOnFocus
-		| ImGuiWindowFlags_NoBackground
-		| ImGuiWindowFlags_NoSavedSettings;
 
 	inline constexpr ImGuiWindowFlags SidebarFlags = ImGuiWindowFlags_NoTitleBar
 		| ImGuiWindowFlags_NoCollapse

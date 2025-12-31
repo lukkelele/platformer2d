@@ -17,6 +17,17 @@ namespace platformer2d::UI {
 		std::array<char, 1024 + 1> LabelIDBuffer;
 
 		bool bDockspaceInitialized = false;
+
+		/* The host window flags are entirely internal. */
+		ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
+			| ImGuiWindowFlags_NoCollapse
+			| ImGuiWindowFlags_NoResize
+			| ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_NoNavFocus
+			| ImGuiWindowFlags_NoInputs
+			| ImGuiWindowFlags_NoBringToFrontOnFocus
+			| ImGuiWindowFlags_NoBackground
+			| ImGuiWindowFlags_NoSavedSettings;
 	}
 
 	void PushID()
@@ -84,7 +95,7 @@ namespace platformer2d::UI {
 		 * is needed to make the sizes the same.
 		 */
 		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr) {
-			LK_INFO("Creating dockspace layout");
+			LK_INFO_TAG("UI", "Creating dockspace layout");
 
 			/* Remove existing layout. */
 			LK_DEBUG("Removing existing docking layout (ID: {})", DockspaceID);
@@ -127,7 +138,7 @@ namespace platformer2d::UI {
 
 			ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopBarFraction, nullptr, &DockID_Main);
 
-			ImGui::DockBuilderDockWindow(PanelID::EditorViewport, DockID_Main);
+			ImGui::DockBuilderDockWindow(PanelID::Viewport, DockID_Main);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
