@@ -46,6 +46,8 @@ namespace platformer2d {
 		virtual CCamera* GetActiveCamera() const = 0;
 		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const = 0;
 		virtual std::shared_ptr<CScene> GetScene() const = 0;
+		virtual void OpenScene(const std::filesystem::path& ScenePath) = 0;
+		virtual void CloseScene() = 0;
 		bool HasScene() const { return GetScene() != nullptr; }
 
 		virtual void PauseGame() = 0;
