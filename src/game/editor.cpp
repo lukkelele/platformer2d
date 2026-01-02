@@ -853,8 +853,10 @@ namespace platformer2d {
 
 		ImGui::Spacing();
 
-		if (ImGui::Button("Close scene")) {
-			bCloseSceneNextTick = true;
+		if (ImGui::Button("Close Scene")) {
+			if (Scene) {
+				bCloseSceneNextTick = true;
+			}
 		}
 		ImGui::SameLine(0, 10.0f);
 
@@ -862,7 +864,7 @@ namespace platformer2d {
 		if (HasSceneRef) {
 			ImGui::BeginDisabled();
 		}
-		if (ImGui::Button("Open scene")) {
+		if (ImGui::Button("Open Scene")) {
 			bOpenSceneNextTick = true;
 		}
 		if (HasSceneRef) {
