@@ -76,6 +76,7 @@ namespace platformer2d {
 		bool bSceneStateChanged = false;
 		glm::vec2 PLAYER_SPAWN = { 0.0f, 0.0f };
 		glm::vec2 GRAVITY = { 0.0f, -5.0f };
+		glm::vec2 GRAVITY_CACHED = GRAVITY; /* Updated during scene termination. */
 		float SCENE_LOAD_CAMERA_ZOOM = 0.30f;
 
 		/* @todo Remove from here. Just temporary */
@@ -117,7 +118,7 @@ namespace platformer2d {
 		DelegateHandles.OnContactEndEvent = CPhysicsWorld::OnContactEndEvent.Add(this, &CEditor::OnContactEndEvent);
 
 		Deserialize(GameSpec.LevelFilepath);
-		OpenScene();
+		OpenScene(SceneToOpen);
 		LastSceneFilepath = Scene->GetFilepath();
 		LK_TRACE_TAG("Editor", "Last scene filepath: {}", LastSceneFilepath);
 
@@ -243,7 +244,7 @@ namespace platformer2d {
 
 		if (!Scene) {
 			if (bOpenSceneNextTick) {
-				OpenScene();
+				OpenScene(SceneToOpen);
 				bOpenSceneNextTick = false;
 			}
 			return;
@@ -316,7 +317,7 @@ namespace platformer2d {
 
 		UI_LeftSidebar();
 
-		UI_PrepareEditorViewport();
+		UI::PrepareViewport();
 		const bool EditorViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
 		ImGui::PopStyleVar(2);
 		if (EditorViewportOpen) {
@@ -324,7 +325,7 @@ namespace platformer2d {
 			if (Scene) {
 				UI_ViewportTexture();
 			} else {
-				UI_LevelLauncher();
+				UI::LevelLauncher();
 			}
 
 			UI_Level();
@@ -594,7 +595,7 @@ namespace platformer2d {
 		/* Physics */
 		Out << YAML::Key << "Physics";
 		Out << YAML::BeginMap;
-		Out << YAML::Key << "Gravity" << YAML::Value << CPhysicsWorld::GetGravity();
+		Out << YAML::Key << "Gravity" << YAML::Value << (Scene ? CPhysicsWorld::GetGravity() : GRAVITY_CACHED);
 		Out << YAML::EndMap;
 		/* ~ Physics */
 
@@ -1003,33 +1004,6 @@ namespace platformer2d {
 		}
 	}
 
-	void CEditor::UI_PrepareEditorViewport()
-	{
-		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::Viewport);
-		if (!Window) {
-			return;
-		}
-
-		ImGuiDockNode* DockNode = Window->DockNode;
-		if (!DockNode) {
-			return;
-		}
-
-		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
-			return;
-		}
-
-		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
-		ImGuiStyle& Style = ImGui::GetStyle();
-
-		/* Modify the size on the y-axis to account for the docking separators. */
-		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
-
-		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
-		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
-	}
-
 	void CEditor::UI_Topbar()
 	{
 		static constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
@@ -1171,6 +1145,11 @@ namespace platformer2d {
 					}
 				}
 				break;
+			case EKey::Escape:
+				if (Data.State == EKeyState::Pressed) {
+					UI::ToggleGameMenu();
+				}
+				break;
 		}
 	}
 
@@ -1228,9 +1207,9 @@ namespace platformer2d {
 #endif
 	}
 
-	void CEditor::OpenScene()
+	void CEditor::OpenScene(const std::filesystem::path& ScenePath)
 	{
-		if (SceneToOpen.empty()) {
+		if (ScenePath.empty()) {
 			LK_ERROR_TAG("Editor", "No scene to open");
 			return;
 		}
@@ -1242,7 +1221,7 @@ namespace platformer2d {
 		CPhysicsWorld::Initialize(GRAVITY);
 
 		Scene = std::make_shared<CScene>("Editor");
-		Scene->Deserialize(SceneToOpen);
+		Scene->Deserialize(ScenePath);
 		Scene->SetState(ESceneState::Play);
 		CreatePlayer();
 		LK_VERIFY(Player);
@@ -1276,6 +1255,7 @@ namespace platformer2d {
 		Player.reset();
 		Player = nullptr;
 
+		GRAVITY_CACHED = CPhysicsWorld::GetGravity();
 		CPhysicsWorld::Destroy();
 
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();

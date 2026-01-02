@@ -26,6 +26,8 @@ namespace platformer2d {
 		virtual CCamera* GetActiveCamera() const override;
 		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
 		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
+		virtual void OpenScene(const std::filesystem::path& ScenePath) override;
+		virtual void CloseScene() override;
 
 		virtual void PauseGame() override;
 		virtual void ResumeGame() override;
@@ -55,7 +57,6 @@ namespace platformer2d {
 		void UI_Player();
 		void UI_ViewportTexture();
 		void UI_DrawGizmo();
-		void UI_PrepareEditorViewport();
 		void UI_Topbar();
 		void UI_LeftSidebar();
 		void UI_LevelLauncher();
@@ -66,9 +67,6 @@ namespace platformer2d {
 
 		void MousePickScene();
 		void RaycastScene();
-
-		void OpenScene();
-		void CloseScene();
 		void SaveScene();
 
 		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
