@@ -250,7 +250,7 @@ namespace platformer2d {
 			if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined()) {
 				EC.emplace();
 				Serialization::Deserialize(*EC, EffectCompNode);
-				LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
+				LK_ASSERT(!(*EC).Effects.empty(), "At least one effect is required");
 			}
 
 			std::optional<FInteractionComponent> IC;
