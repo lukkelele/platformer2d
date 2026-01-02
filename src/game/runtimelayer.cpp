@@ -493,7 +493,13 @@ namespace platformer2d {
 
 	void CRuntimeLayer::OnKeyPressed(const FKeyData& Data)
 	{
-		LK_UNUSED(Data);
+		switch (Data.Key) {
+			case EKey::Escape:
+				if (Data.State == EKeyState::Pressed) {
+					UI::ToggleGameMenu();
+				}
+				break;
+		}
 	}
 
 	void CRuntimeLayer::OnMouseButtonPressed(const FMouseButtonData& Data)
