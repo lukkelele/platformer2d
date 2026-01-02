@@ -168,16 +168,17 @@ namespace platformer2d {
 		/* Queue: Layer removal */
 		while (!Core::Global.LayerRemoveQueue.empty()) {
 			const Core::ELayer LayerType = Core::Global.LayerRemoveQueue.front();
-			LK_INFO_TAG("Application", "Removing layer: {}", Enum::ToString(LayerType));
 			switch (LayerType) {
 				case Core::ELayer::Runtime:
 					if (std::shared_ptr<CLayer> Layer = LayerStack.GetLayer("Runtime")) {
+						LK_INFO_TAG("Application", "Removing layer: {}", Enum::ToString(LayerType));
 						LayerStack.PopLayer(Layer);
 						CRenderer::SetClearColor(FColor::Convert(RGBA32::DarkerGray));
 					}
 					break;
 				case Core::ELayer::Editor:
 					if (std::shared_ptr<CLayer> Layer = LayerStack.GetLayer("Editor")) {
+						LK_INFO_TAG("Application", "Removing layer: {}", Enum::ToString(LayerType));
 						LayerStack.PopLayer(Layer);
 						CRenderer::SetClearColor(FColor::Convert(RGBA32::DarkerGray));
 					}
