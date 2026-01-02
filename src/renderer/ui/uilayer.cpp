@@ -13,12 +13,26 @@ namespace platformer2d {
 	static void UI_GameMenu_Default();
 	static void UI_GameMenu_Settings();
 
+	struct FNextLevel
+	{
+		bool bSelected = false;
+		std::filesystem::path Path{};
+
+		void Clear()
+		{
+			bSelected = false;
+			Path.clear();
+		}
+	};
+
 	namespace {
 		FGameMenu GameMenu{};
 		constexpr float LABEL_COLUMN_WIDTH = 190.0f;
 		constexpr float LABEL_INDENT_WIDTH = 24.0f;
 		constexpr float COLUMN_ITEM_WIDTH = 410.0f;
+
 		CUILayer::EMenu NextMenu = CUILayer::EMenu::None;
+		FNextLevel NextLevel{};
 	}
 
 	CUILayer::CUILayer(std::string_view InName)
@@ -48,8 +62,20 @@ namespace platformer2d {
 
 	void CUILayer::Tick(const float DeltaTime)
 	{
+		CGameInstance* GameInstance = CGameInstance::Get();
+		if (NextLevel.bSelected) {
+			LK_ASSERT(GameInstance);
+			if (GameInstance) {
+				LK_DEBUG_TAG("UILayer", "Level selected: {}", NextLevel.Path);
+				GameInstance->OpenScene(NextLevel.Path);
+				NextLevel.Clear();
+			} else {
+				LK_ERROR_TAG("UILayer", "No game instance, cannot enter level");
+			}
+		}
+
 		/* Draw dark overlay whenever the pause menu is open. */
-		if (CGameInstance* GameInstance = CGameInstance::Get()) {
+		if (GameInstance) {
 			CWindow* Window = CWindow::Get();
 			if (Window && GameInstance->HasScene() && UI::IsGameMenuOpen()) {
 				const glm::vec2 WindowSize = Window->GetSize();
@@ -340,6 +366,7 @@ namespace platformer2d {
 		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
 		if (ImGui::Button(LK_ICON_BOOK " Main Menu", ButtonSize)) {
 			Core::Global.RemoveAllLayers();
+			NextMenu = CUILayer::EMenu::MainMenu;
 		}
 
 		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
@@ -520,20 +547,25 @@ namespace platformer2d {
 			UI::BeginViewport();
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(12, 12));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(12, 18));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 16);
 		UI::Font::Push(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
 
-		static constexpr ImVec2 ButtonSize(292.0f, 74.0f);
+		static constexpr ImVec2 ButtonSize(392.0f, 84.0f);
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		UI::ShiftCursorY(Avail.y * 0.25f);
+		UI::ShiftCursorY(Avail.y * 0.06f);
 		UI::BannerTextCentralized("Levels", EFont::SourceSansPro, EFontModifier::Bold);
-		UI::ShiftCursorY(Avail.y * 0.05f);
+		UI::ShiftCursorY(Avail.y * 0.15f);
 
 		auto NextButtonEntry = []() -> void
 		{
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
+		};
+
+		auto EntrySpacing = []() -> void
+		{
+			ImGui::Dummy(ImVec2(0, 46));
 		};
 
 		if (ImGui::BeginTable("##LevelLauncher", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
@@ -545,38 +577,44 @@ namespace platformer2d {
 			NextButtonEntry();
 			{
 				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::NiceGreen
+					ImGuiCol_Button, RGBA32::SmoothGreen
 				);
 
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
-				if (ImGui::Button("Lukkelele's World", ButtonSize)) {
+				if (ImGui::Button(LK_ICON_CODEPEN "  Lukkelele's World", ButtonSize)) {
+					static const std::filesystem::path ScenePath(SCENES_DIR "/LukkelelesWorld.lscene");
 					if (GameInstance) {
-						GameInstance->OpenScene(std::filesystem::path(SCENES_DIR "/LukkelelesWorld.lscene"));
+						GameInstance->OpenScene(ScenePath);
 					} else {
-						LK_WARN_TAG("UI", "No game instance");
+						Core::Global.AddLayer(Core::ELayer::Runtime);
+						NextLevel.bSelected = true;
+						NextLevel.Path = ScenePath;
 					}
 				}
 
-				ImGui::Dummy(ImVec2(0, 16));
+				EntrySpacing();
 			}
 
 			/* Button: TestLevel */
 			NextButtonEntry();
 			{
 				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::SmoothGreen
+					ImGuiCol_Button, RGBA32::DarkGray
 				);
 
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
-				if (ImGui::Button("Test Level", ButtonSize)) {
+				if (ImGui::Button(LK_ICON_PENCIL "  Test Level", ButtonSize)) {
+					static const std::filesystem::path ScenePath(SCENES_DIR "/TestLevel.lscene");
 					if (GameInstance) {
-						GameInstance->OpenScene(std::filesystem::path(SCENES_DIR "/TestLevel.lscene"));
+						GameInstance->OpenScene(ScenePath);
 					} else {
-						LK_WARN_TAG("UI", "No game instance");
+						Core::Global.AddLayer(Core::ELayer::Editor);
+						NextLevel.bSelected = true;
+						NextLevel.Path = ScenePath;
 					}
 				}
 
-				ImGui::Dummy(ImVec2(0, 16));
+				EntrySpacing();
 			}
 
 			ImGui::PopStyleVar(1); /* FrameRounding */
@@ -587,7 +625,7 @@ namespace platformer2d {
 		/* Button: Main Menu */
 		{
 			if (UI::MainMenuButton(ButtonSize)) {
-				LK_DEBUG_TAG("UI", "Enter main menu");
+				LK_TRACE_TAG("UI", "Enter main menu");
 				NextMenu = CUILayer::EMenu::MainMenu;
 			}
 		}
@@ -604,8 +642,7 @@ namespace platformer2d {
 	{
 		bool Ret = false;
 		UI::FScopedColorStack ColorStack(
-			ImGuiCol_Button, RGBA32::Gray,
-			ImGuiCol_ButtonHovered, RGBA32::DarkGray
+			ImGuiCol_Button, RGBA32::DarkGray
 		);
 
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
