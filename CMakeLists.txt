@@ -11,7 +11,7 @@ include(cmake/extensions.cmake)
 
 option(LK_BUILD_TESTS "Build tests" OFF)
 option(LK_ENABLE_ASSERT "Enable assert" OFF)
-if (NOT DEFINED LK_ENABLE_ASSERT AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(LK_ENABLE_ASSERT ON)
 endif()
 if (LK_ENABLE_ASSERT)
