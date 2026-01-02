@@ -61,7 +61,7 @@ namespace platformer2d {
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
 
-		UI::BeginViewport(CWindow::Get());
+		UI::BeginCoreViewport(CWindow::Get());
 	}
 
 	void CImGuiLayer::EndFrame()

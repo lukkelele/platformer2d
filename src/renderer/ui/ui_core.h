@@ -53,7 +53,8 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoMove;
 
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
-		| ImGuiDockNodeFlags_NoDockingInCentralNode;
+		| ImGuiDockNodeFlags_NoDockingOverCentralNode
+		| ImGuiDockNodeFlags_AutoHideTabBar;
 
 	struct FViewportData
 	{
@@ -71,7 +72,11 @@ namespace platformer2d::UI {
 	bool Begin(const char* WindowTitle, bool* Open = nullptr, ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None);
 	void End();
 
-	void BeginViewport(CWindow* Window);
+	void BeginCoreViewport(CWindow* Window);
+	bool BeginViewport();
+	void EndViewport();
+
+	void PrepareViewport();
 	ImGuiDockNode* FindCentralNode(ImGuiID DockspaceID);
 
 	inline void ShiftCursorX(const float Distance)

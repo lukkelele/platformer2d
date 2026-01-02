@@ -70,10 +70,10 @@ namespace platformer2d::UI {
         UI::PopID();
     }
 
-	void BeginViewport(CWindow* Window)
+	void BeginCoreViewport(CWindow* Window)
 	{
 		if (UI::DockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode) {
-		    UI::CoreViewportFlags |= ImGuiWindowFlags_NoBackground;
+			UI::CoreViewportFlags |= ImGuiWindowFlags_NoBackground;
 			UI::HostWindowFlags |= ImGuiWindowFlags_NoBackground;
 		}
 
@@ -187,6 +187,58 @@ namespace platformer2d::UI {
 		ImGui::SetNextWindowSize(Viewport->Size);
 		ImGui::SetNextWindowViewport(Viewport->ID);
 		ImGui::Begin(PanelID::CoreViewport, nullptr, UI::CoreViewportFlags);
+	}
+
+	bool BeginViewport()
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags)) {
+			ImGui::PopStyleVar(2);
+			return false;
+		}
+
+		UI::PrepareViewport();
+		const bool ViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
+		ImGui::PopStyleVar(2);
+		if (!ViewportOpen) {
+			UI::End(); /* ~Viewport */
+		}
+
+		return ViewportOpen;
+	}
+
+	void EndViewport()
+	{
+		UI::End(); /* ~Viewport */
+		UI::End(); /* ~CoreViewport */
+	}
+
+	void PrepareViewport()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::Viewport);
+		if (!Window) {
+			return;
+		}
+
+		ImGuiDockNode* DockNode = Window->DockNode;
+		if (!DockNode) {
+			return;
+		}
+
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
+			return;
+		}
+
+		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
+		ImGuiStyle& Style = ImGui::GetStyle();
+
+		/* Modify the size on the y-axis to account for the docking separators. */
+		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
+
+		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
+		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
 	}
 
 	ImGuiDockNode* FindCentralNode(const ImGuiID DockspaceID)

@@ -117,11 +117,12 @@ namespace platformer2d::UI {
 	extern FPhysicsBodyData PhysicsBodyData;
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec);
 
-	void StartMenu();
+	void LevelLauncher();
 	void OpenGameMenu();
 	void CloseGameMenu();
 	void ToggleGameMenu();
 	bool IsGameMenuOpen();
+	bool MainMenuButton(const ImVec2& Size);
 
 	bool ColorDropdown(EColor& Selected);
 
