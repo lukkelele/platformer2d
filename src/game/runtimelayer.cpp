@@ -73,7 +73,7 @@ namespace platformer2d {
 		DelegateHandles.OnContactEndEvent = CPhysicsWorld::OnContactEndEvent.Add(this, &CRuntimeLayer::OnContactEndEvent);
 
 		Deserialize(GameSpec.LevelFilepath);
-		OpenScene();
+		OpenScene(SceneToOpen);
 		LastSceneFilepath = Scene->GetFilepath();
 		LK_TRACE_TAG("RuntimeLayer", "Last scene filepath: {}", LastSceneFilepath);
 
@@ -183,7 +183,7 @@ namespace platformer2d {
 
 		if (!Scene) {
 			if (bOpenSceneNextTick) {
-				OpenScene();
+				OpenScene(SceneToOpen);
 				bOpenSceneNextTick = false;
 			}
 			return;
@@ -566,9 +566,9 @@ namespace platformer2d {
 		LK_UNUSED(Hits);
 	}
 
-	void CRuntimeLayer::OpenScene()
+	void CRuntimeLayer::OpenScene(const std::filesystem::path& ScenePath)
 	{
-		if (SceneToOpen.empty()) {
+		if (ScenePath.empty()) {
 			LK_ERROR_TAG("RuntimeLayer", "No scene to open");
 			return;
 		}
@@ -580,7 +580,7 @@ namespace platformer2d {
 		CPhysicsWorld::Initialize(LevelData.Gravity);
 
 		Scene = std::make_shared<CScene>("Runtime");
-		Scene->Deserialize(SceneToOpen);
+		Scene->Deserialize(ScenePath);
 		Scene->SetState(ESceneState::Play);
 		CreatePlayer();
 		LK_VERIFY(Player);
