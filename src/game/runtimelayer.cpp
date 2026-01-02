@@ -226,26 +226,16 @@ namespace platformer2d {
 
 	void CRuntimeLayer::RenderUI()
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		const bool CoreViewportOpen = UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags);
-		if (!CoreViewportOpen) {
-			ImGui::PopStyleVar(2);
+		if (!UI::BeginViewport()) {
 			return;
 		}
 
-		const bool ViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
-		ImGui::PopStyleVar(2);
-		if (ViewportOpen) {
-			const ImVec2 WindowSize = ImGui::GetWindowSize();
-			ViewportWidth = WindowSize.x;
-			ViewportHeight = WindowSize.y;
-			UI_ViewportTexture();
+		const ImVec2 WindowSize = ImGui::GetWindowSize();
+		ViewportWidth = WindowSize.x;
+		ViewportHeight = WindowSize.y;
+		UI_ViewportTexture();
 
-			UI::End(); /* ~Viewport */
-		} 
-
-		UI::End(); /* ~CoreViewport */
+		UI::EndViewport();
 	}
 
 	CCamera* CRuntimeLayer::GetActiveCamera() const
