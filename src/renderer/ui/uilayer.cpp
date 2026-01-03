@@ -501,22 +501,6 @@ namespace platformer2d {
 				ImGui::Dummy(ImVec2(0, 16));
 			}
 
-			/* Button: Test Runtime Layer */
-			NextButtonEntry();
-			{
-				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::Orange
-				);
-
-				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
-				if (ImGui::Button("Test: Runtime Layer", ButtonSize)) {
-					LK_FATAL("Testing runtime layer");
-					Core::Global.AddLayer(Core::ELayer::Runtime);
-				}
-
-				ImGui::Dummy(ImVec2(0, 16));
-			}
-
 			ImGui::EndTable();
 		}
 
