@@ -33,7 +33,7 @@ namespace platformer2d {
 
 	private:
 		void UI_MainMenu();
-		void UI_GameMenu();
+		void UI_PauseMenu();
 
 		void OnKeyPressed(const FKeyData& KeyData);
 

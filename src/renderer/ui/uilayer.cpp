@@ -6,12 +6,12 @@
 #include "renderer/renderer.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
-#include "gamemenu.h"
+#include "renderer/ui/pausemenu.h"
 
 namespace platformer2d {
 
-	static void UI_GameMenu_Default();
-	static void UI_GameMenu_Settings();
+	static void UI_PauseMenu_Default();
+	static void UI_PauseMenu_Settings();
 
 	struct FNextLevel
 	{
@@ -25,8 +25,11 @@ namespace platformer2d {
 		}
 	};
 
+	namespace UI {
+		FPauseMenu PauseMenu{};
+	}
+
 	namespace {
-		FGameMenu GameMenu{};
 		constexpr float LABEL_COLUMN_WIDTH = 190.0f;
 		constexpr float LABEL_INDENT_WIDTH = 24.0f;
 		constexpr float COLUMN_ITEM_WIDTH = 410.0f;
@@ -77,7 +80,7 @@ namespace platformer2d {
 		/* Draw dark overlay whenever the pause menu is open. */
 		if (GameInstance) {
 			CWindow* Window = CWindow::Get();
-			if (Window && GameInstance->HasScene() && UI::IsGameMenuOpen()) {
+			if (Window && GameInstance->HasScene() && UI::IsPauseMenuOpen()) {
 				const glm::vec2 WindowSize = Window->GetSize();
 				static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.90f };
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
@@ -98,8 +101,8 @@ namespace platformer2d {
 
 		if (CGameInstance* GameInstance = CGameInstance::Get()) {
 			if (GameInstance->HasScene()) {
-				if (UI::IsGameMenuOpen()) {
-					UI_GameMenu();
+				if (UI::IsPauseMenuOpen()) {
+					UI_PauseMenu();
 				}
 			} else {
 				NextMenu = EMenu::None;
@@ -131,7 +134,7 @@ namespace platformer2d {
 		ImGuiLayer->EndFrame();
 	}
 
-	void CUILayer::UI_GameMenu()
+	void CUILayer::UI_PauseMenu()
 	{
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
@@ -156,9 +159,9 @@ namespace platformer2d {
 			| ImGuiWindowFlags_NoCollapse;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 0.0f));
-		const bool GameMenuWindowOpened = UI::Begin("##GameMenu", nullptr, WindowFlags);
+		const bool PauseMenuWindowOpened = UI::Begin("##PauseMenu", nullptr, WindowFlags);
 		ImGui::PopStyleVar(2);
-		if (!GameMenuWindowOpened) {
+		if (!PauseMenuWindowOpened) {
 			return;
 		}
 
@@ -166,27 +169,27 @@ namespace platformer2d {
 		const ImVec2 MenuSize = ImGui::GetWindowSize();
 		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
 
-		switch (GameMenu.View) {
-			case EGameMenuView::Default:
-				UI_GameMenu_Default();
+		switch (UI::PauseMenu.View) {
+			case UI::EPauseMenuView::Default:
+				UI_PauseMenu_Default();
 				break;
-			case EGameMenuView::Settings:
-				UI_GameMenu_Settings();
+			case UI::EPauseMenuView::Settings:
+				UI_PauseMenu_Settings();
 				break;
 		}
 
-		if (GameMenu.View != GameMenu.LastView) {
+		if (UI::PauseMenu.View != UI::PauseMenu.LastView) {
 			LK_TRACE_TAG("UILayer", "View changed");
 		}
 
-		GameMenu.LastView = GameMenu.View;
+		UI::PauseMenu.LastView = UI::PauseMenu.View;
 
 		UI::End();
 	}
 
-	void UI_GameMenu_Settings()
+	void UI_PauseMenu_Settings()
 	{
-		FGameMenu::FSettings& Settings = GameMenu.Settings;
+		UI::FPauseMenu::FSettings& Settings = UI::PauseMenu.Settings;
 		ImGuiStyle& Style = ImGui::GetStyle();
 		CWindow* Window = CWindow::Get();
 
@@ -226,7 +229,7 @@ namespace platformer2d {
 			UI::Checkbox("Start Maximized", Settings.Window.bStartMaximized, IndentX);
 
 			ImGui::TableNextRow();
-			UI::Checkbox("Debug", GameMenu.Settings.bDebug, IndentX);
+			UI::Checkbox("Debug", UI::PauseMenu.Settings.bDebug, IndentX);
 
 			ImGui::EndTable();
 		}
@@ -318,12 +321,12 @@ namespace platformer2d {
 			UI::ShiftCursorY(ImGui::GetContentRegionAvail().y - ButtonSize.y);
 			UI::FScopedColor ButtonHovered(ImGuiCol_ButtonHovered, RGBA32::Compliment);
 			if (ImGui::Button(LK_ICON_BACKWARD, ButtonSize)) {
-				GameMenu.View = EGameMenuView::Default;
+				UI::PauseMenu.View = UI::EPauseMenuView::Default;
 			}
 		}
 	}
 
-	static void UI_GameMenu_Title(const ImVec2& MenuSize)
+	static void UI_PauseMenu_Title(const ImVec2& MenuSize)
 	{
 		ImGui::SetCursorPosY(16.0f);
 		UI::Font::Push(EFont::Roboto, EFontSize::Banner, EFontModifier::BoldItalic);
@@ -346,14 +349,14 @@ namespace platformer2d {
 		ImGui::Dummy(ImVec2(0.0f, 52.0f));
 	}
 
-	void UI_GameMenu_Default()
+	void UI_PauseMenu_Default()
 	{
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 MenuSize = ImGui::GetContentRegionAvail();
 		ImGuiStyle& Style = ImGui::GetStyle();
 
 		/* Menu title. */
-		UI_GameMenu_Title(MenuSize);
+		UI_PauseMenu_Title(MenuSize);
 
 		/* @todo: Use a table for all the menu options */
 
@@ -371,7 +374,7 @@ namespace platformer2d {
 
 		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
 		if (ImGui::Button(LK_ICON_COG " Settings", ButtonSize)) {
-			GameMenu.View = EGameMenuView::Settings;
+			UI::PauseMenu.View = UI::EPauseMenuView::Settings;
 		}
 
 		ImGui::PopStyleVar(1); /* FrameRounding */
@@ -396,7 +399,7 @@ namespace platformer2d {
 		ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::NiceGreen);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
 		if (ImGui::Button(LK_ICON_PLAY " Play", HalfButtonSize)) {
-			UI::CloseGameMenu();
+			UI::ClosePauseMenu();
 		}
 		ImGui::PopStyleColor(2);
 		ImGui::PopStyleVar(1);
@@ -454,7 +457,7 @@ namespace platformer2d {
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 WindowSize = ImGui::GetWindowSize();
 		const ImVec2 ButtonSize = { WindowSize.x * 0.40f, 72.0f };
-		UI_GameMenu_Title(WindowSize);
+		UI_PauseMenu_Title(WindowSize);
 
 		auto NextButtonEntry = []() -> void
 		{
@@ -657,28 +660,30 @@ namespace platformer2d {
 		return Ret;
 	}
 
-	void UI::OpenGameMenu()
+	void UI::OpenPauseMenu(const EPauseMenuView View)
 	{
-		GameMenu.bOpen = true;
-		OnGameMenuOpened.Broadcast(GameMenu.bOpen);
+		PauseMenu.View = View;
+		PauseMenu.bOpen = true;
+		OnPauseMenuOpened.Broadcast(PauseMenu.bOpen);
 	}
 
-	void UI::CloseGameMenu()
+	void UI::ClosePauseMenu(const EPauseMenuView View)
 	{
-		GameMenu.bOpen = false;
-		OnGameMenuOpened.Broadcast(GameMenu.bOpen);
+		PauseMenu.View = View;
+		PauseMenu.bOpen = false;
+		OnPauseMenuOpened.Broadcast(PauseMenu.bOpen);
 	}
 
-	void UI::ToggleGameMenu()
+	void UI::TogglePauseMenu()
 	{
-		GameMenu.bOpen = !GameMenu.bOpen;
-		LK_TRACE_TAG("UI", "Toggle Game Menu: {}", GameMenu.bOpen ? "Open" : "Closed");
-		OnGameMenuOpened.Broadcast(GameMenu.bOpen);
+		PauseMenu.bOpen = !PauseMenu.bOpen;
+		LK_TRACE_TAG("UI", "Toggle Pause Menu: {}", PauseMenu.bOpen ? "Open" : "Closed");
+		OnPauseMenuOpened.Broadcast(PauseMenu.bOpen);
 	}
 
-	bool UI::IsGameMenuOpen()
+	bool UI::IsPauseMenuOpen()
 	{
-		return GameMenu.bOpen;
+		return PauseMenu.bOpen;
 	}
 
 }
