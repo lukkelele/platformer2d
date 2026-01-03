@@ -95,10 +95,10 @@ namespace platformer2d {
 			LK_TRACE_TAG("RuntimeLayer", "OnActorDeleted: {}", Handle);
 		});
 
-		DelegateHandles.OnGameMenuOpened = UI::OnGameMenuOpened.Add([&](const bool Opened)
+		DelegateHandles.OnPauseMenuOpened = UI::OnPauseMenuOpened.Add([&](const bool Opened)
 		{
 			if (!Scene) {
-				LK_TRACE_TAG("RuntimeLayer", "Game menu toggled, no scene active");
+				LK_TRACE_TAG("RuntimeLayer", "Pause menu toggled, no scene active");
 				return;
 			}
 
@@ -145,7 +145,7 @@ namespace platformer2d {
 		CPhysicsWorld::OnContactEndEvent.Remove(DelegateHandles.OnContactEndEvent);
 		CScene::OnActorCreated.Remove(DelegateHandles.OnActorCreated);
 		CScene::OnActorDeleted.Remove(DelegateHandles.OnActorDeleted);
-		UI::OnGameMenuOpened.Remove(DelegateHandles.OnGameMenuOpened);
+		UI::OnPauseMenuOpened.Remove(DelegateHandles.OnPauseMenuOpened);
 
 		Serialize(GameSpec.LevelFilepath);
 		CloseScene();
@@ -496,7 +496,7 @@ namespace platformer2d {
 		switch (Data.Key) {
 			case EKey::Escape:
 				if (Data.State == EKeyState::Pressed) {
-					UI::ToggleGameMenu();
+					UI::TogglePauseMenu();
 				}
 				break;
 		}
@@ -601,7 +601,7 @@ namespace platformer2d {
 			return;
 		}
 
-		UI::CloseGameMenu();
+		UI::ClosePauseMenu();
 
 		/**
 		 * @fixme: Need to make sure the scene is transient for runtime.
