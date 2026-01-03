@@ -1,11 +1,11 @@
 project_library_sources(
 	combo.h
 	combo.cpp
-	gamemenu.h
 	imgui.h
 	imguilayer.h
 	imguilayer.cpp
 	editor_resources.h
+	pausemenu.h
 	physics.cpp
 	selectionpanel.h
 	selectionpanel.cpp

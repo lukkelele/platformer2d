@@ -2,20 +2,20 @@
 
 #include "core/core.h"
 
-namespace platformer2d {
+namespace platformer2d::UI {
 
-	enum class EGameMenuView
+	enum class EPauseMenuView
 	{
 		Default,
 		Settings,
 	};
 
-	struct FGameMenu
+	struct FPauseMenu
 	{
 		bool bOpen = false;
 
-		EGameMenuView View = EGameMenuView::Default;
-		EGameMenuView LastView = EGameMenuView::Default;
+		EPauseMenuView View = EPauseMenuView::Default;
+		EPauseMenuView LastView = EPauseMenuView::Default;
 
 		struct FSettings
 		{
@@ -24,5 +24,7 @@ namespace platformer2d {
 			bool bIDStackTool = false;
 		} Settings;
 	};
+
+	extern FPauseMenu PauseMenu;
 
 }
