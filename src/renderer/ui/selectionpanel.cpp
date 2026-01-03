@@ -25,8 +25,17 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		if (!UI::Begin(PanelID::Selection, nullptr)) {
+		if (!UI::Begin(UI::PanelID::Selection, nullptr)) {
 			return;
+		}
+
+		ImGuiWindow* Window = ImGui::GetCurrentWindow();
+		Window->Flags &= ~ImGuiWindowFlags_NoTitleBar;
+
+		if (ImGuiDockNode* DockNode = ImGui::GetWindowDockNode()) {
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking
+				| ImGuiDockNodeFlags_NoWindowMenuButton;
+			DockNode->LocalFlags &= ~(ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_HiddenTabBar);
 		}
 
 		const LUUID SelectedID = CSelectionContext::GetSelected();
