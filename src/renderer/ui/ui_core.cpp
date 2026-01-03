@@ -106,18 +106,26 @@ namespace platformer2d::UI {
 
 			float LeftSidebarFraction = 0.25f;
 			float RightSidebarFraction = 0.25f;
-			float TopBarFraction = 0.05f;
+			float TopbarFraction = 0.05f;
+			float MenubarFraction = 0.03f;
 
 			/* Wide monitor. */
-			if ((WindowWidth > 1920) || (WindowHeight > 1080)) {
+			if ((WindowWidth > 1920) && (WindowHeight > 1080)) {
 				LeftSidebarFraction = 0.20f;
 				RightSidebarFraction = 0.24f;
-				TopBarFraction = 0.07f;
+				TopbarFraction = 0.07f;
+				MenubarFraction = 0.03f;
 			/* Normal 16:9 monitor. */
-			} else if ((WindowWidth <= 1920) || (WindowHeight <= 1080)) {
+			} else if (((WindowWidth <= 1920) && (WindowWidth > 1280)) && (WindowHeight <= 1080)) {
+				LeftSidebarFraction = 0.30f;
+				RightSidebarFraction = 0.40f;
+				TopbarFraction = 0.05f;
+				MenubarFraction = 0.03f;
+			} else if ((WindowWidth <= 1280) && (WindowHeight <= 1080)) {
 				LeftSidebarFraction = 0.24f;
 				RightSidebarFraction = 0.28f;
-				TopBarFraction = 0.05f;
+				TopbarFraction = 0.05f;
+				MenubarFraction = 0.03f;
 			}
 
 			/* Add empty node. */
@@ -127,6 +135,7 @@ namespace platformer2d::UI {
 			ImGui::DockBuilderSetNodeSize(DockspaceID, Viewport->Size);
 
 			ImGuiID DockID_Main = DockspaceID;
+			ImGuiID DockID_Menubar = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, MenubarFraction, nullptr, &DockID_Main);
 			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, LeftSidebarFraction, nullptr, &DockID_Main);
 			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.34f, nullptr, &DockID_Left);
 
@@ -136,12 +145,13 @@ namespace platformer2d::UI {
 			ImGuiID DockID_Bottom = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Down, 0.32f, nullptr, &DockID_Main);
 			ImGuiID DockID_Bottom_Right = ImGui::DockBuilderSplitNode(DockID_Bottom, ImGuiDir_Right, 0.42f, nullptr, &DockID_Bottom);
 
-			ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopBarFraction, nullptr, &DockID_Main);
+			ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopbarFraction, nullptr, &DockID_Main);
 
 			ImGui::DockBuilderDockWindow(PanelID::Viewport, DockID_Main);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
+			ImGui::DockBuilderDockWindow(PanelID::Menubar, DockID_Menubar);
 
 			ImGui::DockBuilderDockWindow(PanelID::ContentBrowser, DockID_Bottom);
 			ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left);
