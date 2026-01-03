@@ -124,10 +124,10 @@ namespace platformer2d {
 		CEffectManager::Get().Initialize();
 
 		/**
-		 * Disable depth testing when game menu is opened.
+		 * Disable depth testing when pause menu is opened.
 		 * Done to make sure the dark overlay is drawn on top the scene.
 		 */
-		UI::OnGameMenuOpened.Add([](const bool Open)
+		UI::OnPauseMenuOpened.Add([](const bool Open)
 		{
 			if (Open) {
 				SetDepthTest(false);

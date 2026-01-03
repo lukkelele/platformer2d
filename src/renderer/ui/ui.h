@@ -14,6 +14,7 @@
 #include "renderer/ui/scoped.h"
 #include "scene/actor.h"
 #include "combo.h"
+#include "pausemenu.h"
 
 namespace platformer2d {
 	class CPlayer;
@@ -37,8 +38,8 @@ namespace platformer2d::UI {
 		BottomRight,
 	};
 
-	LK_DECLARE_MULTICAST_DELEGATE(FOnGameMenuOpened, bool);
-	extern FOnGameMenuOpened OnGameMenuOpened;
+	LK_DECLARE_MULTICAST_DELEGATE(FOnPauseMenuOpened, bool);
+	extern FOnPauseMenuOpened OnPauseMenuOpened;
 
 	FORCEINLINE bool InTable() { return ImGui::GetCurrentTable() != nullptr; }
 
@@ -118,10 +119,10 @@ namespace platformer2d::UI {
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec);
 
 	void LevelLauncher();
-	void OpenGameMenu();
-	void CloseGameMenu();
-	void ToggleGameMenu();
-	bool IsGameMenuOpen();
+	void OpenPauseMenu(EPauseMenuView View = EPauseMenuView::Default);
+	void ClosePauseMenu(EPauseMenuView View = EPauseMenuView::Default);
+	void TogglePauseMenu();
+	bool IsPauseMenuOpen();
 	bool MainMenuButton(const ImVec2& Size);
 
 	bool ColorDropdown(EColor& Selected);
@@ -159,6 +160,7 @@ namespace platformer2d::UI {
 	void PrepareLeftSidebar();
 	void PrepareRightSidebar();
 	void PrepareTopBar();
+	void PrepareMenuBar();
 
 	namespace Array {
 		inline constexpr std::array<EDirection, std::to_underlying(EDirection::COUNT)> Direction = {

@@ -15,7 +15,7 @@
 
 namespace platformer2d::UI {
 
-	FOnGameMenuOpened OnGameMenuOpened;
+	FOnPauseMenuOpened OnPauseMenuOpened;
 	FViewportData ViewportData;
 	FActorAttributes ActorAttr;
 	FPhysicsBodyData PhysicsBodyData;
@@ -888,11 +888,37 @@ namespace platformer2d::UI {
 			return;
 		}
 
+		DockNode->Size.y = 68.0f;
 		DockNode->SizeRef.y = DockNode->Size.y; /* @fixme: Is this needed? */
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking;
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoResize;
+
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking
+			| ImGuiDockNodeFlags_NoWindowMenuButton
+			| ImGuiDockNodeFlags_NoTabBar
+			| ImGuiDockNodeFlags_NoResize;
+	}
+
+	void PrepareMenuBar()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(PanelID::Menubar);
+		if (Window == nullptr) {
+			return;
+		}
+
+		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
+		ImGuiDockNode* DockNode = Window->DockNode;
+		if (DockNode == nullptr) {
+			return;
+		}
+
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
+			return;
+		}
+
+		DockNode->SizeRef.y = 28.0f;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking
+			| ImGuiDockNodeFlags_NoWindowMenuButton
+			| ImGuiDockNodeFlags_NoTabBar
+			| ImGuiDockNodeFlags_NoResize;
 	}
 
 }
