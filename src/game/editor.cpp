@@ -19,9 +19,10 @@
 #include "renderer/renderer.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/ui/editor_resources.h"
+#include "renderer/ui/pausemenu.h"
+#include "renderer/ui/selectionpanel.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
-#include "renderer/ui/selectionpanel.h"
 #include "physics/body.h"
 #include "physics/physicsworld.h"
 #include "physics/ray.h"
@@ -155,10 +156,10 @@ namespace platformer2d {
 			UI::Widget::OnActorDeleted(Handle);
 		});
 
-		DelegateHandles.OnGameMenuOpened = UI::OnGameMenuOpened.Add([&](const bool Opened)
+		DelegateHandles.OnPauseMenuOpened = UI::OnPauseMenuOpened.Add([&](const bool Opened)
 		{
 			if (!Scene) {
-				LK_TRACE_TAG("Editor", "Game menu toggled, no scene active");
+				LK_TRACE_TAG("Editor", "Pause menu toggled, no scene active");
 				return;
 			}
 
@@ -205,7 +206,7 @@ namespace platformer2d {
 		CPhysicsWorld::OnContactEndEvent.Remove(DelegateHandles.OnContactEndEvent);
 		CScene::OnActorCreated.Remove(DelegateHandles.OnActorCreated);
 		CScene::OnActorDeleted.Remove(DelegateHandles.OnActorDeleted);
-		UI::OnGameMenuOpened.Remove(DelegateHandles.OnGameMenuOpened);
+		UI::OnPauseMenuOpened.Remove(DelegateHandles.OnPauseMenuOpened);
 
 		Serialize(GameSpec.LevelFilepath);
 		CloseScene();
@@ -309,14 +310,6 @@ namespace platformer2d {
 			return;
 		}
 
-		UI::PrepareTopBar();
-		if (UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
-			UI_Topbar();
-			UI::End();
-		}
-
-		UI_LeftSidebar();
-
 		UI::PrepareViewport();
 		const bool EditorViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
 		ImGui::PopStyleVar(2);
@@ -339,6 +332,20 @@ namespace platformer2d {
 
 			UI::End(); /* ~Viewport */
 		}
+
+		UI::PrepareMenuBar();
+		if (UI::Begin(UI::PanelID::Menubar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
+			UI_MainMenubar();
+			UI::End();
+		}
+
+		UI::PrepareTopBar();
+		if (UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
+			UI_Topbar();
+			UI::End();
+		}
+
+		UI_LeftSidebar();
 
 		UI::End(); /* ~CoreViewport */
 	}
@@ -762,11 +769,6 @@ namespace platformer2d {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
-		/* @fixme: Temporary, remove */
-		if (ImGui::Button("Close Editor")) {
-			Core::Global.RemoveLayer(Core::ELayer::Editor);
-		}
-
 		UI::Widget::SceneManagerPanel(Scene);
 
 		ImGui::Separator();
@@ -1011,14 +1013,12 @@ namespace platformer2d {
 		static constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
 		static constexpr float ButtonSize = 42.0f + 5.0f;
 		static constexpr float EdgeOffset = 4.0f;
-		static constexpr float NumberOfButtons = 3.0f;
-		static constexpr float BackgroundWidth = (EdgeOffset * 6.0f) + (ButtonSize * NumberOfButtons) + EdgeOffset * (NumberOfButtons - 1.0f) * 2.0f;
 
 		auto ToolbarButton = [](const std::shared_ptr<CTexture>& Icon, const ImColor& Tint, float PaddingY = 0.0f)
 		{
 			const float Height = std::min(static_cast<float>(Icon->GetHeight()), ButtonSize) - PaddingY * 2.0f;
 			const float Width = (static_cast<float>(Icon->GetWidth()) / static_cast<float>(Icon->GetHeight()) * Height);
-			UI::ShiftCursorY(8);
+			UI::ShiftCursorY(EdgeOffset);
 			const bool Clicked = ImGui::InvisibleButton(UI::GenerateID(), ImVec2(Width, Height));
 			UI::DrawButtonImage(Icon, Tint, Tint, Tint, UI::RectOffset(UI::GetItemRect(), 0.0f, PaddingY));
 			return Clicked;
@@ -1062,6 +1062,63 @@ namespace platformer2d {
 				ImGui::EndDisabled();
 			}
 		}
+	}
+
+	void CEditor::UI_MainMenubar()
+	{
+		ImGui::BeginMenuBar();
+		if (ImGui::MenuItem("Settings")) {
+			if (UI::IsPauseMenuOpen()) {
+				UI::ClosePauseMenu(UI::EPauseMenuView::Default);
+			} else {
+				UI::OpenPauseMenu(UI::EPauseMenuView::Settings);
+			}
+		}
+
+		if (ImGui::BeginMenu("Editor")) {
+			if (ImGui::MenuItem("Save", "Ctrl+S")) {
+				Serialize(GameSpec.LevelFilepath);
+			}
+
+			if (ImGui::MenuItem("Close")) {
+				Core::Global.RemoveLayer(Core::ELayer::Editor);
+			}
+			ImGui::EndMenu();
+		}
+
+		const bool HasValidScene = (Scene != nullptr);
+		if (ImGui::BeginMenu("Scene")) {
+			if (HasValidScene) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Open")) {
+				if (!Scene) {
+					bOpenSceneNextTick = true;
+				}
+			}
+			if (HasValidScene) {
+				ImGui::EndDisabled();
+			}
+
+			if (!HasValidScene) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Close")) {
+				if (Scene) {
+					bCloseSceneNextTick = true;
+				}
+			}
+			if (ImGui::MenuItem("Save")) {
+				SaveScene();
+			}
+			if (!HasValidScene) {
+				ImGui::EndDisabled();
+			}
+
+			ImGui::EndMenu(); /* ~Scene */
+		}
+
+		ImGui::EndMenuBar();
 	}
 
 	void CEditor::UI_LeftSidebar()
@@ -1138,6 +1195,13 @@ namespace platformer2d {
 				Gizmo = ImGuizmo::OPERATION::SCALE;
 				break;
 #endif
+			case EKey::S:
+				if (Data.State == EKeyState::Pressed) {
+					if (CKeyboard::IsKeyDown(EKey::LeftControl)) {
+						Serialize(GameSpec.LevelFilepath);
+					}
+				}
+				break;
 			case EKey::P:
 				if (Data.State == EKeyState::Pressed) {
 					if (IsGamePaused()) {
@@ -1149,7 +1213,7 @@ namespace platformer2d {
 				break;
 			case EKey::Escape:
 				if (Data.State == EKeyState::Pressed) {
-					UI::ToggleGameMenu();
+					UI::TogglePauseMenu();
 				}
 				break;
 		}
@@ -1248,7 +1312,7 @@ namespace platformer2d {
 			return;
 		}
 
-		UI::CloseGameMenu();
+		UI::ClosePauseMenu();
 		SaveScene();
 
 		LK_TRACE_TAG("Editor", "Release current scene and player");

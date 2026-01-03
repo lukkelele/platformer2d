@@ -58,6 +58,7 @@ namespace platformer2d {
 		void UI_ViewportTexture();
 		void UI_DrawGizmo();
 		void UI_Topbar();
+		void UI_MainMenubar();
 		void UI_LeftSidebar();
 		void UI_LevelLauncher();
 
