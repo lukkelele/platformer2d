@@ -769,16 +769,11 @@ namespace platformer2d {
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
-		UI::Widget::SceneManagerPanel(Scene);
-
-		ImGui::Separator();
-		ImGui::Spacing();
-
-		ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
-		UI::SetTooltip(LastSceneFilepath.generic_string());
-		ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
-		UI::SetTooltip(SceneToOpen.generic_string());
-		ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
+		if (Scene) {
+			UI::Widget::SceneManagerPanel(Scene);
+			ImGui::Separator();
+			ImGui::Spacing();
+		}
 
 		ImGui::Spacing();
 		{
@@ -851,26 +846,6 @@ namespace platformer2d {
 
 		if (Player) {
 			UI::Widget::Rifle(Player->GetRifle());
-		}
-
-		ImGui::Spacing();
-
-		if (ImGui::Button("Close Scene")) {
-			if (Scene) {
-				bCloseSceneNextTick = true;
-			}
-		}
-		ImGui::SameLine(0, 10.0f);
-
-		const bool HasSceneRef = HasScene();
-		if (HasSceneRef) {
-			ImGui::BeginDisabled();
-		}
-		if (ImGui::Button("Open Scene")) {
-			bOpenSceneNextTick = true;
-		}
-		if (HasSceneRef) {
-			ImGui::EndDisabled();
 		}
 
 		ImGui::Spacing();
@@ -955,6 +930,18 @@ namespace platformer2d {
 
 			ImGui::TreePop();
 		}
+
+		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
+			UI::SetTooltip(LastSceneFilepath.generic_string());
+			ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
+			UI::SetTooltip(SceneToOpen.generic_string());
+			ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
+
+			ImGui::TreePop();
+		}
+
+		ImGui::Spacing();
 
 		if (Scene) {
 			UI::CreatorMenu(Scene);
