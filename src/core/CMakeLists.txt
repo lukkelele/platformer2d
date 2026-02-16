@@ -16,6 +16,7 @@ project_library_sources(
 	log_formatters.h
 	macros.h
 	platform.h
+	profiler.h
 	selectioncontext.h
 	selectioncontext.cpp
 	settings.h

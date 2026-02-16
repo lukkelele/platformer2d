@@ -5,17 +5,7 @@
 #include <chrono>
 #include <type_traits>
 
-#include "core/macros.h"
-
-#ifdef LK_PROFILING
-#if LK_PROFILING_USE_SCOPED_TIMERS
-#	define LK_PROFILE_SCOPE(Name) CScopedTimer LK_CONCAT_EXPAND(__LK_SCOPE_TIMER_, __LINE__)(Name);
-#else
-#	define LK_PROFILE_SCOPE(Name) /* @todo: Tracy impl of some sort */
-#endif /* LK_PROFILING_USE_SCOPED_TIMERS */
-#else
-#	define LK_PROFILE_SCOPE(Name)
-#endif /* LK_PROFILING */
+#include "log.h"
 
 namespace platformer2d {
 
