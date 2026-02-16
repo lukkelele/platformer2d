@@ -1,5 +1,6 @@
 #include "physicsworld.h"
 
+#include "core/profiler.h"
 #include "core/math/math.h"
 #include "game/player.h"
 #include "renderer/renderer.h"
@@ -34,6 +35,7 @@ namespace platformer2d {
 
 	void CPhysicsWorld::Update(const float DeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		if (!b2World_IsValid(WorldID) || bPaused) {
 			return;
 		}
