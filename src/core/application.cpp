@@ -1,5 +1,6 @@
 #include "application.h"
 
+#include "core/profiler.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "game/editor.h"
