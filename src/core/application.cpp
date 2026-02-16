@@ -95,6 +95,7 @@ namespace platformer2d {
 		bRunning = true;
 		Timer.Reset();
 		while (!glfwWindowShouldClose(GlfwWindow)) {
+			LK_PROFILE_SCOPE("Main");
 			if (Core::Global.bShouldShutdown) {
 				break;
 			}
