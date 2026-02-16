@@ -92,6 +92,11 @@ set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory(box2d)
 
 ##############################
+# Library: Tracy
+##############################
+add_subdirectory(tracy)
+
+##############################
 # Library: yaml-cpp
 ##############################
 add_subdirectory(yaml-cpp)
