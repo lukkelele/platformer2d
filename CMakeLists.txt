@@ -98,6 +98,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		LK_BUILD_DEBUG
 		LK_PROFILING
 		LK_PROFILING_USE_SCOPED_TIMERS=${LK_PROFILING_USE_SCOPED_TIMERS}
+		TRACY_ENABLE
+		TRACY_STATIC
+		TRACY_ON_DEMAND
+		TRACY_CALLSTACK=15
 	)
 endif()
 
@@ -124,6 +128,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/external/imgui
 	${CMAKE_SOURCE_DIR}/external/ImGuizmo
 	${CMAKE_SOURCE_DIR}/external/spdlog/include
+	${CMAKE_SOURCE_DIR}/external/tracy/public
 	${CMAKE_SOURCE_DIR}/external/yaml-cpp/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
 )
@@ -138,6 +143,7 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	ImGuizmo
 	spdlog
 	stb_image
+	Tracy::TracyClient
 	yaml-cpp
 )
 
