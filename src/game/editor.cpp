@@ -4,8 +4,9 @@
 #include <istream>
 #include <numeric>
 
-#include "core/window.h"
+#include "core/profiler.h"
 #include "core/timer.h"
+#include "core/window.h"
 #include "core/selectioncontext.h"
 #include "core/string.h"
 #include "core/input/keyboard.h"
@@ -235,6 +236,7 @@ namespace platformer2d {
 
 	void CEditor::Tick(const float InDeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
 		if (SceneState == ESceneState::Play) {
 			DeltaTime = InDeltaTime;
@@ -303,6 +305,7 @@ namespace platformer2d {
 
 	void CEditor::RenderUI()
 	{
+		LK_PROFILE_FUNC();
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags)) {
