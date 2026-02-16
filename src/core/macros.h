@@ -7,6 +7,9 @@
 #define LK_STRINGIFY(x)      #x
 #define LK_BIT(x)            (1 << x)
 
+#define LK_CONCAT(a, b)        a##b
+#define LK_CONCAT_EXPAND(a, b) LK_CONCAT(a, b)
+
 #if defined(FORCEINLINE) || defined(CDECL) || defined(STDCALL)
 #error "Already defined"
 #endif
