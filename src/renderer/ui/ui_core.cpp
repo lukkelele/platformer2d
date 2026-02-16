@@ -2,6 +2,7 @@
 
 #include <queue>
 
+#include "core/profiler.h"
 #include "editor_resources.h"
 
 namespace platformer2d {
@@ -72,6 +73,7 @@ namespace platformer2d::UI {
 
 	void BeginCoreViewport(CWindow* Window)
 	{
+		LK_PROFILE_FUNC();
 		if (UI::DockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode) {
 			UI::CoreViewportFlags |= ImGuiWindowFlags_NoBackground;
 			UI::HostWindowFlags |= ImGuiWindowFlags_NoBackground;

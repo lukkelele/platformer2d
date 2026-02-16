@@ -1,5 +1,4 @@
 #include "renderer.h"
-#include "renderer.h"
 
 #include <array>
 #include <atomic>
@@ -14,6 +13,8 @@
 #include <imgui/imgui_internal.h>
 
 #include "core/window.h"
+#include "core/profiler.h"
+#include "core/timer.h"
 #include "backendinfo.h"
 #include "debugrenderer.h"
 #include "opengl.h"
@@ -353,6 +354,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginFrame()
 	{
+		LK_PROFILE_FUNC();
 		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
 		SwapQueues();
 
@@ -364,6 +366,7 @@ namespace platformer2d {
 
 	void CRenderer::EndFrame()
 	{
+		LK_PROFILE_FUNC();
 		Flush();
 
 		CommandQueue[GetRenderQueueIndex()]->Execute();
@@ -371,6 +374,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginScene(const CCamera& Camera)
 	{
+		LK_PROFILE_FUNC();
 		CameraData.ViewProjection = Camera.GetViewProjection();
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 
@@ -383,6 +387,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginScene(const CCamera& Camera, const glm::mat4& Transform)
 	{
+		LK_PROFILE_FUNC();
 		CameraData.ViewProjection = Camera.GetViewProjection() * glm::inverse(Transform);
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 		StartBatch();
@@ -390,6 +395,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginScene(const glm::mat4& ViewProj, const glm::mat4& Transform)
 	{
+		LK_PROFILE_FUNC();
 		CameraData.ViewProjection = ViewProj * glm::inverse(Transform);
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 		StartBatch();
@@ -397,6 +403,7 @@ namespace platformer2d {
 
 	void CRenderer::StartBatch()
 	{
+		LK_PROFILE_FUNC();
 		QuadIndexCount = 0;
 		QuadVertexBufferPtr = QuadVertexBufferBase;
 
@@ -409,12 +416,14 @@ namespace platformer2d {
 
 	void CRenderer::NextBatch()
 	{
+		LK_PROFILE_FUNC();
 		Flush();
 		StartBatch();
 	}
 
 	void CRenderer::Flush()
 	{
+		LK_PROFILE_FUNC();
 		Data.ViewportFramebuffer->Bind();
 
 		if (QuadIndexCount > 0) {
