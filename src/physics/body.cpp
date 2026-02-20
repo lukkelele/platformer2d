@@ -23,7 +23,7 @@ namespace platformer2d {
 		}
 		if (Spec.Flags & EBodyFlag_ContactEvents) {
 			ShapeDef.enableContactEvents = true;
-		} 
+		}
 		if (Spec.Flags & EBodyFlag_SensorEvents) {
 			ShapeDef.enableSensorEvents = true;
 		}
@@ -181,7 +181,7 @@ namespace platformer2d {
 	{
 		return b2Body_GetMass(ID);
 	}
-	
+
 	void CBody::SetMass(const float InMass) const
 	{
 		b2MassData Data{};
@@ -354,7 +354,7 @@ namespace platformer2d {
 		else if (IsShape<EShape::Capsule>(Spec.Shape)) ShapeType = EShape::Capsule;
 		else ShapeType = EShape::None;
 
-		return LK_FMT("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
+		return Format("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
 					  Enum::ToString(ShapeType), Spec.Position, Spec.Flags, Spec.MotionLock, Spec.Density);
 	}
 
