@@ -103,7 +103,7 @@ namespace platformer2d {
 
 		std::string ToString() const
 		{
-			return LK_FMT("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
+			return Format("Translation={} Scale={} RotEuler={}", Translation, Scale, RotationEuler);
 		}
 	};
 
