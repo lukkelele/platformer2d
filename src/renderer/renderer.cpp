@@ -231,7 +231,7 @@ namespace platformer2d {
 		for (auto& [Texture, TextureRef] : Data.Textures) {
 			LK_VERIFY(TextureRef, "Invalid texture reference: {}", Enum::ToString(Texture));
 			const int Idx = static_cast<int>(Texture);
-			QuadShader->Set(LK_FMT("u_texture{}", Idx), Idx);
+			QuadShader->Set(Format("u_texture{}", Idx), Idx);
 			TextureRef->Bind(Idx);
 			TextureRef->SetSlot(Idx);
 		}

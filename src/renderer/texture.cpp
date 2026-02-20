@@ -33,10 +33,10 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &ID));
 		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, ID));
 
-		Format = OpenGL::GetImageFormat(Spec.Format);
+		DataFormat = OpenGL::GetImageFormat(Spec.Format);
 		InternalFormat = OpenGL::GetImageInternalFormat(Spec.Format);
 		DataType = OpenGL::GetFormatDataType(Spec.Format);
-		LK_TRACE_TAG("Texture", "Format: {} (GLFormat={} InternalGLFormat={})", Enum::ToString(Spec.Format), Format, InternalFormat);
+		LK_TRACE_TAG("Texture", "Format: {} (GLFormat={} InternalGLFormat={})", Enum::ToString(Spec.Format), DataFormat, InternalFormat);
 
 		stbi_set_flip_vertically_on_load(Spec.bFlipVertical);
 		int ReadWidth, ReadHeight, ReadChannels;
@@ -68,7 +68,7 @@ namespace platformer2d {
 		Channels = ReadChannels;
 		const uint64_t ImageSize = OpenGL::CalculateImageSize(Spec.Format, Width, Height);
 		LK_ASSERT(ImageSize <= std::numeric_limits<uint64_t>::max(), "ImageSize overflow");
-		LK_TRACE_TAG("Texture", "[{}] Format={} Size=({}x{}) Storage={} Channels={}, GLFormat={} InternalGLFormat={}", Spec.Path.stem(), Enum::ToString(Spec.Format), Width, Height, Spec.bStorage, Channels, Format, InternalFormat);
+		LK_TRACE_TAG("Texture", "[{}] Format={} Size=({}x{}) Storage={} Channels={}, GLFormat={} InternalGLFormat={}", Spec.Path.stem(), Enum::ToString(Spec.Format), Width, Height, Spec.bStorage, Channels, DataFormat, InternalFormat);
 		ImageBuffer = FBuffer::Copy(Data, ImageSize);
 
 		if (Data) {
@@ -79,9 +79,9 @@ namespace platformer2d {
 				ReadWidth,
 				ReadHeight,
 				0,
-				Format,
+				DataFormat,
 				DataType,
-				ImageBuffer.Data	
+				ImageBuffer.Data
 			));
 
 			stbi_image_free(Data);
@@ -101,7 +101,7 @@ namespace platformer2d {
 		OpenGL::SetTextureFilter(Spec.SamplerFilter, bMipmap);
 
 		if (Name.empty()) {
-			Name = LK_FMT("{}", Path.filename());
+			Name = Format("{}", Path.filename());
 		}
 
 		Slot = CreatedTextures++;
@@ -118,10 +118,10 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &ID));
 		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, ID));
 
-		Format = OpenGL::GetImageFormat(Spec.Format);
+		DataFormat = OpenGL::GetImageFormat(Spec.Format);
 		InternalFormat = OpenGL::GetImageInternalFormat(Spec.Format);
 		DataType = OpenGL::GetFormatDataType(Spec.Format);
-		LK_TRACE_TAG("Texture", "[{}] Format={} Size=({}x{}) Storage={} GLFormat={} InternalGLFormat={}", Spec.Path.stem(), Enum::ToString(Spec.Format), Width, Height, Spec.bStorage, Channels, Format, InternalFormat);
+		LK_TRACE_TAG("Texture", "[{}] Format={} Size=({}x{}) Storage={} GLFormat={} InternalGLFormat={}", Spec.Path.stem(), Enum::ToString(Spec.Format), Width, Height, Spec.bStorage, Channels, DataFormat, InternalFormat);
 
 		if (Spec.bStorage) {
 			LK_OpenGL_Verify(glTexImage2D(
@@ -131,7 +131,7 @@ namespace platformer2d {
 				Spec.Width,
 				Spec.Height,
 				0,
-				Format,
+				DataFormat,
 				DataType,
 				nullptr
 			));
@@ -145,7 +145,7 @@ namespace platformer2d {
 					Spec.Width,
 					Spec.Height,
 					0,
-					Format,
+					DataFormat,
 					DataType,
 					ImageBuffer.Data
 				));
@@ -165,7 +165,7 @@ namespace platformer2d {
 		OpenGL::SetTextureFilter(Spec.SamplerFilter, bMipmap);
 
 		if (Name.empty()) {
-			Name = LK_FMT("{}", Path.filename());
+			Name = Format("{}", Path.filename());
 		}
 		Slot = CreatedTextures++;
 		LK_TRACE_TAG("Texture", "Index: {} ({})", Slot, Path.filename());
@@ -209,7 +209,7 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 		LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
-		Name = LK_FMT("{}", Path.filename());
+		Name = Format("{}", Path.filename());
 		Slot = CreatedTextures++;
 		LK_TRACE_TAG("Texture", "Index: {}", Slot);
 	}
@@ -255,7 +255,7 @@ namespace platformer2d {
 				0,
 				Width,
 				Height,
-				Format,
+				DataFormat,
 				DataType,
 				ImageBuffer.Data
 			));

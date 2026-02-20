@@ -68,7 +68,7 @@ namespace platformer2d {
 		std::filesystem::path Path{};
 		std::string Name{};
 
-		GLenum Format{};
+		GLenum DataFormat{}; /* Format of pixel data. */
 		GLenum InternalFormat{};
 		GLenum DataType{};
 

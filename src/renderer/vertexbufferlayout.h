@@ -14,15 +14,15 @@ namespace platformer2d {
 	enum class EShaderDataType : uint8_t
 	{
 		Null = 0,
-		Float, 
-		Float2, 
-		Float3, 
+		Float,
+		Float2,
+		Float3,
 		Float4,
-		Int, 
-		Int2, 
-		Int3, 
+		Int,
+		Int2,
+		Int3,
 		Int4,
-		Mat3, 
+		Mat3,
 		Mat4,
 		Bool,
 	};
@@ -145,7 +145,7 @@ namespace platformer2d {
 			std::string String{};
 			for (const FVertexBufferElement& Element : Elements)
 			{
-				String += LK_FMT("{}: {}\n", Element.Name, Enum::ToString(Element.Type));
+				String += Format("{}: {}\n", Element.Name, Enum::ToString(Element.Type));
 			}
 
 			return String;
