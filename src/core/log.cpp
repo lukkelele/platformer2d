@@ -8,7 +8,7 @@
 #ifdef LK_LOG_DEBUG
 #define LK_LOG_PRINTLN(...) LK_PRINTLN(__VA_ARGS__)
 #else
-#define LK_LOG_PRINTLN(...) 
+#define LK_LOG_PRINTLN(...)
 #endif
 
 namespace platformer2d {
@@ -57,9 +57,9 @@ namespace platformer2d {
 	{
 		Get(); /* Make sure instance exists. */
 		if (!InLogfile.empty()) {
-			Logfile = LK_FMT("{}/{}-{}.log", LogDirectory, InLogfile, CurrentTimestamp());
+			Logfile = Format("{}/{}-{}.log", LogDirectory, InLogfile, CurrentTimestamp());
 		} else {
-			Logfile = LK_FMT("{}/{}-{}.log", LogDirectory, FileName, CurrentTimestamp());
+			Logfile = Format("{}/{}-{}.log", LogDirectory, FileName, CurrentTimestamp());
 		}
 		LK_LOG_PRINTLN("Log file: {}", Logfile);
 
