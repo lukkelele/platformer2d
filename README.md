@@ -53,10 +53,19 @@ Clone the repo and setup all submodules.
 git clone --recursive https://github.com/lukkelele/platformer2d
 ```
 Make sure to run `git submodule update --init --recursive` if the repo is cloned **without** the `--recursive` flag.
+  
+  
+Run the setup script.
+```
+./scripts/setup.sh
+```
 
 ### Dependencies
+> Manual installation is only needed if the setup script has not been run!
+
 The project is dependent on several external libraries.  
-Most dependencies are submodules but some need manual installation.
+Most dependencies are submodules but some need manual installation.  
+Make sure to run the setup script to do the steps for you.
 
 #### glad
 The files for glad need to be generated.  
