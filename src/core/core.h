@@ -67,8 +67,8 @@ namespace platformer2d {
 			std::queue<ELayer> LayerRemoveQueue;
 			int LayerStackSize = 0; /* Managed by CLayerStack. */
 
-			friend class CApplication;
-			friend class CLayerStack;
+			friend class ::platformer2d::CApplication;
+			friend class ::platformer2d::CLayerStack;
 		};
 
 		extern FGlobal Global;
