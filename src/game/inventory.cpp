@@ -85,7 +85,7 @@ namespace platformer2d {
 	bool CInventory::GetNextFreeIdx(std::size_t& Idx) const
 	{
 		Idx = 0;
-		for (Idx; Idx < Items.size(); Idx++) {
+		for (; Idx < Items.size(); Idx++) {
 			if (Items.at(Idx).ItemRef == nullptr) {
 				return true;
 			}

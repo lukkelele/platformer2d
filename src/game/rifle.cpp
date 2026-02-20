@@ -114,7 +114,7 @@ namespace platformer2d {
 		}
 
 		FActorSpecification Spec;
-		Spec.Name = LK_FMT("Projectile-{}", Ammo);
+		Spec.Name = Format("Projectile-{}", Ammo);
 		Spec.Pos = Origin;
 		Spec.Color = ProjectileColor;
 		std::shared_ptr<CProjectile> Projectile = std::make_shared<CProjectile>(Spec, this, &CRifle::DestroyProjectile);

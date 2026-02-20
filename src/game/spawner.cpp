@@ -11,7 +11,7 @@ namespace platformer2d {
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
-			ActorName = LK_FMT("StaticPolygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+			ActorName = Format("StaticPolygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
 		}
 		CGameInstance* GameInstance = CGameInstance::Get();
 		LK_VERIFY(GameInstance);
@@ -42,7 +42,7 @@ namespace platformer2d {
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
-			ActorName = LK_FMT("Polygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+			ActorName = Format("Polygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
 		}
 		CGameInstance* GameInstance = CGameInstance::Get();
 		LK_VERIFY(GameInstance);
