@@ -2,10 +2,26 @@
   {
     "label": "cmake: configure",
     "command": "cmake",
+    "args": ["-S .", "-B build", "--fresh", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "reveal_target": "dock",
+    "hide": "never",
+    "shell": "system",
+    "show_summary": true,
+    "show_command": true,
+  },
+  {
+    "label": "cmake: configure: debug",
+    "command": "cmake",
     "args": [
       "-S .",
       "-B build",
-      "--fresh"
+      "--fresh",
+      "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+      "-DCMAKE_BUILD_TYPE=Debug",
     ],
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
@@ -20,10 +36,7 @@
   {
     "label": "cmake: build",
     "command": "cmake",
-    "args": [
-      "--build build",
-      "-j 8"
-    ],
+    "args": ["--build build", "-j 8"],
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
@@ -33,5 +46,18 @@
     "shell": "system",
     "show_summary": true,
     "show_command": true,
-  }
+  },
+  {
+    "label": "platformer2d: run",
+    "command": "./build/platformer2d/platformer2d",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "reveal_target": "dock",
+    "hide": "never",
+    "shell": "system",
+    "show_summary": true,
+    "show_command": true,
+  },
 ]
