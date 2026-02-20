@@ -17,7 +17,7 @@ namespace platformer2d {
 		: Name(InName)
 	{
 		LK_VERIFY(!Name.empty(), "Scene name is empty");
-		Path = LK_FMT("{}/{}.{}", SCENES_DIR, Name, FILE_EXTENSION).c_str();
+		Path = Format("{}/{}.{}", SCENES_DIR, Name, FILE_EXTENSION).c_str();
 		LK_DEBUG_TAG("Scene", "Created: {} ({})", Name, StringUtils::GetPathRelativeToProject(Path));
 
 		OnActorDeleted.Add([&](const LUUID Handle)
