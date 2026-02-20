@@ -8,7 +8,7 @@
 
 namespace ImGui {
 
-	inline bool TreeNodeBehaviorIsOpen(const ImGuiID NodeID, 
+	inline bool TreeNodeBehaviorIsOpen(const ImGuiID NodeID,
 									   const ImGuiTreeNodeFlags Flags = ImGuiTreeNodeFlags_None)
 	{
 		ImGuiContext& G = *GImGui;
@@ -20,7 +20,7 @@ namespace ImGui {
 }
 
 template<>
-struct LK_FMT_LIB::formatter<ImVec2>
+struct LkFmt::formatter<ImVec2>
 {
     template<typename ParseContext>
     constexpr auto parse(ParseContext& Context)
@@ -31,12 +31,12 @@ struct LK_FMT_LIB::formatter<ImVec2>
 	template<typename FormatContext>
     auto format(const ImVec2& Vec, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "({:.2f}, {:.2f})", Vec.x, Vec.y);
+        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f})", Vec.x, Vec.y);
     }
 };
 
 template<>
-struct LK_FMT_LIB::formatter<ImVec4>
+struct LkFmt::formatter<ImVec4>
 {
     template<typename ParseContext>
     constexpr auto parse(ParseContext& Context)
@@ -47,6 +47,6 @@ struct LK_FMT_LIB::formatter<ImVec4>
 	template<typename FormatContext>
     auto format(const ImVec4& Vec, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Vec.x, Vec.y, Vec.z, Vec.w);
+        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Vec.x, Vec.y, Vec.z, Vec.w);
     }
 };

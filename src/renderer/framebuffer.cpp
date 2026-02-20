@@ -51,7 +51,7 @@ namespace platformer2d {
 		if (ID) {
 			LK_TRACE_TAG("Framebuffer", "Delete existing framebuffer");
 			LK_OpenGL_Verify(glDeleteFramebuffers(1, &ID));
-			
+
 			LK_TRACE_TAG("Framebuffer", "Clear color attachments");
 			ColorAttachments.clear();
 
@@ -76,7 +76,7 @@ namespace platformer2d {
 				TexSpec.Width = Spec.Width;
 				TexSpec.Height = Spec.Height;
 				TexSpec.Format = ColorAttachmentSpecs[Idx].ImageFormat;
-				TexSpec.Name = LK_FMT("fb-image-{}", Enum::ToString(ColorAttachmentSpecs[Idx].ImageFormat));
+				TexSpec.Name = Format("fb-image-{}", Enum::ToString(ColorAttachmentSpecs[Idx].ImageFormat));
 				TexSpec.Format = EImageFormat::RGBA32F;
 				TexSpec.SamplerWrap = ETextureWrap::Clamp;
 				TexSpec.SamplerFilter = ETextureFilter::Nearest;
