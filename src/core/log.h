@@ -24,9 +24,23 @@
 
 namespace platformer2d {
 
+#if defined(LK_COMPILER_MSVC)
+    template<typename... TArgs>
+    using TFormatString = std::format_string<TArgs...>;
+#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
+    template<typename... TArgs>
+    using TFormatString = fmt::format_string<TArgs...>;
+#endif
+
+    template<typename... TArgs>
+    inline std::string Format(TFormatString<TArgs...> Fmt, TArgs&&... Args)
+    {
+        return LkFmt::format(Fmt, std::forward<TArgs>(Args)...);
+    }
+
     /**
      * @enum ELogLevel
-	 * Log verbosity.
+     * Log verbosity.
      */
     enum class ELogLevel
     {
@@ -80,69 +94,33 @@ namespace platformer2d {
          * @brief Print a formatted message.
          */
         template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-        static void PrintMessage(const ELoggerType LoggerType, const ELogLevel Level,
-                                 std::format_string<TArgs...> Format, TArgs&&... Args);
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-        static void PrintMessage(const ELoggerType LoggerType, const ELogLevel Level,
-                                 fmt::format_string<TArgs...> Format, TArgs&&... Args);
-	#endif
+        static void PrintMessage(const ELoggerType LoggerType, const ELogLevel Level, TFormatString<TArgs...> Format, TArgs&&... Args);
 
         /**
          * @brief Print a formatted message with a tag.
 		 * @note Uses std::format_string on MSVC and fmt::format on GCC/Clang.
          */
         template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-        static void PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag,
-                                        std::format_string<TArgs...> Format, TArgs&&... Args);
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-        static void PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag,
-                                        fmt::format_string<TArgs...> Format, TArgs&&... Args);
-	#endif
-
-        static void PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level,
-                                        std::string_view Tag, std::string_view Message);
+        static void PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag, TFormatString<TArgs...> Format, TArgs&&... Args);
+        static void PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag, std::string_view Message);
 
         template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-        static void PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix,
-                                       std::format_string<TArgs...> Message, TArgs&&... Args);
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-        static void PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix,
-                                       fmt::format_string<TArgs...> Message, TArgs&&... Args);
-	#endif
+        static void PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix, TFormatString<TArgs...> Message, TArgs&&... Args);
         static void PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix);
 
 		template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-		static void Print(std::format_string<TArgs...> Format, TArgs&&... Args)
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-		static void Print(fmt::format_string<TArgs...> Format, TArgs&&... Args)
-	#endif
+		static void Print(TFormatString<TArgs...> Fmt, TArgs&&... Args)
 		{
-		#if defined(LK_COMPILER_MSVC)
-			const std::string FormattedString = std::format(Format, std::forward<TArgs>(Args)...);
-		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-			const std::string FormattedString = fmt::format(Format, std::forward<TArgs>(Args)...);
-		#endif
-			std::printf("%s", FormattedString.c_str());
+			const std::string String = Format(Fmt, std::forward<TArgs>(Args)...);
+			std::printf("%s", String.c_str());
 			std::fflush(stdout);
 		}
 
 		template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-		static void PrintLn(std::format_string<TArgs...> Format, TArgs&&... Args)
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-		static void PrintLn(fmt::format_string<TArgs...> Format, TArgs&&... Args)
-	#endif
+		static void PrintLn(TFormatString<TArgs...> Fmt, TArgs&&... Args)
 		{
-		#if defined(LK_COMPILER_MSVC)
-			const std::string FormattedString = std::format(Format, std::forward<TArgs>(Args)...);
-		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-			const std::string FormattedString = fmt::format(Format, std::forward<TArgs>(Args)...);
-		#endif
-			std::printf("%s\n", FormattedString.c_str());
+			const std::string String = Format(Fmt, std::forward<TArgs>(Args)...);
+			std::printf("%s\n", String.c_str());
 			std::fflush(stdout);
 		}
 
@@ -170,84 +148,65 @@ namespace platformer2d {
 namespace platformer2d {
 
 	template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-	FORCEINLINE void CLog::PrintMessage(const ELoggerType LoggerType, const ELogLevel Level,
-										std::format_string<TArgs...> Format, TArgs&&... Args)
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-	FORCEINLINE void CLog::PrintMessage(const ELoggerType LoggerType, const ELogLevel Level,
-										fmt::format_string<TArgs...> Format, TArgs&&... Args)
-	#endif
+	FORCEINLINE void CLog::PrintMessage(const ELoggerType LoggerType, const ELogLevel Level, TFormatString<TArgs...> Fmt, TArgs&&... Args)
 	{
 		FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
 		if (TagDetails.Enabled && TagDetails.Filter <= Level) {
 			auto& Logger = CLog::GetLogger(LoggerType);
 			switch (Level) {
 				case ELogLevel::Trace:
-					Logger->trace(Format, std::forward<TArgs>(Args)...);
+					Logger->trace(Fmt, std::forward<TArgs>(Args)...);
 					break;
 				case ELogLevel::Debug:
-					Logger->debug(Format, std::forward<TArgs>(Args)...);
+					Logger->debug(Fmt, std::forward<TArgs>(Args)...);
 					break;
 				case ELogLevel::Info:
-					Logger->info(Format, std::forward<TArgs>(Args)...);
+					Logger->info(Fmt, std::forward<TArgs>(Args)...);
 					break;
 				case ELogLevel::Warning:
-					Logger->warn(Format, std::forward<TArgs>(Args)...);
+					Logger->warn(Fmt, std::forward<TArgs>(Args)...);
 					break;
 				case ELogLevel::Error:
-					Logger->error(Format, std::forward<TArgs>(Args)...);
+					Logger->error(Fmt, std::forward<TArgs>(Args)...);
 					break;
 				case ELogLevel::Fatal:
-					Logger->critical(Format, std::forward<TArgs>(Args)...);
+					Logger->critical(Fmt, std::forward<TArgs>(Args)...);
 					break;
 			}
 		}
 	}
 
 	template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag,
-											 std::format_string<TArgs...> Format, TArgs&&... Args)
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag,
-											 fmt::format_string<TArgs...> Format, TArgs&&... Args)
-	#endif
+	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag, TFormatString<TArgs...> Fmt, TArgs&&... Args)
 	{
 		const FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
 		if (TagDetails.Enabled && (TagDetails.Filter <= Level)) {
-		#if defined(LK_COMPILER_MSVC)
-			const std::string FormattedString = std::format(Format, std::forward<TArgs>(Args)...);
-		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-			const std::string FormattedString = fmt::format(Format, std::forward<TArgs>(Args)...);
-		#else
-			#error "Unsupported"
-		#endif
+			const std::string Message = Format(Fmt, std::forward<TArgs>(Args)...);
 			auto& Logger = CLog::GetLogger(LoggerType);
 			switch (Level) {
 				case ELogLevel::Trace:
-					Logger->trace("[{0}] {1}", Tag, FormattedString);
+					Logger->trace("[{0}] {1}", Tag, Message);
 					break;
 				case ELogLevel::Debug:
-					Logger->debug("[{0}] {1}", Tag, FormattedString);
+					Logger->debug("[{0}] {1}", Tag, Message);
 					break;
 				case ELogLevel::Info:
-					Logger->info("[{0}] {1}", Tag, FormattedString);
+					Logger->info("[{0}] {1}", Tag, Message);
 					break;
 				case ELogLevel::Warning:
-					Logger->warn("[{0}] {1}", Tag, FormattedString);
+					Logger->warn("[{0}] {1}", Tag, Message);
 					break;
 				case ELogLevel::Error:
-					Logger->error("[{0}] {1}", Tag, FormattedString);
+					Logger->error("[{0}] {1}", Tag, Message);
 					break;
 				case ELogLevel::Fatal:
-					Logger->critical("[{0}] {1}", Tag, FormattedString);
+					Logger->critical("[{0}] {1}", Tag, Message);
 					break;
 			}
 		}
 	}
 
-	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level,
-											 std::string_view Tag, std::string_view Message)
+	LK_INLINE void CLog::PrintMessageWithTag(const ELoggerType LoggerType, const ELogLevel Level, std::string_view Tag, std::string_view Message)
 	{
 		const FTagDetails& TagDetails = EnabledTags[GetLoggerName(LoggerType).data()];
 		if (TagDetails.Enabled && TagDetails.Filter <= Level) {
@@ -276,23 +235,13 @@ namespace platformer2d {
 	}
 
 	template<typename... TArgs>
-	#if defined(LK_COMPILER_MSVC)
-	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix,
-											std::format_string<TArgs...> Format, TArgs&&... Args)
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix,
-											fmt::format_string<TArgs...> Format, TArgs&&... Args)
-	#endif
+	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix, TFormatString<TArgs...> Fmt, TArgs&&... Args)
 	{
-		#if defined(LK_COMPILER_MSVC)
-			const std::string FormattedString = std::format(Format, std::forward<TArgs>(Args)...);
-		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
-			const std::string FormattedString = fmt::format(Format, std::forward<TArgs>(Args)...);
-		#endif
+		const std::string Message = fmt::format(Fmt, std::forward<TArgs>(Args)...);
 		if (auto Logger = GetLogger(LoggerType); Logger != nullptr) {
-			Logger->error("{0}: {1}", Prefix, FormattedString);
+			Logger->error("{0}: {1}", Prefix, Message);
 		} else {
-			PrintLn("{2}{0}: {1}{3}", Prefix, FormattedString, LK_ANSI_COLOR_BG_BRIGHT_RED, LK_ANSI_COLOR_RESET);
+			PrintLn("{2}{0}: {1}{3}", Prefix, Message, LK_ANSI_COLOR_BG_BRIGHT_RED, LK_ANSI_COLOR_RESET);
 		}
 	}
 
@@ -309,13 +258,13 @@ namespace platformer2d {
 #undef LK_LOG_ASSERT
 #undef LK_INLINE
 
-/** 
+/**
  * Standard print functions.
  */
 #define LK_PRINT(...)    ::platformer2d::CLog::Print(__VA_ARGS__)
 #define LK_PRINTLN(...)  ::platformer2d::CLog::PrintLn(__VA_ARGS__)
 
-/** 
+/**
  * Core logging.
  */
 #define LK_TRACE(...)   ::platformer2d::CLog::PrintMessage(::platformer2d::ELoggerType::Core, ::platformer2d::ELogLevel::Trace, __VA_ARGS__)
