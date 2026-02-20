@@ -33,7 +33,9 @@ set(PROJECT_EXECUTABLE ${PROJECT_NAME})
 add_library(${PROJECT_INTERFACE} INTERFACE)
 
 # Compiler.
-message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} (${CMAKE_CXX_COMPILER})")
+message(STATUS "Compiler:   ${CMAKE_CXX_COMPILER_ID}
+Version:    ${CMAKE_CXX_COMPILER_VERSION}
+Executable: ${CMAKE_CXX_COMPILER}")
 if (MSVC)
 	set(LK_COMPILER_MSVC ON)
 	project_add_compile_definitions(
@@ -63,6 +65,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	set(LK_COMPILER_GCC ON)
 	project_add_compile_definitions(
 		LK_COMPILER_GCC
+		__LK_VA_OPT
 	)
 	project_add_compile_options(
 		-Wno-format-security
@@ -75,7 +78,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	set(LK_COMPILER_CLANG ON)
-	project_add_compile_definitions(LK_COMPILER_CLANG)
+	project_add_compile_definitions(
+	    LK_COMPILER_CLANG
+	    __LK_VA_OPT
+	)
 else()
 	message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -88,7 +94,6 @@ project_add_compile_definitions(
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-	message(WARNING "LK_PROFILING_USE_SCOPED_TIMERS: ${LK_PROFILING_USE_SCOPED_TIMERS}")
     if (LK_PROFILING_USE_SCOPED_TIMERS)
         set(LK_PROFILING_USE_SCOPED_TIMERS 1)
     else()
