@@ -34,9 +34,9 @@ namespace platformer2d {
 
 }
 
-namespace std 
+namespace std
 {
-	template<typename T> 
+	template<typename T>
 	struct hash;
 
 	template<>
@@ -50,11 +50,11 @@ namespace std
 }
 
 template<>
-struct LK_FMT_LIB::formatter<platformer2d::LUUID> : LK_FMT_LIB::formatter<std::string>
+struct LkFmt::formatter<platformer2d::LUUID> : LkFmt::formatter<std::string>
 {
 	template<typename FormatContext>
     auto format(const platformer2d::LUUID UUID, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "{}", static_cast<platformer2d::LUUID::SizeType>(UUID));
+        return LkFmt::format_to(Context.out(), "{}", static_cast<platformer2d::LUUID::SizeType>(UUID));
     }
 };

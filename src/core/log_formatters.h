@@ -14,33 +14,33 @@
 #include "macros.h"
 
 template<>
-struct LK_FMT_LIB::formatter<std::filesystem::path> : LK_FMT_LIB::formatter<std::string>
+struct LkFmt::formatter<std::filesystem::path> : LkFmt::formatter<std::string>
 {
     template<typename FormatContext>
     auto format(const std::filesystem::path& Input, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "{}", Input.generic_string());
+        return LkFmt::format_to(Context.out(), "{}", Input.generic_string());
     }
 };
 
 template<>
-struct LK_FMT_LIB::formatter<glm::vec2>
+struct LkFmt::formatter<glm::vec2>
 {
     template<typename ParseContext>
     constexpr auto parse(ParseContext& Context)
     {
         return Context.begin();
     }
-	
+
     template<typename FormatContext>
     auto format(const glm::vec2& Input, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "({:.2f}, {:.2f})", Input.x, Input.y);
+        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f})", Input.x, Input.y);
     }
 };
 
 template<>
-struct LK_FMT_LIB::formatter<glm::vec3>
+struct LkFmt::formatter<glm::vec3>
 {
     template<typename ParseContext>
     constexpr auto parse(ParseContext& Context)
@@ -51,12 +51,12 @@ struct LK_FMT_LIB::formatter<glm::vec3>
     template<typename FormatContext>
     auto format(const glm::vec3& Input, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f})", Input.x, Input.y, Input.z);
+        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f})", Input.x, Input.y, Input.z);
     }
 };
 
 template<>
-struct LK_FMT_LIB::formatter<glm::vec4>
+struct LkFmt::formatter<glm::vec4>
 {
     template<typename ParseContext>
     constexpr auto parse(ParseContext& Context)
@@ -67,6 +67,6 @@ struct LK_FMT_LIB::formatter<glm::vec4>
     template<typename FormatContext>
     auto format(const glm::vec4& Input, FormatContext& Context) const
     {
-        return LK_FMT_LIB::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Input.x, Input.y, Input.z, Input.z);
+        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Input.x, Input.y, Input.z, Input.z);
     }
 };
