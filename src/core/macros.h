@@ -28,10 +28,12 @@
 #	define STDCALL      __stdcall
 #endif
 
+/* NOLINTBEGIN(misc-unused-alias-decls) */
 #ifdef SPDLOG_USE_STD_FORMAT
-#	define LK_FMT std::format
-#	define LK_FMT_LIB std
+#include <format>
+namespace LkFmt = std;
 #else
-#	define LK_FMT fmt::format
-#	define LK_FMT_LIB fmt
+#include <spdlog/fmt/fmt.h>
+namespace LkFmt = fmt;
 #endif
+/* NOLINTEND(misc-unused-alias-decls) */
