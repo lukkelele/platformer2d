@@ -62,7 +62,7 @@ namespace platformer2d::test {
 
 			static std::vector<EKey> PressedKeys;
 			const std::size_t PressedKeyCount = CKeyboard::GetPressedKeys(PressedKeys);
-			const std::string Title = LK_FMT("Pressed Keys: {}", PressedKeyCount);
+			const std::string Title = Format("Pressed Keys: {}", PressedKeyCount);
 			if (ImGui::BeginTable(Title.c_str(), 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit))
 			{
 				ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, ImGui::CalcTextSize("Key ------").x);
