@@ -237,7 +237,7 @@ namespace platformer2d {
 	template<typename... TArgs>
 	LK_INLINE void CLog::PrintAssertMessage(const ELoggerType LoggerType, std::string_view Prefix, TFormatString<TArgs...> Fmt, TArgs&&... Args)
 	{
-		const std::string Message = fmt::format(Fmt, std::forward<TArgs>(Args)...);
+		const std::string Message = Format(Fmt, std::forward<TArgs>(Args)...);
 		if (auto Logger = GetLogger(LoggerType); Logger != nullptr) {
 			Logger->error("{0}: {1}", Prefix, Message);
 		} else {

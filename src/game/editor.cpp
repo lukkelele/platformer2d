@@ -785,7 +785,7 @@ namespace platformer2d {
 
 				FActorSpecification ActorSpec;
 				auto Enemies = Scene->GetAllOfType<CEnemy>();
-				ActorSpec.Name = LK_FMT("Enemy-{}", Enemies.size() + 1);
+				ActorSpec.Name = Format("Enemy-{}", Enemies.size() + 1);
 				ActorSpec.Texture = ETexture::Enemy1;
 
 				FBodySpecification BodySpec;
@@ -1217,7 +1217,7 @@ namespace platformer2d {
 					if (bEditorViewportFocused) {
 						MousePickScene();
 					}
-				} 
+				}
 				break;
 			case EMouseButtonState::Released:
 				break;
@@ -1291,7 +1291,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(LK_FMT("platformer2d - Editor - {} ({})", Scene->GetName(), Core::GetPlatformName()));
+		CWindow::Get()->SetTitle(Format("platformer2d - Editor - {} ({})", Scene->GetName(), Core::GetPlatformName()));
 		SceneToOpen.clear();
 	}
 
@@ -1318,7 +1318,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(LK_FMT("platformer2d ({})", Core::GetPlatformName()));
+		CWindow::Get()->SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
 		LK_DEBUG_TAG("Editor", "Scene closed");
 	}
 

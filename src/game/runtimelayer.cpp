@@ -508,7 +508,7 @@ namespace platformer2d {
 			case EMouseButtonState::Pressed:
 				if (Data.Button == EMouseButton::Button0) {
 					MousePickScene();
-				} 
+				}
 				break;
 			case EMouseButtonState::Released:
 				break;
@@ -590,7 +590,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(LK_FMT("platformer2d - {} ({})", Scene->GetName(), Core::GetPlatformName()));
+		CWindow::Get()->SetTitle(Format("platformer2d - {} ({})", Scene->GetName(), Core::GetPlatformName()));
 		SceneToOpen.clear();
 	}
 
@@ -623,7 +623,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(LK_FMT("platformer2d ({})", Core::GetPlatformName()));
+		CWindow::Get()->SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
 		LK_DEBUG_TAG("RuntimeLayer", "Scene closed");
 	}
 
