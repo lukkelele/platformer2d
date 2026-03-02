@@ -18,21 +18,21 @@ BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
-  AfterControlStatement: true
+  AfterControlStatement: false
   AfterEnum: true
   AfterFunction: true
   AfterNamespace: false
   AfterObjCDeclaration: true
   AfterStruct: true
-  AfterUnion: true
-  AfterExternBlock: true
-  BeforeCatch: true
-  BeforeElse: true
-  BeforeLambdaBody: true 
-  BeforeWhile: true
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: true
+  BeforeWhile: false
   IndentBraces: false
   SplitEmptyRecord: true
-  SplitEmptyFunction: false 
+  SplitEmptyFunction: false
 BreakBeforeBinaryOperators: NonAssignment
 BreakInheritanceList: AfterColon
 BreakBeforeTernaryOperators: true
@@ -55,12 +55,12 @@ IndentWidth: 4
 IndentExternBlock: AfterExternBlock
 NamespaceIndentation: All
 AlignArrayOfStructures: Right
-IndentPPDirectives: AfterHash 
+IndentPPDirectives: AfterHash
 PPIndentWidth: 4
 PointerAlignment: Left
 SortIncludes: false
 SpaceBeforeCaseColon: false
-SpaceBeforeCtorInitializerColon: true 
+SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
 SpaceBeforeJsonColon: false
 SpacesInAngles: Never
@@ -79,8 +79,8 @@ KeepEmptyLinesAtEOF: true
 SeparateDefinitionBlocks: Leave
 SpaceAfterTemplateKeyword: false
 ExperimentalAutoDetectBinPacking: false
-BinPackArguments: true 
-BinPackParameters: true 
+BinPackArguments: true
+BinPackParameters: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowAllArgumentsOnNextLine: true
 PenaltyBreakAssignment: 100
