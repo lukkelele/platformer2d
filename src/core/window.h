@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 #include <glad/glad.h>
@@ -34,6 +34,7 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnResized, CWindow, uint16_t /* Width */, uint16_t /* Height */);
 		LK_DECLARE_EVENT(FOnFramebufferResized, CWindow, uint32_t, uint32_t);
+
 	public:
 		CWindow(const FWindowSpecification& InSpec);
 		CWindow() = delete;
@@ -68,6 +69,7 @@ namespace platformer2d {
 	public:
 		static inline FOnResized OnResized;
 		static inline FOnFramebufferResized OnFramebufferResized;
+
 	private:
 		const FWindowSpecification Spec;
 		GLFWwindow* GlfwWindow = nullptr;

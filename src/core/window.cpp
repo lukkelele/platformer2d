@@ -30,7 +30,11 @@ namespace platformer2d {
 		const int GlfwInit = glfwInit();
 		glfwSetErrorCallback([](const int Error, const char* Description)
 		{
-			LK_ERROR("GLFW error ({}): {}", Error, Description);
+			if (Error == GLFW_FEATURE_UNAVAILABLE) {
+				LK_WARN_TAG("Window", "GLFW error ({}): {}", Error, Description);
+			} else {
+				LK_ERROR_TAG("Window", "GLFW error ({}): {}", Error, Description);
+			}
 		});
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, LK_OPENGL_MAJOR);
@@ -50,7 +54,7 @@ namespace platformer2d {
 
 		SetVSync(Spec.bVSync);
 
-		glfwSetWindowSizeCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow, int NewWidth, int NewHeight) 
+		glfwSetWindowSizeCallback(GlfwWindow, [](GLFWwindow* InGlfwWindow, int NewWidth, int NewHeight)
 		{
 			FWindowData& Data = *((FWindowData*)glfwGetWindowUserPointer(InGlfwWindow));
 			LK_ASSERT(Data.WindowRef, "Invalid window reference");
