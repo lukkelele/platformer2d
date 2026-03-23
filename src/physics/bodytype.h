@@ -4,7 +4,7 @@
 
 namespace platformer2d {
 
-	enum class EBodyType
+	enum class EBodyType : std::uint8_t
 	{
 		Static,
 		Dynamic,
@@ -12,14 +12,13 @@ namespace platformer2d {
 		COUNT
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
 		inline const char* ToString(const EBodyType Type)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EBodyType::EnumValue: S = #EnumValue; break
-			switch (Type)
-			{
+#define _(EnumValue)                                 \
+	case EBodyType::EnumValue: S = #EnumValue; break
+			switch (Type) {
 				_(Static);
 				_(Dynamic);
 				_(Kinematic);
@@ -28,7 +27,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

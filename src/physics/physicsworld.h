@@ -10,7 +10,7 @@
 
 namespace platformer2d {
 
-	using TPreSolveFunc = bool(*)(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
+	using TPreSolveFunc = bool (*)(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
 
 	class CPhysicsWorld
 	{
@@ -19,6 +19,7 @@ namespace platformer2d {
 		LK_DECLARE_EVENT(FOnSensorEndEvent, CPhysicsWorld, const CSensorEndEvent&);
 		LK_DECLARE_EVENT(FOnContactBeginEvent, CPhysicsWorld, const CContactBeginEvent&);
 		LK_DECLARE_EVENT(FOnContactEndEvent, CPhysicsWorld, const CContactEndEvent&);
+
 	public:
 		CPhysicsWorld() = delete;
 		~CPhysicsWorld() = delete;
@@ -54,6 +55,7 @@ namespace platformer2d {
 		static inline FOnSensorEndEvent OnSensorEndEvent;
 		static inline FOnContactBeginEvent OnContactBeginEvent;
 		static inline FOnContactEndEvent OnContactEndEvent;
+
 	private:
 		static inline b2WorldId WorldID;
 		static inline uint8_t Substep = 6;

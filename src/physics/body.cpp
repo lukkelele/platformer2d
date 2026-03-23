@@ -49,10 +49,10 @@ namespace platformer2d {
 			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
 			/* Body-local space. */
 			const b2Capsule Capsule = {
-				{ ShapeRef.P0.x, ShapeRef.P0.y },
-				{ ShapeRef.P1.x, ShapeRef.P1.y },
+				{ShapeRef.P0.x, ShapeRef.P0.y},
+				{ShapeRef.P1.x, ShapeRef.P1.y},
 				ShapeRef.Radius
-			};
+            };
 			ShapeID = b2CreateCapsuleShape(ID, &ShapeDef, &Capsule);
 		}
 
@@ -169,12 +169,12 @@ namespace platformer2d {
 
 	void CBody::ApplyForce(const glm::vec2& InForce, const bool bWakeUp) const
 	{
-		b2Body_ApplyForceToCenter(ID, { InForce.x, InForce.y }, bWakeUp);
+		b2Body_ApplyForceToCenter(ID, {InForce.x, InForce.y}, bWakeUp);
 	}
 
 	void CBody::ApplyImpulse(const glm::vec2& InImpulse, const bool bWakeUp) const
 	{
-		b2Body_ApplyLinearImpulseToCenter(ID, { InImpulse.x, InImpulse.y }, bWakeUp);
+		b2Body_ApplyLinearImpulseToCenter(ID, {InImpulse.x, InImpulse.y}, bWakeUp);
 	}
 
 	float CBody::GetMass() const
@@ -186,7 +186,7 @@ namespace platformer2d {
 	{
 		b2MassData Data{};
 		Data.mass = InMass;
-		Data.center = { 0.0f, 0.0f };
+		Data.center = {0.0f, 0.0f};
 		Data.rotationalInertia = 0.0f;
 		b2Body_SetMassData(ID, Data);
 	}
@@ -231,7 +231,7 @@ namespace platformer2d {
 
 	void CBody::SetScale(const float Factor)
 	{
-		SetScale({ Factor, Factor });
+		SetScale({Factor, Factor});
 	}
 
 	void CBody::SetScale(const glm::vec2& Factor)
@@ -291,7 +291,7 @@ namespace platformer2d {
 			return GetBoundingBox(Ref);
 		}
 
-		return { 0.0f, 0.0f };
+		return {0.0f, 0.0f};
 	}
 
 	FAABB CBody::GetAABB() const
@@ -312,7 +312,8 @@ namespace platformer2d {
 		Out << YAML::BeginMap;
 		Out << YAML::Key << "ShapeType" << YAML::Value << std::to_underlying(ShapeType);
 		switch (ShapeType) {
-			case EShape::Polygon: {
+			case EShape::Polygon:
+			{
 				const auto& ShapeRef = std::get<FPolygon>(Shape);
 				Out << YAML::Key << "Size" << YAML::Value << ShapeRef.Size;
 				Out << YAML::Key << "Rotation" << YAML::Value << GetRotation();
@@ -321,12 +322,14 @@ namespace platformer2d {
 				break;
 			}
 
-			case EShape::Line: {
+			case EShape::Line:
+			{
 				LK_MARK_NOT_IMPLEMENTED();
 				break;
 			}
 
-			case EShape::Capsule: {
+			case EShape::Capsule:
+			{
 				const auto& ShapeRef = std::get<FCapsule>(Shape);
 				Out << YAML::Key << "P0" << YAML::Value << ShapeRef.P0;
 				Out << YAML::Key << "P1" << YAML::Value << ShapeRef.P1;
@@ -349,19 +352,23 @@ namespace platformer2d {
 	std::string CBody::ToString(const FBodySpecification& Spec)
 	{
 		EShape ShapeType = EShape::None;
-		if (IsShape<EShape::Polygon>(Spec.Shape)) ShapeType = EShape::Polygon;
-		else if (IsShape<EShape::Line>(Spec.Shape)) ShapeType = EShape::Line;
-		else if (IsShape<EShape::Capsule>(Spec.Shape)) ShapeType = EShape::Capsule;
-		else ShapeType = EShape::None;
+		if (IsShape<EShape::Polygon>(Spec.Shape)) {
+			ShapeType = EShape::Polygon;
+		} else if (IsShape<EShape::Line>(Spec.Shape)) {
+			ShapeType = EShape::Line;
+		} else if (IsShape<EShape::Capsule>(Spec.Shape)) {
+			ShapeType = EShape::Capsule;
+		} else {
+			ShapeType = EShape::None;
+		}
 
 		return Format("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
-					  Enum::ToString(ShapeType), Spec.Position, Spec.Flags, Spec.MotionLock, Spec.Density);
+			Enum::ToString(ShapeType), Spec.Position, Spec.Flags, Spec.MotionLock, Spec.Density);
 	}
 
 	void CBody::SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const
 	{
-		switch (Spec.Type)
-		{
+		switch (Spec.Type) {
 			case EBodyType::Static:
 				BodyDef.type = b2_staticBody;
 				break;
@@ -474,8 +481,7 @@ namespace platformer2d {
 
 	EBodyType CBody::DetermineBodyType(const b2BodyType Type)
 	{
-		switch (Type)
-		{
+		switch (Type) {
 			case b2BodyType::b2_staticBody:
 				return EBodyType::Static;
 			case b2BodyType::b2_dynamicBody:

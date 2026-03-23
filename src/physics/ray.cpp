@@ -3,9 +3,9 @@
 namespace platformer2d::Physics {
 
 	void CastRay(FRayCast& RayCast, const glm::vec2& Pos, const glm::mat4& ViewMat,
-				 const glm::mat4& ProjMat, float const MousePosX, const float MousePosY)
+		const glm::mat4& ProjMat, float const MousePosX, const float MousePosY)
 	{
-		const glm::vec4 MouseClipPos = { MousePosX, MousePosY, -1.0f, 1.0f };
+		const glm::vec4 MouseClipPos = {MousePosX, MousePosY, -1.0f, 1.0f};
 		const glm::mat4 InverseProj = glm::inverse(ProjMat);
 		const glm::vec4 Ray = InverseProj * MouseClipPos;
 		const glm::mat3 InverseView = glm::inverse(glm::mat3(ViewMat));
@@ -18,8 +18,7 @@ namespace platformer2d::Physics {
 	{
 		const glm::vec2 Origin = glm::vec2(RayCast.Pos.x, RayCast.Pos.y);
 		const glm::vec2 Dir = glm::vec2(RayCast.Dir.x, RayCast.Dir.y);
-		if ((Dir.x == 0.0f) && (Dir.y == 0.0f))
-		{
+		if ((Dir.x == 0.0f) && (Dir.y == 0.0f)) {
 			return false;
 		}
 
@@ -30,12 +29,10 @@ namespace platformer2d::Physics {
 		const float TMin = glm::max(glm::min(T1.x, T2.x), glm::min(T1.y, T2.y));
 		const float TMax = glm::min(glm::max(T1.x, T2.x), glm::max(T1.y, T2.y));
 
-		if (TMax < 0.0f)
-		{
+		if (TMax < 0.0f) {
 			return false;
 		}
-		if (TMin > TMax)
-		{
+		if (TMin > TMax) {
 			return false;
 		}
 

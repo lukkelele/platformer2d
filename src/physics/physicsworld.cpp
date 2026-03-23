@@ -141,7 +141,7 @@ namespace platformer2d {
 			Normal.y = -Normal.y;
 		}
 
-		const b2Vec2 Up = { 0.0f, 1.0f };
+		const b2Vec2 Up = {0.0f, 1.0f};
 		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
 		if (UpDot <= 0.0f) {
 			/* Side/ceiling/backface -> behave as a solid. */

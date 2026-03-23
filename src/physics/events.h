@@ -24,6 +24,7 @@ namespace platformer2d {
 	public:
 		CActor* Sensor = nullptr;
 		CActor* Visitor = nullptr;
+
 	private:
 		LK_EVENT(CSensorBeginEvent, SensorBegin);
 	};
@@ -42,10 +43,10 @@ namespace platformer2d {
 	public:
 		CActor* Sensor = nullptr;
 		CActor* Visitor = nullptr;
+
 	private:
 		LK_EVENT(CSensorEndEvent, SensorEnd);
 	};
-
 
 	/************************************
 	 * Contact Events
@@ -64,6 +65,7 @@ namespace platformer2d {
 	public:
 		CActor* A = nullptr;
 		CActor* B = nullptr;
+
 	private:
 		LK_EVENT(CContactBeginEvent, ContactBegin);
 	};
@@ -82,6 +84,7 @@ namespace platformer2d {
 	public:
 		CActor* A = nullptr;
 		CActor* B = nullptr;
+
 	private:
 		LK_EVENT(CContactEndEvent, ContactEnd);
 	};

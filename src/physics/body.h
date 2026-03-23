@@ -16,19 +16,19 @@ namespace platformer2d {
 	enum EMotionLock : uint32_t
 	{
 		EMotionLock_None = 0,
-		EMotionLock_X    = LK_BIT(1),
-		EMotionLock_Y    = LK_BIT(2),
-		EMotionLock_Z    = LK_BIT(3),
-		EMotionLock_All  = (EMotionLock_X | EMotionLock_Y | EMotionLock_Z)
+		EMotionLock_X = LK_BIT(1),
+		EMotionLock_Y = LK_BIT(2),
+		EMotionLock_Z = LK_BIT(3),
+		EMotionLock_All = (EMotionLock_X | EMotionLock_Y | EMotionLock_Z)
 	};
 
 	enum EBodyFlag : uint32_t
 	{
-		EBodyFlag_None           = 0,
+		EBodyFlag_None = 0,
 		EBodyFlag_PreSolveEvents = LK_BIT(1),
-		EBodyFlag_ContactEvents  = LK_BIT(2),
-		EBodyFlag_SensorEvents   = LK_BIT(3),
-		EBodyFlag_Bullet         = LK_BIT(4),
+		EBodyFlag_ContactEvents = LK_BIT(2),
+		EBodyFlag_SensorEvents = LK_BIT(3),
+		EBodyFlag_Bullet = LK_BIT(4),
 	};
 
 	struct FBodySpecification
@@ -36,11 +36,11 @@ namespace platformer2d {
 		EBodyType Type = EBodyType::Static;
 		TShape Shape{};
 
-		glm::vec2 Position = { 0.0f, 0.0f };
+		glm::vec2 Position = {0.0f, 0.0f};
 		float Friction = 0.60f;
 		float Density = 1.0f;
 		float GravityScale = 1.0f;
-		glm::vec2 LinearVelocity = { 0.0f, 0.0f };
+		glm::vec2 LinearVelocity = {0.0f, 0.0f};
 		float LinearDamping = 0.0f;
 		float AngularVelocity = 0.0f;
 		float AngularDamping = 0.0f;
@@ -62,8 +62,8 @@ namespace platformer2d {
 
 		void Tick(float InDeltaTime);
 
-		inline const b2BodyId& GetID() const { return ID; }
-		inline const b2ShapeId& GetShapeID() const { return ShapeID; }
+		const b2BodyId& GetID() const { return ID; }
+		const b2ShapeId& GetShapeID() const { return ShapeID; }
 		EBodyType GetType() const;
 
 		bool IsEnabled() const;
@@ -132,13 +132,14 @@ namespace platformer2d {
 		glm::vec2 GetSize() const;
 		FAABB GetAABB() const;
 
-		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
+		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
 		static std::string ToString(const FBodySpecification& Spec);
 
 	public:
 		static constexpr float LINEAR_VELOCITY_X_EPSILON = 0.010f;
 		static constexpr float LINEAR_VELOCITY_Y_EPSILON = 0.050f;
+
 	private:
 		void SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const;
 
