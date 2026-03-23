@@ -19,6 +19,7 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnActorCreated, CScene, LUUID, std::weak_ptr<CActor>);
 		LK_DECLARE_EVENT(FOnActorDeleted, CScene, LUUID);
+
 	public:
 		CScene(std::string_view InName);
 		CScene() = delete;
@@ -32,8 +33,7 @@ namespace platformer2d {
 		{
 			static_assert(std::is_base_of_v<CActor, T>);
 			std::shared_ptr<T> Actor = std::shared_ptr<T>(new T(std::forward<TArgs>(Args)...));
-			if (Actor != nullptr)
-			{
+			if (Actor != nullptr) {
 				LK_DEBUG_TAG("Scene", "Created: {} ({})", Actor->GetName(), Actor->GetHandle());
 				Actors.emplace_back(Actor);
 
@@ -118,6 +118,7 @@ namespace platformer2d {
 		static constexpr const char* FILE_EXTENSION = "lscene";
 		static inline FOnActorCreated OnActorCreated;
 		static inline FOnActorDeleted OnActorDeleted;
+
 	private:
 		LUUID ID;
 		std::string Name;
@@ -130,7 +131,8 @@ namespace platformer2d {
 		inline const char* ToString(const ESceneState State)
 		{
 			const char* S = "";
-		#define _(EnumValue) case ESceneState::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                   \
+	case ESceneState::EnumValue: S = #EnumValue; break
 			switch (State) {
 				_(None);
 				_(Play);
@@ -141,7 +143,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(State);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

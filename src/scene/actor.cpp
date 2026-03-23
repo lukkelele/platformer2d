@@ -64,7 +64,7 @@ namespace platformer2d {
 		return Body ? Body->GetSize() : GetTransformComponent().GetScale();
 	}
 
-	void CActor::SetSize(const glm::vec2 & InSize)
+	void CActor::SetSize(const glm::vec2& InSize)
 	{
 		if (Body) {
 			LK_FATAL_TAG("Actor", "Not supported yet: {}", LK_FUNCSIG);
@@ -76,7 +76,7 @@ namespace platformer2d {
 
 	void CActor::SetPosition(const float X, const float Y)
 	{
-		SetPosition({ X, Y });
+		SetPosition({X, Y});
 	}
 
 	void CActor::SetPosition(const glm::vec2& NewPos)
@@ -84,7 +84,7 @@ namespace platformer2d {
 		TransformComp.Translation.x = NewPos.x;
 		TransformComp.Translation.y = NewPos.y;
 		if (Body) {
-			Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+			Body->SetPosition({TransformComp.Translation.x, TransformComp.Translation.y});
 		}
 	}
 
@@ -92,7 +92,7 @@ namespace platformer2d {
 	{
 		TransformComp.Translation = NewPos;
 		if (Body) {
-			Body->SetPosition({ TransformComp.Translation.x, TransformComp.Translation.y });
+			Body->SetPosition({TransformComp.Translation.x, TransformComp.Translation.y});
 		}
 	}
 
@@ -221,7 +221,8 @@ namespace platformer2d {
 	{
 		for (auto& Effect : EC.Effects) {
 			switch (Effect.Type) {
-				case EEffectType::Rotate: {
+				case EEffectType::Rotate:
+				{
 					if (Body) {
 						const FRotateEffect& Rotate = std::get<FRotateEffect>(Effect.Data);
 						Body->SetAngularVelocity(glm::radians(Rotate.AngularSpeedDegPerSecond));

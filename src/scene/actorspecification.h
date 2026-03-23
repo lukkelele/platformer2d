@@ -22,7 +22,7 @@ namespace platformer2d {
 		EActorType Type = EActorType::Object;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
-		glm::vec3 Pos = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Pos = {0.0f, 0.0f, 0.0f};
 		std::string Name;
 
 		bool OutlineEnabled = true;
@@ -30,14 +30,17 @@ namespace platformer2d {
 		glm::vec4 OutlineColor = FColor::Transparent;
 
 		FActorSpecification() = default;
-		FActorSpecification(const ETexture InTexture) : Texture(InTexture) {}
+		FActorSpecification(const ETexture InTexture)
+			: Texture(InTexture)
+		{}
 	};
 
 	namespace Enum {
 		inline const char* ToString(const EActorType Type)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EActorType::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                  \
+	case EActorType::EnumValue: S = #EnumValue; break
 			switch (Type) {
 				_(Object);
 				_(Player);
@@ -49,7 +52,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

@@ -25,30 +25,32 @@ namespace platformer2d {
 	struct FTransformComponent
 	{
 	public:
-		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+		glm::vec3 Translation = {0.0f, 0.0f, 0.0f};
+		glm::vec3 Scale = {1.0f, 1.0f, 1.0f};
 		bool bIsStatic = false;
 
 	private:
-		glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
-		glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
+		glm::vec3 RotationEuler = {0.0f, 0.0f, 0.0f};
+		glm::quat Rotation = {1.0f, 0.0f, 0.0f, 0.0f};
 
 	public:
 		FTransformComponent() = default;
-		FTransformComponent(const glm::vec3& Translation) : Translation(Translation) {}
+		FTransformComponent(const glm::vec3& Translation)
+			: Translation(Translation)
+		{}
 		FTransformComponent(const FTransformComponent& Other) = default;
 
-		inline glm::vec3 GetTranslation() const { return Translation; }
-		inline glm::vec3 GetScale() const { return Scale; }
+		glm::vec3 GetTranslation() const { return Translation; }
+		glm::vec3 GetScale() const { return Scale; }
 
-		inline glm::mat4 GetTransform() const
+		glm::mat4 GetTransform() const
 		{
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* glm::toMat4(Rotation)
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 
-		inline glm::mat4 GetInvTransform() const
+		glm::mat4 GetInvTransform() const
 		{
 			const glm::mat4 InvTranslation = glm::translate(glm::mat4(1.0f), -Translation);
 			const glm::quat InvRot = glm::conjugate(Rotation);
@@ -56,13 +58,13 @@ namespace platformer2d {
 			return InvScale * glm::toMat4(InvRot) * InvTranslation;
 		}
 
-		inline glm::quat GetRotation() const { return Rotation; }
-		inline glm::vec3 GetRotationEuler() const { return RotationEuler; }
+		glm::quat GetRotation() const { return Rotation; }
+		glm::vec3 GetRotationEuler() const { return RotationEuler; }
 
 		/**
 		 * @brief Get 2D rotation in radians.
 		 */
-		inline float GetRotation2D() const { return glm::eulerAngles(Rotation).z; }
+		float GetRotation2D() const { return glm::eulerAngles(Rotation).z; }
 
 		void SetTranslation(const glm::vec3& InTranslation) { Translation = InTranslation; }
 		void SetTranslation(const glm::vec2& InTranslation) { Translation = glm::vec3(InTranslation, 0.0f); }
@@ -85,8 +87,7 @@ namespace platformer2d {
 
 			/* Attempt to avoid 180deg flips in the Euler angles when using SetRotation(quat). */
 			if ((std::fabs(RotationEuler.x - OriginalEulerer.x) == glm::pi<float>())
-				&& (std::fabs(RotationEuler.z - OriginalEulerer.z) == glm::pi<float>()))
-			{
+				&& (std::fabs(RotationEuler.z - OriginalEulerer.z) == glm::pi<float>())) {
 				RotationEuler.x = OriginalEulerer.x;
 				RotationEuler.y = glm::pi<float>() - RotationEuler.y;
 				RotationEuler.z = OriginalEulerer.z;
@@ -99,7 +100,7 @@ namespace platformer2d {
 			Rotation = glm::quat(RotationEuler);
 		}
 
-		inline bool IsStatic() const { return bIsStatic; }
+		bool IsStatic() const { return bIsStatic; }
 
 		std::string ToString() const
 		{
@@ -202,8 +203,8 @@ namespace platformer2d {
 		float Health = MaxHealth;
 		bool bDamageable = true;
 
-		FORCEINLINE float GetHealth() const { return Health; }
-		FORCEINLINE void SetHealth(const float InHealth)
+		float GetHealth() const { return Health; }
+		void SetHealth(const float InHealth)
 		{
 			Health = InHealth;
 			if (Health < 0.0f) {
@@ -211,19 +212,20 @@ namespace platformer2d {
 			}
 		}
 
-		FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
-		FORCEINLINE void SetMaxHealth(const float InMaxHealth) { MaxHealth = InMaxHealth; }
+		float GetMaxHealth() const { return MaxHealth; }
+		void SetMaxHealth(const float InMaxHealth) { MaxHealth = InMaxHealth; }
 
-		FORCEINLINE bool IsDamageable() const { return bDamageable; }
-		FORCEINLINE void SetDamageable(const bool Enabled) { bDamageable = Enabled; }
-		FORCEINLINE bool IsDead() const { return (Health <= 0.0f); }
+		bool IsDamageable() const { return bDamageable; }
+		void SetDamageable(const bool Enabled) { bDamageable = Enabled; }
+		bool IsDead() const { return (Health <= 0.0f); }
 	};
 
 	namespace Enum {
 		inline const char* ToString(const EEffectType Type)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EEffectType::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                   \
+	case EEffectType::EnumValue: S = #EnumValue; break
 			switch (Type) {
 				_(None);
 				_(Rotate);
@@ -231,14 +233,15 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 
 		inline const char* ToString(const EInteraction Interaction)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EInteraction::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                    \
+	case EInteraction::EnumValue: S = #EnumValue; break
 			switch (Interaction) {
 				_(None);
 				_(Damage);
@@ -248,14 +251,15 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Interaction);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 
 		inline const char* ToString(const EPickupKind Kind)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EPickupKind::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                   \
+	case EPickupKind::EnumValue: S = #EnumValue; break
 			switch (Kind) {
 				_(Item);
 				_(Weapon);
@@ -264,7 +268,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Kind);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 

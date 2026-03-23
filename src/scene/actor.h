@@ -72,7 +72,7 @@ namespace platformer2d {
 
 		glm::vec2 GetSize() const;
 		void SetSize(const glm::vec2& InSize);
-		FORCEINLINE const glm::vec3& GetPosition() const { return TransformComp.Translation; }
+		const glm::vec3& GetPosition() const { return TransformComp.Translation; }
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
 		void SetPosition(const glm::vec3& NewPos);
@@ -83,10 +83,10 @@ namespace platformer2d {
 		float GetRotation() const;
 		void SetRotation(float AngleRad);
 
-		FORCEINLINE FTransformComponent& GetTransformComponent() { return TransformComp; }
-		FORCEINLINE const FTransformComponent& GetTransformComponent() const { return TransformComp; }
-		FORCEINLINE CBody* GetBody() { return Body ? Body.get() : nullptr; }
-		FORCEINLINE const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
+		FTransformComponent& GetTransformComponent() { return TransformComp; }
+		const FTransformComponent& GetTransformComponent() const { return TransformComp; }
+		CBody* GetBody() { return Body ? Body.get() : nullptr; }
+		const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
 		bool IsMoving() const;
 
 		bool IsTickEnabled() const { return bTickEnabled; }
@@ -219,3 +219,4 @@ namespace platformer2d {
 }
 
 #include "actor_impl.h"
+

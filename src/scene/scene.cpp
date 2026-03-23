@@ -58,8 +58,7 @@ namespace platformer2d {
 				Actor->GetColor(),
 				glm::degrees(TC.GetRotation2D()),
 				Actor->IsOutlineEnabled() ? Actor->GetOutlineThickness() : 0.0f,
-				Actor->GetOutlineColor()
-			);
+				Actor->GetOutlineColor());
 		}
 	}
 
@@ -281,7 +280,8 @@ namespace platformer2d {
 			switch (ActorType) {
 				case EActorType::Object:
 					[[fallthrough]];
-				case EActorType::Spawnpoint: {
+				case EActorType::Spawnpoint:
+				{
 					if (HasBody) {
 						Actor = Create<CActor>(ActorSpec, *BodySpec);
 					} else {
@@ -289,12 +289,14 @@ namespace platformer2d {
 					}
 					break;
 				}
-				case EActorType::Player: {
+				case EActorType::Player:
+				{
 					LK_VERIFY(HasBody, "Body is expected for {}: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
 					Actor = Create<CActor>(ActorSpec, *BodySpec);
 					break;
 				}
-				case EActorType::Enemy: {
+				case EActorType::Enemy:
+				{
 					LK_VERIFY(HasBody, "Body is expected for {}: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
 					LK_VERIFY(EnemySpec.has_value(), "Enemy specification missing for {} ({})", ActorSpec.Handle, ActorSpec.Name);
 					Actor = Create<CEnemy>(*EnemySpec, ActorSpec, *BodySpec);

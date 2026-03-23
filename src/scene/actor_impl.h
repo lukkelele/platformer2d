@@ -27,8 +27,7 @@ namespace platformer2d {
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>()
 	{
 		LK_DEBUG_TAG("Actor", "{}: Add effect component", Name);
-		if (!EffectComp.has_value())
-		{
+		if (!EffectComp.has_value()) {
 			EffectComp.emplace();
 		}
 
