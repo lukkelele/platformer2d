@@ -30,6 +30,7 @@ namespace platformer2d {
 	{
 	public:
 		using TSink = YAML::Emitter;
+
 	public:
 		virtual ~ISerializable() = default;
 
@@ -48,6 +49,7 @@ namespace platformer2d {
 	{
 	public:
 		using TSink = std::filesystem::path;
+
 	public:
 		virtual ~ISerializable() = default;
 

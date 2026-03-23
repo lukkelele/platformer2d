@@ -7,26 +7,26 @@
 
 namespace platformer2d::Serialization {
 
-	/**
-	 * @def LK_DESERIALIZE_PROPERTY
-	 * @brief Get a value from a node with a fallback value incase it doesn't exist.
-	 */
-	#define LK_DESERIALIZE_PROPERTY(PropertyName, Destination, DefaultValue, Node) \
-		if (Node.IsDefined()) { \
-			if (auto NodeRef = Node[#PropertyName]) { \
-				try { \
-					Destination = NodeRef.as<decltype(DefaultValue)>(); \
-				} catch (const std::exception& Exception) { \
-					LK_ERROR_TAG("Deserializer", "Failed to get \"{}\": {}", #PropertyName, Exception.what()); \
-					Destination = DefaultValue; \
-				} \
-			} else { \
-				LK_WARN_TAG("Deserializer", "Property not found: {}", #PropertyName); \
-			} \
-		} else { \
-			LK_ERROR_TAG("Deserializer", "Default value used for: {}", #PropertyName); \
-			Destination = DefaultValue; \
-		}
+/**
+ * @def LK_DESERIALIZE_PROPERTY
+ * @brief Get a value from a node with a fallback value incase it doesn't exist.
+ */
+#define LK_DESERIALIZE_PROPERTY(PropertyName, Destination, DefaultValue, Node)                             \
+	if (Node.IsDefined()) {                                                                                \
+		if (auto NodeRef = Node[#PropertyName]) {                                                          \
+			try {                                                                                          \
+				Destination = NodeRef.as<decltype(DefaultValue)>();                                        \
+			} catch (const std::exception& Exception) {                                                    \
+				LK_ERROR_TAG("Deserializer", "Failed to get \"{}\": {}", #PropertyName, Exception.what()); \
+				Destination = DefaultValue;                                                                \
+			}                                                                                              \
+		} else {                                                                                           \
+			LK_WARN_TAG("Deserializer", "Property not found: {}", #PropertyName);                          \
+		}                                                                                                  \
+	} else {                                                                                               \
+		LK_ERROR_TAG("Deserializer", "Default value used for: {}", #PropertyName);                         \
+		Destination = DefaultValue;                                                                        \
+	}
 
 	template<typename TDest, typename TDefault>
 	static void DeserializeProperty(std::string_view PropertyName, TDest& Destination, const TDefault& DefaultValue, const YAML::Node& Node)
@@ -86,7 +86,8 @@ namespace platformer2d::Serialization {
 			Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(Instance.Type);
 
 			switch (Instance.Type) {
-				case EEffectType::Rotate: {
+				case EEffectType::Rotate:
+				{
 					const FRotateEffect& Rotate = std::get<FRotateEffect>(Instance.Data);
 					Out << YAML::Key << "AngularSpeedDegPerSecond" << YAML::Value << Rotate.AngularSpeedDegPerSecond;
 					break;
@@ -108,12 +109,14 @@ namespace platformer2d::Serialization {
 		Out << YAML::BeginMap;
 		Out << YAML::Key << "InteractionType" << YAML::Value << std::to_underlying(IC.GetType());
 		switch (IC.Type) {
-			case EInteraction::Damage: {
+			case EInteraction::Damage:
+			{
 				const auto& Data = std::get<FDamageInteraction>(IC.Data);
 				Out << YAML::Key << "Damage" << YAML::Value << Data.Damage;
 				break;
 			}
-			case EInteraction::Pickup: {
+			case EInteraction::Pickup:
+			{
 				const auto& Data = std::get<FPickupInteraction>(IC.Data);
 				Out << YAML::Key << "PickupKind" << YAML::Value << std::to_underlying(Data.Kind);
 
@@ -213,14 +216,16 @@ namespace platformer2d::Serialization {
 	{
 		IC.Type = static_cast<EInteraction>(Node["InteractionType"].as<std::underlying_type_t<EInteraction>>());
 		switch (IC.Type) {
-			case EInteraction::Damage: {
+			case EInteraction::Damage:
+			{
 				FDamageInteraction Data;
 				LK_DESERIALIZE_PROPERTY(Damage, Data.Damage, 0.0f, Node);
 				IC.Data = Data;
 				LK_DEBUG_TAG("Deserializer", "FDamageInteraction::Damage: {}", Data.Damage);
 				break;
 			}
-			case EInteraction::Pickup: {
+			case EInteraction::Pickup:
+			{
 				FPickupInteraction Data;
 				LK_DESERIALIZE_PROPERTY(PickupKind, Data.Kind, EPickupKind::Item, Node);
 				LK_DESERIALIZE_PROPERTY(ExpireWhenPickedUp, Data.bExpireWhenPickedUp, false, Node);
@@ -238,13 +243,11 @@ namespace platformer2d::Serialization {
 				if (ObjectTypeValue >= 0) {
 					if (Data.Kind == EPickupKind::Item) {
 						FPickupItem Object = {
-							.Type = static_cast<EItemType>(ObjectTypeValue)
-						};
+							.Type = static_cast<EItemType>(ObjectTypeValue)};
 						Data.Object = Object;
 					} else if (Data.Kind == EPickupKind::Weapon) {
 						FPickupWeapon Object = {
-							.Type = static_cast<EWeaponType>(ObjectTypeValue)
-						};
+							.Type = static_cast<EWeaponType>(ObjectTypeValue)};
 
 						const YAML::Node& ObjectNode = Node["Object"];
 						LK_ASSERT(ObjectNode.IsDefined(), "Object node not defined");
@@ -290,7 +293,8 @@ namespace platformer2d::Serialization {
 		LK_VERIFY(ShapeNode["ShapeType"], "ShapeType missing in yaml");
 		const EShape ShapeType = static_cast<EShape>(ShapeNode["ShapeType"].as<int>());
 		switch (ShapeType) {
-			case EShape::Polygon: {
+			case EShape::Polygon:
+			{
 				const glm::vec2 Size = ShapeNode["Size"].as<glm::vec2>();
 				const float Rotation = ShapeNode["Rotation"].as<float>();
 				const float Radius = ShapeNode["Radius"].as<float>();
@@ -304,11 +308,13 @@ namespace platformer2d::Serialization {
 				BodySpec.Shape.emplace<FPolygon>(Polygon);
 				break;
 			}
-			case EShape::Line: {
+			case EShape::Line:
+			{
 				LK_MARK_NOT_IMPLEMENTED();
 				break;
 			}
-			case EShape::Capsule: {
+			case EShape::Capsule:
+			{
 				const glm::vec2 P0 = ShapeNode["Size"].as<glm::vec2>();
 				const glm::vec2 P1 = ShapeNode["Size"].as<glm::vec2>();
 				const float Radius = ShapeNode["Radius"].as<float>();
