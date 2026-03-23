@@ -12,7 +12,6 @@ project_library_sources(
 	layerstack.h
 	layerstack.cpp
 	log.h
-	log.cpp
 	log_formatters.h
 	macros.h
 	platform.h
@@ -33,3 +32,4 @@ project_library_sources(
 add_subdirectory(event)
 add_subdirectory(input)
 add_subdirectory(math)
+

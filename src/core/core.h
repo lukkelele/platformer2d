@@ -13,6 +13,8 @@
 #include <span>
 #include <queue>
 
+#include <glm/glm.hpp>
+
 #include "assert.h"
 #include "log.h"
 #include "macros.h"

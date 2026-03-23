@@ -2,17 +2,20 @@
 
 #include <cassert>
 
-#include "platform.h"
 #include "log.h"
+
+#include "platform.h"
 
 /**
  * Assert.
  */
 #ifdef LK_ENABLE_ASSERT
 #	ifdef __LK_VA_OPT
-#		define __LK_ASSERT_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Assert failed" __VA_OPT__(, ) __VA_ARGS__)
+//#		define __LK_ASSERT_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Assert failed" __VA_OPT__(, ) __VA_ARGS__)
+#		define __LK_ASSERT_MESSAGE(...) ::lklog::log::print_assert_msg("Assert failed" __VA_OPT__(, ) __VA_ARGS__)
 #	else
-#		define __LK_ASSERT_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Assert failed", ##__VA_ARGS__)
+//#		define __LK_ASSERT_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Assert failed", ##__VA_ARGS__)
+#		define __LK_ASSERT_MESSAGE(...) ::lklog::log::print_assert_msg("Assert failed", ##__VA_ARGS__)
 #	endif
 #define LK_ASSERT(Condition, ...)                        \
 	{                                                    \
@@ -38,9 +41,10 @@
  */
 #ifdef LK_ENABLE_VERIFY
 #	ifdef __LK_VA_OPT
-#		define __LK_VERIFY_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Verify failed" __VA_OPT__(, ) __VA_ARGS__)
+//#		define __LK_VERIFY_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Verify failed" __VA_OPT__(, ) __VA_ARGS__)
+#		define __LK_VERIFY_MESSAGE(...) ::lklog::log::print_assert_msg("Verify failed" __VA_OPT__(, ) __VA_ARGS__)
 #	else
-#		define __LK_VERIFY_MESSAGE(...) ::platformer2d::CLog::PrintAssertMessage(::platformer2d::ELoggerType::Core, "Verify failed", ##__VA_ARGS__)
+#		define __LK_VERIFY_MESSAGE(...) ::lklog::log::print_assert_msg("Verify failed", ##__VA_ARGS__)
 #	endif
 #define LK_VERIFY(Condition, ...)                             \
 	{                                                         \

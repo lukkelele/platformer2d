@@ -1,6 +1,8 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+
+#include <lklog/lklog.h>
 
 #include "core/core.h"
 #include "core/assert.h"
@@ -227,7 +229,7 @@ namespace platformer2d {
 }
 
 template<>
-struct LkFmt::formatter<platformer2d::EKey>
+struct lklog::fmt::formatter<platformer2d::EKey>
 {
 	template<typename ParseContext>
 	constexpr auto parse(ParseContext& Context)
@@ -238,12 +240,12 @@ struct LkFmt::formatter<platformer2d::EKey>
 	template<typename FormatContext>
 	auto format(const platformer2d::EKey Key, FormatContext& Context) const
 	{
-		return LkFmt::format_to(Context.out(), "{}", platformer2d::Enum::ToString(Key));
+		return lklog::fmt::format_to(Context.out(), "{}", platformer2d::Enum::ToString(Key));
 	}
 };
 
 template<>
-struct LkFmt::formatter<platformer2d::EKeyState>
+struct lklog::fmt::formatter<platformer2d::EKeyState>
 {
 	template<typename ParseContext>
 	constexpr auto parse(ParseContext& Context)
@@ -254,6 +256,6 @@ struct LkFmt::formatter<platformer2d::EKeyState>
 	template<typename FormatContext>
 	auto format(const platformer2d::EKeyState State, FormatContext& Context) const
 	{
-		return LkFmt::format_to(Context.out(), "{}", platformer2d::Enum::ToString(State));
+		return lklog::fmt::format_to(Context.out(), "{}", platformer2d::Enum::ToString(State));
 	}
 };

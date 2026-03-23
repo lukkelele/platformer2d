@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <random>
 
 #include "core/core.h"
@@ -8,13 +9,13 @@ namespace platformer2d {
 
 	struct LUUID
 	{
-		using SizeType = uint64_t;
+		using SizeType = std::uint64_t;
 
 		LUUID();
 		LUUID(const SizeType InUUID);
 		LUUID(const LUUID&) = default;
 
-		operator uint64_t() const { return UUID; }
+		operator std::uint64_t() const { return UUID; }
 
 	private:
 		static SizeType Generate()
@@ -23,19 +24,17 @@ namespace platformer2d {
 			static std::mt19937_64 RandomEngine(RandomDevice());
 			static std::uniform_int_distribution<SizeType> UniformDistribution(
 				1,
-				std::numeric_limits<SizeType>::max()
-			);
+				std::numeric_limits<SizeType>::max());
 			return UniformDistribution(RandomEngine);
 		}
 
 	private:
-		uint64_t UUID = 0;
+		std::uint64_t UUID = 0;
 	};
 
 }
 
-namespace std
-{
+namespace std {
 	template<typename T>
 	struct hash;
 
@@ -50,11 +49,12 @@ namespace std
 }
 
 template<>
-struct LkFmt::formatter<platformer2d::LUUID> : LkFmt::formatter<std::string>
+struct lklog::fmt::formatter<platformer2d::LUUID> : lklog::fmt::formatter<std::string>
 {
 	template<typename FormatContext>
-    auto format(const platformer2d::LUUID UUID, FormatContext& Context) const
-    {
-        return LkFmt::format_to(Context.out(), "{}", static_cast<platformer2d::LUUID::SizeType>(UUID));
-    }
+	auto format(const platformer2d::LUUID UUID, FormatContext& Context) const
+	{
+		return lklog::fmt::format_to(Context.out(), "{}", static_cast<platformer2d::LUUID::SizeType>(UUID));
+	}
 };
+

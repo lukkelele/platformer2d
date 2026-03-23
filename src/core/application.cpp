@@ -24,8 +24,9 @@ namespace platformer2d {
 
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
-		CLog::Initialize();
-		CLog::SetLogLevel(ELogLevel::Debug);
+		//CLog::Initialize();
+		//CLog::SetLogLevel(ELogLevel::Debug);
+		lklog::init(lklog::level::debug, "platformer2d");
 	}
 
 	CApplication::~CApplication()
