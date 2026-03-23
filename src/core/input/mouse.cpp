@@ -4,8 +4,7 @@
 
 namespace platformer2d {
 
-	namespace
-	{
+	namespace {
 		GLFWwindow* ActiveWindow = nullptr;
 	}
 

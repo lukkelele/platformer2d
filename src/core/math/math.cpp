@@ -13,8 +13,7 @@ namespace platformer2d::Math {
 	{
 		using T = float;
 		glm::mat4 LocalMatrix(Transform);
-		if (glm::epsilonEqual(LocalMatrix[3][3], static_cast<T>(0), glm::epsilon<T>()))
-		{
+		if (glm::epsilonEqual(LocalMatrix[3][3], static_cast<T>(0), glm::epsilon<T>())) {
 			return false;
 		}
 
@@ -23,10 +22,8 @@ namespace platformer2d::Math {
 
 		glm::vec3 Row[3] = {};
 		/* Scale and shear. */
-		for (glm::length_t i = 0; i < 3; i++)
-		{
-			for (glm::length_t j = 0; j < 3; j++)
-			{
+		for (glm::length_t i = 0; i < 3; i++) {
+			for (glm::length_t j = 0; j < 3; j++) {
 				Row[i][j] = LocalMatrix[i][j];
 			}
 		}
@@ -48,8 +45,7 @@ namespace platformer2d::Math {
 		int j = 0;
 		int k = 0;
 		T SquareRoot, Trace = Row[0].x + Row[1].y + Row[2].z;
-		if (Trace > static_cast<T>(0))
-		{
+		if (Trace > static_cast<T>(0)) {
 			SquareRoot = std::sqrt(Trace + static_cast<T>(1));
 			Rotation.w = static_cast<T>(0.50) * SquareRoot;
 			SquareRoot = static_cast<T>(0.50) / SquareRoot;
@@ -57,17 +53,13 @@ namespace platformer2d::Math {
 			Rotation.x = SquareRoot * (Row[1].z - Row[2].y);
 			Rotation.y = SquareRoot * (Row[2].x - Row[0].z);
 			Rotation.z = SquareRoot * (Row[0].y - Row[1].x);
-		}
-		else
-		{
-			static int Next[3] = { 1, 2, 0 };
+		} else {
+			static int Next[3] = {1, 2, 0};
 			i = 0;
-			if (Row[1].y > Row[0].x)
-			{
+			if (Row[1].y > Row[0].x) {
 				i = 1;
 			}
-			if (Row[2].z > Row[i][i])
-			{
+			if (Row[2].z > Row[i][i]) {
 				i = 2;
 			}
 
@@ -92,8 +84,7 @@ namespace platformer2d::Math {
 		const float S = std::sin(AngleRad);
 		return glm::vec2(
 			(C * V.x) - (S * V.y),
-			(S * V.x) + (C * V.y)
-		);
+			(S * V.x) + (C * V.y));
 	}
 
 	bool IsPointInPolygon(const glm::vec2& PointWorld, const glm::vec2& Center, const glm::vec2& Size, const float RotationRad)
@@ -107,28 +98,27 @@ namespace platformer2d::Math {
 	}
 
 	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
-								   const float Width, const float Height, const float Zoom)
+		const float Width, const float Height, const float Zoom)
 	{
 		const float Ratio = Width / Height;
 		const float U = Point.x / Width;
 		const float V = (Height - Point.y) / Height;
 
-		const glm::vec3 Extents = { Zoom * Ratio, Zoom, 0.0f };
+		const glm::vec3 Extents = {Zoom * Ratio, Zoom, 0.0f};
 		const glm::vec3 Lower = Center - Extents;
 		const glm::vec3 Upper = Center + Extents;
 
 		return glm::vec3(
 			(1.0f - U) * Lower.x + U * Upper.x,
 			(1.0f - V) * Lower.y + V * Upper.y,
-			0.0f
-		);
+			0.0f);
 	}
 
 	glm::vec3 ConvertWorldToScreen(const glm::vec3& Point, const glm::vec3& Center,
-								   const float Width, const float Height, const float Zoom)
+		const float Width, const float Height, const float Zoom)
 	{
 		const float Ratio = Width / Height;
-		const glm::vec3 Extents = { Zoom * Ratio, Zoom, 0.0f };
+		const glm::vec3 Extents = {Zoom * Ratio, Zoom, 0.0f};
 		const glm::vec3 Lower = Center - Extents;
 		const glm::vec3 Upper = Center + Extents;
 
@@ -142,8 +132,7 @@ namespace platformer2d::Math {
 	{
 		const float AngleRad = std::atan2(
 			2.0f * (Q.w * Q.z + Q.x * Q.y),
-			1.0f - (2.0f * (Q.y * Q.y + Q.z * Q.z))
-		);
+			1.0f - (2.0f * (Q.y * Q.y + Q.z * Q.z)));
 
 		return AngleRad;
 	}

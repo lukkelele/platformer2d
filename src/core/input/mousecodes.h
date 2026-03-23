@@ -15,8 +15,8 @@ namespace platformer2d {
 		None,
 
 		/* Keep aliases below the rest. */
-		Left   = Button0,
-		Right  = Button1,
+		Left = Button0,
+		Right = Button1,
 		Middle = Button2,
 	};
 
@@ -41,12 +41,10 @@ namespace platformer2d {
 		Down
 	};
 
-	namespace Enum
-	{
-		inline const char* ToString(const EMouseButton MouseButton)
+	namespace Enum {
+		constexpr const char* ToString(const EMouseButton MouseButton)
 		{
-			switch (MouseButton)
-			{
+			switch (MouseButton) {
 				case EMouseButton::Button0: return "Button0";
 				case EMouseButton::Button1: return "Button1";
 				case EMouseButton::Button2: return "Button2";
@@ -55,30 +53,25 @@ namespace platformer2d {
 				case EMouseButton::Button5: return "Button5";
 				case EMouseButton::None:    return "None";
 			}
-			LK_VERIFY(false);
 			return nullptr;
 		}
 
-		inline const char* ToString(const ECursorMode CursorMode)
+		constexpr const char* ToString(const ECursorMode CursorMode)
 		{
-			switch (CursorMode)
-			{
+			switch (CursorMode) {
 				case ECursorMode::Normal: return "Normal";
 				case ECursorMode::Hidden: return "Hidden";
 				case ECursorMode::Locked: return "Locked";
 			}
-			LK_VERIFY(false);
 			return nullptr;
 		}
 
-		inline const char* ToString(const EMouseScrollDirection ScrollDirection)
+		constexpr const char* ToString(const EMouseScrollDirection ScrollDirection)
 		{
-			switch (ScrollDirection)
-			{
+			switch (ScrollDirection) {
 				case EMouseScrollDirection::Up:   return "Up";
 				case EMouseScrollDirection::Down: return "Down";
 			}
-			LK_VERIFY(false);
 			return nullptr;
 		}
 	}

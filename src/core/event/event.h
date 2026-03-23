@@ -29,25 +29,13 @@ namespace platformer2d {
 		bool bHandled = false;
 	};
 
-	/**
-	 * @def LK_EVENT
-	 * Implements basic event functionality.
-	 */
-	#define LK_EVENT(EventName, EventType, ...) \
-		public: \
-		using Class = EventName; \
-		static ::platformer2d::EEventType GetStaticType() { return EEventType::EventType; } \
-		virtual ::platformer2d::EEventType GetType() const override { return GetStaticType(); } \
-		virtual const char* GetName() const override { return #EventType; }
-
-	namespace Enum
-	{
+	namespace Enum {
 		inline const char* ToString(const EEventType Type)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EEventType::EnumValue: S = #EnumValue; break
-			switch (Type)
-			{
+#define _(EnumValue)                                  \
+	case EEventType::EnumValue: S = #EnumValue; break
+			switch (Type) {
 				_(None);
 				_(SensorBegin);
 				_(SensorEnd);
@@ -56,9 +44,29 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
+	}
+
+/**
+ * @def LK_EVENT
+ * Implements basic event functionality.
+ */
+#define LK_EVENT(EventName, EventType, ...)                     \
+public:                                                         \
+	using Class = EventName;                                    \
+	static ::platformer2d::EEventType GetStaticType()           \
+	{                                                           \
+		return EEventType::EventType;                           \
+	}                                                           \
+	virtual ::platformer2d::EEventType GetType() const override \
+	{                                                           \
+		return GetStaticType();                                 \
+	}                                                           \
+	virtual const char* GetName() const override                \
+	{                                                           \
+		return #EventType;                                      \
 	}
 
 }

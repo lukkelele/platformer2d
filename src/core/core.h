@@ -20,10 +20,10 @@
 #include "macros.h"
 #include "uuid.h"
 
-#define LK_MARK_NOT_IMPLEMENTED() \
+#define LK_MARK_NOT_IMPLEMENTED()                                   \
 	LK_VERIFY(false, "Not implemented: {}::{}", __FILE__, __LINE__)
 
-#define LK_THROW_ENUM_ERR(EnumValue) \
+#define LK_THROW_ENUM_ERR(EnumValue)                                                                                              \
 	LK_VERIFY(false, "{} failed with value: {}", std::source_location::current().function_name(), std::to_underlying(EnumValue));
 
 namespace platformer2d {
@@ -83,7 +83,7 @@ namespace platformer2d {
 		std::filesystem::path GetRelativeFromProject(const std::filesystem::path& Input);
 
 		int ParseSvgPath(std::string_view, const glm::vec2& Offset,
-						 std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
+			std::span<glm::vec2> Points, float Scale, bool ReverseOrder);
 
 		/**
 		 * @brief Run asynchronously.
@@ -92,12 +92,11 @@ namespace platformer2d {
 		static void RunDetachedAfter(const std::chrono::steady_clock::duration& Delay, F&& Func, TArgs&&... Args)
 		{
 			std::thread(
-				[Delay, Func = std::forward<F>(Func), ...Args = std::forward<TArgs>(Args)]()
-				{
-					std::this_thread::sleep_for(Delay);
-					Func(std::forward<TArgs>(Args)...);
-				}
-			).detach();
+				[Delay, Func = std::forward<F>(Func), ... Args = std::forward<TArgs>(Args)]()
+			{
+				std::this_thread::sleep_for(Delay);
+				Func(std::forward<TArgs>(Args)...);
+			}).detach();
 		}
 	}
 
@@ -114,7 +113,8 @@ namespace platformer2d {
 		inline const char* ToString(const Core::ELayer Layer)
 		{
 			const char* S = "";
-		#define _(EnumValue) case Core::ELayer::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                    \
+	case Core::ELayer::EnumValue: S = #EnumValue; break
 			switch (Layer) {
 				_(Runtime);
 				_(Editor);
@@ -123,14 +123,15 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Layer);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 
 		inline const char* ToString(const EDirection Direction)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EDirection::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                  \
+	case EDirection::EnumValue: S = #EnumValue; break
 			switch (Direction) {
 				_(Up);
 				_(Down);
@@ -140,7 +141,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Direction);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

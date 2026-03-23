@@ -24,8 +24,6 @@ namespace platformer2d {
 
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
-		//CLog::Initialize();
-		//CLog::SetLogLevel(ELogLevel::Debug);
 		lklog::init(lklog::level::debug, "platformer2d");
 	}
 
@@ -146,14 +144,16 @@ namespace platformer2d {
 			const Core::ELayer LayerType = Core::Global.LayerAddQueue.front();
 			LK_INFO_TAG("Application", "Adding layer: {}", Enum::ToString(LayerType));
 			switch (LayerType) {
-				case Core::ELayer::Runtime: {
+				case Core::ELayer::Runtime:
+				{
 					LK_VERIFY(!LayerStack.HasLayer("Runtime"), "Runtime layer already present");
 					LK_VERIFY(!LayerStack.HasLayer("Editor"), "Editor layer present");
 					std::shared_ptr<CRuntimeLayer> RuntimeLayer = std::make_shared<CRuntimeLayer>();
 					LayerStack.PushLayer(RuntimeLayer);
 					break;
 				}
-				case Core::ELayer::Editor: {
+				case Core::ELayer::Editor:
+				{
 					LK_VERIFY(!LayerStack.HasLayer("Editor"), "Editor layer already present");
 					LK_VERIFY(!LayerStack.HasLayer("Runtime"), "Runtime layer present");
 					std::shared_ptr<CEditor> Editor = std::make_shared<CEditor>();

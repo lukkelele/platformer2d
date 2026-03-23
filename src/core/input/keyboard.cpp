@@ -4,9 +4,8 @@
 #include "core/window.h"
 
 namespace platformer2d {
-	
-	namespace
-	{
+
+	namespace {
 		GLFWwindow* ActiveWindow = nullptr;
 	}
 
@@ -19,8 +18,7 @@ namespace platformer2d {
 	void CKeyboard::Update()
 	{
 		/* Held keys. */
-		for (auto& [Key, HeldData] : KeyHeldMap)
-		{
+		for (auto& [Key, HeldData] : KeyHeldMap) {
 			KeyDataMap[Key].RepeatCount++;
 			HeldData.second = std::chrono::steady_clock::now();
 		}
@@ -28,10 +26,8 @@ namespace platformer2d {
 
 	void CKeyboard::TransitionPressedKeys()
 	{
-		for (const auto& [Key, KeyData] : KeyDataMap)
-		{
-			if (KeyData.State == EKeyState::Pressed)
-			{
+		for (const auto& [Key, KeyData] : KeyDataMap) {
+			if (KeyData.State == EKeyState::Pressed) {
 				LK_TRACE("Transition: {} -> Held", Key);
 				UpdateKeyState(Key, EKeyState::Held);
 			}
@@ -45,8 +41,7 @@ namespace platformer2d {
 
 	bool CKeyboard::IsKeyDown(const EKey Key)
 	{
-		if (!ActiveWindow)
-		{
+		if (!ActiveWindow) {
 			return false;
 		}
 
@@ -61,16 +56,13 @@ namespace platformer2d {
 
 	bool CKeyboard::IsAnyKeysDown(std::span<const EKey> Keys)
 	{
-		if (!ActiveWindow)
-		{
+		if (!ActiveWindow) {
 			return false;
 		}
 
-		for (const EKey Key : Keys)
-		{
+		for (const EKey Key : Keys) {
 			const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
-			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT))
-			{
+			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT)) {
 				return true;
 			}
 		}
@@ -80,17 +72,14 @@ namespace platformer2d {
 
 	bool CKeyboard::IsAnyKeysDown(std::span<const EKey> Keys, std::vector<EKey>& Result)
 	{
-		if (!ActiveWindow)
-		{
+		if (!ActiveWindow) {
 			return false;
 		}
 
 		Result.clear();
-		for (const EKey Key : Keys)
-		{
+		for (const EKey Key : Keys) {
 			const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
-			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT))
-			{
+			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT)) {
 				Result.push_back(Key);
 			}
 		}
@@ -101,16 +90,13 @@ namespace platformer2d {
 	bool CKeyboard::IsAnyKeysDown(const EKey* KeysArray, const std::size_t N)
 	{
 		LK_ASSERT(KeysArray && (N > 0));
-		if (!ActiveWindow)
-		{
+		if (!ActiveWindow) {
 			return false;
 		}
 
-		for (int Idx = 0; Idx < N; Idx++)
-		{
+		for (int Idx = 0; Idx < N; Idx++) {
 			const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(KeysArray[Idx]));
-			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT))
-			{
+			if ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT)) {
 				return true;
 			}
 		}
@@ -128,10 +114,8 @@ namespace platformer2d {
 	{
 		InKeys.clear();
 		InKeys.reserve(KeyDataMap.size());
-		for (const auto& [Key, KeyData] : KeyDataMap)
-		{
-			if ((KeyData.State == EKeyState::Pressed) || (KeyData.State == EKeyState::Held))
-			{
+		for (const auto& [Key, KeyData] : KeyDataMap) {
+			if ((KeyData.State == EKeyState::Pressed) || (KeyData.State == EKeyState::Held)) {
 				InKeys.emplace_back(Key);
 			}
 		}
@@ -148,20 +132,20 @@ namespace platformer2d {
 		KeyData.State = NewState;
 		LK_TRACE("{}: {} -> {}", Key, KeyData.OldState, KeyData.State);
 
-		if (NewState == EKeyState::Pressed)
-		{
+		if (NewState == EKeyState::Pressed) {
 			KeyData.RepeatCount = 0;
-		}
-		else if (NewState == EKeyState::Released)
-		{
+		} else if (NewState == EKeyState::Released) {
 			/* Remove held key data whenever key is released. */
-			std::erase_if(KeyHeldMap, [Key](const auto& CurrentKey) { return (Key == CurrentKey.first); });
-		}
-		else if ((NewState == EKeyState::Held) && (KeyData.RepeatCount <= 1))
-		{
+			std::erase_if(KeyHeldMap, [Key](const auto& CurrentKey)
+			{
+				return (Key == CurrentKey.first);
+			});
+		} else if ((NewState == EKeyState::Held) && (KeyData.RepeatCount <= 1)) {
 			using namespace std::chrono;
 			/* Insert timestamp once on the initial held event. */
-			KeyHeldMap.insert({ Key, { steady_clock::now(), steady_clock::now() } });
+			KeyHeldMap.insert({
+				Key, {steady_clock::now(), steady_clock::now()}
+            });
 		}
 
 		OnKeyPressed.Broadcast(KeyData);

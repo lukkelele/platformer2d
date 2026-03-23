@@ -11,8 +11,7 @@ namespace platformer2d::StringUtils {
 	inline std::string RemovePreceding(std::string_view Prefix, const std::string& Path)
 	{
 		const std::size_t Pos = Path.find(Prefix);
-		if (Pos == std::string::npos)
-		{
+		if (Pos == std::string::npos) {
 			return Path;
 		}
 

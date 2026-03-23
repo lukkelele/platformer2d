@@ -18,7 +18,7 @@ namespace platformer2d::Core {
 	template<typename TObject, typename TReturnValue, typename... TArgs>
 	struct MemberFunction<true, TObject, TReturnValue, TArgs...>
 	{
-		using type = TReturnValue(TObject::*)(TArgs...) const;
+		using type = TReturnValue (TObject::*)(TArgs...) const;
 	};
 
 	/**
@@ -27,7 +27,7 @@ namespace platformer2d::Core {
 	template<typename TObject, typename TReturnValue, typename... TArgs>
 	struct MemberFunction<false, TObject, TReturnValue, TArgs...>
 	{
-		using type = TReturnValue(TObject::*)(TArgs...);
+		using type = TReturnValue (TObject::*)(TArgs...);
 	};
 
 }

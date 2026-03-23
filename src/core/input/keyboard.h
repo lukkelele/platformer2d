@@ -23,6 +23,7 @@ namespace platformer2d {
 	{
 	public:
 		LK_DECLARE_EVENT(FOnKeyPressed, CKeyboard, const FKeyData&);
+
 	public:
 		CKeyboard() = delete;
 		~CKeyboard() = default;
@@ -48,8 +49,7 @@ namespace platformer2d {
 		static TDuration GetKeyHeldTime(const EKey Key)
 		{
 			using namespace std::chrono;
-			if (!KeyHeldMap.contains(Key))
-			{
+			if (!KeyHeldMap.contains(Key)) {
 				return 0s;
 			}
 
@@ -62,6 +62,7 @@ namespace platformer2d {
 
 	public:
 		static inline FOnKeyPressed OnKeyPressed;
+
 	private:
 		static inline std::map<EKey, FKeyData> KeyDataMap{};
 

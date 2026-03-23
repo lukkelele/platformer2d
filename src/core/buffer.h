@@ -28,12 +28,10 @@ namespace platformer2d {
 			: Data(nullptr)
 			, Size(Other.Size)
 		{
-			if (Other.Data && (Other.Size > 0))
-			{
+			if (Other.Data && (Other.Size > 0)) {
 				/* Perform deep copy. */
 				Allocate(Other.Size);
-				if (Data)
-				{
+				if (Data) {
 					std::memcpy(Data, Other.Data, Other.Size);
 				}
 			}
@@ -49,20 +47,16 @@ namespace platformer2d {
 
 		FBuffer& operator=(const FBuffer& Other) noexcept
 		{
-			if (this != &Other)
-			{
+			if (this != &Other) {
 				/* Release current buffer if it exists. */
 				Release();
 
-				if (Other.Data && Other.Size > 0)
-				{
+				if (Other.Data && Other.Size > 0) {
 					/* Perform deep copy. */
 					Allocate(Other.Size);
 					std::memcpy(Data, Other.Data, Other.Size);
 					Size = Other.Size;
-				}
-				else
-				{
+				} else {
 					Data = nullptr;
 					Size = 0;
 				}
@@ -73,9 +67,8 @@ namespace platformer2d {
 
 		FBuffer& operator=(FBuffer&& Other) noexcept
 		{
-			if (this != &Other)
-			{
-				delete[](uint8_t*)Data;
+			if (this != &Other) {
+				delete[] (uint8_t*)Data;
 
 				/* Transfer ownership. */
 				Allocate(Other.Size);
@@ -111,7 +104,7 @@ namespace platformer2d {
 		void Allocate(const uint64_t InSize)
 		{
 			LK_ASSERT(InSize > 0, "Allocate failed, invalid size: {}", InSize);
-			delete[](uint8_t*)Data;
+			delete[] (uint8_t*)Data;
 			Data = nullptr;
 
 			Data = new uint8_t[InSize];
@@ -120,10 +113,9 @@ namespace platformer2d {
 
 		void Release()
 		{
-			if (Data)
-			{
+			if (Data) {
 				LK_TRACE_TAG("Buffer", "Release {} bytes: {}", Size, Data);
-				delete[](uint8_t*)Data;
+				delete[] (uint8_t*)Data;
 				Data = nullptr;
 				Size = 0;
 			}
