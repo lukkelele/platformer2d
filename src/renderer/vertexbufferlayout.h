@@ -27,24 +27,22 @@ namespace platformer2d {
 		Bool,
 	};
 
-	namespace Enum
-	{
-		FORCEINLINE static const char* ToString(const EShaderDataType ShaderDataType)
+	namespace Enum {
+		constexpr const char* ToString(const EShaderDataType ShaderDataType)
 		{
-			switch (ShaderDataType)
-			{
-				case EShaderDataType::Null:		return "Null";
-				case EShaderDataType::Bool:		return "Bool";
-				case EShaderDataType::Int:		return "Int";
-				case EShaderDataType::Int2:		return "Int2";
-				case EShaderDataType::Int3:		return "Int3";
-				case EShaderDataType::Int4:		return "Int4";
-				case EShaderDataType::Float:	return "Float";
-				case EShaderDataType::Float2:	return "Float2";
-				case EShaderDataType::Float3:	return "Float3";
-				case EShaderDataType::Float4:	return "Float4";
-				case EShaderDataType::Mat3:		return "Mat3";
-				case EShaderDataType::Mat4:		return "Mat4";
+			switch (ShaderDataType) {
+				case EShaderDataType::Null:   return "Null";
+				case EShaderDataType::Bool:   return "Bool";
+				case EShaderDataType::Int:    return "Int";
+				case EShaderDataType::Int2:   return "Int2";
+				case EShaderDataType::Int3:   return "Int3";
+				case EShaderDataType::Int4:   return "Int4";
+				case EShaderDataType::Float:  return "Float";
+				case EShaderDataType::Float2: return "Float2";
+				case EShaderDataType::Float3: return "Float3";
+				case EShaderDataType::Float4: return "Float4";
+				case EShaderDataType::Mat3:   return "Mat3";
+				case EShaderDataType::Mat4:   return "Mat4";
 			}
 			return "Unknown";
 		}
@@ -60,21 +58,20 @@ namespace platformer2d {
 		Color
 	};
 
-	static inline constexpr uint32_t GetShaderDataTypeSize(const EShaderDataType DataType)
+	inline std::uint32_t GetShaderDataTypeSize(const EShaderDataType DataType)
 	{
-		switch (DataType)
-		{
-			case EShaderDataType::Bool:     return 1;
-			case EShaderDataType::Int:      return 4;
-			case EShaderDataType::Int2:     return 4 * 2;
-			case EShaderDataType::Int3:     return 4 * 3;
-			case EShaderDataType::Int4:     return 4 * 4;
-			case EShaderDataType::Float:    return 4;
-			case EShaderDataType::Float2:   return 4 * 2;
-			case EShaderDataType::Float3:   return 4 * 3;
-			case EShaderDataType::Float4:   return 4 * 4;
-			case EShaderDataType::Mat3:     return 4 * 3 * 3;
-			case EShaderDataType::Mat4:     return 4 * 4 * 4;
+		switch (DataType) {
+			case EShaderDataType::Bool:   return 1;
+			case EShaderDataType::Int:    return 4;
+			case EShaderDataType::Int2:   return 4 * 2;
+			case EShaderDataType::Int3:   return 4 * 3;
+			case EShaderDataType::Int4:   return 4 * 4;
+			case EShaderDataType::Float:  return 4;
+			case EShaderDataType::Float2: return 4 * 2;
+			case EShaderDataType::Float3: return 4 * 3;
+			case EShaderDataType::Float4: return 4 * 4;
+			case EShaderDataType::Mat3:   return 4 * 3 * 3;
+			case EShaderDataType::Mat4:   return 4 * 4 * 4;
 		}
 		return 0;
 	}
@@ -83,8 +80,8 @@ namespace platformer2d {
 	{
 		std::string Name{};
 		EShaderDataType Type;
-		uint32_t Size = 0;
-		size_t Offset = 0;
+		std::uint32_t Size = 0;
+		std::size_t Offset = 0;
 		unsigned char Normalized{};
 		unsigned int Count = 0;
 
@@ -99,21 +96,20 @@ namespace platformer2d {
 		{
 		}
 
-		FORCEINLINE uint32_t GetComponentCount() const
+		std::uint32_t GetComponentCount() const
 		{
-			switch (Type)
-			{
-				case EShaderDataType::Float:   return 1;
-				case EShaderDataType::Float2:  return 2;
-				case EShaderDataType::Float3:  return 3;
-				case EShaderDataType::Float4:  return 4;
-				case EShaderDataType::Mat3:    return 3 * 3;
-				case EShaderDataType::Mat4:    return 4 * 4;
-				case EShaderDataType::Int:     return 1;
-				case EShaderDataType::Int2:    return 2;
-				case EShaderDataType::Int3:    return 3;
-				case EShaderDataType::Int4:    return 4;
-				case EShaderDataType::Bool:    return 1;
+			switch (Type) {
+				case EShaderDataType::Float:  return 1;
+				case EShaderDataType::Float2: return 2;
+				case EShaderDataType::Float3: return 3;
+				case EShaderDataType::Float4: return 4;
+				case EShaderDataType::Mat3:   return 3 * 3;
+				case EShaderDataType::Mat4:   return 4 * 4;
+				case EShaderDataType::Int:    return 1;
+				case EShaderDataType::Int2:   return 2;
+				case EShaderDataType::Int3:   return 3;
+				case EShaderDataType::Int4:   return 4;
+				case EShaderDataType::Bool:   return 1;
 			}
 
 			LK_ASSERT(false, "GetComponentCount failed");
@@ -143,8 +139,7 @@ namespace platformer2d {
 		std::string ToString() const
 		{
 			std::string String{};
-			for (const FVertexBufferElement& Element : Elements)
-			{
+			for (const FVertexBufferElement& Element : Elements) {
 				String += Format("{}: {}\n", Element.Name, Enum::ToString(Element.Type));
 			}
 
@@ -156,8 +151,7 @@ namespace platformer2d {
 		{
 			Stride = 0;
 			uint32_t Offset = 0;
-			for (FVertexBufferElement& Element : Elements)
-			{
+			for (FVertexBufferElement& Element : Elements) {
 				Element.Offset = Offset;
 				Offset += Element.Size;
 				Stride += Element.Size;
@@ -166,8 +160,8 @@ namespace platformer2d {
 		}
 
 	private:
-		std::vector<FVertexBufferElement> Elements{};
-		uint32_t Stride = 0;
+		std::vector<FVertexBufferElement> Elements;
+		std::uint32_t Stride = 0;
 	};
 
 }
