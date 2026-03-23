@@ -2,6 +2,7 @@
 
 #include "opengl.h"
 #include "renderer.h"
+#include "core/profiler.h"
 
 namespace platformer2d {
 
@@ -69,39 +70,36 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
 
 		/* Color attachments. */
-		if (ColorAttachmentSpecs.size() > 0) {
-			LK_TRACE_TAG("Framebuffer", "Creating {} color attachments {} multisampling", ColorAttachmentSpecs.size(), Multisample ? "with" : "without");
-			for (std::size_t Idx = 0; Idx < ColorAttachmentSpecs.size(); Idx++) {
-				FTextureSpecification TexSpec;
-				TexSpec.Width = Spec.Width;
-				TexSpec.Height = Spec.Height;
-				TexSpec.Format = ColorAttachmentSpecs[Idx].ImageFormat;
-				TexSpec.Name = Format("fb-image-{}", Enum::ToString(ColorAttachmentSpecs[Idx].ImageFormat));
-				TexSpec.Format = EImageFormat::RGBA32F;
-				TexSpec.SamplerWrap = ETextureWrap::Clamp;
-				TexSpec.SamplerFilter = ETextureFilter::Nearest;
-				TexSpec.Mips = 1; /* No mipmapping. */
-				TexSpec.bStorage = true;
+		LK_TRACE_TAG("Framebuffer", "Creating {} color attachments {} multisampling", ColorAttachmentSpecs.size(), Multisample ? "with" : "without");
+		for (std::size_t Idx = 0; Idx < ColorAttachmentSpecs.size(); Idx++) {
+			FTextureSpecification TexSpec;
+			TexSpec.Width = Spec.Width;
+			TexSpec.Height = Spec.Height;
+			TexSpec.Format = ColorAttachmentSpecs[Idx].ImageFormat;
+			TexSpec.Name = Format("fb-image-{}", Enum::ToString(ColorAttachmentSpecs[Idx].ImageFormat));
+			TexSpec.Format = EImageFormat::RGBA32F;
+			TexSpec.SamplerWrap = ETextureWrap::Clamp;
+			TexSpec.SamplerFilter = ETextureFilter::Nearest;
+			TexSpec.Mips = 1; /* No mipmapping. */
+			TexSpec.bStorage = true;
 
-				std::shared_ptr<CTexture> WhiteTexture = CRenderer::GetWhiteTexture();
-				const std::filesystem::path TexturePath = WhiteTexture->GetFilePath();
-				TexSpec.Path = TexturePath.string();
-				LK_TRACE_TAG("Framebuffer", "{}: {}x{}", TexturePath.stem(), TexSpec.Width, TexSpec.Height);
+			std::shared_ptr<CTexture> WhiteTexture = CRenderer::GetWhiteTexture();
+			const std::filesystem::path TexturePath = WhiteTexture->GetFilePath();
+			TexSpec.Path = TexturePath.string();
+			LK_TRACE_TAG("Framebuffer", "{}: {}x{}", TexturePath.stem(), TexSpec.Width, TexSpec.Height);
 
-				const FBuffer& ImageData = WhiteTexture->GetImageBuffer();
-				LK_VERIFY(ImageData.Data, "Image data from white texture is NULL");
-				std::shared_ptr<CTexture> Image = std::make_shared<CTexture>(TexSpec, ImageData);
-				ColorAttachments.push_back(Image);
+			const FBuffer& ImageData = WhiteTexture->GetImageBuffer();
+			LK_VERIFY(ImageData.Data, "Image data from white texture is NULL");
+			std::shared_ptr<CTexture> Image = std::make_shared<CTexture>(TexSpec, ImageData);
+			ColorAttachments.push_back(Image);
 
-				LK_OpenGL_Verify(glFramebufferTexture2D(
-					GL_FRAMEBUFFER,
-					(GL_COLOR_ATTACHMENT0 + Idx),
-					GL_TEXTURE_2D,
-					ColorAttachments[Idx]->GetID(),
-					0
-				));
-				LK_TRACE_TAG("Framebuffer", "ColorAttachment ID: {}  Size: ({}, {})", ColorAttachments[Idx]->GetID(), TexSpec.Width, TexSpec.Height);
-			}
+			LK_OpenGL_Verify(glFramebufferTexture2D(
+				GL_FRAMEBUFFER,
+				(GL_COLOR_ATTACHMENT0 + Idx),
+				GL_TEXTURE_2D,
+				ColorAttachments[Idx]->GetID(),
+				0));
+			LK_TRACE_TAG("Framebuffer", "ColorAttachment ID: {}  Size: ({}, {})", ColorAttachments[Idx]->GetID(), TexSpec.Width, TexSpec.Height);
 		}
 
 		/* Depth attachment. */
@@ -119,8 +117,7 @@ namespace platformer2d {
 						GL_DEPTH24_STENCIL8,
 						GL_DEPTH_STENCIL_ATTACHMENT,
 						Spec.Width,
-						Spec.Height
-					);
+						Spec.Height);
 					break;
 			}
 
@@ -167,7 +164,8 @@ namespace platformer2d {
 
 	void CFramebuffer::Resize(const uint32_t InWidth, const uint32_t InHeight)
 	{
-		LK_DEBUG_TAG("Framebuffer", "Resize: ({}, {})", InWidth, InHeight);
+		LK_PROFILE_FUNC();
+		LK_TRACE_TAG("Framebuffer", "Resize: ({}, {})", InWidth, InHeight);
 		if ((InWidth <= 0) || (InHeight <= 0)) {
 			return;
 		}
@@ -196,8 +194,7 @@ namespace platformer2d {
 			0,
 			OpenGL::GetImageFormat(TextureSpec.ImageFormat),
 			GL_INT,
-			&Value
-		));
+			&Value));
 	}
 
 	uint32_t CFramebuffer::GetColorAttachmentID(const uint32_t Idx) const
@@ -224,9 +221,7 @@ namespace platformer2d {
 	{
 		const bool Multisampled = (Samples > 1);
 		if (Multisampled) {
-			LK_OpenGL_Verify(
-				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, Samples, Format, Width, Height, GL_FALSE)
-			);
+			LK_OpenGL_Verify(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, Samples, Format, Width, Height, GL_FALSE));
 		} else {
 			LK_OpenGL_Verify(glTexStorage2D(GL_TEXTURE_2D, 1, Format, Width, Height));
 			LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
