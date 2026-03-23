@@ -12,10 +12,10 @@ namespace platformer2d {
 		CPatrolController(float InPatrolHalfDistance, float InStartDelaySeconds = 0.0f);
 		~CPatrolController() = default;
 
-		virtual void OnPossess(CEnemy& Enemy) override;
-		virtual void Tick(CEnemy& Enemy, float DeltaTime) override;
+		void OnPossess(CEnemy& Enemy) override;
+		void Tick(CEnemy& Enemy, float DeltaTime) override;
 
-		virtual EControllerType GetControllerType() const override { return EControllerType::Patrol; }
+		EControllerType GetControllerType() const override { return EControllerType::Patrol; }
 
 		void SetTarget(std::shared_ptr<CActor> InTarget);
 		bool HasTarget() const { return !TargetRef.expired(); }

@@ -34,7 +34,8 @@ namespace platformer2d {
 		inline constexpr const char* ToString(const EEnemyState State)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EEnemyState::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                   \
+	case EEnemyState::EnumValue: S = #EnumValue; break
 			switch (State) {
 				_(Idle);
 				_(Patrolling);
@@ -43,7 +44,7 @@ namespace platformer2d {
 					S = nullptr;
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

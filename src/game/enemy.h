@@ -68,7 +68,8 @@ namespace platformer2d {
 		inline const char* ToString(const CEnemy::EReviveVariant Variant)
 		{
 			const char* S = "";
-		#define _(EnumValue) case CEnemy::EReviveVariant::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                              \
+	case CEnemy::EReviveVariant::EnumValue: S = #EnumValue; break
 			switch (Variant) {
 				_(AtSpawn);
 				_(AtLastLocation);
@@ -76,7 +77,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Variant);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

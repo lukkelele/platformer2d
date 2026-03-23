@@ -23,7 +23,8 @@ namespace platformer2d {
 		inline const char* ToString(const EControllerType Type)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EControllerType::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                       \
+	case EControllerType::EnumValue: S = #EnumValue; break
 			switch (Type) {
 				_(None);
 				_(Patrol);
@@ -32,7 +33,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

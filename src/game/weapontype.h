@@ -19,7 +19,8 @@ namespace platformer2d {
 		inline const char* ToString(const EWeaponType Type)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EWeaponType::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                   \
+	case EWeaponType::EnumValue: S = #EnumValue; break
 			switch (Type) {
 				_(Rifle);
 				_(COUNT);
@@ -27,7 +28,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

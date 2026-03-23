@@ -12,8 +12,7 @@ namespace platformer2d {
 	void CProjectile::Destroy()
 	{
 		LK_TRACE("{}: Destroy", Name);
-		if (Owner && OnDestroy)
-		{
+		if (Owner && OnDestroy) {
 			(Owner->*OnDestroy)(ID);
 		}
 	}

@@ -13,7 +13,8 @@ namespace platformer2d {
 	class CProjectile : public CActor
 	{
 	public:
-		using TDestroy = bool(CRifle::*)(const b2BodyId&);
+		using TDestroy = bool (CRifle::*)(const b2BodyId&);
+
 	public:
 		CProjectile(const FActorSpecification& InSpec, CRifle* InOwner, TDestroy DestroyCallback);
 		CProjectile() = delete;
@@ -29,6 +30,7 @@ namespace platformer2d {
 	public:
 		uint8_t BounceCount = 0;
 		uint8_t MaxBounceCount = 1;
+
 	private:
 		CRifle* Owner;
 		TDestroy OnDestroy;
