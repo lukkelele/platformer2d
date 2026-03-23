@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "core/core.h"
+#include "core/log_formatters.h"
 #include "backendinfo.h"
 #include "camera.h"
 #include "color.h"

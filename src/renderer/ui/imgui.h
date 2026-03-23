@@ -9,7 +9,7 @@
 namespace ImGui {
 
 	inline bool TreeNodeBehaviorIsOpen(const ImGuiID NodeID,
-									   const ImGuiTreeNodeFlags Flags = ImGuiTreeNodeFlags_None)
+		const ImGuiTreeNodeFlags Flags = ImGuiTreeNodeFlags_None)
 	{
 		ImGuiContext& G = *GImGui;
 		ImGuiWindow* Window = G.CurrentWindow;
@@ -20,33 +20,33 @@ namespace ImGui {
 }
 
 template<>
-struct LkFmt::formatter<ImVec2>
+struct lklog::fmt::formatter<ImVec2>
 {
-    template<typename ParseContext>
-    constexpr auto parse(ParseContext& Context)
-    {
-        return Context.begin();
-    }
+	template<typename ParseContext>
+	constexpr auto parse(ParseContext& Context)
+	{
+		return Context.begin();
+	}
 
 	template<typename FormatContext>
-    auto format(const ImVec2& Vec, FormatContext& Context) const
-    {
-        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f})", Vec.x, Vec.y);
-    }
+	auto format(const ImVec2& Vec, FormatContext& Context) const
+	{
+		return lklog::fmt::format_to(Context.out(), "({:.2f}, {:.2f})", Vec.x, Vec.y);
+	}
 };
 
 template<>
-struct LkFmt::formatter<ImVec4>
+struct lklog::fmt::formatter<ImVec4>
 {
-    template<typename ParseContext>
-    constexpr auto parse(ParseContext& Context)
-    {
-        return Context.begin();
-    }
+	template<typename ParseContext>
+	constexpr auto parse(ParseContext& Context)
+	{
+		return Context.begin();
+	}
 
 	template<typename FormatContext>
-    auto format(const ImVec4& Vec, FormatContext& Context) const
-    {
-        return LkFmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Vec.x, Vec.y, Vec.z, Vec.w);
-    }
+	auto format(const ImVec4& Vec, FormatContext& Context) const
+	{
+		return lklog::fmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Vec.x, Vec.y, Vec.z, Vec.w);
+	}
 };
