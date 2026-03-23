@@ -66,10 +66,10 @@ namespace platformer2d {
 		const std::size_t CommandQueueCount = CommandQueue.size();
 
 		constexpr glm::vec2 QuadTextureCoords[] = {
-			{ 0.0f, 0.0f }, /*  Bottom Left.  */
-			{ 0.0f, 1.0f }, /*  Top Left.     */
-			{ 1.0f, 1.0f }, /*  Top Right.    */
-			{ 1.0f, 0.0f }  /*  Bottom Right. */
+			{0.0f, 0.0f}, /*  Bottom Left.  */
+			{0.0f, 1.0f}, /*  Top Left.     */
+			{1.0f, 1.0f}, /*  Top Right.    */
+			{1.0f, 0.0f}  /*  Bottom Right. */
 		};
 	}
 
@@ -168,7 +168,7 @@ namespace platformer2d {
 	void CRenderer::CreateFramebuffer()
 	{
 		FFramebufferSpecification Spec;
-		Spec.Attachments = { EImageFormat::RGBA32F, EImageFormat::DEPTH24STENCIL8 };
+		Spec.Attachments = {EImageFormat::RGBA32F, EImageFormat::DEPTH24STENCIL8};
 		Spec.Samples = 1;
 		Spec.ClearColorOnLoad = false;
 		Spec.ClearColor = FColor::Convert(RGBA32::DarkerGray);
@@ -182,7 +182,7 @@ namespace platformer2d {
 			if ((NewWidth <= 0) || (NewHeight <= 0)) {
 				return;
 			}
-			LK_DEBUG_TAG("Renderer", "OnFramebufferResized: ({}, {})", NewWidth, NewHeight);
+			LK_TRACE_TAG("Renderer", "OnFramebufferResized: ({}, {})", NewWidth, NewHeight);
 			Data.ViewportFramebuffer->Resize(NewWidth, NewHeight);
 		});
 	}
@@ -190,6 +190,7 @@ namespace platformer2d {
 	void CRenderer::SetupQuadRenderer()
 	{
 		const FVertexBufferLayout QuadLayout = {
+			/* clang-format off */
 			{ "pos",              EShaderDataType::Float3, },
 			{ "color",            EShaderDataType::Float4, },
 			{ "texcoord",         EShaderDataType::Float2, },
@@ -197,6 +198,7 @@ namespace platformer2d {
 			{ "tilefactor",       EShaderDataType::Float,  },
 			{ "outlinethickness", EShaderDataType::Float,  },
 			{ "outlinecolor",     EShaderDataType::Float4, },
+			/* clang-format on */
 		};
 
 		QuadVAO = OpenGL::VertexArray::Create();
@@ -245,8 +247,10 @@ namespace platformer2d {
 	void CRenderer::SetupLineRenderer()
 	{
 		const FVertexBufferLayout LineLayout = {
+			/* clang-format off */
 			{ "pos",   EShaderDataType::Float3, },
 			{ "color", EShaderDataType::Float4, },
+			/* clang-format on */
 		};
 
 		LineVAO = OpenGL::VertexArray::Create();
@@ -270,10 +274,12 @@ namespace platformer2d {
 	void CRenderer::SetupCircleRenderer()
 	{
 		const FVertexBufferLayout CircleLayout = {
+			/* clang-format off */
 			{ "worldpos",  EShaderDataType::Float3, },
 			{ "thickness", EShaderDataType::Float,  },
 			{ "localpos",  EShaderDataType::Float2, },
 			{ "color",     EShaderDataType::Float4, },
+			/* clang-format on */
 		};
 
 		CircleVAO = OpenGL::VertexArray::Create();
@@ -297,8 +303,8 @@ namespace platformer2d {
 		Data.Textures.reserve(MaxTextures);
 
 		auto LoadTexture = [](std::string_view Path, const ETexture Texture,
-							  const EImageFormat Format = EImageFormat::RGBA8,
-							  const glm::vec2& Size = { 0.0f, 0.0f }) -> void
+							   const EImageFormat Format = EImageFormat::RGBA8,
+							   const glm::vec2& Size = {0.0f, 0.0f}) -> void
 		{
 			LK_VERIFY(std::filesystem::exists(Path), "Texture {} does not exist", static_cast<int>(Texture));
 			LK_VERIFY(!Data.Textures.contains(Texture));
@@ -318,7 +324,7 @@ namespace platformer2d {
 			Data.Textures.emplace(std::make_pair(Texture, std::make_shared<CTexture>(Spec)));
 		};
 
-		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, { 1.0f, 1.0f });
+		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, {1.0f, 1.0f});
 		LoadTexture(TEXTURES_DIR "/sunny.png", ETexture::Background, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/characters.png", ETexture::Player, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/metal.png", ETexture::Metal, EImageFormat::RGBA8);
@@ -492,9 +498,9 @@ namespace platformer2d {
 		static constexpr int TextureIndex = 0;
 		static constexpr float TileFactor = 1.0f;
 
-		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
-            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
-            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), {Pos.x, Pos.y, 0.0f})
+			* glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+			* glm::scale(glm::mat4(1.0f), {Size.x, Size.y, 1.0f});
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
@@ -511,13 +517,13 @@ namespace platformer2d {
 	}
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color,
-							 const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
+		const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, Color, RotationDeg, OutlineThickness, OutlineColor);
+		DrawQuad({Pos.x, Pos.y, 0.010f}, Size, Texture, Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const glm::vec4& Color,
-							 const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
+		const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
@@ -526,8 +532,8 @@ namespace platformer2d {
 		static constexpr float TileFactor = 1.0f;
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
-            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
-            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+			* glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+			* glm::scale(glm::mat4(1.0f), {Size.x, Size.y, 1.0f});
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
@@ -545,13 +551,13 @@ namespace platformer2d {
 	}
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords,
-							 const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
+		const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({ Pos.x, Pos.y, 0.0f }, Size, Texture, TexCoords, Color, RotationDeg);
+		DrawQuad({Pos.x, Pos.y, 0.0f}, Size, Texture, TexCoords, Color, RotationDeg);
 	}
 
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords,
-							 const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
+		const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
@@ -560,8 +566,8 @@ namespace platformer2d {
 		static constexpr float TileFactor = 1.0f;
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
-            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
-            * glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.0f));
+			* glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.0f));
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
@@ -580,11 +586,11 @@ namespace platformer2d {
 
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, const float RotationDeg, float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({ Pos.x, Pos.y, 0.010f }, Size, Texture, UV, Color, RotationDeg, OutlineThickness, OutlineColor);
+		DrawQuad({Pos.x, Pos.y, 0.010f}, Size, Texture, UV, Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color, const float RotationDeg,
-							 const float OutlineThickness, const glm::vec4& OutlineColor)
+		const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
 		if (QuadIndexCount >= MaxIndices) {
 			NextBatch();
@@ -593,15 +599,14 @@ namespace platformer2d {
 		static constexpr float TileFactor = 1.0f;
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Pos)
-            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
-            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+			* glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+			* glm::scale(glm::mat4(1.0f), {Size.x, Size.y, 1.0f});
 
 		const std::array<glm::vec2, 4> TexCoords = {
 			glm::vec2(UV.U0, UV.V0),
 			glm::vec2(UV.U0, UV.V1),
 			glm::vec2(UV.U1, UV.V1),
-			glm::vec2(UV.U1, UV.V0)
-		};
+			glm::vec2(UV.U1, UV.V0)};
 
 		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			QuadVertexBufferPtr->Position = Transform * QuadVertexPositions[Idx];
@@ -625,7 +630,7 @@ namespace platformer2d {
 
 	void CRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)
 	{
-		DrawLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, Color, LineWidth);
+		DrawLine({P0.x, P0.y, 0.0f}, {P1.x, P1.y, 0.0f}, Color, LineWidth);
 	}
 
 	void CRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, const uint16_t LineWidth)
@@ -646,15 +651,15 @@ namespace platformer2d {
 
 	void CRenderer::DrawCircle(const glm::vec2& P0, const glm::vec3& Rotation, const float Radius, const glm::vec4& Color)
 	{
-		DrawCircle({ P0.x, P0.y, 0.0f }, Rotation, Radius, Color);
+		DrawCircle({P0.x, P0.y, 0.0f}, Rotation, Radius, Color);
 	}
 
 	void CRenderer::DrawCircle(const glm::vec3& P0, const glm::vec3& Rotation, const float Radius, const glm::vec4& Color)
 	{
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
-			* glm::rotate(glm::mat4(1.0f), Rotation.x, { 1.0f, 0.0f, 0.0f })
-			* glm::rotate(glm::mat4(1.0f), Rotation.y, { 0.0f, 1.0f, 0.0f })
-			* glm::rotate(glm::mat4(1.0f), Rotation.z, { 0.0f, 0.0f, 1.0f })
+			* glm::rotate(glm::mat4(1.0f), Rotation.x, {1.0f, 0.0f, 0.0f})
+			* glm::rotate(glm::mat4(1.0f), Rotation.y, {0.0f, 1.0f, 0.0f})
+			* glm::rotate(glm::mat4(1.0f), Rotation.z, {0.0f, 0.0f, 1.0f})
 			* glm::scale(glm::mat4(1.0f), glm::vec3(Radius));
 
 		DrawCircle(Transform, Color);
@@ -664,9 +669,9 @@ namespace platformer2d {
 	{
 		for (int Idx = 0; Idx < CIRCLE_SEGMENTS; Idx++) {
 			float AngleRad = 2.0f * glm::pi<float>() * static_cast<float>(Idx) / CIRCLE_SEGMENTS;
-			const glm::vec4 StartPos = { glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f };
+			const glm::vec4 StartPos = {glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f};
 			AngleRad = 2.0f * glm::pi<float>() * static_cast<float>((Idx + 1) % CIRCLE_SEGMENTS) / CIRCLE_SEGMENTS;
-			const glm::vec4 EndPos = { glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f };
+			const glm::vec4 EndPos = {glm::cos(AngleRad), glm::sin(AngleRad), 0.0f, 1.0f};
 
 			const glm::vec3 P0 = Transform * StartPos;
 			const glm::vec3 P1 = Transform * EndPos;
@@ -676,7 +681,7 @@ namespace platformer2d {
 
 	void CRenderer::DrawCircleFilled(const glm::vec2& P0, const float Radius, const glm::vec4& Color, const float Thickness)
 	{
-		DrawCircleFilled({ P0.x, P0.y, 0.0f }, Radius, Color, Thickness);
+		DrawCircleFilled({P0.x, P0.y, 0.0f}, Radius, Color, Thickness);
 	}
 
 	void CRenderer::DrawCircleFilled(const glm::vec3& P0, const float Radius, const glm::vec4& Color, const float Thickness)
@@ -785,8 +790,7 @@ namespace platformer2d {
 
 	std::shared_ptr<CShader> CRenderer::GetShader(const CShader::EType ShaderType)
 	{
-		switch (ShaderType)
-		{
+		switch (ShaderType) {
 			case CShader::EType::Quad:   return QuadShader;
 			case CShader::EType::Line:   return LineShader;
 			case CShader::EType::Circle: return CircleShader;
