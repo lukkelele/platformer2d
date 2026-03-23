@@ -22,6 +22,12 @@ set(GLFW_LIBRARY_TYPE STATIC CACHE STRING "" FORCE)
 add_subdirectory(glfw)
 
 ##############################
+# Library: lklog
+##############################
+set(LKLOG_BUILD_TESTS OFF)
+add_subdirectory(lklog)
+
+##############################
 # Library: ImGui
 ##############################
 add_library(imgui STATIC
@@ -59,14 +65,6 @@ add_library(ImGuizmo STATIC
 	ImGuizmo/GraphEditor.cpp
 )
 target_include_directories(ImGuizmo PRIVATE imgui)
-
-##############################
-# Library: spdlog
-##############################
-if (LK_COMPILER_MSVC)
-	set(SPDLOG_USE_STD_FORMAT ON)
-endif()
-add_subdirectory(spdlog)
 
 ##############################
 # Library: stb_image
@@ -107,3 +105,4 @@ add_subdirectory(yaml-cpp)
 #set(MSDFGEN_DISABLE_PNG ON) # TODO: libpng be added as dependency (?)
 # TODO: Need to fix freetype dependency. Do not want to use vcpkg toolchain :)
 #add_subdirectory(msdf-atlas-gen)
+

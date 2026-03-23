@@ -5,10 +5,12 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cmake/project.cmake)
 include(cmake/extensions.cmake)
 
+#-------------------------------------------------------------------
+# Configuration
+#-------------------------------------------------------------------
 option(LK_BUILD_TESTS "Build tests" OFF)
 option(LK_ENABLE_ASSERT "Enable assert" OFF)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -31,6 +33,8 @@ option(LK_PROFILING_USE_SCOPED_TIMERS "Use timers for scoped profiling" OFF)
 set(PROJECT_EXECUTABLE ${PROJECT_NAME})
 # Project interface.
 add_library(${PROJECT_INTERFACE} INTERFACE)
+
+project_add_compile_definitions(LKLOG_ENABLED)
 
 # Compiler.
 message(STATUS "Compiler:   ${CMAKE_CXX_COMPILER_ID}
@@ -126,13 +130,13 @@ add_subdirectory(modules)
 target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/src
 	${CMAKE_SOURCE_DIR}/external
-	${CMAKE_SOURCE_DIR}/external/catch2/src
 	${CMAKE_SOURCE_DIR}/external/box2d
+	${CMAKE_SOURCE_DIR}/external/catch2/src
 	${CMAKE_SOURCE_DIR}/external/glfw/include
 	${CMAKE_SOURCE_DIR}/external/glm
+	${CMAKE_SOURCE_DIR}/external/lklog/include
 	${CMAKE_SOURCE_DIR}/external/imgui
 	${CMAKE_SOURCE_DIR}/external/ImGuizmo
-	${CMAKE_SOURCE_DIR}/external/spdlog/include
 	${CMAKE_SOURCE_DIR}/external/tracy/public
 	${CMAKE_SOURCE_DIR}/external/yaml-cpp/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
@@ -144,9 +148,9 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	glad
 	glfw
 	glm
+	lklog
 	imgui
 	ImGuizmo
-	spdlog
 	stb_image
 	Tracy::TracyClient
 	yaml-cpp
@@ -176,3 +180,4 @@ foreach(library ${PROJECT_LIBS_PROPERTY})
 	message(STATUS "Link: ${PROJECT_EXECUTABLE} -> ${library}")
 	target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${library})
 endforeach()
+
