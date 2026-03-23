@@ -3,18 +3,48 @@ BasedOnStyle: LLVM
 
 AccessModifierOffset: -4
 IndentAccessModifiers: false
-AlignAfterOpenBracket: Align
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AlignArrayOfStructures: Right
+AlignAfterOpenBracket: false
 AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: true
-AlignEscapedNewlines: Left
+AlignEscapedNewlines: LeftWithLastLine
 AlignOperands: DontAlign
-AlignTrailingComments: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+  AlignCaseColons: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortLoopsOnASingleLine: false
 AllowShortLambdasOnASingleLine: None
+AllowShortCaseLabelsOnASingleLine: true
+AlignTrailingComments: true
+BinPackArguments: true
+BinPackParameters: BinPack
+BitFieldColonSpacing: Both
+BreakAfterReturnType: Automatic
+BreakAfterAttributes: Never
 BreakBeforeBraces: Custom
+########################################
+### clang-format 22
+# BreakAfterOpenBracketBracedList: true
+# BreakBeforeCloseBracketBracedList: true
+# BreakAfterOpenBracketFunction: false
+# BreakBeforeCloseBracketFunction: true
+# BreakAfterOpenBracketIf: false
+# BreakBeforeCloseBracketIf: true
+# BreakAfterOpenBracketSwitch: false
+# BreakBeforeCloseBracketSwitch: true
+# NumericLiteralCase:
+#   ExponentLetter: Leave
+#   HexDigit: Lower
+#   Prefix: Upper
+#   Suffix: Lower
+########################################
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
@@ -34,27 +64,23 @@ BraceWrapping:
   SplitEmptyRecord: true
   SplitEmptyFunction: false
 BreakBeforeBinaryOperators: NonAssignment
-BreakInheritanceList: AfterColon
+BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: false
-BitFieldColonSpacing: Both
 ColumnLimit: 0
+ContinuationIndentWidth: 4
+CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-Cpp11BracedListStyle: false
+Cpp11BracedListStyle: true
 EmptyLineBeforeAccessModifier: LogicalBlock
 IndentCaseBlocks: false
 IndentCaseLabels: true
-AllowShortCaseLabelsOnASingleLine: true
-AlignConsecutiveShortCaseStatements:
-  Enabled: true
-  AcrossEmptyLines: true
-  AcrossComments: false
-  AlignCaseColons: false
 IndentWidth: 4
 IndentExternBlock: AfterExternBlock
+IndentRequiresClause: true
 NamespaceIndentation: All
-AlignArrayOfStructures: Right
+FixNamespaceComments: false
 IndentPPDirectives: AfterHash
 PPIndentWidth: 4
 PointerAlignment: Left
@@ -67,23 +93,20 @@ SpacesInAngles: Never
 SpacesBeforeTrailingComments: 1
 SpaceAfterCStyleCast: false
 TabWidth: 4
-UseTab: Always
+UseTab: ForContinuationAndIndentation
 InsertNewlineAtEOF: true
+InsertBraces: true
 PackConstructorInitializers: Never
 LambdaBodyIndentation: OuterScope
-FixNamespaceComments: false
-CompactNamespaces: false
-MaxEmptyLinesToKeep: 2
+MaxEmptyLinesToKeep: 1
 KeepEmptyLinesAtTheStartOfBlocks: true
 KeepEmptyLinesAtEOF: true
 SeparateDefinitionBlocks: Leave
 SpaceAfterTemplateKeyword: false
-ExperimentalAutoDetectBinPacking: false
-BinPackArguments: true
-BinPackParameters: true
-AllowAllParametersOfDeclarationOnNextLine: true
-AllowAllArgumentsOnNextLine: true
+RequiresClausePosition: OwnLine
 PenaltyBreakAssignment: 100
 PenaltyBreakBeforeFirstCallParameter: 200
 PenaltyBreakOpenParenthesis: 180
 PenaltyBreakTemplateDeclaration: 100
+WrapNamespaceBodyWithEmptyLines: Leave
+
