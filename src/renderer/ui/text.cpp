@@ -23,8 +23,7 @@ namespace platformer2d::UI {
 		ImVec2 Pos = StartPos;
 		ImDrawList* DrawList = ImGui::GetWindowDrawList();
 
-		for (const char* Ptr = Text; *Ptr; Ptr++)
-		{
+		for (const char* Ptr = Text; *Ptr; Ptr++) {
 			/* Create smooth oscillation between 0.0 and 1.0f */
 			const float T = 0.50f * (std::sin(Time + (*Ptr) * 0.15f) + 1.0f);
 
@@ -46,7 +45,7 @@ namespace platformer2d::UI {
 			Col.z = Colors[Index1].z + (Colors[Index2].z - Colors[Index1].z) * LocalT;
 			Col.w = 1.0f;
 
-			const char Character[2] = { *Ptr, 0 };
+			const char Character[2] = {*Ptr, 0};
 			DrawList->AddText(Font, FontSize, Pos, ImGui::ColorConvertFloat4ToU32(Col), Character);
 			Pos.x += Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Character).x;
 		}
@@ -64,8 +63,7 @@ namespace platformer2d::UI {
 
 		ImVec2 Pos = StartPos;
 		ImDrawList* DrawList = ImGui::GetWindowDrawList();
-		for (const char* Ptr = Text; *Ptr; Ptr++)
-		{
+		for (const char* Ptr = Text; *Ptr; Ptr++) {
 			float Hue = std::fmod(Time + (*Ptr) * Speed, 1.0f);
 			ImVec4 Col;
 			ImGui::ColorConvertHSVtoRGB(Hue, 1.0f, 1.0f, Col.x, Col.y, Col.z);
@@ -80,7 +78,7 @@ namespace platformer2d::UI {
 	}
 
 	void RainbowTextSynced(const char* Text, const float WaveLengthPx,
-						   const float SpeedPxPerSec, const float Saturation, const float Value)
+		const float SpeedPxPerSec, const float Saturation, const float Value)
 	{
 		LK_ASSERT(Text && *Text && (WaveLengthPx > 0.0f));
 		ImDrawList* DrawList = ImGui::GetWindowDrawList();
@@ -93,17 +91,15 @@ namespace platformer2d::UI {
 		const float Time = ImGui::GetTime();
 		const float InvWavelength = (1.0f / WaveLengthPx);
 
-		for (const char* Ptr = Text; *Ptr;)
-		{
-			if (*Ptr == '\n')
-			{
+		for (const char* Ptr = Text; *Ptr;) {
+			if (*Ptr == '\n') {
 				Pen.x = StartPos.x;
 				Pen.y += FontSize;
 				++Ptr;
 				continue;
 			}
 
-			char Ch[2] = { *Ptr, 0 };
+			char Ch[2] = {*Ptr, 0};
 			Ptr++;
 
 			const float AdvanceX = Font->CalcTextSizeA(FontSize, FLT_MAX, 0.0f, Ch).x;

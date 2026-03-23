@@ -34,7 +34,13 @@ namespace platformer2d {
 	class CShader
 	{
 	public:
-		enum EType { Quad, Line, Circle };
+		enum EType
+		{
+			Quad,
+			Line,
+			Circle
+		};
+
 	public:
 		CShader(const std::filesystem::path& ShaderPath);
 		CShader(const std::filesystem::path& VertexShaderPath, const std::filesystem::path& FragShaderPath);
@@ -81,14 +87,11 @@ namespace platformer2d {
 		void Set(std::string_view Uniform, const T* Array, const std::size_t ArrSize)
 		{
 			static_assert(std::disjunction_v<std::is_same<T, int>,
-											 std::is_same<T, uint32_t>>);
+				std::is_same<T, uint32_t>>);
 			LK_OpenGL_Verify(glUseProgram(RendererID));
-			if constexpr (std::is_same_v<T, int>)
-			{
+			if constexpr (std::is_same_v<T, int>) {
 				LK_OpenGL_Verify(glUniform1iv(GetUniformLocation(Uniform.data()), ArrSize, Array));
-			}
-			else if constexpr (std::is_same_v<T, uint32_t>)
-			{
+			} else if constexpr (std::is_same_v<T, uint32_t>) {
 				LK_OpenGL_Verify(glUniform1ui(GetUniformLocation(Uniform.data()), ArrSize, Array));
 			}
 		}

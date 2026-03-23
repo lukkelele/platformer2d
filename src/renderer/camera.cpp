@@ -10,8 +10,7 @@
 
 namespace platformer2d {
 
-	CCamera::CCamera(const float InWidth, const float InHeight, 
-					 const float InNearP, const float InFarP)
+	CCamera::CCamera(const float InWidth, const float InHeight, const float InNearP, const float InFarP)
 		: OrthographicNear(InNearP)
 		, OrthographicFar(InFarP)
 		, AspectRatio(InWidth / InHeight)
@@ -55,17 +54,14 @@ namespace platformer2d {
 	void CCamera::OnKeyPressed(const FKeyData& KeyData)
 	{
 		LK_TRACE_TAG("Camera", "OnKeyPressed: {} (Count: {})", Enum::ToString(KeyData.Key), KeyData.RepeatCount);
-		if (KeyData.Key == EKey::Minus)
-		{
+		if (KeyData.Key == EKey::Minus) {
 			SetZoom(GetZoom() - ZOOM_DIFF);
 		}
 
 		/* Modifiers */
 		/* @fixme: This should take the user keyboard layout into account... */
-		if (CKeyboard::IsKeyDown(EKey::LeftShift) || CKeyboard::IsKeyDown(EKey::RightShift))
-		{
-			if (KeyData.Key == EKey::Equal)
-			{
+		if (CKeyboard::IsKeyDown(EKey::LeftShift) || CKeyboard::IsKeyDown(EKey::RightShift)) {
+			if (KeyData.Key == EKey::Equal) {
 				SetZoom(GetZoom() + ZOOM_DIFF);
 			}
 		}
@@ -74,26 +70,21 @@ namespace platformer2d {
 	void CCamera::Target(const glm::vec2& TargetPos, const float DeltaTime)
 	{
 		/* Dead-zone logic. */
-		if (DeltaTime > 0.0f)
-		{
+		if (DeltaTime > 0.0f) {
 			glm::vec2 Center2 = glm::vec2(Center.x, Center.y);
 			glm::vec2 Offset = TargetPos - Center2;
 			glm::vec2 Desired = Center2;
 
-			if (Offset.x > DeadzoneHalf.x)
-			{
+			if (Offset.x > DeadzoneHalf.x) {
 				Desired.x = TargetPos.x - DeadzoneHalf.x;
 			}
-			if (Offset.x < -DeadzoneHalf.x)
-			{
+			if (Offset.x < -DeadzoneHalf.x) {
 				Desired.x = TargetPos.x + DeadzoneHalf.x;
 			}
-			if (Offset.y > DeadzoneHalf.y)
-			{
+			if (Offset.y > DeadzoneHalf.y) {
 				Desired.y = TargetPos.y - DeadzoneHalf.y;
 			}
-			if (Offset.y < -DeadzoneHalf.y)
-			{
+			if (Offset.y < -DeadzoneHalf.y) {
 				Desired.y = TargetPos.y + DeadzoneHalf.y;
 			}
 
@@ -102,9 +93,7 @@ namespace platformer2d {
 
 			Center.x = Center2.x;
 			Center.y = Center2.y;
-		}
-		else
-		{
+		} else {
 			/* Instant target lock. */
 			Center.x = TargetPos.x;
 			Center.y = TargetPos.y;
@@ -148,8 +137,7 @@ namespace platformer2d {
 		const float HalfWidth = HalfHeight * AspectRatio;
 		return std::make_pair(
 			glm::vec2(-HalfWidth, -HalfHeight),
-			glm::vec2(HalfWidth, HalfHeight)
-		);
+			glm::vec2(HalfWidth, HalfHeight));
 	}
 
 	void CCamera::OnMouseButtonPressed(const FMouseButtonData& ButtonData)

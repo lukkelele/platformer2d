@@ -42,8 +42,8 @@ namespace platformer2d::UI {
 
 		template<EPlacementPolicy Policy = EPlacementPolicy::Auto>
 		inline bool DragFloat(const char* Label, float& Value, float ValueSpeed = 1.0f,
-							  float ValueMin = 0.0f, float ValueMax = 0.0f,
-							  const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
+			float ValueMin = 0.0f, float ValueMax = 0.0f,
+			const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
 		{
 			static constexpr int LABEL_BUFSIZE = 72;
 
@@ -55,7 +55,7 @@ namespace platformer2d::UI {
 			static constexpr float FramePadding = 4.0f;
 			static constexpr float OutlineSpacing = 1.0f;
 			const float LineHeight = GImGui->Font->LegacySize + FramePadding * 2.0f;
-			const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
+			const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 
 			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
 			if constexpr (Policy == EPlacementPolicy::Auto) {
@@ -90,8 +90,7 @@ namespace platformer2d::UI {
 				&ValueMin,
 				&ValueMax,
 				Format,
-				Flags
-			);
+				Flags);
 
 			if (ImGui::TempInputIsActive(InputID)) {
 				Modified = false;
@@ -102,8 +101,8 @@ namespace platformer2d::UI {
 
 		template<EVectorSemantic VecSemantic = EVectorSemantic::XYZ, typename VectorType = glm::vec2>
 		inline bool DragFloat2(const std::string& Label, VectorType& Values, const float ResetValue = 0.0f,
-							   const float ValueSpeed = 0.10f, const float ValueMin = 0.0f, const float ValueMax = 0.0f,
-							   const float ColumnWidth = 100.0f, const char* Format = "%.2f")
+			const float ValueSpeed = 0.10f, const float ValueMin = 0.0f, const float ValueMax = 0.0f,
+			const float ColumnWidth = 100.0f, const char* Format = "%.2f")
 		{
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
@@ -141,7 +140,7 @@ namespace platformer2d::UI {
 				static constexpr float FramePadding = 4.0f;
 				static constexpr float OutlineSpacing = 1.0f;
 				const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
-				const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
+				const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 				const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f) - ButtonSize.x;
 
 				auto DrawControl = [&](const std::string& InLabel,
@@ -156,8 +155,7 @@ namespace platformer2d::UI {
 						UI::FScopedColorStack ButtonColors(
 							ImGuiCol_Button, InColorNormal,
 							ImGuiCol_ButtonHovered, InColorHover,
-							ImGuiCol_ButtonActive, InColorPressed
-						);
+							ImGuiCol_ButtonActive, InColorPressed);
 
 						if (ImGui::Button(InLabel.c_str(), ButtonSize)) {
 							InValue = ResetValue;
@@ -188,9 +186,8 @@ namespace platformer2d::UI {
 					V1,
 					Values.x,
 					ColorX,
-					{ ColorX.x + Diff, ColorX.y + Diff, ColorX.z + Diff, ColorX.w },
-					{ ColorX.x - Diff, ColorX.y - Diff, ColorX.z - Diff, ColorX.w }
-				);
+					{ColorX.x + Diff, ColorX.y + Diff, ColorX.z + Diff, ColorX.w},
+					{ColorX.x - Diff, ColorX.y - Diff, ColorX.z - Diff, ColorX.w});
 
 				/* Draw: V2 */
 				ImGui::SameLine(0.0f, OutlineSpacing);
@@ -199,9 +196,8 @@ namespace platformer2d::UI {
 					V2,
 					Values.y,
 					ColorY,
-					{ ColorY.x + Diff, ColorY.y + Diff, ColorY.z + Diff, ColorY.w },
-					{ ColorY.x - Diff, ColorY.y - Diff, ColorY.z - Diff, ColorY.w }
-				);
+					{ColorY.x + Diff, ColorY.y + Diff, ColorY.z + Diff, ColorY.w},
+					{ColorY.x - Diff, ColorY.y - Diff, ColorY.z - Diff, ColorY.w});
 
 				ImGui::PopStyleVar(1); /* FrameRounding */
 
@@ -211,12 +207,11 @@ namespace platformer2d::UI {
 			return Modified;
 		}
 
-
 		template<EVectorSemantic VecSemantic = EVectorSemantic::XYZ, typename VectorType = glm::vec3>
 		inline bool DragFloat3(const std::string& Label, VectorType& Values, const float ResetValue = 0.0f,
-							   const float ValueSpeed = 0.10f, const float ValueMin = 0.0f,
-							   const float ValueMax = 0.0f, const float ColumnWidth = 100.0f,
-							   const char* Format = "%.2f")
+			const float ValueSpeed = 0.10f, const float ValueMin = 0.0f,
+			const float ValueMax = 0.0f, const float ColumnWidth = 100.0f,
+			const char* Format = "%.2f")
 		{
 			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
 			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
@@ -256,7 +251,7 @@ namespace platformer2d::UI {
 				static constexpr float FramePadding = 4.0f;
 				static constexpr float OutlineSpacing = 1.0f;
 				const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
-				const ImVec2 ButtonSize = { LineHeight + 2.0f, LineHeight - 2.0f };
+				const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 				const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 3.0f) - ButtonSize.x;
 
 				auto DrawControl = [&](const std::string& InLabel,
@@ -271,11 +266,9 @@ namespace platformer2d::UI {
 						UI::FScopedColorStack ButtonColors(
 							ImGuiCol_Button, InColorNormal,
 							ImGuiCol_ButtonHovered, InColorHover,
-							ImGuiCol_ButtonActive, InColorPressed
-						);
+							ImGuiCol_ButtonActive, InColorPressed);
 
-						if (ImGui::Button(InLabel.c_str(), ButtonSize))
-						{
+						if (ImGui::Button(InLabel.c_str(), ButtonSize)) {
 							InValue = ResetValue;
 							Modified = true;
 						}
@@ -313,8 +306,7 @@ namespace platformer2d::UI {
 					Values.y,
 					ImVec4(0.20f, 0.70f, 0.20f, 1.0f),
 					ImVec4(0.30f, 0.80f, 0.30f, 1.0f),
-					ImVec4(0.20f, 0.70f, 0.20f, 1.0f)
-				);
+					ImVec4(0.20f, 0.70f, 0.20f, 1.0f));
 
 				/* Draw: V3 */
 				ImGui::SameLine(0.0f, OutlineSpacing);
@@ -323,8 +315,7 @@ namespace platformer2d::UI {
 					Values.z,
 					ImVec4(0.10f, 0.25f, 0.80f, 1.0f),
 					ImVec4(0.20f, 0.35f, 0.90f, 1.0f),
-					ImVec4(0.10f, 0.25f, 0.80f, 1.0f)
-				);
+					ImVec4(0.10f, 0.25f, 0.80f, 1.0f));
 
 				ImGui::PopStyleVar(1); /* FrameRounding */
 				ImGui::EndChild();
@@ -390,8 +381,8 @@ namespace platformer2d::UI {
 			Window->DC.CurrLineTextBaseOffset = 3.0f;
 
 			const ImVec2 RowAreaMin = ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 0).Min;
-			const ImVec2 RowAreaMax = { ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnCount() - 1).Max.x - 20,
-										RowAreaMin.y + RowHeight };
+			const ImVec2 RowAreaMax = {ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnCount() - 1).Max.x - 20,
+				RowAreaMin.y + RowHeight};
 
 			ImGuiID ID = ImGui::GetID(Name.data());
 			ImRect RowRect(RowAreaMin, RowAreaMax);
@@ -414,7 +405,7 @@ namespace platformer2d::UI {
 			if (IsRowHovered) {
 				FillRowWithColor(RGBA32::Background);
 				ImGui::SetTooltip("Clicked: %d RowAreaMin=(%.2f, %.2f) RowAreaMax=(%.2f, %.2f)", IsRowClicked, RowAreaMin.x,
-								  RowAreaMin.y, RowAreaMax.x, RowAreaMax.y);
+					RowAreaMin.y, RowAreaMax.x, RowAreaMax.y);
 			}
 
 			UI::Image(Icon, ImVec2(RowHeight - 3.0f, RowHeight - 3.0f));

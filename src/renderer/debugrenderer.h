@@ -32,11 +32,12 @@ namespace platformer2d {
 		static void DrawCircle(const glm::mat4& Transform, float Radius, const glm::vec4& Color);
 
 		static void DrawRayHit(const FRayCast& RayCast, float T, uint16_t LineWidth = 9,
-							   const glm::vec4& LineColor = FColor::Convert(RGBA32::Magenta),
-							   float Radius = 0.030f, const glm::vec4& CircleColor = FColor::Red);
+			const glm::vec4& LineColor = FColor::Convert(RGBA32::Magenta),
+			float Radius = 0.030f, const glm::vec4& CircleColor = FColor::Red);
 
 	public:
 		static inline glm::mat4 ViewProjection = glm::mat4(1.0f);
+
 	private:
 		CDebugRenderer& operator=(const CDebugRenderer&) = delete;
 		CDebugRenderer& operator=(CDebugRenderer&&) = delete;

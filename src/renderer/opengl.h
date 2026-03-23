@@ -10,14 +10,14 @@
 #include "vertexbufferlayout.h"
 
 #ifdef LK_BUILD_DEBUG
-#include "opengl_debug.h"
+#	include "opengl_debug.h"
 #endif
 
 #define LK_VERTEXARRAY_RETURN_STD_ARRAY 1
 
-#define LK_OpenGL_Verify(OpenGLFunction) \
-	::platformer2d::OpenGL::Internal::CheckForErrors(); \
-	OpenGLFunction; \
+#define LK_OpenGL_Verify(OpenGLFunction)                                                                   \
+	::platformer2d::OpenGL::Internal::CheckForErrors();                                                    \
+	OpenGLFunction;                                                                                        \
 	LK_VERIFY(::platformer2d::OpenGL::Internal::VerifyFunctionResult(#OpenGLFunction, __FILE__, __LINE__))
 
 namespace platformer2d {
@@ -36,19 +36,18 @@ namespace platformer2d {
 		TriangleFan
 	};
 
-	namespace OpenGL::Internal
-	{
+	namespace OpenGL::Internal {
 		inline void CheckForErrors()
 		{
-			while (glGetError() != GL_NO_ERROR);
+			while (glGetError() != GL_NO_ERROR)
+				;
 		}
 
 		inline bool VerifyFunctionResult(const char* InFunction, const char* InFile, int InLine)
 		{
-			while (GLenum Error = glGetError())
-			{
+			while (GLenum Error = glGetError()) {
 				std::printf("Error: %d\n * Function: %s\n * File: %s\n * Line: %d\n",
-								  static_cast<int>(Error), InFunction, InFile, InLine);
+					static_cast<int>(Error), InFunction, InFile, InLine);
 				return false;
 			}
 			return true;
@@ -81,19 +80,18 @@ namespace platformer2d::OpenGL {
 
 	static constexpr GLenum ShaderDataTypeToOpenGLBaseType(const EShaderDataType Type)
 	{
-		switch (Type)
-		{
+		switch (Type) {
 			case EShaderDataType::Float:  return GL_FLOAT;
 			case EShaderDataType::Float2: return GL_FLOAT;
 			case EShaderDataType::Float3: return GL_FLOAT;
 			case EShaderDataType::Float4: return GL_FLOAT;
-			case EShaderDataType::Mat3:	  return GL_FLOAT;
-			case EShaderDataType::Mat4:	  return GL_FLOAT;
+			case EShaderDataType::Mat3:   return GL_FLOAT;
+			case EShaderDataType::Mat4:   return GL_FLOAT;
 			case EShaderDataType::Int:
 			case EShaderDataType::Int2:
 			case EShaderDataType::Int3:
-			case EShaderDataType::Int4:	  return GL_INT;
-			case EShaderDataType::Bool:	  return GL_BOOL;
+			case EShaderDataType::Int4:   return GL_INT;
+			case EShaderDataType::Bool:   return GL_BOOL;
 		}
 		return GL_INVALID_ENUM;
 	}
@@ -101,11 +99,9 @@ namespace platformer2d::OpenGL {
 	static void ApplyVertexBufferLayout(const FVertexBufferLayout& Layout)
 	{
 		int VertexBufferIndex = 0;
-		for (const FVertexBufferElement& Element : Layout)
-		{
+		for (const FVertexBufferElement& Element : Layout) {
 			LK_TRACE("ComponentCount={} Stride={}", Element.GetComponentCount(), Layout.GetStride());
-			switch (Element.Type)
-			{
+			switch (Element.Type) {
 				case EShaderDataType::Float:
 				case EShaderDataType::Float2:
 				case EShaderDataType::Float3:
@@ -118,8 +114,7 @@ namespace platformer2d::OpenGL {
 						OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
 						(Element.Normalized ? GL_TRUE : GL_FALSE),
 						Layout.GetStride(),
-						(const void*)Element.Offset
-					);
+						(const void*)Element.Offset);
 					VertexBufferIndex++;
 					break;
 				}
@@ -135,8 +130,7 @@ namespace platformer2d::OpenGL {
 						Element.GetComponentCount(),
 						OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
 						Layout.GetStride(),
-						(const void*)Element.Offset
-					);
+						(const void*)Element.Offset);
 					VertexBufferIndex++;
 					break;
 				}
@@ -144,8 +138,7 @@ namespace platformer2d::OpenGL {
 				case EShaderDataType::Mat4:
 				{
 					const uint8_t Count = Element.GetComponentCount();
-					for (uint8_t Idx = 0; Idx < Count; Idx++)
-					{
+					for (uint8_t Idx = 0; Idx < Count; Idx++) {
 						glEnableVertexAttribArray(VertexBufferIndex);
 						glVertexAttribPointer(
 							VertexBufferIndex,
@@ -153,8 +146,7 @@ namespace platformer2d::OpenGL {
 							OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
 							(Element.Normalized ? GL_TRUE : GL_FALSE),
 							Layout.GetStride(),
-							(const void*)(Element.Offset + sizeof(float) * Count * Idx)
-						);
+							(const void*)(Element.Offset + sizeof(float) * Count * Idx));
 						glVertexAttribDivisor(VertexBufferIndex, 1);
 						VertexBufferIndex++;
 					}
@@ -167,36 +159,32 @@ namespace platformer2d::OpenGL {
 		}
 	}
 
-	namespace VertexArray 
-	{
+	namespace VertexArray {
 		template<std::size_t N = 1>
 		static auto Create()
 		{
 			/* Return type: GLuint */
-			if constexpr (N == 1)
-			{
+			if constexpr (N == 1) {
 				GLuint VAO;
 				LK_OpenGL_Verify(glGenVertexArrays(1, &VAO));
 				LK_OpenGL_Verify(glBindVertexArray(VAO));
 				return VAO;
 			}
 			/* Return type: std::array<GLuint, N> */
-			else
-			{
-			#if LK_VERTEXARRAY_RETURN_STD_ARRAY
+			else {
+#if LK_VERTEXARRAY_RETURN_STD_ARRAY
 				std::array<GLuint, N> VAO;
 				LK_OpenGL_Verify(glGenVertexArrays(static_cast<GLsizei>(N), VAO.data()));
-			#else
+#else
 				GLuint VAO[N];
 				LK_OpenGL_Verify(glBindVertexArray(VAO[0]));
-			#endif
+#endif
 				return VAO;
 			}
 		}
 	}
 
-	namespace VertexBuffer
-	{
+	namespace VertexBuffer {
 		static GLuint Create(const std::size_t DataSize, const FVertexBufferLayout& Layout, const int BufferType = GL_DYNAMIC_DRAW)
 		{
 			GLuint VBO;
@@ -221,8 +209,7 @@ namespace platformer2d::OpenGL {
 		}
 	}
 
-	namespace ElementBuffer
-	{
+	namespace ElementBuffer {
 		template<typename T = uint32_t, std::size_t N>
 		static GLuint Create(const T (&Data)[N])
 		{
@@ -244,7 +231,6 @@ namespace platformer2d::OpenGL {
 			LK_OpenGL_Verify(glBufferData(GL_ELEMENT_ARRAY_BUFFER, Size, Data, GL_STATIC_DRAW));
 			return EBO;
 		}
-
 
 		template<typename T = uint32_t, std::size_t N>
 		static GLuint Create(const std::array<T, N>& Data)

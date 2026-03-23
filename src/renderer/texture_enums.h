@@ -90,12 +90,10 @@ namespace platformer2d {
 		bool bStoreLocally = false;
 	};
 
-	namespace Enum
-	{
+	namespace Enum {
 		inline const char* ToString(const EImageFormat Format)
 		{
-			switch (Format)
-			{
+			switch (Format) {
 				case EImageFormat::RG8:             return "RG8";
 				case EImageFormat::RG16F:           return "RG16F";
 				case EImageFormat::RG32F:           return "RG32F";
@@ -114,8 +112,7 @@ namespace platformer2d {
 
 		inline const char* ToString(const ETextureWrap Wrap)
 		{
-			switch (Wrap)
-			{
+			switch (Wrap) {
 				case ETextureWrap::Clamp:  return "Clamp";
 				case ETextureWrap::Repeat: return "Repeat";
 			}
@@ -125,8 +122,7 @@ namespace platformer2d {
 
 		inline const char* ToString(const ETextureFilter Filter)
 		{
-			switch (Filter)
-			{
+			switch (Filter) {
 				case ETextureFilter::Linear:  return "Linear";
 				case ETextureFilter::Nearest: return "Nearest";
 			}

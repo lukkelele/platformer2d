@@ -14,7 +14,7 @@ namespace platformer2d::UI {
 	namespace {
 		uint32_t Counter = 0;
 		int UIContextID = 0;
-		std::array<char, 16 + 2 + 1> IDBuffer = { "##" };
+		std::array<char, 16 + 2 + 1> IDBuffer = {"##"};
 		std::array<char, 1024 + 1> LabelIDBuffer;
 
 		bool bDockspaceInitialized = false;
@@ -32,16 +32,16 @@ namespace platformer2d::UI {
 	}
 
 	void PushID()
-    {
-        ImGui::PushID(UIContextID++);
-        Counter = 0;
-    }
+	{
+		ImGui::PushID(UIContextID++);
+		Counter = 0;
+	}
 
-    void PopID()
-    {
-        ImGui::PopID();
-        UIContextID--;
-    }
+	void PopID()
+	{
+		ImGui::PopID();
+		UIContextID--;
+	}
 
 	const char* GenerateID()
 	{
@@ -50,9 +50,9 @@ namespace platformer2d::UI {
 	}
 
 	bool Begin(const char* WindowTitle, bool* Open, ImGuiWindowFlags WindowFlags)
-    {
-        UI::PushID();
-        ImGui::Begin(WindowTitle, Open, WindowFlags);
+	{
+		UI::PushID();
+		ImGui::Begin(WindowTitle, Open, WindowFlags);
 
 		if (ImGuiWindow* ThisWindow = ImGui::GetCurrentWindow(); ThisWindow != nullptr) {
 			if (ThisWindow->SkipItems) {
@@ -63,13 +63,13 @@ namespace platformer2d::UI {
 		}
 
 		return true;
-    }
+	}
 
-    void End()
-    {
-        ImGui::End();
-        UI::PopID();
-    }
+	void End()
+	{
+		ImGui::End();
+		UI::PopID();
+	}
 
 	void BeginCoreViewport(CWindow* Window)
 	{
@@ -79,16 +79,16 @@ namespace platformer2d::UI {
 			UI::HostWindowFlags |= ImGuiWindowFlags_NoBackground;
 		}
 
-        ImGuiViewport* Viewport = ImGui::GetMainViewport();
+		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 
 		FScopedStyle WindowRounding(ImGuiStyleVar_WindowRounding, 0.0f);
 		FScopedStyle WindowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		FScopedColor MenuBarBg(ImGuiCol_MenuBarBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::SetNextWindowPos(Viewport->Pos);
-        ImGui::SetNextWindowSize(Viewport->Size);
-        ImGui::SetNextWindowViewport(Viewport->ID);
-        ImGui::Begin(PanelID::CoreViewport, nullptr, UI::HostWindowFlags);
+		ImGui::SetNextWindowPos(Viewport->Pos);
+		ImGui::SetNextWindowSize(Viewport->Size);
+		ImGui::SetNextWindowViewport(Viewport->ID);
+		ImGui::Begin(PanelID::CoreViewport, nullptr, UI::HostWindowFlags);
 		ImGuiID DockspaceID = ImGui::GetID(PanelID::Dockspace);
 
 		/**
@@ -117,7 +117,7 @@ namespace platformer2d::UI {
 				RightSidebarFraction = 0.24f;
 				TopbarFraction = 0.07f;
 				MenubarFraction = 0.03f;
-			/* Normal 16:9 monitor. */
+				/* Normal 16:9 monitor. */
 			} else if (((WindowWidth <= 1920) && (WindowWidth > 1280)) && (WindowHeight <= 1080)) {
 				LeftSidebarFraction = 0.30f;
 				RightSidebarFraction = 0.40f;
@@ -131,7 +131,7 @@ namespace platformer2d::UI {
 			}
 
 			/* Add empty node. */
-			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace 
+			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace
 				| ImGuiDockNodeFlags_NoWindowMenuButton;
 			ImGui::DockBuilderAddNode(DockspaceID, DockFlags);
 			ImGui::DockBuilderSetNodeSize(DockspaceID, Viewport->Size);

@@ -17,7 +17,8 @@ namespace platformer2d {
 	struct FFramebufferTextureSpecification
 	{
 		FFramebufferTextureSpecification(const EImageFormat InImageFormat)
-			: ImageFormat(InImageFormat) {}
+			: ImageFormat(InImageFormat)
+		{}
 		FFramebufferTextureSpecification() = default;
 
 		EImageFormat ImageFormat{};
@@ -28,7 +29,8 @@ namespace platformer2d {
 	{
 		FFramebufferAttachmentSpecification() = default;
 		FFramebufferAttachmentSpecification(const std::initializer_list<FFramebufferTextureSpecification>& InAttachments)
-			: Attachments(InAttachments) {}
+			: Attachments(InAttachments)
+		{}
 
 		std::vector<FFramebufferTextureSpecification> Attachments{};
 	};
@@ -38,7 +40,7 @@ namespace platformer2d {
 		float Scale = 1.0f;
 		uint32_t Width = 0;
 		uint32_t Height = 0;
-		glm::vec4 ClearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+		glm::vec4 ClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 		float DepthClearValue = 0.0f;
 		bool ClearColorOnLoad = true;
 		bool ClearDepthOnLoad = true;
@@ -58,8 +60,8 @@ namespace platformer2d {
 	public:
 		CFramebuffer(const FFramebufferSpecification& InSpec);
 		CFramebuffer() = delete;
-        ~CFramebuffer();
-        
+		~CFramebuffer();
+
 		void Destroy();
 		void Invalidate();
 
@@ -100,9 +102,9 @@ namespace platformer2d {
 		inline const char* ToString(const EFramebufferTextureFormat Format)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EFramebufferTextureFormat::EnumValue: S = #EnumValue; break
-			switch (Format)
-			{
+#define _(EnumValue)                                                 \
+	case EFramebufferTextureFormat::EnumValue: S = #EnumValue; break
+			switch (Format) {
 				_(None);
 				_(RGBA8);
 				_(RED_INTEGER);
@@ -111,7 +113,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Format);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

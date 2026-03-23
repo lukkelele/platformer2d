@@ -41,7 +41,10 @@ namespace platformer2d::UI {
 	LK_DECLARE_MULTICAST_DELEGATE(FOnPauseMenuOpened, bool);
 	extern FOnPauseMenuOpened OnPauseMenuOpened;
 
-	FORCEINLINE bool InTable() { return ImGui::GetCurrentTable() != nullptr; }
+	FORCEINLINE bool InTable()
+	{
+		return ImGui::GetCurrentTable() != nullptr;
+	}
 
 	namespace Table {
 		FORCEINLINE void Label(std::string_view Str, const float IndentX = 0.0f)
@@ -61,7 +64,7 @@ namespace platformer2d::UI {
 	inline bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 0.0f)
 	{
 		bool Active = false;
-		char LabelBuf[64] = { 0 };
+		char LabelBuf[64] = {0};
 		std::snprintf(LabelBuf, sizeof(LabelBuf), "##%s", Str.data());
 
 		if (InTable()) {
@@ -88,10 +91,10 @@ namespace platformer2d::UI {
 	struct FPhysicsBodyData
 	{
 		EBodyType BodyType = EBodyType::Static;
-		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 Position = {0.0f, 0.0f, 0.0f};
 		float Friction = 0.60f;
 		float Density = 1.0f;
-		glm::vec2 LinearVelocity = { 0.0f, 0.0f };
+		glm::vec2 LinearVelocity = {0.0f, 0.0f};
 		float AngularVelocity = 0.0f;
 		float GravityScale = 1.0f;
 		float LinearDamping = 0.0f;
@@ -129,11 +132,11 @@ namespace platformer2d::UI {
 
 	struct FActorAttributes
 	{
-		glm::vec2 Position = { 0.0f, 0.0f };
-		glm::vec2 Size = { 0.20f, 0.20f };
+		glm::vec2 Position = {0.0f, 0.0f};
+		glm::vec2 Size = {0.20f, 0.20f};
 		ETexture Texture = ETexture::White;
 		EColor Color = EColor::White;
-		std::array<char, 128> NameBuf = { 0 };
+		std::array<char, 128> NameBuf = {0};
 	};
 	extern FActorAttributes ActorAttr;
 
@@ -144,7 +147,7 @@ namespace platformer2d::UI {
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
 	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
-				   const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
+		const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
 	void PlayerData(std::shared_ptr<CPlayer> Player);
 	void RifleData(std::shared_ptr<CRifle> Rifle);
@@ -155,7 +158,7 @@ namespace platformer2d::UI {
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);
 	void RainbowTextGradient(const char* Text, float Speed = 0.15f);
 	void RainbowTextSynced(const char* Text, float WaveLengthPx = 180.0f, float SpeedPxPerSec = 30.0f,
-						   float Saturation = 1.0f, float Value = 1.0f);
+		float Saturation = 1.0f, float Value = 1.0f);
 
 	void PrepareLeftSidebar();
 	void PrepareRightSidebar();
@@ -167,8 +170,7 @@ namespace platformer2d::UI {
 			EDirection::Up,
 			EDirection::Down,
 			EDirection::Left,
-			EDirection::Right
-		};
+			EDirection::Right};
 
 		inline constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
 			Enum::ToString(ETexture::White),

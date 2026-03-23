@@ -55,20 +55,17 @@ namespace platformer2d {
 
 	extern const std::unordered_map<EFontSize, float> FontSizeMap;
 
-	namespace UI::Font 
-	{
+	namespace UI::Font {
 		void Add(const FFontConfiguration& FontConfig, bool IsDefault = false);
 		void Push(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
 		void Pop();
 		ImFont* Get(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
 	}
 
-	namespace Enum
-	{
+	namespace Enum {
 		static const char* ToString(const EFont Font)
 		{
-			switch (Font)
-			{
+			switch (Font) {
 				case EFont::None:          return "None";
 				case EFont::SourceSansPro: return "SourceSansPro";
 				case EFont::Roboto:        return "Roboto";
@@ -81,8 +78,7 @@ namespace platformer2d {
 
 		static const char* ToString(const EFontSize FontSize)
 		{
-			switch (FontSize)
-			{
+			switch (FontSize) {
 				case EFontSize::None:    return "None";
 				case EFontSize::Smaller: return "Smaller";
 				case EFontSize::Small:   return "Small";
@@ -99,8 +95,7 @@ namespace platformer2d {
 
 		static const char* ToString(const EFontModifier FontModifier)
 		{
-			switch (FontModifier)
-			{
+			switch (FontModifier) {
 				case EFontModifier::Normal:     return "Normal";
 				case EFontModifier::Bold:       return "Bold";
 				case EFontModifier::Italic:     return "Italic";
@@ -114,24 +109,23 @@ namespace platformer2d {
 	}
 }
 
-namespace std 
-{
-    template<>
-    struct hash<::platformer2d::EFontModifier>
-    {
-        std::size_t operator()(const ::platformer2d::EFontModifier Modifier) const noexcept
-        {
+namespace std {
+	template<>
+	struct hash<::platformer2d::EFontModifier>
+	{
+		std::size_t operator()(const ::platformer2d::EFontModifier Modifier) const noexcept
+		{
 			return static_cast<std::size_t>(Modifier);
-        }
-    };
+		}
+	};
 
-    template<>
-    struct hash<::platformer2d::EFont>
-    {
-        std::size_t operator()(const ::platformer2d::EFont Font) const noexcept
-        {
+	template<>
+	struct hash<::platformer2d::EFont>
+	{
+		std::size_t operator()(const ::platformer2d::EFont Font) const noexcept
+		{
 			return static_cast<std::size_t>(Font);
-        }
-    };
+		}
+	};
 
 }

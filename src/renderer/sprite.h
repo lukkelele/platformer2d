@@ -36,8 +36,8 @@ namespace platformer2d {
 	{
 	public:
 		CSprite(std::shared_ptr<CTexture> InTexture, const glm::vec2& InTilePos,
-				const glm::vec2& InTileSize, const FSpriteAnimation& InAnim = FSpriteAnimation(),
-				bool FlipHorizontal = false, bool FlipVertical = false);
+			const glm::vec2& InTileSize, const FSpriteAnimation& InAnim = FSpriteAnimation(),
+			bool FlipHorizontal = false, bool FlipVertical = false);
 		CSprite() = delete;
 		~CSprite();
 
@@ -62,9 +62,9 @@ namespace platformer2d {
 		void FlipVertical();
 
 		[[nodiscard]] static FSpriteUV CalculateUV(const glm::vec2& InTilePos, const glm::vec2& InTileSize,
-												   const glm::vec2& InSheetSize, bool FlipHorizontal = false, bool FlipVertical = false);
+			const glm::vec2& InSheetSize, bool FlipHorizontal = false, bool FlipVertical = false);
 		static void CalculateUV(FSpriteUV& InSpriteUV, const glm::vec2& InTilePos, const glm::vec2& InTileSize,
-								const glm::vec2& InSheetSize, bool FlipHorizontal = false, bool FlipVertical = false);
+			const glm::vec2& InSheetSize, bool FlipHorizontal = false, bool FlipVertical = false);
 
 	private:
 		void UpdateSprite(bool FlipHorizontal = false, bool FlipVertical = false);

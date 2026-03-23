@@ -13,11 +13,11 @@ namespace platformer2d {
 		CUILayer(std::string_view InLayerName = "UI");
 		~CUILayer() = default;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
+		void OnAttach() override;
+		void OnDetach() override;
 
-		virtual void Tick(float DeltaTime) override;
-		virtual void RenderUI() override;
+		void Tick(float DeltaTime) override;
+		void RenderUI() override;
 
 		void BeginFrame();
 		void EndFrame();
@@ -51,7 +51,8 @@ namespace platformer2d {
 		inline const char* ToString(const CUILayer::EMenu Menu)
 		{
 			const char* S = "";
-		#define _(EnumValue) case CUILayer::EMenu::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                       \
+	case CUILayer::EMenu::EnumValue: S = #EnumValue; break
 			switch (Menu) {
 				_(None);
 				_(MainMenu);
@@ -60,7 +61,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Menu);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

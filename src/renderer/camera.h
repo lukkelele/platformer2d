@@ -31,7 +31,7 @@ namespace platformer2d {
 		void SetOrthographic(float InWidth, float InHeight, float InNearClip = -1.0f, float InFarClip = 1.0f);
 
 		void SetZoom(float InZoom);
-		float GetZoom() const { return Zoom; }	
+		float GetZoom() const { return Zoom; }
 
 		void Target(const glm::vec2& TargetPos, float DeltaTime = 0.0f);
 		void SetFollowSpeed(float InFollowSpeed);
@@ -48,10 +48,9 @@ namespace platformer2d {
 			const float HalfWidth = HalfHeight * AspectRatio;
 
 			ProjectionMatrix = glm::ortho(
-				-HalfWidth,  HalfWidth,
+				-HalfWidth, HalfWidth,
 				-HalfHeight, HalfHeight,
-				OrthographicNear, OrthographicFar
-			);
+				OrthographicNear, OrthographicFar);
 		}
 
 		FORCEINLINE void UpdateView()
@@ -68,8 +67,9 @@ namespace platformer2d {
 		static constexpr float ZOOM_MIN = 0.010f;
 		static constexpr float ZOOM_MAX = 1.0f;
 		static constexpr float ZOOM_DIFF = 0.010f;
+
 	private:
-		glm::vec2 Center = { 0.0f, 0.0f };
+		glm::vec2 Center = {0.0f, 0.0f};
 
 		float ViewportWidth;
 		float ViewportHeight;
@@ -87,7 +87,7 @@ namespace platformer2d {
 		glm::mat4 ViewMatrix = glm::mat4(1.0f);
 		glm::mat4 ProjectionMatrix = glm::mat4(1.0f);
 
-		glm::vec2 DeadzoneHalf = { 0.10f, 0.0f }; /* World units. */
+		glm::vec2 DeadzoneHalf = {0.10f, 0.0f}; /* World units. */
 		float FollowSpeed = 10.0f;
 	};
 

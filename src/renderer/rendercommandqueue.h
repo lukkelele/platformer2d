@@ -7,7 +7,7 @@ namespace platformer2d {
 	class CRenderCommandQueue
 	{
 	public:
-		using FRenderCommand = void(*)(void*);
+		using FRenderCommand = void (*)(void*);
 
 		CRenderCommandQueue();
 		~CRenderCommandQueue();

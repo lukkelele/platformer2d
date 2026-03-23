@@ -4,21 +4,23 @@
 
 namespace platformer2d::UI {
 
-	namespace
-	{
+	namespace {
 		using TFontArray = std::array<ImFont*, static_cast<std::size_t>(EFontSize::COUNT)>;
 		using TFontMap = std::unordered_map<EFont, TFontArray>;
 
 		std::unordered_map<EFontModifier, TFontMap> FontMap = {
+			/* clang-format off */
 			{ EFontModifier::Normal,     { { EFont::SourceSansPro, TFontArray{} } } },
 			{ EFontModifier::Bold  ,     { { EFont::Roboto,        TFontArray{} } } },
 			{ EFontModifier::Italic,     { { EFont::FontAwesome,   TFontArray{} } } },
 			{ EFontModifier::BoldItalic, { { EFont::FontAwesome,   TFontArray{} } } },
 			{ EFontModifier::SemiMedium, { { EFont::FontAwesome,   TFontArray{} } } },
+			/* clang-format on */
 		};
 	}
 
 	const std::unordered_map<EFontSize, float> FontSizeMap = {
+		/* clang-format off */
 		{ EFontSize::Regular, 22.0f },
 		{ EFontSize::Smaller, 12.0f },
 		{ EFontSize::Small,   20.0f },
@@ -27,6 +29,7 @@ namespace platformer2d::UI {
 		{ EFontSize::Header,  38.0f },
 		{ EFontSize::Title,   54.0f },
 		{ EFontSize::Banner,  72.0f },
+		/* clang-format on */
 	};
 
 	void Font::Add(const FFontConfiguration& FontConfig, const bool IsDefault)
@@ -42,22 +45,19 @@ namespace platformer2d::UI {
 			FontConfig.FilePath.string().c_str(),
 			FontSizeMap.at(FontConfig.Size),
 			&ImguiFontConfig,
-			(FontConfig.GlyphRanges == nullptr ? IO.Fonts->GetGlyphRangesDefault() : FontConfig.GlyphRanges)
-		);
+			(FontConfig.GlyphRanges == nullptr ? IO.Fonts->GetGlyphRangesDefault() : FontConfig.GlyphRanges));
 		LK_VERIFY(Font, "Failed to load font: {}", FontConfig.FilePath);
 
 		TFontArray& ArrayRef = FontMap.at(FontConfig.Modifier)[FontConfig.Font];
 		/* Verify the font hasn't been added yet. */
-		if (FontConfig.Font != EFont::FontAwesome)
-		{
+		if (FontConfig.Font != EFont::FontAwesome) {
 			LK_VERIFY(ArrayRef[static_cast<int>(FontConfig.Size)] == nullptr,
-					  "Font {} ({}) already added", Enum::ToString(FontConfig.Font), Enum::ToString(FontConfig.Size));
+				"Font {} ({}) already added", Enum::ToString(FontConfig.Font), Enum::ToString(FontConfig.Size));
 		}
 		ArrayRef[static_cast<int>(FontConfig.Size)] = Font;
 		LK_TRACE_TAG("Font", "Added: {} ({})", FontConfig.FilePath.filename(), FontSizeMap.at(FontConfig.Size));
 
-		if (IsDefault)
-		{
+		if (IsDefault) {
 			IO.FontDefault = Font;
 		}
 	}

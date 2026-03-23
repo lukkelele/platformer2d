@@ -82,7 +82,7 @@ namespace platformer2d {
 			CWindow* Window = CWindow::Get();
 			if (Window && GameInstance->HasScene() && UI::IsPauseMenuOpen()) {
 				const glm::vec2 WindowSize = Window->GetSize();
-				static constexpr glm::vec4 OverlayColor = { 0.10f, 0.10f, 0.10f, 0.90f };
+				static constexpr glm::vec4 OverlayColor = {0.10f, 0.10f, 0.10f, 0.90f};
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
 			}
 		}
@@ -144,12 +144,10 @@ namespace platformer2d {
 		static constexpr float YFactor = 0.80f;
 		const ImVec2 WindowSize = ImVec2(
 			(std::clamp(Viewport->Size.x * 0.33f, 630.0f, 680.0f)),
-			(Viewport->Size.y * YFactor)
-		);
+			(Viewport->Size.y * YFactor));
 		const ImVec2 WindowPos = ImVec2(
 			(Viewport->Size.x * 0.50f) - (WindowSize.x * 0.50f),
-			((Viewport->Size.y * (1.0f - YFactor)) * 0.50f)
-		);
+			((Viewport->Size.y * (1.0f - YFactor)) * 0.50f));
 
 		ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize(WindowSize, ImGuiCond_Always);
@@ -167,7 +165,7 @@ namespace platformer2d {
 
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 MenuSize = ImGui::GetWindowSize();
-		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
+		const ImVec2 ButtonSize = {MenuSize.x, 62.0f};
 
 		switch (UI::PauseMenu.View) {
 			case UI::EPauseMenuView::Default:
@@ -195,7 +193,7 @@ namespace platformer2d {
 
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 MenuSize = ImGui::GetContentRegionAvail();
-		const ImVec2 ButtonSize = { MenuSize.x, 62.0f };
+		const ImVec2 ButtonSize = {MenuSize.x, 62.0f};
 
 		UI::ShiftCursorY(12.0f);
 		UI::BannerTextCentralized("Settings", EFont::Roboto, EFontModifier::Bold);
@@ -361,7 +359,7 @@ namespace platformer2d {
 		/* @todo: Use a table for all the menu options */
 
 		static constexpr float OptionPercentage = 0.80f;
-		const ImVec2 ButtonSize = { MenuSize.x * OptionPercentage, 62.0f };
+		const ImVec2 ButtonSize = {MenuSize.x * OptionPercentage, 62.0f};
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 14.0f);
 		UI::Font::Push(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
@@ -382,7 +380,7 @@ namespace platformer2d {
 		/* Place Quit and Play buttons at the bottom. */
 		ImGui::SetCursorPosY(MenuSize.y - ButtonSize.y - 2 * (Style.ItemSpacing.y + Style.FramePadding.y));
 
-		const ImVec2 HalfButtonSize = { (ButtonSize.x * 0.50f), ButtonSize.y };
+		const ImVec2 HalfButtonSize = {(ButtonSize.x * 0.50f), ButtonSize.y};
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
 		/* Quit button. */
@@ -431,12 +429,10 @@ namespace platformer2d {
 
 		const ImVec2 ViewportSize = ImVec2(
 			(std::clamp(Viewport->Size.x * XFactor, 620.0f, 940.0f)),
-			(Viewport->Size.y * YFactor)
-		);
+			(Viewport->Size.y * YFactor));
 		const ImVec2 WindowPos = ImVec2(
 			(Viewport->Size.x * 0.50f) - (ViewportSize.x * 0.50f),
-			((Viewport->Size.y * (1.0f - YFactor)) * 0.50f)
-		);
+			((Viewport->Size.y * (1.0f - YFactor)) * 0.50f));
 
 		ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ViewportSize, ImGuiCond_Always);
@@ -456,7 +452,7 @@ namespace platformer2d {
 
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 WindowSize = ImGui::GetWindowSize();
-		const ImVec2 ButtonSize = { WindowSize.x * 0.40f, 72.0f };
+		const ImVec2 ButtonSize = {WindowSize.x * 0.40f, 72.0f};
 		UI_PauseMenu_Title(WindowSize);
 
 		auto NextButtonEntry = []() -> void
@@ -475,8 +471,7 @@ namespace platformer2d {
 			NextButtonEntry();
 			{
 				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::SmoothGreen
-				);
+					ImGuiCol_Button, RGBA32::SmoothGreen);
 
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 				if (ImGui::Button("Levels", ButtonSize)) {
@@ -490,8 +485,7 @@ namespace platformer2d {
 			NextButtonEntry();
 			{
 				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::DarkCyan
-				);
+					ImGuiCol_Button, RGBA32::DarkCyan);
 
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 				if (ImGui::Button("Editor", ButtonSize)) {
@@ -511,8 +505,7 @@ namespace platformer2d {
 			const ImVec2 Avail = ImGui::GetContentRegionAvail();
 			UI::ShiftCursor(
 				(Avail.x * 0.50f) - (ButtonSize.x * 0.50f),
-				(Avail.y - ButtonSize.y - 40.0f)
-			);
+				(Avail.y - ButtonSize.y - 40.0f));
 			if (ImGui::Button("Quit", ButtonSize)) {
 				Core::Global.bShouldShutdown = true;
 			}
@@ -564,8 +557,7 @@ namespace platformer2d {
 			NextButtonEntry();
 			{
 				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::SmoothGreen
-				);
+					ImGuiCol_Button, RGBA32::SmoothGreen);
 
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 				if (ImGui::Button(LK_ICON_CODEPEN "  Lukkelele's World", ButtonSize)) {
@@ -586,8 +578,7 @@ namespace platformer2d {
 			NextButtonEntry();
 			{
 				UI::FScopedColorStack ColorStack(
-					ImGuiCol_Button, RGBA32::DarkGray
-				);
+					ImGuiCol_Button, RGBA32::DarkGray);
 
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 				if (ImGui::Button(LK_ICON_PENCIL "  Test Level", ButtonSize)) {
@@ -629,14 +620,12 @@ namespace platformer2d {
 	{
 		bool Ret = false;
 		UI::FScopedColorStack ColorStack(
-			ImGuiCol_Button, RGBA32::DarkGray
-		);
+			ImGuiCol_Button, RGBA32::DarkGray);
 
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
 		UI::ShiftCursor(
 			(Avail.x * 0.50f) - (Size.x * 0.50f),
-			(Avail.y - Size.y - 40.0f)
-		);
+			(Avail.y - Size.y - 40.0f));
 		if (ImGui::Button(LK_ICON_BOOK "  Main Menu", Size)) {
 			Ret = true;
 		}

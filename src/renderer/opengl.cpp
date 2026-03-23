@@ -15,16 +15,14 @@ namespace platformer2d::OpenGL {
 		int ExtensionCount;
 		glGetIntegerv(GL_NUM_EXTENSIONS, &ExtensionCount);
 		Info.Extensions.reserve(ExtensionCount);
-		for (int Idx = 0; Idx < ExtensionCount; Idx++)
-		{
+		for (int Idx = 0; Idx < ExtensionCount; Idx++) {
 			Info.Extensions.push_back(std::string(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, Idx))));
 		}
 	}
 
 	void SetTextureFilter(const ETextureFilter TextureFilter, const bool IsMipmap)
 	{
-		switch (TextureFilter)
-		{
+		switch (TextureFilter) {
 			case ETextureFilter::Linear:
 			{
 				LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (IsMipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR)));
@@ -42,8 +40,7 @@ namespace platformer2d::OpenGL {
 
 	void SetTextureFilter(const LRendererID ID, const ETextureFilter TextureFilter, const bool IsMipmap)
 	{
-		switch (TextureFilter)
-		{
+		switch (TextureFilter) {
 			case ETextureFilter::Linear:
 			{
 				LK_OpenGL_Verify(glTextureParameteri(ID, GL_TEXTURE_MIN_FILTER, (IsMipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR)));
@@ -61,8 +58,7 @@ namespace platformer2d::OpenGL {
 
 	void SetTextureWrap(const ETextureWrap TextureWrap)
 	{
-		switch (TextureWrap)
-		{
+		switch (TextureWrap) {
 			case ETextureWrap::Clamp:
 			{
 				LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -80,8 +76,7 @@ namespace platformer2d::OpenGL {
 
 	void SetTextureWrap(const LRendererID ID, const ETextureWrap TextureWrap)
 	{
-		switch (TextureWrap)
-		{
+		switch (TextureWrap) {
 			case ETextureWrap::Clamp:
 			{
 				LK_OpenGL_Verify(glTextureParameteri(ID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -94,15 +89,14 @@ namespace platformer2d::OpenGL {
 				LK_OpenGL_Verify(glTextureParameteri(ID, GL_TEXTURE_WRAP_T, GL_REPEAT));
 				break;
 			}
-			default: 
+			default:
 				LK_ASSERT(false, "Unknown texture wrap: {}", static_cast<int>(TextureWrap));
 		}
 	}
 
 	GLenum GetImageFormat(const EImageFormat Format)
 	{
-		switch (Format)
-		{
+		switch (Format) {
 			case EImageFormat::RGB:
 			case EImageFormat::RGB8: return GL_RGB;
 
@@ -123,12 +117,11 @@ namespace platformer2d::OpenGL {
 
 	GLenum GetFormatDataType(const EImageFormat Format)
 	{
-		switch (Format)
-		{
+		switch (Format) {
 			case EImageFormat::RGB:
 			case EImageFormat::RGB8:
 			case EImageFormat::RGBA:
-			case EImageFormat::RGBA8:	return GL_UNSIGNED_BYTE;
+			case EImageFormat::RGBA8:   return GL_UNSIGNED_BYTE;
 			case EImageFormat::RGBA16F:
 			case EImageFormat::RGBA32F: return GL_FLOAT;
 		}
@@ -139,23 +132,22 @@ namespace platformer2d::OpenGL {
 
 	GLenum GetImageInternalFormat(const EImageFormat Format)
 	{
-		switch (Format)
-		{
-			case EImageFormat::RGB:		return GL_RGB32F;
-			case EImageFormat::RGB8:	return GL_RGB8;
+		switch (Format) {
+			case EImageFormat::RGB:     return GL_RGB32F;
+			case EImageFormat::RGB8:    return GL_RGB8;
 
-			case EImageFormat::RGBA:	return GL_RGBA32F;
-			case EImageFormat::RGBA8:	return GL_RGBA8;
+			case EImageFormat::RGBA:    return GL_RGBA32F;
+			case EImageFormat::RGBA8:   return GL_RGBA8;
 			case EImageFormat::RGBA16F: return GL_RGBA16F;
 			case EImageFormat::RGBA32F: return GL_RGBA32F;
 
-			case EImageFormat::RG16F:	return GL_RG16F;
-			case EImageFormat::RG32F:	return GL_RG32F;
+			case EImageFormat::RG16F:   return GL_RG16F;
+			case EImageFormat::RG32F:   return GL_RG32F;
 
-			case EImageFormat::RED8UI:	return GL_R8UI;
+			case EImageFormat::RED8UI:  return GL_R8UI;
 			case EImageFormat::RED16UI: return GL_R16UI;
 			case EImageFormat::RED32UI: return GL_R32UI;
-			case EImageFormat::RED32F:	return GL_R32F;
+			case EImageFormat::RED32F:  return GL_R32F;
 		}
 
 		LK_ASSERT(false, "Unknown image format: {}", static_cast<int>(Format));
@@ -164,8 +156,7 @@ namespace platformer2d::OpenGL {
 
 	GLenum GetSamplerWrap(const ETextureWrap TextureWrap)
 	{
-		switch (TextureWrap)
-		{
+		switch (TextureWrap) {
 			case ETextureWrap::Clamp:  return GL_CLAMP_TO_EDGE;
 			case ETextureWrap::Repeat: return GL_REPEAT;
 		}
@@ -176,8 +167,7 @@ namespace platformer2d::OpenGL {
 
 	GLenum GetSamplerFilter(const ETextureFilter TextureFilter, const bool IsMipmap)
 	{
-		switch (TextureFilter)
-		{
+		switch (TextureFilter) {
 			case ETextureFilter::Linear:  return IsMipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
 			case ETextureFilter::Nearest: return IsMipmap ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
 		}
@@ -188,8 +178,7 @@ namespace platformer2d::OpenGL {
 
 	GLenum ImageFormatToDataFormat(const EImageFormat Format)
 	{
-		switch (Format)
-		{
+		switch (Format) {
 			case EImageFormat::RGBA:
 			case EImageFormat::RGBA8:
 			case EImageFormat::RGBA16F:
@@ -197,15 +186,15 @@ namespace platformer2d::OpenGL {
 
 			case EImageFormat::RG8:
 			case EImageFormat::RG16F:
-			case EImageFormat::RG32F:	return GL_RG;
+			case EImageFormat::RG32F:   return GL_RG;
 
 			case EImageFormat::RGB:
-			case EImageFormat::RGB8:	return GL_RGB;
+			case EImageFormat::RGB8:    return GL_RGB;
 
 			case EImageFormat::RED8UI:
 			case EImageFormat::RED16UI:
 			case EImageFormat::RED32UI: return GL_RED_INTEGER;
-			case EImageFormat::RED32F:	return GL_RED_INTEGER;
+			case EImageFormat::RED32F:  return GL_RED_INTEGER;
 		}
 
 		LK_ASSERT(false, "Invalid image format: {}", static_cast<int>(Format));
@@ -214,15 +203,14 @@ namespace platformer2d::OpenGL {
 
 	GLenum GetFramebufferTextureFormat(const EImageFormat ImageFormat)
 	{
-		switch (ImageFormat)
-		{
-			case EImageFormat::RGBA8:			return GL_RGBA8;
-			case EImageFormat::RGBA16F:			return GL_RGBA16F;
-			case EImageFormat::RGBA32F:			return GL_RGBA32F;
+		switch (ImageFormat) {
+			case EImageFormat::RGBA8:           return GL_RGBA8;
+			case EImageFormat::RGBA16F:         return GL_RGBA16F;
+			case EImageFormat::RGBA32F:         return GL_RGBA32F;
 			case EImageFormat::RED8UI:
 			case EImageFormat::RED8UN:
 			case EImageFormat::RED16UI:
-			case EImageFormat::RED32UI:			return GL_RED_INTEGER;
+			case EImageFormat::RED32UI:         return GL_RED_INTEGER;
 			case EImageFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
 		}
 
@@ -237,8 +225,7 @@ namespace platformer2d::OpenGL {
 
 	uint32_t GetFormatBPP(const EImageFormat ImageFormat)
 	{
-		switch (ImageFormat)
-		{
+		switch (ImageFormat) {
 			case EImageFormat::RGB:     return 1 * 3;
 			case EImageFormat::RGB8:    return 1 * 3;
 			case EImageFormat::RGBA8:   return 1 * 4;

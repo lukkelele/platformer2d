@@ -24,7 +24,10 @@ namespace platformer2d::UI {
 		constexpr auto& ColorArray = FColor::GetArray();
 	}
 
-	const FViewportData& GetViewportData() { return ViewportData; }
+	const FViewportData& GetViewportData()
+	{
+		return ViewportData;
+	}
 
 	bool BeginPropertyGrid(const std::size_t LabelColumnWidth)
 	{
@@ -68,8 +71,7 @@ namespace platformer2d::UI {
 
 		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
 		ImGui::SetNextItemWidth(ComboItemWidth);
-		if (ImGui::BeginCombo("##Color", Enum::ToString(Selected)))
-		{
+		if (ImGui::BeginCombo("##Color", Enum::ToString(Selected))) {
 			for (int Idx = 0; Idx < ColorArray.size(); Idx++) {
 				const char* Option = Enum::ToString(ColorArray[Idx]);
 				if (Option == nullptr) {
@@ -142,7 +144,7 @@ namespace platformer2d::UI {
 			static constexpr ImVec2 ButtonSize = ImVec2(142, 50);
 			if (ImGui::Button("Add Spawnpoint", ButtonSize)) {
 				LK_WARN("Add spawnpoint");
-				CSpawner::CreateSpawnpoint("PlayerSpawn", { 0.0f, 0.0f });
+				CSpawner::CreateSpawnpoint("PlayerSpawn", {0.0f, 0.0f});
 			}
 
 			ImGui::SameLine();
@@ -152,25 +154,24 @@ namespace platformer2d::UI {
 			}
 
 			ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::Orange);
-			if (ImGui::Button("Template: Floor", { ButtonSize.x + 64, ButtonSize.y })) {
+			if (ImGui::Button("Template: Floor", {ButtonSize.x + 64, ButtonSize.y})) {
 				auto Player = CGameInstance::Get()->GetPlayer(0);
 				ActorAttr.Size = glm::vec2(1.46, 0.11);
 				const glm::vec3 PlayerPos = Player->GetPosition();
-				ActorAttr.Position = { PlayerPos.x, PlayerPos.y + 0.15f};
+				ActorAttr.Position = {PlayerPos.x, PlayerPos.y + 0.15f};
 				PhysicsBodyData.Position = glm::vec3(ActorAttr.Position, 0.0f);
 			}
 			ImGui::PopStyleColor(1);
 
 			ImGui::SameLine();
 			ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::Orange);
-			if (ImGui::Button("Template: Large Floor", { ButtonSize.x + 64, ButtonSize.y })) {
+			if (ImGui::Button("Template: Large Floor", {ButtonSize.x + 64, ButtonSize.y})) {
 				auto Player = CGameInstance::Get()->GetPlayer(0);
 				ActorAttr.Size = glm::vec2(2.24, 0.11);
 				const glm::vec3 PlayerPos = Player->GetPosition();
-				ActorAttr.Position = { PlayerPos.x, PlayerPos.y + 0.15f};
+				ActorAttr.Position = {PlayerPos.x, PlayerPos.y + 0.15f};
 			}
 			ImGui::PopStyleColor(1);
-
 		}
 
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -220,8 +221,7 @@ namespace platformer2d::UI {
 			UI::FScopedColorStack ButtonColours(
 				ImGuiCol_Button, RGBA32::LightGreen,
 				ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-				ImGuiCol_ButtonActive, RGBA32::NiceGreen
-			);
+				ImGuiCol_ButtonActive, RGBA32::NiceGreen);
 
 			const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
 			if (ActorExists) {
@@ -239,24 +239,22 @@ namespace platformer2d::UI {
 						ActorAttr.NameBuf.data(),
 						ActorAttr.Position,
 						ActorAttr.Size,
-						FColor::Get(ActorAttr.Color)
-					);
+						FColor::Get(ActorAttr.Color));
 
 					auto Player = CGameInstance::Get()->GetPlayer(0);
 					const glm::vec3 PlayerPos = Player->GetPosition();
-					CGameplaySystem::Teleport(SpawnedPolygon, { PlayerPos.x, PlayerPos.y + 0.50f });
+					CGameplaySystem::Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
 				} else if (NewBodySpec.Type == EBodyType::Dynamic) {
 					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreatePolygon(
 						ActorAttr.NameBuf.data(),
 						NewBodySpec,
 						ActorAttr.Size,
 						FColor::Get(ActorAttr.Color),
-						ActorAttr.Texture
-					);
+						ActorAttr.Texture);
 
 					auto Player = CGameInstance::Get()->GetPlayer(0);
 					const glm::vec3 PlayerPos = Player->GetPosition();
-					CGameplaySystem::Teleport(SpawnedPolygon, { PlayerPos.x, PlayerPos.y + 0.50f });
+					CGameplaySystem::Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
 				}
 			}
 
@@ -279,7 +277,7 @@ namespace platformer2d::UI {
 		if (Operation == ImGuizmo::OPERATION::ROTATE) {
 			SnapValue = 1.0f;
 		}
-		const float SnapValues[3] = { SnapValue, SnapValue, SnapValue };
+		const float SnapValues[3] = {SnapValue, SnapValue, SnapValue};
 
 		FTransformComponent& TC = Actor.GetTransformComponent();
 		glm::mat4 TransformMatrix = TC.GetTransform();
@@ -291,8 +289,7 @@ namespace platformer2d::UI {
 			ImGuizmo::WORLD,
 			glm::value_ptr(TransformMatrix),
 			nullptr,
-			ShouldNotSnapValues ? nullptr : SnapValues
-		);
+			ShouldNotSnapValues ? nullptr : SnapValues);
 
 		const bool IsUsing = ImGuizmo::IsUsing();
 		if (IsUsing) {
@@ -578,7 +575,7 @@ namespace platformer2d::UI {
 		ImGui::SetNextWindowBgAlpha(0.25f);
 		const ImVec2 WindowPos = ImGui::GetWindowPos();
 		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
-		ImGui::SetNextWindowPos({ WindowPos.x + Padding, Padding + TopBarOffsetY }, ImGuiCond_Always);
+		ImGui::SetNextWindowPos({WindowPos.x + Padding, Padding + TopBarOffsetY}, ImGuiCond_Always);
 
 		ImGui::SetNextWindowSize(ImVec2(260, 0), ImGuiCond_Always);
 		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration
@@ -630,7 +627,7 @@ namespace platformer2d::UI {
 		NextColumn();
 		const bool CameraLocked = Player->IsCameraLocked();
 		ImGui::Text("%s", CameraLocked ? "Active" : "Not active");
-		
+
 		ImGui::EndTable();
 
 		if (ImGui::IsWindowHovered()) {
@@ -802,7 +799,7 @@ namespace platformer2d::UI {
 		auto& V = ViewportData;
 		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
 
-		V.LeftSidebarSize = { DockNode->Size.x, DockNode->Size.y };
+		V.LeftSidebarSize = {DockNode->Size.x, DockNode->Size.y};
 		SidebarWindow->Pos = ImVec2(0, V.MenuBarSize.y);
 		SidebarWindow->Size = ImVec2(V.LeftSidebarSize.x, Viewport->WorkSize.y);
 
@@ -845,7 +842,7 @@ namespace platformer2d::UI {
 		auto& V = ViewportData;
 		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
 
-		V.RightSidebarSize = { DockNode->Size.x, DockNode->Size.y };
+		V.RightSidebarSize = {DockNode->Size.x, DockNode->Size.y};
 		SidebarWindow->Pos = ImVec2(Viewport->Size.x - V.RightSidebarSize.x, V.MenuBarSize.y);
 		SidebarWindow->Size = ImVec2(V.RightSidebarSize.x, V.RightSidebarSize.y);
 

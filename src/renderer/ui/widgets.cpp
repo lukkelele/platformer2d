@@ -48,8 +48,7 @@ namespace platformer2d::UI::Widget {
 				UI::FScopedColorStack ButtonColours(
 					ImGuiCol_Button, RGBA32::LightGreen,
 					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-					ImGuiCol_ButtonActive, RGBA32::NiceGreen
-				);
+					ImGuiCol_ButtonActive, RGBA32::NiceGreen);
 
 				const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
 				if (ActorExists) {
@@ -66,8 +65,7 @@ namespace platformer2d::UI::Widget {
 						ActorAttr.NameBuf.data(),
 						NewBodySpec,
 						ActorAttr.Size,
-						FColor::Get(ActorAttr.Color)
-					);
+						FColor::Get(ActorAttr.Color));
 				}
 				if (ActorExists) {
 					ImGui::EndDisabled();
@@ -80,8 +78,7 @@ namespace platformer2d::UI::Widget {
 				UI::FScopedColorStack ButtonColours(
 					ImGuiCol_Button, RGBA32::WineRed,
 					ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-					ImGuiCol_ButtonActive, RGBA32::Red
-				);
+					ImGuiCol_ButtonActive, RGBA32::Red);
 
 				UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
 				const bool IsDeletable = Actor->IsDeletable();
@@ -118,8 +115,7 @@ namespace platformer2d::UI::Widget {
 		UI::FScopedColorStack ButtonColours(
 			ImGuiCol_Button, RGBA32::WineRed,
 			ImGuiCol_ButtonHovered, RGBA32::DarkRed,
-			ImGuiCol_ButtonActive, RGBA32::Red
-		);
+			ImGuiCol_ButtonActive, RGBA32::Red);
 
 		UI::ShiftCursorX(ImGui::GetStyle().FramePadding.x);
 		const bool IsDeletable = Actor->IsDeletable();
@@ -321,7 +317,7 @@ namespace platformer2d::UI::Widget {
 			ImGui::TableNextRow();
 			{
 				const glm::vec4& Color = Actor->GetOutlineColor();
-				glm::vec3 C = { Color.x, Color.y, Color.z };
+				glm::vec3 C = {Color.x, Color.y, Color.z};
 				if (UI::Widget::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
 					Actor->SetOutlineColor(glm::vec4(C, 1.0f));
 				}
@@ -488,18 +484,21 @@ namespace platformer2d::UI::Widget {
 
 					/* Convert to new variant. */
 					switch (IC.Type) {
-						case EInteraction::None: {
+						case EInteraction::None:
+						{
 							IC.Data = std::monostate{};
 							break;
 						}
 
-						case EInteraction::Damage: {
+						case EInteraction::Damage:
+						{
 							FDamageInteraction Data;
 							IC.Data = Data;
 							break;
 						}
 
-						case EInteraction::Pickup: {
+						case EInteraction::Pickup:
+						{
 							FPickupInteraction Data;
 							IC.Data = Data;
 							break;
@@ -532,14 +531,16 @@ namespace platformer2d::UI::Widget {
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 			UI::BeginPropertyGrid();
 			switch (IC.GetType()) {
-				case EInteraction::Damage: {
+				case EInteraction::Damage:
+				{
 					ImGui::TableNextRow();
 					auto& Data = std::get<FDamageInteraction>(IC.GetData());
 					UI::Widget::DragFloat("Damage", Data.Damage, 1.0f, 0.0, 100.0f, "%.1f");
 					break;
 				}
 
-				case EInteraction::Pickup: {
+				case EInteraction::Pickup:
+				{
 					auto& Data = std::get<FPickupInteraction>(IC.GetData());
 					CheckboxInTable("Expire When Picked Up", Data.bExpireWhenPickedUp);
 
@@ -577,7 +578,8 @@ namespace platformer2d::UI::Widget {
 				ImGui::TableSetColumnIndex(0);
 
 				switch (Effect.Type) {
-					case EEffectType::Rotate: {
+					case EEffectType::Rotate:
+					{
 						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
 						if (ImGui::TreeNodeEx("Rotate", ImGuiTreeNodeFlags_SpanAllColumns)) {
 							ImGui::TableNextRow();
@@ -674,7 +676,8 @@ namespace platformer2d::UI::Widget {
 				FEffectInstance Effect;
 				Effect.Type = EffectType;
 				switch (Effect.Type) {
-					case EEffectType::Rotate: {
+					case EEffectType::Rotate:
+					{
 						LK_DEBUG_TAG("UI", "Add rotate effect: AngularSpeed={}", AngularSpeed);
 						FRotateEffect Rotate;
 						Rotate.AngularSpeedDegPerSecond = AngularSpeed;

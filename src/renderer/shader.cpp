@@ -19,8 +19,7 @@ namespace platformer2d {
 	static uint16_t ReadShaderFile(const std::filesystem::path& ShaderPath, std::string& Source)
 	{
 		std::ifstream File(ShaderPath, std::ios::in);
-		if (!File.is_open())
-		{
+		if (!File.is_open()) {
 			spdlog::error("Failed to open: {}", ShaderPath.generic_string());
 			return 0;
 		}
@@ -29,8 +28,7 @@ namespace platformer2d {
 		uint16_t Count = 0;
 		std::string Line;
 		std::stringstream SStream;
-		while (std::getline(File, Line))
-		{
+		while (std::getline(File, Line)) {
 			SStream << Line << '\n';
 			Count++;
 		}
@@ -71,8 +69,7 @@ namespace platformer2d {
 		{
 			int InfoLogLength;
 			LK_OpenGL_Verify(glGetShaderiv(Shader, GL_INFO_LOG_LENGTH, &InfoLogLength));
-			if (InfoLogLength > 0)
-			{
+			if (InfoLogLength > 0) {
 				std::vector<char> ErrorMsg(InfoLogLength + 1);
 				glGetShaderInfoLog(Shader, InfoLogLength, NULL, &ErrorMsg[0]);
 			}
@@ -139,7 +136,7 @@ namespace platformer2d {
 
 	void CShader::Get(std::string_view Uniform, glm::vec2& Value)
 	{
-		float ValueArray[2] = { 0 };
+		float ValueArray[2] = {0};
 		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
 		Value.x = ValueArray[0];
 		Value.y = ValueArray[1];
@@ -147,7 +144,7 @@ namespace platformer2d {
 
 	void CShader::Get(std::string_view Uniform, glm::vec3& Value)
 	{
-		float ValueArray[3] = { 0 };
+		float ValueArray[3] = {0};
 		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
 		Value.x = ValueArray[0];
 		Value.y = ValueArray[1];
@@ -160,7 +157,7 @@ namespace platformer2d {
 #if 0
 		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), &Value.x));
 #else
-		float ValueArray[4] = { 0 };
+		float ValueArray[4] = {0};
 		LK_OpenGL_Verify(glGetUniformfv(RendererID, GetUniformLocation(Uniform.data()), ValueArray));
 		Value.x = ValueArray[0];
 		Value.y = ValueArray[1];
@@ -219,19 +216,15 @@ namespace platformer2d {
 
 	int CShader::GetUniformLocation(const std::string& Uniform)
 	{
-		if (UniformLocationCache.find(Uniform) != UniformLocationCache.end())
-		{
+		if (UniformLocationCache.find(Uniform) != UniformLocationCache.end()) {
 			return UniformLocationCache[Uniform];
 		}
 
 		int UniformLocation;
 		LK_OpenGL_Verify(UniformLocation = glGetUniformLocation(RendererID, Uniform.c_str()));
-		if (UniformLocation != -1)
-		{
+		if (UniformLocation != -1) {
 			UniformLocationCache[Uniform] = UniformLocation;
-		}
-		else
-		{
+		} else {
 			LK_WARN_TAG("Shader", "Uniform '{}' is not in use ({})", Uniform, Filepath.filename());
 		}
 
@@ -249,19 +242,18 @@ namespace platformer2d {
 
 		int Result;
 		LK_OpenGL_Verify(glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &Result));
-		if (Result == GL_FALSE)
-		{
+		if (Result == GL_FALSE) {
 			int Length;
 			LK_OpenGL_Verify(glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &Length));
 
-		#if defined(LK_COMPILER_MSVC)
+#if defined(LK_COMPILER_MSVC)
 			char* ErrorMessage = (char*)_malloca(Length * sizeof(char));
-		#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
+#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
 			char* ErrorMessage = (char*)alloca(Length * sizeof(char));
-		#endif
+#endif
 			LK_OpenGL_Verify(glGetShaderInfoLog(ShaderID, Length, &Length, ErrorMessage));
 			spdlog::error("Failed to compile {} shader\nError: \"{}\"",
-							  ((ShaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT"), ErrorMessage);
+				((ShaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT"), ErrorMessage);
 			LK_OpenGL_Verify(glDeleteShader(ShaderID));
 			return 0;
 		}
@@ -276,23 +268,15 @@ namespace platformer2d {
 
 		std::ifstream InputStream(Filepath);
 		std::string Line;
-		while (std::getline(InputStream, Line))
-		{
-			if (Line.find("#lk_shader") != std::string::npos)
-			{
-				if (Line.find("vertex") != std::string::npos)
-				{
+		while (std::getline(InputStream, Line)) {
+			if (Line.find("#lk_shader") != std::string::npos) {
+				if (Line.find("vertex") != std::string::npos) {
 					ShaderType = EShaderType::Vertex;
-				}
-				else if (Line.find("fragment") != std::string::npos)
-				{
+				} else if (Line.find("fragment") != std::string::npos) {
 					ShaderType = EShaderType::Fragment;
 				}
-			}
-			else
-			{
-				if (ShaderType != EShaderType::None)
-				{
+			} else {
+				if (ShaderType != EShaderType::None) {
 					StringStreams[static_cast<int>(ShaderType)] << Line << '\n';
 				}
 			}

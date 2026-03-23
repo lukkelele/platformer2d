@@ -41,9 +41,10 @@ namespace platformer2d {
 
 	public:
 		static constexpr int MAX_TEXTURES = 10;
+
 	private:
 		LRendererID RendererID;
-		std::vector<std::shared_ptr<CTexture>> Textures{};
+		std::vector<std::shared_ptr<CTexture>> Textures;
 
 		uint32_t Width = 1;
 		uint32_t Height = 1;

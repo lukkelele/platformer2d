@@ -7,11 +7,11 @@
 #include "core/log.h"
 
 #ifndef GL_VERSION_4_3
-#error "Current OpenGL version not supported"
+#	error "Current OpenGL version not supported"
 #endif
 
 #ifndef GL_KHR_debug
-#error "Missing extension: GL_KHR_debug"
+#	error "Missing extension: GL_KHR_debug"
 #endif
 
 namespace platformer2d::OpenGL::Internal {
@@ -57,12 +57,12 @@ namespace platformer2d::OpenGL::Internal {
 	}
 
 	static void APIENTRY DebugCallback(const GLenum Source,
-									   const GLenum Type,
-									   const GLuint ID,
-									   const GLenum Severity,
-									   const GLsizei Length,
-									   const GLchar* Message,
-									   const void* UserParam)
+		const GLenum Type,
+		const GLuint ID,
+		const GLenum Severity,
+		const GLsizei Length,
+		const GLchar* Message,
+		const void* UserParam)
 	{
 		LK_UNUSED(Length, UserParam);
 		if ((Severity == GL_DEBUG_SEVERITY_NOTIFICATION) || (Severity == GL_DEBUG_SEVERITY_MEDIUM)) {
@@ -70,14 +70,13 @@ namespace platformer2d::OpenGL::Internal {
 		}
 
 		LK_ERROR_TAG("OpenGL", "\n * Type: {}\n"
-					 " * Source: {}\n * Severity: {}\n * ID: {}\n"
-					 "\n{}\n",
-					 TypeToString(Type),
-					 SourceToString(Source),
-					 SeverityToString(Severity),
-					 ID,
-					 Message
-		);
+							   " * Source: {}\n * Severity: {}\n * ID: {}\n"
+							   "\n{}\n",
+			TypeToString(Type),
+			SourceToString(Source),
+			SeverityToString(Severity),
+			ID,
+			Message);
 
 		if (Type == GL_DEBUG_TYPE_ERROR) {
 			LK_DEBUG_BREAK();
@@ -100,8 +99,7 @@ namespace platformer2d::OpenGL::Internal {
 			GL_DONT_CARE,
 			0,
 			nullptr,
-			GL_TRUE
-		);
+			GL_TRUE);
 	}
 
 }

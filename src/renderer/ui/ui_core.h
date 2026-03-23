@@ -59,9 +59,9 @@ namespace platformer2d::UI {
 
 	struct FViewportData
 	{
-		glm::vec2 MenuBarSize = { 0.0f, 30.0f };
-		glm::vec2 LeftSidebarSize = { 340.0f, 0.0f };
-		glm::vec2 RightSidebarSize = { 340.0f, 0.0f };
+		glm::vec2 MenuBarSize = {0.0f, 30.0f};
+		glm::vec2 LeftSidebarSize = {340.0f, 0.0f};
+		glm::vec2 RightSidebarSize = {340.0f, 0.0f};
 	};
 	extern FViewportData ViewportData;
 	const FViewportData& GetViewportData();
@@ -166,7 +166,7 @@ namespace platformer2d::UI {
 	}
 
 	inline void SetTooltip(std::string_view Text, const float DelayInSeconds = 0.10f,
-						   const bool AllowWhenDisabled = true, const ImVec2 Padding = ImVec2(5, 5))
+		const bool AllowWhenDisabled = true, const ImVec2 Padding = ImVec2(5, 5))
 	{
 		if (IsItemHovered(DelayInSeconds, AllowWhenDisabled ? ImGuiHoveredFlags_AllowWhenDisabled : ImGuiHoveredFlags_None)) {
 			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, Padding);
@@ -241,13 +241,13 @@ namespace platformer2d::UI {
 	};
 
 	inline void DrawButtonImage(const std::shared_ptr<CTexture>& ImageNormal,
-								const std::shared_ptr<CTexture>& ImageHovered,
-								const std::shared_ptr<CTexture>& ImagePressed,
-								const ImU32 TintNormal,
-								const ImU32 TintHovered,
-								const ImU32 TintPressed,
-								const ImVec2& RectMin,
-								const ImVec2& RectMax)
+		const std::shared_ptr<CTexture>& ImageHovered,
+		const std::shared_ptr<CTexture>& ImagePressed,
+		const ImU32 TintNormal,
+		const ImU32 TintHovered,
+		const ImU32 TintPressed,
+		const ImVec2& RectMin,
+		const ImVec2& RectMax)
 	{
 		static constexpr ImVec2 UVMin(0, 0);
 		static constexpr ImVec2 UVMax(1, 1);
@@ -262,10 +262,10 @@ namespace platformer2d::UI {
 	}
 
 	inline void DrawButtonImage(const std::shared_ptr<CTexture>& Image,
-								const ImU32 TintNormal,
-								const ImU32 TintHovered,
-								const ImU32 TintPressed,
-								const ImRect& Rectangle)
+		const ImU32 TintNormal,
+		const ImU32 TintHovered,
+		const ImU32 TintPressed,
+		const ImRect& Rectangle)
 	{
 		DrawButtonImage(Image, Image, Image, TintNormal, TintHovered, TintPressed, Rectangle.Min, Rectangle.Max);
 	}
@@ -288,8 +288,7 @@ namespace platformer2d::UI {
 				ImVec2(Cursor.x + OffsetX, Cursor.y + OffsetY),
 				ImVec2(Cursor.x + Width, Cursor.y + OffsetY),
 				RGBA32::BackgroundDark,
-				1.0f
-			);
+				1.0f);
 
 			if (FullWidth) {
 				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {

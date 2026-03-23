@@ -48,13 +48,13 @@ namespace platformer2d::UI {
 	class FScopedColorStack
 	{
 	public:
-		template <typename ColorType, typename... OtherColors>
-		FORCEINLINE FScopedColorStack(const ImGuiCol FirstColorID, 
-									  const ColorType FirstColor, 
-									  OtherColors&&... OtherColorPairs)
-			: Count((sizeof... (OtherColorPairs) / 2) + 1)
+		template<typename ColorType, typename... OtherColors>
+		FORCEINLINE FScopedColorStack(const ImGuiCol FirstColorID,
+			const ColorType FirstColor,
+			OtherColors&&... OtherColorPairs)
+			: Count((sizeof...(OtherColorPairs) / 2) + 1)
 		{
-			static_assert((sizeof... (OtherColorPairs) & 1u) == 0, "FScopedColorStack expects a list of pairs of color IDs and colors");
+			static_assert((sizeof...(OtherColorPairs) & 1u) == 0, "FScopedColorStack expects a list of pairs of color IDs and colors");
 			PushColor(FirstColorID, FirstColor, std::forward<OtherColors>(OtherColorPairs)...);
 		}
 
@@ -67,17 +67,14 @@ namespace platformer2d::UI {
 	private:
 		int Count = 0;
 
-		template <typename ColorType, typename... OtherColors>
-		FORCEINLINE void PushColor(const ImGuiCol ColorID, 
-								   const ColorType Color, 
-								   OtherColors&& ... OtherColorPairs)
+		template<typename ColorType, typename... OtherColors>
+		FORCEINLINE void PushColor(const ImGuiCol ColorID,
+			const ColorType Color,
+			OtherColors&&... OtherColorPairs)
 		{
-			if constexpr (sizeof... (OtherColorPairs) == 0)
-			{
+			if constexpr (sizeof...(OtherColorPairs) == 0) {
 				ImGui::PushStyleColor(ColorID, ImColor(Color).Value);
-			}
-			else
-			{
+			} else {
 				ImGui::PushStyleColor(ColorID, ImColor(Color).Value);
 				PushColor(std::forward<OtherColors>(OtherColorPairs)...);
 			}
@@ -88,9 +85,9 @@ namespace platformer2d::UI {
 	{
 	public:
 		template<typename ValueType, typename... OtherStylePairs>
-		FORCEINLINE FScopedStyleStack(const ImGuiStyleVar FirstStyleVar, 
-									  const ValueType FirstValue, 
-									  OtherStylePairs&& ... OtherPairs)
+		FORCEINLINE FScopedStyleStack(const ImGuiStyleVar FirstStyleVar,
+			const ValueType FirstValue,
+			OtherStylePairs&&... OtherPairs)
 			: StackCount((sizeof...(OtherPairs) / 2) + 1)
 		{
 			static_assert((sizeof...(OtherPairs) & 1u) == 0);
@@ -107,16 +104,13 @@ namespace platformer2d::UI {
 		int StackCount = 0;
 
 		template<typename ValueType, typename... OtherStylePairs>
-		FORCEINLINE void PushStyle(const ImGuiStyleVar StyleVar, 
-								   const ValueType Value, 
-								   OtherStylePairs&& ... OtherPairs)
+		FORCEINLINE void PushStyle(const ImGuiStyleVar StyleVar,
+			const ValueType Value,
+			OtherStylePairs&&... OtherPairs)
 		{
-			if constexpr (sizeof...(OtherPairs) == 0)
-			{
+			if constexpr (sizeof...(OtherPairs) == 0) {
 				ImGui::PushStyleVar(StyleVar, Value);
-			}
-			else
-			{
+			} else {
 				ImGui::PushStyleVar(StyleVar, Value);
 				PushStyle(std::forward<OtherStylePairs>(OtherPairs)...);
 			}

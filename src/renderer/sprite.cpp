@@ -5,8 +5,7 @@
 namespace platformer2d {
 
 	CSprite::CSprite(std::shared_ptr<CTexture> InTexture, const glm::vec2& InTilePos,
-					 const glm::vec2& InTileSize, const FSpriteAnimation& InAnim,
-					 const bool FlipHorizontal, const bool FlipVertical)
+		const glm::vec2& InTileSize, const FSpriteAnimation& InAnim, const bool FlipHorizontal, const bool FlipVertical)
 		: Texture(InTexture)
 		, Size(InTexture->GetWidth(), Texture->GetHeight())
 		, TilePos(InTilePos)
@@ -14,30 +13,28 @@ namespace platformer2d {
 		, Anim(InAnim)
 	{
 		LK_VERIFY(Texture && (Size.x > 0.0f) && (Size.y > 0.0f)
-				  && (TileSize.x > 0.0f) && (TileSize.y > 0.0f));
+			&& (TileSize.x > 0.0f) && (TileSize.y > 0.0f));
 		LK_DEBUG_TAG("Sprite", "Created: {} Size=({}, {}) TilePos=({}, {}) TileSize=({}, {})", InTexture->GetFilePath().filename(),
-					 Size.x, Size.y, TilePos.x, TilePos.y, TileSize.x, TileSize.y);
+			Size.x, Size.y, TilePos.x, TilePos.y, TileSize.x, TileSize.y);
 
 		UV = CalculateUV(TilePos, TileSize, Size, FlipHorizontal, FlipVertical);
 	}
 
 	CSprite::~CSprite()
 	{
-		if (Texture)
-		{
+		if (Texture) {
 			Texture.reset();
 		}
 	}
 
 	void CSprite::SetTilePos(const uint16_t X, const uint16_t Y, const bool FlipHorizontal, const bool FlipVertical)
 	{
-		SetTilePos({ X, Y }, FlipHorizontal, FlipVertical);
+		SetTilePos({X, Y}, FlipHorizontal, FlipVertical);
 	}
 
 	void CSprite::SetTilePos(const glm::vec2& InTilePos, const bool FlipHorizontal, const bool FlipVertical)
 	{
-		if (TilePos != InTilePos)
-		{
+		if (TilePos != InTilePos) {
 			TilePos = InTilePos;
 			UpdateSprite(FlipHorizontal, FlipVertical);
 		}
@@ -70,19 +67,17 @@ namespace platformer2d {
 	}
 
 	FSpriteUV CSprite::CalculateUV(const glm::vec2& TilePos, const glm::vec2& TileSize,
-								   const glm::vec2& SheetSize, const bool FlipHorizontal, const bool FlipVertical)
+		const glm::vec2& SheetSize, const bool FlipHorizontal, const bool FlipVertical)
 	{
-		float U0 = (TilePos.x * TileSize.x)  / static_cast<float>(SheetSize.x);
+		float U0 = (TilePos.x * TileSize.x) / static_cast<float>(SheetSize.x);
 		float U1 = ((TilePos.x + 1) * TileSize.x) / static_cast<float>(SheetSize.x);
-		if (FlipHorizontal)
-		{
+		if (FlipHorizontal) {
 			std::swap(U0, U1);
 		}
 
 		float V0 = (TilePos.y * TileSize.y) / static_cast<float>(SheetSize.y);
 		float V1 = ((TilePos.y + 1) * TileSize.y) / static_cast<float>(SheetSize.y);
-		if (FlipVertical)
-		{
+		if (FlipVertical) {
 			const float InvV0 = 1.0f - V1;
 			const float InvV1 = 1.0f - V0;
 			V0 = InvV0;
@@ -92,20 +87,18 @@ namespace platformer2d {
 		return FSpriteUV(U0, V0, U1, V1);
 	}
 
-	void CSprite::CalculateUV(FSpriteUV& SpriteUV, const glm::vec2& TilePos, const glm::vec2& TileSize, 
-							  const glm::vec2& SheetSize, const bool FlipHorizontal, const bool FlipVertical)
+	void CSprite::CalculateUV(FSpriteUV& SpriteUV, const glm::vec2& TilePos, const glm::vec2& TileSize,
+		const glm::vec2& SheetSize, const bool FlipHorizontal, const bool FlipVertical)
 	{
-		SpriteUV.U0 = (TilePos.x * TileSize.x)  / static_cast<float>(SheetSize.x);
+		SpriteUV.U0 = (TilePos.x * TileSize.x) / static_cast<float>(SheetSize.x);
 		SpriteUV.U1 = ((TilePos.x + 1) * TileSize.x) / static_cast<float>(SheetSize.x);
-		if (FlipHorizontal)
-		{
+		if (FlipHorizontal) {
 			std::swap(SpriteUV.U0, SpriteUV.U1);
 		}
 
 		SpriteUV.V0 = (TilePos.y * TileSize.y) / static_cast<float>(SheetSize.y);
 		SpriteUV.V1 = ((TilePos.y + 1) * TileSize.y) / static_cast<float>(SheetSize.y);
-		if (FlipVertical)
-		{
+		if (FlipVertical) {
 			const float InvV0 = 1.0f - SpriteUV.V1;
 			const float InvV1 = 1.0f - SpriteUV.V0;
 			SpriteUV.V0 = InvV0;

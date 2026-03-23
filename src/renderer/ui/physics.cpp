@@ -14,7 +14,7 @@ namespace platformer2d::UI {
 
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec)
 	{
-		BodySpec.Position = { Data.Position.x, Data.Position.y };
+		BodySpec.Position = {Data.Position.x, Data.Position.y};
 		BodySpec.Friction = Data.Friction;
 		BodySpec.Density = Data.Density;
 		BodySpec.GravityScale = Data.GravityScale;
@@ -28,23 +28,34 @@ namespace platformer2d::UI {
 
 		/* Body flags. */
 		int BodyFlags = EBodyFlag::EBodyFlag_None;
-		if (Data.BodyFlag.bPreSolveEvents) BodyFlags |= EBodyFlag::EBodyFlag_PreSolveEvents;
-		if (Data.BodyFlag.bContactEvents) BodyFlags |= EBodyFlag::EBodyFlag_ContactEvents;
-		if (Data.BodyFlag.bSensorEvents) BodyFlags |= EBodyFlag::EBodyFlag_SensorEvents;
-		if (Data.BodyFlag.bBullet) BodyFlags |= EBodyFlag::EBodyFlag_Bullet;
+		if (Data.BodyFlag.bPreSolveEvents) {
+			BodyFlags |= EBodyFlag::EBodyFlag_PreSolveEvents;
+		}
+		if (Data.BodyFlag.bContactEvents) {
+			BodyFlags |= EBodyFlag::EBodyFlag_ContactEvents;
+		}
+		if (Data.BodyFlag.bSensorEvents) {
+			BodyFlags |= EBodyFlag::EBodyFlag_SensorEvents;
+		}
+		if (Data.BodyFlag.bBullet) {
+			BodyFlags |= EBodyFlag::EBodyFlag_Bullet;
+		}
 		BodySpec.Flags = static_cast<EBodyFlag>(BodyFlags);
 
 		/* Motion lock flags. */
 		int MotionLockFlags = EMotionLock::EMotionLock_None;
-		if (Data.MotionLock.All)
-		{
+		if (Data.MotionLock.All) {
 			MotionLockFlags = EMotionLock::EMotionLock_All;
-		}
-		else
-		{
-			if (Data.MotionLock.X) MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_X);
-			if (Data.MotionLock.Y) MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_Y);
-			if (Data.MotionLock.Z) MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_Z);
+		} else {
+			if (Data.MotionLock.X) {
+				MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_X);
+			}
+			if (Data.MotionLock.Y) {
+				MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_Y);
+			}
+			if (Data.MotionLock.Z) {
+				MotionLockFlags |= std::to_underlying(EMotionLock::EMotionLock_Z);
+			}
 		}
 		BodySpec.MotionLock = static_cast<EMotionLock>(MotionLockFlags);
 	}
@@ -86,19 +97,15 @@ namespace platformer2d::UI {
 			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
 			ImGui::SetNextItemWidth(ComboItemWidth);
 			const char* Selected = Enum::ToString(BodyTypes[SelectedIdx]);
-			if (ImGui::BeginCombo("##BodyType", Selected))
-			{
-				for (int Idx = 0; Idx < BodyTypes.size(); Idx++)
-				{
+			if (ImGui::BeginCombo("##BodyType", Selected)) {
+				for (int Idx = 0; Idx < BodyTypes.size(); Idx++) {
 					const char* Option = Enum::ToString(BodyTypes[Idx]);
-					if (Option == nullptr)
-					{
+					if (Option == nullptr) {
 						continue;
 					}
 
 					const bool IsSelected = (Option == Selected);
-					if (ImGui::Selectable(Option, IsSelected))
-					{
+					if (ImGui::Selectable(Option, IsSelected)) {
 						SelectedIdx = Idx;
 					}
 				}
@@ -130,7 +137,7 @@ namespace platformer2d::UI {
 			UI::Widget::DragFloat("Density", Density, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static glm::vec2 LinearVelocity = { 0.0f, 0.0f };
+			static glm::vec2 LinearVelocity = {0.0f, 0.0f};
 			UI::Widget::DragFloat2("Linear Velocity", LinearVelocity, 0.10f, 0.010f, 0.010f);
 
 			ImGui::TableNextRow();
@@ -168,8 +175,7 @@ namespace platformer2d::UI {
 		ImGui::PushFont(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		const bool BodyFlagsOpened = ImGui::TreeNodeEx("Body Flags", ImGuiTreeNodeFlags_SpanAvailWidth);
-		if (BodyFlagsOpened)
-		{
+		if (BodyFlagsOpened) {
 			ImGui::PopFont();
 			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
 
@@ -224,9 +230,7 @@ namespace platformer2d::UI {
 
 			ImGui::EndTable();
 			ImGui::TreePop();
-		}
-		else
-		{
+		} else {
 			ImGui::PopFont();
 		}
 
@@ -236,53 +240,42 @@ namespace platformer2d::UI {
 		ImGui::PushFont(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		const bool MotionLockOpened = ImGui::TreeNodeEx("Motion Lock", ImGuiTreeNodeFlags_SpanAvailWidth);
-		if (MotionLockOpened)
-		{
+		if (MotionLockOpened) {
 			ImGui::PopFont();
 			UI::ShiftCursorY(4.0f);
 			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
 
 			/* Axis: X */
-			if (ImGui::Checkbox("X", &Data.MotionLock.X))
-			{
-				if (Data.MotionLock.X)
-				{
+			if (ImGui::Checkbox("X", &Data.MotionLock.X)) {
+				if (Data.MotionLock.X) {
 					Data.MotionLock.All = false;
 				}
 			}
 
 			/* Axis: Y */
 			ImGui::SameLine(0.0f, 18.0f);
-			if (ImGui::Checkbox("Y", &Data.MotionLock.Y))
-			{
-				if (Data.MotionLock.Y)
-				{
+			if (ImGui::Checkbox("Y", &Data.MotionLock.Y)) {
+				if (Data.MotionLock.Y) {
 					Data.MotionLock.All = false;
 				}
 			}
 
 			/* Axis: Z */
 			ImGui::SameLine(0.0f, 18.0f);
-			if (ImGui::Checkbox("Z", &Data.MotionLock.Z))
-			{
-				if (Data.MotionLock.Z)
-				{
+			if (ImGui::Checkbox("Z", &Data.MotionLock.Z)) {
+				if (Data.MotionLock.Z) {
 					Data.MotionLock.All = false;
 				}
 			}
 
 			/* All */
 			ImGui::SameLine(0.0f, 32.0f);
-			if (ImGui::Checkbox("All", &Data.MotionLock.All))
-			{
-				if (Data.MotionLock.All)
-				{
+			if (ImGui::Checkbox("All", &Data.MotionLock.All)) {
+				if (Data.MotionLock.All) {
 					Data.MotionLock.X = true;
 					Data.MotionLock.Y = true;
 					Data.MotionLock.Z = true;
-				}
-				else
-				{
+				} else {
 					Data.MotionLock.X = false;
 					Data.MotionLock.Y = false;
 					Data.MotionLock.Z = false;
@@ -290,9 +283,7 @@ namespace platformer2d::UI {
 			}
 
 			ImGui::TreePop();
-		}
-		else
-		{
+		} else {
 			ImGui::PopFont();
 		}
 

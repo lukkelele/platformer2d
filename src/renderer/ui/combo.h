@@ -11,7 +11,7 @@ namespace platformer2d::UI {
 	template<std::size_t N, typename TEnum>
 	inline bool Combo(std::string_view Label, const std::array<TEnum, N>& Options, TEnum& Selected)
 	{
-		char NameBuf[64] = { 0 };
+		char NameBuf[64] = {0};
 		std::snprintf(NameBuf, sizeof(NameBuf), "%s", Label.data());
 		if (!ImGui::BeginCombo(NameBuf, Enum::ToString(Selected))) {
 			return false;
@@ -40,7 +40,7 @@ namespace platformer2d::UI {
 	template<typename TEnum>
 	inline bool Combo(std::string_view Label, const char*& Options, const std::size_t N, TEnum& Selected)
 	{
-		char NameBuf[64] = { 0 };
+		char NameBuf[64] = {0};
 		std::snprintf(NameBuf, sizeof(NameBuf), "%s", Label.data());
 		if (!ImGui::BeginCombo(NameBuf, Enum::ToString(Selected))) {
 			return false;
@@ -65,7 +65,6 @@ namespace platformer2d::UI {
 		ImGui::EndCombo();
 		return Updated;
 	}
-
 
 	namespace Widget::Combo {
 		void TextureModifier();

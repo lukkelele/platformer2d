@@ -91,7 +91,7 @@ namespace platformer2d {
 				case ETexture::Enemy1:     return "Enemy1";
 				case ETexture::Enemy2:     return "Enemy2";
 				case ETexture::COUNT:      return "COUNT";
-				default: break;
+				default:                   break;
 			}
 			return nullptr;
 		}

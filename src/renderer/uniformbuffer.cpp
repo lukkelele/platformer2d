@@ -10,7 +10,7 @@ namespace platformer2d {
 	{
 		LK_ASSERT(!Name.empty());
 		LK_OpenGL_Verify(glCreateBuffers(1, &ID));
-		LK_OpenGL_Verify(glNamedBufferData(ID, Size, nullptr, GL_DYNAMIC_DRAW)); 
+		LK_OpenGL_Verify(glNamedBufferData(ID, Size, nullptr, GL_DYNAMIC_DRAW));
 		LK_OpenGL_Verify(glBindBufferBase(GL_UNIFORM_BUFFER, 0, ID));
 	}
 

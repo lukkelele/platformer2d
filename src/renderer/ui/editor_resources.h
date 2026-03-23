@@ -18,11 +18,10 @@ namespace platformer2d {
 			std::shared_ptr<CTexture> ScaleIcon = nullptr;
 		} Gizmo;
 
-
 		void Initialize()
 		{
 			auto LoadTexture = [](std::string_view Path, const EImageFormat Format = EImageFormat::RGBA8,
-								  const glm::vec2& Size = { 1.0f, 1.0f }, const bool Inverted = false)
+								   const glm::vec2& Size = {1.0f, 1.0f}, const bool Inverted = false)
 			{
 				LK_VERIFY(std::filesystem::exists(Path), "Texture does not exist: ", Path);
 				FTextureSpecification Spec = {
@@ -44,15 +43,15 @@ namespace platformer2d {
 			};
 
 			constexpr bool INVERT_COLOR = true;
-			GearIcon = LoadTexture(TEXTURES_DIR "/editor/gear.png", EImageFormat::RGBA8, { 1.0f, 1.0f });
-			PauseIcon = LoadTexture(TEXTURES_DIR "/editor/pause.png", EImageFormat::RGBA8, { 1.0f, 1.0f }, INVERT_COLOR);
-			PlayIcon = LoadTexture(TEXTURES_DIR "/editor/play.png", EImageFormat::RGBA8, { 1.0f, 1.0f }, INVERT_COLOR);
-			PlusIcon = LoadTexture(TEXTURES_DIR "/editor/plus.png", EImageFormat::RGBA8, { 1.0f, 1.0f });
-			SaveIcon = LoadTexture(TEXTURES_DIR "/editor/save.png", EImageFormat::RGBA8, { 1.0f, 1.0f });
+			GearIcon = LoadTexture(TEXTURES_DIR "/editor/gear.png", EImageFormat::RGBA8, {1.0f, 1.0f});
+			PauseIcon = LoadTexture(TEXTURES_DIR "/editor/pause.png", EImageFormat::RGBA8, {1.0f, 1.0f}, INVERT_COLOR);
+			PlayIcon = LoadTexture(TEXTURES_DIR "/editor/play.png", EImageFormat::RGBA8, {1.0f, 1.0f}, INVERT_COLOR);
+			PlusIcon = LoadTexture(TEXTURES_DIR "/editor/plus.png", EImageFormat::RGBA8, {1.0f, 1.0f});
+			SaveIcon = LoadTexture(TEXTURES_DIR "/editor/save.png", EImageFormat::RGBA8, {1.0f, 1.0f});
 
-			Gizmo.MoveIcon = LoadTexture(TEXTURES_DIR "/editor/move.png", EImageFormat::RGBA8, { 1.0f, 1.0f }, INVERT_COLOR);
-			Gizmo.RotateIcon = LoadTexture(TEXTURES_DIR "/editor/rotate.png", EImageFormat::RGBA8, { 1.0f, 1.0f }, INVERT_COLOR);
-			Gizmo.ScaleIcon = LoadTexture(TEXTURES_DIR "/editor/scale.png", EImageFormat::RGBA8, { 1.0f, 1.0f }, INVERT_COLOR);
+			Gizmo.MoveIcon = LoadTexture(TEXTURES_DIR "/editor/move.png", EImageFormat::RGBA8, {1.0f, 1.0f}, INVERT_COLOR);
+			Gizmo.RotateIcon = LoadTexture(TEXTURES_DIR "/editor/rotate.png", EImageFormat::RGBA8, {1.0f, 1.0f}, INVERT_COLOR);
+			Gizmo.ScaleIcon = LoadTexture(TEXTURES_DIR "/editor/scale.png", EImageFormat::RGBA8, {1.0f, 1.0f}, INVERT_COLOR);
 		}
 
 		void Destroy()

@@ -16,13 +16,12 @@ namespace platformer2d {
 		const GLuint InternalFormatGL = OpenGL::GetImageInternalFormat(Specification.ImageFormat);
 		LK_OpenGL_Verify(glTextureStorage3D(RendererID, 1, InternalFormatGL, Width, Height, Layers));
 
-		if (Specification.Mips > 1)
-		{
+		if (Specification.Mips > 1) {
 			LK_OpenGL_Verify(glGenerateTextureMipmap(RendererID));
 			LK_OpenGL_Verify(glTextureParameteri(RendererID, GL_TEXTURE_MAX_LEVEL, 10));
 		}
 
-		LK_OpenGL_Verify(glTextureParameteri(RendererID, GL_TEXTURE_MIN_FILTER, GL_NEAREST)); 
+		LK_OpenGL_Verify(glTextureParameteri(RendererID, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 		LK_OpenGL_Verify(glTextureParameteri(RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 		LK_OpenGL_Verify(glTextureParameteri(RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT));
 		LK_OpenGL_Verify(glTextureParameteri(RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT));
@@ -30,8 +29,7 @@ namespace platformer2d {
 
 	CTextureArray::~CTextureArray()
 	{
-		if (RendererID)
-		{
+		if (RendererID) {
 			LK_TRACE_TAG("TextureArray", "Releasing resources (ID {})", RendererID);
 			LK_OpenGL_Verify(glDeleteTextures(1, &RendererID));
 		}
@@ -50,12 +48,10 @@ namespace platformer2d {
 	bool CTextureArray::AddTexture(const std::shared_ptr<CTexture> Texture)
 	{
 		LK_ASSERT(Texture);
-		if (!Texture)
-		{
+		if (!Texture) {
 			return false;
 		}
-		if (Textures.size() >= MAX_TEXTURES)
-		{
+		if (Textures.size() >= MAX_TEXTURES) {
 			LK_ERROR_TAG("TextureArray", "Reached max capacity: {}", Textures.size());
 			return false;
 		}
@@ -73,17 +69,16 @@ namespace platformer2d {
 
 		LK_OpenGL_Verify(glTextureSubImage3D(
 			RendererID,
-			0, /* Level */
+			0,       /* Level */
 			XOffset, /* X Offset */
 			YOffset, /* Y Offset */
 			ZOffset, /* Z Offset */
 			Width,
 			Height,
 			Depth,
-			Format, /* Format */
+			Format,   /* Format */
 			DataType, /* Type */
-			ImageBuffer.Data
-		));
+			ImageBuffer.Data));
 
 		LK_DEBUG_TAG("TextureArray", "Add: {} (index {})", Texture->GetFilePath().filename(), Textures.size());
 		Textures.push_back(Texture);
