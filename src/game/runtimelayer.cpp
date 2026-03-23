@@ -30,6 +30,7 @@ namespace platformer2d {
 
 	namespace {
 		const FGameSpecification GameSpec = {
+			/* clang-format off */
 			.InstanceName = "Runtime",
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/testlevel.yaml"),
 			.Player = {
@@ -49,6 +50,7 @@ namespace platformer2d {
 					.MotionLock = EMotionLock_Z,
 				},
 			}
+			/* clang-format on */
 		};
 	}
 
@@ -218,8 +220,7 @@ namespace platformer2d {
 			FColor::White,
 			glm::degrees(Player->GetRotation()),
 			Player->GetOutlineThickness(),
-			Player->GetOutlineColor()
-		);
+			Player->GetOutlineColor());
 
 		Scene->Render();
 	}
@@ -289,8 +290,7 @@ namespace platformer2d {
 			Camera.GetViewMatrix(),
 			Camera.GetProjectionMatrix(),
 			MousePos.x,
-			MousePos.y
-		);
+			MousePos.y);
 
 		for (const auto& Actor : TargetScene->GetActors()) {
 			const glm::vec2 Pos = Actor->GetPosition();
@@ -301,7 +301,7 @@ namespace platformer2d {
 
 			float T = 0.0f;
 			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T)) {
-				HitResults.push_back(FHitResult{ Actor->GetHandle(), Actor, T });
+				HitResults.push_back(FHitResult{Actor->GetHandle(), Actor, T});
 
 				if (Config.Debug.bDrawRayHits) {
 					CDebugRenderer::DrawRayHit(RayData, T);
@@ -313,7 +313,10 @@ namespace platformer2d {
 			return 0;
 		}
 
-		std::sort(HitResults.begin(), HitResults.end(), [](auto& Lhs, auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		std::sort(HitResults.begin(), HitResults.end(), [](auto& Lhs, auto& Rhs)
+		{
+			return Lhs.Distance < Rhs.Distance;
+		});
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
@@ -340,12 +343,14 @@ namespace platformer2d {
 				Event.Sensor->SetOutlineEnabled(true);
 
 				switch (IC->GetType()) {
-					case EInteraction::Damage: {
+					case EInteraction::Damage:
+					{
 						auto& Data = std::get<FDamageInteraction>(IC->GetData());
 						LK_WARN("Damage={}", Data.Damage);
 						break;
 					}
-					case EInteraction::Pickup: {
+					case EInteraction::Pickup:
+					{
 						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 						OnPickupEvent(PlayerRef, *IC);
 						break;
@@ -519,7 +524,7 @@ namespace platformer2d {
 
 	void CRuntimeLayer::UI_ViewportTexture()
 	{
-		const ImVec2 WindowSize = { static_cast<float>(ViewportWidth), static_cast<float>(ViewportHeight) };
+		const ImVec2 WindowSize = {static_cast<float>(ViewportWidth), static_cast<float>(ViewportHeight)};
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
 
@@ -658,7 +663,7 @@ namespace platformer2d {
 		const FGameSpecification& Spec = GetSpecification();
 		FActorSpecification ActorSpec;
 		ActorSpec.Texture = ETexture::Player;
-		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec , Spec.Player.BodySpec);
+		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec, Spec.Player.BodySpec);
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)
 		{
@@ -730,7 +735,7 @@ namespace platformer2d {
 			Normal.y = -Normal.y;
 		}
 
-		const b2Vec2 Up = { 0.0f, 1.0f };
+		const b2Vec2 Up = {0.0f, 1.0f};
 		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
 		if (UpDot <= 0.0f) {
 			/* Side/ceiling/backface -> behave as a solid. */

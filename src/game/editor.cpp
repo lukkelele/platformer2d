@@ -36,6 +36,7 @@ namespace platformer2d {
 		 *        GAME SPECIFICATION
 		 *************************************/
 		const FGameSpecification GameSpec = {
+			/* clang-format off */
 			.InstanceName = "Editor",
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/editor.yaml"),
 			.Player = {
@@ -55,6 +56,7 @@ namespace platformer2d {
 					.MotionLock = EMotionLock_Z,
 				},
 			}
+			/* clang-format on */
 		};
 
 		constexpr float UI_BG_ALPHA = 0.70f;
@@ -76,8 +78,8 @@ namespace platformer2d {
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
 		bool bSceneStateChanged = false;
-		glm::vec2 PLAYER_SPAWN = { 0.0f, 0.0f };
-		glm::vec2 GRAVITY = { 0.0f, -5.0f };
+		glm::vec2 PLAYER_SPAWN = {0.0f, 0.0f};
+		glm::vec2 GRAVITY = {0.0f, -5.0f};
 		glm::vec2 GRAVITY_CACHED = GRAVITY; /* Updated during scene termination. */
 		float SCENE_LOAD_CAMERA_ZOOM = 0.30f;
 
@@ -85,8 +87,8 @@ namespace platformer2d {
 		bool bDrawCircle = false;
 		bool bDrawCircleFilled = false;
 		bool bDrawLine = false;
-		glm::vec3 P1 = { 0.30f, -0.40, 0.50f };
-		glm::vec3 DebugRot = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 P1 = {0.30f, -0.40, 0.50f};
+		glm::vec3 DebugRot = {0.0f, 0.0f, 0.0f};
 		float DebugRadius = 0.05f;
 	}
 
@@ -286,8 +288,7 @@ namespace platformer2d {
 			FColor::White,
 			glm::degrees(Player->GetRotation()),
 			Player->GetOutlineThickness(),
-			Player->GetOutlineColor()
-		);
+			Player->GetOutlineColor());
 
 		/* @fixme Just temporarily here */
 		if (bDrawCircle) {
@@ -404,8 +405,7 @@ namespace platformer2d {
 			Camera.GetViewMatrix(),
 			Camera.GetProjectionMatrix(),
 			MousePos.x,
-			MousePos.y
-		);
+			MousePos.y);
 
 		for (const auto& Actor : TargetScene->GetActors()) {
 			const glm::vec2 Pos = Actor->GetPosition();
@@ -416,7 +416,7 @@ namespace platformer2d {
 
 			float T = 0.0f;
 			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T)) {
-				HitResults.push_back(FHitResult{ Actor->GetHandle(), Actor, T });
+				HitResults.push_back(FHitResult{Actor->GetHandle(), Actor, T});
 
 				if (Config.Debug.bDrawRayHits) {
 					CDebugRenderer::DrawRayHit(RayData, T);
@@ -428,7 +428,10 @@ namespace platformer2d {
 			return 0;
 		}
 
-		std::sort(HitResults.begin(), HitResults.end(), [](auto& Lhs, auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		std::sort(HitResults.begin(), HitResults.end(), [](auto& Lhs, auto& Rhs)
+		{
+			return Lhs.Distance < Rhs.Distance;
+		});
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
@@ -461,7 +464,10 @@ namespace platformer2d {
 			return 0;
 		}
 
-		std::sort(HitResults.begin(), HitResults.end(), [](const auto& Lhs, const auto& Rhs) { return Lhs.Distance < Rhs.Distance; });
+		std::sort(HitResults.begin(), HitResults.end(), [](const auto& Lhs, const auto& Rhs)
+		{
+			return Lhs.Distance < Rhs.Distance;
+		});
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
@@ -483,12 +489,14 @@ namespace platformer2d {
 				Event.Sensor->SetOutlineEnabled(true);
 
 				switch (IC->GetType()) {
-					case EInteraction::Damage: {
+					case EInteraction::Damage:
+					{
 						auto& Data = std::get<FDamageInteraction>(IC->GetData());
 						LK_WARN("Damage={}", Data.Damage);
 						break;
 					}
-					case EInteraction::Pickup: {
+					case EInteraction::Pickup:
+					{
 						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 						OnPickupEvent(PlayerRef, *IC);
 						break;
@@ -665,10 +673,7 @@ namespace platformer2d {
 		bEditorViewportHovered = ImGui::IsWindowHovered();
 
 		const auto [PosX, PosY] = CMouse::GetPos();
-		bEditorViewportHovered = (PosX >= EditorViewportBounds[0].x) &&
-			(PosY >= EditorViewportBounds[0].y) &&
-			(PosX <= EditorViewportBounds[1].x) &&
-			(PosY <= EditorViewportBounds[1].y);
+		bEditorViewportHovered = (PosX >= EditorViewportBounds[0].x) && (PosY >= EditorViewportBounds[0].y) && (PosX <= EditorViewportBounds[1].x) && (PosY <= EditorViewportBounds[1].y);
 	}
 
 	void CEditor::UpdateEditorViewportBounds()
@@ -681,20 +686,17 @@ namespace platformer2d {
 
 		EditorViewportBounds[0] = {
 			WindowPos.x + RegionMin.x,
-			WindowPos.y + RegionMin.y
-		};
+			WindowPos.y + RegionMin.y};
 
 		EditorViewportBounds[1] = {
 			WindowPos.x + RegionMax.x,
-			WindowPos.y + RegionMax.y
-		};
+			WindowPos.y + RegionMax.y};
 
 		const float VpWidth = EditorViewportBounds[1].x - EditorViewportBounds[0].x;
 		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
 
-		if ((EditorViewportWidth != static_cast<uint16_t>(VpWidth)) ||
-			(EditorViewportHeight != static_cast<uint16_t>(VpHeight))) {
-			EditorViewportWidth  = static_cast<uint16_t>(VpWidth);
+		if ((EditorViewportWidth != static_cast<uint16_t>(VpWidth)) || (EditorViewportHeight != static_cast<uint16_t>(VpHeight))) {
+			EditorViewportWidth = static_cast<uint16_t>(VpWidth);
 			EditorViewportHeight = static_cast<uint16_t>(VpHeight);
 			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
 		}
@@ -702,12 +704,12 @@ namespace platformer2d {
 
 	void CEditor::UpdateViewportBounds()
 	{
-		ViewportBounds[0] = { 0.0f, 0.0f };
+		ViewportBounds[0] = {0.0f, 0.0f};
 		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
 			ViewportBounds[1] = Window->GetSize();
 		} else {
 			LK_WARN_TAG("Editor", "Failed to update viewport bounds");
-			ViewportBounds[1] = { 0.0f, 0.0f };
+			ViewportBounds[1] = {0.0f, 0.0f};
 		}
 	}
 
@@ -721,8 +723,7 @@ namespace platformer2d {
 
 		return glm::vec2(
 			(MouseX / static_cast<float>(VpWidth)) * 2.0f - 1.0f,
-			((MouseY / static_cast<float>(VpHeight)) * 2.0f - 1.0f) * -1.0f
-		);
+			((MouseY / static_cast<float>(VpHeight)) * 2.0f - 1.0f) * -1.0f);
 	}
 
 	glm::vec2 CEditor::GetMouseInWorldSpace(const CCamera& Camera)
@@ -747,7 +748,7 @@ namespace platformer2d {
 		const FGameSpecification& Spec = GetSpecification();
 		FActorSpecification ActorSpec;
 		ActorSpec.Texture = ETexture::Player;
-		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec , Spec.Player.BodySpec);
+		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec, Spec.Player.BodySpec);
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)
 		{
@@ -963,8 +964,7 @@ namespace platformer2d {
 	{
 		const ImVec2 WindowSize = {
 			static_cast<float>(EditorViewportWidth),
-			static_cast<float>(EditorViewportHeight)
-		};
+			static_cast<float>(EditorViewportHeight)};
 
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
@@ -1130,8 +1130,7 @@ namespace platformer2d {
 	{
 		UI::FScopedStyleStack StyleStack(
 			ImGuiStyleVar_ItemInnerSpacing, ImVec2(12, 12),
-			ImGuiStyleVar_FrameRounding, 12.0f
-		);
+			ImGuiStyleVar_FrameRounding, 12.0f);
 		UI::FScopedFont ButtonFont(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
 
 		static constexpr ImVec2 ButtonSize(292.0f, 74.0f);
@@ -1395,7 +1394,7 @@ namespace platformer2d {
 			Normal.y = -Normal.y;
 		}
 
-		const b2Vec2 Up = { 0.0f, 1.0f };
+		const b2Vec2 Up = {0.0f, 1.0f};
 		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
 		if (UpDot <= 0.0f) {
 			/* Side/ceiling/backface -> behave as a solid. */

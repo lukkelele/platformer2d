@@ -6,15 +6,13 @@ namespace platformer2d {
 
 	bool CGameplaySystem::Teleport(CActor* Source, const glm::vec2& Destination)
 	{
-		if (!Source)
-		{
+		if (!Source) {
 			return false;
 		}
 
 		LK_INFO_TAG("GameplaySystem", "Teleport \"{}\": {} -> {}", Source->GetName(), Source->GetPosition(), Destination);
 		Source->SetPosition(Destination);
-		if (auto Body = Source->GetBody())
-		{
+		if (auto Body = Source->GetBody()) {
 			Body->SetAwake(true);
 		}
 
@@ -28,15 +26,13 @@ namespace platformer2d {
 
 	bool CGameplaySystem::Teleport(std::shared_ptr<CActor> Source, std::shared_ptr<CActor> Destination)
 	{
-		if (!Source || !Destination)
-		{
+		if (!Source || !Destination) {
 			return false;
 		}
 
 		LK_INFO_TAG("GameplaySystem", "Teleport \"{}\": {} -> {}", Source->GetName(), Source->GetPosition(), Destination->GetPosition());
 		Source->SetPosition(Destination->GetPosition());
-		if (auto Body = Source->GetBody())
-		{
+		if (auto Body = Source->GetBody()) {
 			Body->SetAwake(true);
 		}
 

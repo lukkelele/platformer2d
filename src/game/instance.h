@@ -106,6 +106,7 @@ namespace platformer2d {
 			Core::FDelegateHandle OnActorDeleted;
 			Core::FDelegateHandle OnPauseMenuOpened;
 		} DelegateHandles;
+
 	private:
 		FGameSpecification Spec{};
 

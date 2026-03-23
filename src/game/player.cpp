@@ -55,8 +55,7 @@ namespace platformer2d {
 			EKey::A,
 			EKey::S,
 			EKey::D,
-			EKey::Space
-		};
+			EKey::Space};
 	}
 
 	CPlayer::CPlayer(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
@@ -71,12 +70,12 @@ namespace platformer2d {
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		SetDeletable(false);
 
-		constexpr glm::vec2 TilePos = { ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y };
+		constexpr glm::vec2 TilePos = {ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y};
 		WalkAnim.StartTileX = TilePos.x;
 		WalkAnim.StartTileY = TilePos.y;
 		WalkAnim.FrameCount = 4;
 		WalkAnim.TicksPerFrame = WalkAnim.FrameCount * 5;
-		constexpr glm::vec2 TileSize = { 32, 32 };
+		constexpr glm::vec2 TileSize = {32, 32};
 		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
 		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, TileSize);
 
@@ -141,7 +140,7 @@ namespace platformer2d {
 		if (!Data.bJumping) {
 			Data.bJumping = true;
 			SetMovementState(EMovementState::Airborne);
-			Body->ApplyImpulse({ 0.0f, JumpImpulse });
+			Body->ApplyImpulse({0.0f, JumpImpulse});
 
 			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpPreparation);
 			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms);
@@ -207,14 +206,14 @@ namespace platformer2d {
 		}
 		if (CKeyboard::IsKeyDown(EKey::A)) {
 			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
-			Body->ApplyForce({ -DirForce, 0.0f });
+			Body->ApplyForce({-DirForce, 0.0f});
 			LookDir = EDirection::Left;
 			LastDirForce = -DirForce;
 			OnInputReceived();
 		}
 		if (CKeyboard::IsKeyDown(EKey::D)) {
 			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
-			Body->ApplyForce({ DirForce, 0.0f });
+			Body->ApplyForce({DirForce, 0.0f});
 			LastDirForce = DirForce;
 			LookDir = EDirection::Right;
 			OnInputReceived();
@@ -433,7 +432,8 @@ namespace platformer2d {
 	void CPlayer::OnMouseButtonPressed(const FMouseButtonData& Data)
 	{
 		switch (Data.State) {
-			case EMouseButtonState::Pressed: {
+			case EMouseButtonState::Pressed:
+			{
 				if (Data.Button == EMouseButton::Button0) {
 					std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>();
 					if (Rifle && Rifle->IsEnabled()) {

@@ -26,6 +26,7 @@ namespace platformer2d {
 			std::shared_ptr<IItem> ItemRef = nullptr;
 			bool bValid = false;
 		};
+
 	public:
 		CInventory(std::string_view InName);
 		CInventory() = delete;
@@ -80,9 +81,9 @@ namespace platformer2d {
 			}
 
 			LK_INFO_TAG("Inventory", "[{}] Remove {} from slot {}", Name, Enum::ToString(Entry.Type), Idx);
-		#ifdef LK_INVENTORY_SANITY_CAST
+#ifdef LK_INVENTORY_SANITY_CAST
 			std::static_pointer_cast<T>(Entry.ItemRef);
-		#endif
+#endif
 			ClearSlot(Idx);
 			return true;
 		}
@@ -144,6 +145,7 @@ namespace platformer2d {
 
 	public:
 		static constexpr std::size_t MAX_ITEMS = 6;
+
 	private:
 		uint8_t PlayerIdx = 0;
 		std::string Name;
@@ -170,3 +172,4 @@ namespace platformer2d {
 	}
 
 }
+

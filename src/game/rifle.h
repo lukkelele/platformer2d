@@ -64,7 +64,7 @@ namespace platformer2d {
 
 	private:
 		CActor* Owner = nullptr;
-		glm::vec3 Origin{ 0.0f, 0.0f, -0.10f };
+		glm::vec3 Origin{0.0f, 0.0f, -0.10f};
 		std::chrono::milliseconds ExpireTimeout = 1000ms;
 		EDirection LookDir = EDirection::Right;
 
@@ -86,7 +86,7 @@ namespace platformer2d {
 
 		uint16_t Ammo;
 		uint16_t MagazineSize;
-		glm::vec2 MuzzleOffset = { 0.080f, 0.050f };
+		glm::vec2 MuzzleOffset = {0.080f, 0.050f};
 
 		std::vector<std::shared_ptr<CProjectile>> Fired{};
 		std::queue<b2BodyId> ExpiredQueue{};

@@ -52,7 +52,7 @@ namespace platformer2d {
 			 * @todo: The calculated time will never truly match the difference from steady clock.
 			 * Need a better way to handle the timestep if paused.
 			 */
-			const std::chrono::duration<float> DeltaSeconds{ DeltaTime };
+			const std::chrono::duration<float> DeltaSeconds{DeltaTime};
 			for (auto& Projectile : Fired) {
 				RenderProjectile(Projectile);
 				Projectile->TimeFired += duration_cast<steady_clock::duration>(DeltaSeconds);
@@ -77,8 +77,7 @@ namespace platformer2d {
 			glm::vec3(Origin.x + OffsetX + 0.0020f, Origin.y - MuzzleOffset.y - 0.0090f, -0.10f),
 			glm::vec2(0.15f, 0.10f),
 			*CRenderer::GetTexture(ETexture::Rifle),
-			std::span<const glm::vec2, 4>(*TexCoords)
-		);
+			std::span<const glm::vec2, 4>(*TexCoords));
 	}
 
 	void CRifle::Fire(const glm::vec2& TargetPos)
@@ -123,7 +122,10 @@ namespace platformer2d {
 		Projectile->MaxBounceCount = ProjectileBounceCount;
 		Projectile->Damage = ProjectileDamage;
 
-		b2Circle Circle = { { 0.0f, 0.0f }, ProjectileRadius };
+		b2Circle Circle = {
+			{0.0f, 0.0f},
+            ProjectileRadius
+        };
 		b2ShapeDef ShapeDef = b2DefaultShapeDef();
 		ShapeDef.userData = Projectile.get();
 		ShapeDef.enableContactEvents = true;
@@ -203,7 +205,7 @@ namespace platformer2d {
 	{
 		const b2Vec2 Pos = b2Body_GetPosition(Projectile->ID);
 		const float Angle = b2Rot_GetAngle(b2Body_GetRotation(Projectile->ID));
-		const glm::vec3 P0 = { Pos.x, Pos.y, -0.010f };
+		const glm::vec3 P0 = {Pos.x, Pos.y, -0.010f};
 		CRenderer::DrawCircleFilled(P0, ProjectileRadius, Projectile->GetColor(), 1.0f);
 	}
 

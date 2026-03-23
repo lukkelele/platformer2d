@@ -16,7 +16,8 @@ namespace platformer2d {
 		inline const char* ToString(const EItemType Item)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EItemType::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                 \
+	case EItemType::EnumValue: S = #EnumValue; break
 			switch (Item) {
 				_(None);
 				_(Consumable);
@@ -26,7 +27,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(Item);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

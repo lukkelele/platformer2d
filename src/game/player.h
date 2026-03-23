@@ -29,6 +29,7 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnJumped, CPlayer, const FPlayerData&);
 		LK_DECLARE_EVENT(FOnLanded, CPlayer, const FPlayerData&);
+
 	public:
 		CPlayer(const FActorSpecification&, const FBodySpecification& BodySpec);
 		CPlayer(CPlayer&&) = default;
@@ -91,6 +92,7 @@ namespace platformer2d {
 	public:
 		FOnJumped OnJumped;
 		FOnLanded OnLanded;
+
 	private:
 		FPlayerData Data{};
 		CTimer Timer;
@@ -125,7 +127,8 @@ namespace platformer2d {
 		inline const char* ToString(const EMovementState State)
 		{
 			const char* S = "";
-		#define _(EnumValue) case EMovementState::EnumValue: S = #EnumValue; break
+#define _(EnumValue)                                      \
+	case EMovementState::EnumValue: S = #EnumValue; break
 			switch (State) {
 				_(Idle);
 				_(Running);
@@ -134,7 +137,7 @@ namespace platformer2d {
 					LK_THROW_ENUM_ERR(State);
 					break;
 			}
-		#undef _
+#undef _
 			return S;
 		}
 	}

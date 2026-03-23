@@ -7,7 +7,7 @@
 namespace platformer2d {
 
 	std::shared_ptr<CActor> CSpawner::CreateStaticPolygon(std::string_view Name, const glm::vec2& Pos,
-														  const glm::vec2& Size, const glm::vec4& Color, const ETexture Texture)
+		const glm::vec2& Size, const glm::vec4& Color, const ETexture Texture)
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
@@ -38,7 +38,7 @@ namespace platformer2d {
 	}
 
 	std::shared_ptr<CActor> CSpawner::CreatePolygon(std::string_view Name, const FBodySpecification& InBodySpec,
-													const glm::vec2& Size, const glm::vec4& Color, const ETexture Texture)
+		const glm::vec2& Size, const glm::vec4& Color, const ETexture Texture)
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
@@ -81,7 +81,7 @@ namespace platformer2d {
 		ActorSpec.OutlineThickness = 6.0f;
 
 		std::shared_ptr<CActor> Spawnpoint = Scene->Create<CActor>(ActorSpec);
-		Spawnpoint->SetSize({ 0.25f, 0.25f });
+		Spawnpoint->SetSize({0.25f, 0.25f});
 
 		return Spawnpoint;
 	}

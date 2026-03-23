@@ -29,8 +29,7 @@ namespace platformer2d {
 
 		return glm::vec2(
 			(MouseX / static_cast<float>(ViewportWidth)) * 2.0f - 1.0f,
-			((MouseY / static_cast<float>(ViewportHeight)) * 2.0f - 1.0f) * -1.0f
-		);
+			((MouseY / static_cast<float>(ViewportHeight)) * 2.0f - 1.0f) * -1.0f);
 	}
 
 	glm::vec2 CGameInstance::GetMouseInWorldSpace(const CCamera& Camera)
@@ -52,13 +51,14 @@ namespace platformer2d {
 
 	void CGameInstance::UpdateViewportBounds()
 	{
-		ViewportBounds[0] = { 0.0f, 0.0f };
+		ViewportBounds[0] = {0.0f, 0.0f};
 		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
 			ViewportBounds[1] = Window->GetSize();
 		} else {
 			LK_WARN_TAG("GameInstance", "Cannot update viewport bounds");
-			ViewportBounds[1] = { 0.0f, 0.0f };
+			ViewportBounds[1] = {0.0f, 0.0f};
 		}
 	}
 
 }
+
