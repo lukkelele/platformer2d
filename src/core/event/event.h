@@ -14,23 +14,27 @@ namespace platformer2d {
 		COUNT
 	};
 
-	class CEvent
+	class IEvent
 	{
-	public:
-		virtual ~CEvent() = default;
+	protected:
+		IEvent() = default;
 
+	public:
+		virtual ~IEvent() = default;
+		IEvent(IEvent&&) = default;
+		IEvent(const IEvent&) = delete;
+
+		IEvent& operator=(IEvent&&) = default;
+		IEvent& operator=(const IEvent&) = delete;
+
+		virtual void Execute() = 0;
 		virtual EEventType GetType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual std::string ToString() const { return GetName(); }
-
-		[[nodiscard]] bool IsHandled() const { return bHandled; }
-
-	public:
-		bool bHandled = false;
 	};
 
 	namespace Enum {
-		inline const char* ToString(const EEventType Type)
+		constexpr const char* ToString(const EEventType Type)
 		{
 			const char* S = "";
 #define _(EnumValue)                                  \
@@ -41,8 +45,7 @@ namespace platformer2d {
 				_(SensorEnd);
 				_(COUNT);
 				default:
-					LK_THROW_ENUM_ERR(Type);
-					break;
+					return nullptr;
 			}
 #undef _
 			return S;

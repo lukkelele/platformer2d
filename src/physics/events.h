@@ -10,7 +10,7 @@ namespace platformer2d {
 	/************************************
 	 * Sensor Events
 	 ************************************/
-	class CSensorBeginEvent : public CEvent
+	class CSensorBeginEvent : public IEvent
 	{
 	public:
 		CSensorBeginEvent(CActor* InSensor, CActor* InVisitor)
@@ -21,6 +21,8 @@ namespace platformer2d {
 		CSensorBeginEvent() = delete;
 		~CSensorBeginEvent() = default;
 
+		void Execute() override {}
+
 	public:
 		CActor* Sensor = nullptr;
 		CActor* Visitor = nullptr;
@@ -29,7 +31,7 @@ namespace platformer2d {
 		LK_EVENT(CSensorBeginEvent, SensorBegin);
 	};
 
-	class CSensorEndEvent : public CEvent
+	class CSensorEndEvent : public IEvent
 	{
 	public:
 		CSensorEndEvent(CActor* InSensor, CActor* InVisitor)
@@ -39,6 +41,8 @@ namespace platformer2d {
 		}
 		CSensorEndEvent() = delete;
 		~CSensorEndEvent() = default;
+
+		void Execute() override {}
 
 	public:
 		CActor* Sensor = nullptr;
@@ -51,7 +55,7 @@ namespace platformer2d {
 	/************************************
 	 * Contact Events
 	 ************************************/
-	class CContactBeginEvent : public CEvent
+	class CContactBeginEvent : public IEvent
 	{
 	public:
 		CContactBeginEvent(CActor* InA, CActor* InB)
@@ -62,6 +66,8 @@ namespace platformer2d {
 		CContactBeginEvent() = delete;
 		~CContactBeginEvent() = default;
 
+		void Execute() override {}
+
 	public:
 		CActor* A = nullptr;
 		CActor* B = nullptr;
@@ -70,7 +76,7 @@ namespace platformer2d {
 		LK_EVENT(CContactBeginEvent, ContactBegin);
 	};
 
-	class CContactEndEvent : public CEvent
+	class CContactEndEvent : public IEvent
 	{
 	public:
 		CContactEndEvent(CActor* InA, CActor* InB)
@@ -80,6 +86,8 @@ namespace platformer2d {
 		}
 		CContactEndEvent() = delete;
 		~CContactEndEvent() = default;
+
+		void Execute() override {}
 
 	public:
 		CActor* A = nullptr;
