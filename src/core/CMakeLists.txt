@@ -22,6 +22,8 @@ project_library_sources(
 	settings.cpp
 	string.h
 	template.h
+	thread.h
+	thread.cpp
 	timer.h
 	uuid.h
 	uuid.cpp
