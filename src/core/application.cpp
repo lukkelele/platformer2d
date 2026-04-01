@@ -3,6 +3,7 @@
 #include "core/profiler.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
+#include "core/thread.h"
 #include "game/editor.h"
 #include "game/player.h"
 #include "game/runtimelayer.h"
@@ -25,6 +26,15 @@ namespace platformer2d {
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
 		lklog::init(lklog::level::debug, "platformer2d");
+		Core::Thread::Init();
+
+		LKLOG_DEBUG("Thread 0: {}", Core::Thread::GetEntry(EThread::Main).Name);
+		LKLOG_DEBUG("Thread 1: {}", Core::Thread::GetEntry(EThread::Renderer).Name);
+		Core::Thread::Get(EThread::Renderer).Setup([]()
+		{
+			LKLOG_WARN("Thread {}", Core::Thread::GetID());
+		});
+		Core::Thread::Get(EThread::Renderer).Run();
 	}
 
 	CApplication::~CApplication()
