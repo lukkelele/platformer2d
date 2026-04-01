@@ -36,14 +36,14 @@ namespace platformer2d {
 		CPlayer(const CPlayer&) = default;
 		~CPlayer();
 
-		virtual void Tick(float DeltaTime) override;
-		virtual EActorType GetActorType() const override { return EActorType::Player; }
+		void Tick(float DeltaTime) override;
+		EActorType GetActorType() const override { return EActorType::Player; }
 		void Jump();
 
-		inline const FPlayerData& GetData() const { return Data; }
-		inline CInventory& GetInventory() { return Inventory; }
-		inline const CInventory& GetInventory() const { return Inventory; }
-		inline const CSprite& GetSprite() const { return *Sprite; }
+		const FPlayerData& GetData() const { return Data; }
+		CInventory& GetInventory() { return Inventory; }
+		const CInventory& GetInventory() const { return Inventory; }
+		const CSprite& GetSprite() const { return *Sprite; }
 
 		float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);
@@ -55,8 +55,8 @@ namespace platformer2d {
 
 		void SetLookDirection(EDirection InDirection);
 
-		inline CCamera& GetCamera() { return *Camera; }
-		inline const CCamera& GetCamera() const { return *Camera; }
+		CCamera& GetCamera() { return *Camera; }
+		const CCamera& GetCamera() const { return *Camera; }
 		bool IsCameraLocked() const { return bCameraLock; }
 		void SetCameraLock(bool Locked);
 
@@ -65,7 +65,7 @@ namespace platformer2d {
 		bool HasRifle();
 		std::shared_ptr<CRifle> GetRifle();
 
-		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::Yes) const override;
+		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::Yes) const override;
 
 	private:
 		void HandleInput();

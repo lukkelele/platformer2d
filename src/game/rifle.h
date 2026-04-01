@@ -13,8 +13,10 @@ namespace platformer2d {
 		CRifle(const FRifleSpecification& InSpec = FRifleSpecification(), CActor* InOwner = nullptr);
 		~CRifle();
 
-		virtual void Tick(float DeltaTime) override;
-		virtual void Render() override;
+		void Tick(float DeltaTime) override;
+		void Render() override;
+
+		EWeaponType GetWeaponType() const override { return EWeaponType::Rifle; }
 
 		/**
 		 * @brief Fire at target position in world space.
@@ -23,8 +25,8 @@ namespace platformer2d {
 
 		bool Reload();
 		bool NeedToReload() const { return Ammo <= 0; }
-		uint16_t GetAmmo() const { return Ammo; }
-		uint16_t GetMagazineSize() const { return MagazineSize; }
+		std::uint16_t GetAmmo() const { return Ammo; }
+		std::uint16_t GetMagazineSize() const { return MagazineSize; }
 
 		void Equip(CActor* Actor);
 
@@ -55,7 +57,6 @@ namespace platformer2d {
 		const glm::vec4& GetProjectileColor() const { return ProjectileColor; }
 
 		const CActor* GetOwner() const { return Owner; }
-		virtual EWeaponType GetWeaponType() const override { return EWeaponType::Rifle; }
 
 	private:
 		void RenderProjectile(const std::shared_ptr<CProjectile>& Projectile) const;
@@ -81,15 +82,15 @@ namespace platformer2d {
 		 * will not work.
 		 */
 		bool bProjectileExplodeOnImpact = false;
-		uint8_t ProjectileBounceCount = 3;
+		std::uint8_t ProjectileBounceCount = 3;
 		float ProjectileDamage = 10.0f;
 
-		uint16_t Ammo;
-		uint16_t MagazineSize;
+		std::uint16_t Ammo;
+		std::uint16_t MagazineSize;
 		glm::vec2 MuzzleOffset = {0.080f, 0.050f};
 
-		std::vector<std::shared_ptr<CProjectile>> Fired{};
-		std::queue<b2BodyId> ExpiredQueue{};
+		std::vector<std::shared_ptr<CProjectile>> Fired;
+		std::queue<b2BodyId> ExpiredQueue;
 	};
 
 }
