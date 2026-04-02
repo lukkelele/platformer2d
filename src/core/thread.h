@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cassert>
 #include <functional>
 #include <mutex>
@@ -9,6 +10,7 @@
 #include <lklog/lklog.h>
 
 namespace platformer2d {
+
 	enum class EThread : std::uint8_t
 	{
 		Main,
@@ -16,22 +18,13 @@ namespace platformer2d {
 		COUNT
 	};
 
-	namespace Enum {
-		constexpr const char* ToString(const EThread type)
-		{
-			switch (type) {
-				case EThread::Main:     return "Main";
-				case EThread::Renderer: return "Renderer";
-				case EThread::COUNT:    return "COUNT";
-			}
-			return nullptr;
-		}
-	}
-}
-
-namespace platformer2d::Core {
-
-	using FThreadHandle = std::size_t;
+	enum class EThreadState : std::uint8_t
+	{
+		None,
+		Idle,
+		Busy,
+		COUNT
+	};
 
 	enum class EThreadPolicy
 	{
@@ -39,7 +32,6 @@ namespace platformer2d::Core {
 		Join
 	};
 
-	template<EThreadPolicy ThreadPolicy>
 	class CThread;
 
 	struct FThreadEntry;
@@ -48,10 +40,9 @@ namespace platformer2d::Core {
 		void Init();
 		std::size_t GetID() noexcept;
 		FThreadEntry& GetEntry(EThread type);
-		CThread<EThreadPolicy::Detach>& Get(EThread type); /* @fixme: Some neat way to return CThread references without caring about policy */
+		CThread& Get(EThread type);
 	}
 
-	template<EThreadPolicy ThreadPolicy = EThreadPolicy::Detach>
 	class CThread
 	{
 	public:
@@ -66,17 +57,7 @@ namespace platformer2d::Core {
 			};
 		}
 
-		~CThread()
-		{
-			if (Policy == EThreadPolicy::Detach && (WorkerThread.joinable() || bIsRunning)) {
-				LKLOG_ERROR_TAG("Thread", "Detached worker is still joinable");
-				WorkerThread.join();
-			} else if (Policy == EThreadPolicy::Join && (WorkerThread.joinable() || bIsRunning)) {
-				LKLOG_ERROR_TAG("Thread", "Worker is still joinable");
-				WorkerThread.join();
-			}
-		}
-
+		~CThread();
 		CThread(CThread&&) = delete;
 		CThread(const CThread&) = delete;
 		CThread& operator=(CThread&&) = delete;
@@ -91,40 +72,43 @@ namespace platformer2d::Core {
 			};
 		}
 
-		void Run()
-		{
-			assert(Task.has_value() && "Thread has no task");
-			assert(!WorkerThread.joinable() && "Thread already running");
-
-			WorkerThread = std::thread([this]
-			{
-				bIsRunning = true;
-				LKLOG_TRACE_TAG("Thread", "{}: Executing task", Thread::GetID());
-				(*Task)();
-				bIsRunning = false;
-			});
-
-			switch (Policy) {
-				case EThreadPolicy::Detach:
-					WorkerThread.detach();
-					break;
-				case EThreadPolicy::Join:
-					WorkerThread.join();
-					break;
-			}
-		}
+		void Run(EThreadPolicy InPolicy = EThreadPolicy::Detach);
+		bool IsRunning() const { return bIsRunning; }
 
 	private:
 		std::thread WorkerThread;
 		std::optional<std::function<void()>> Task;
 		std::atomic_bool bIsRunning = false;
-		const EThreadPolicy Policy = ThreadPolicy;
+		EThreadPolicy Policy = EThreadPolicy::Detach;
 	};
 
 	struct FThreadEntry
 	{
+		std::thread::id ID;
 		std::string_view Name;
-		CThread<EThreadPolicy::Detach> Thread;
+		CThread Thread;
 	};
+}
 
+namespace platformer2d::Enum {
+	constexpr const char* ToString(const EThread type)
+	{
+		switch (type) {
+			case EThread::Main:     return "Main";
+			case EThread::Renderer: return "Renderer";
+			case EThread::COUNT:    return "COUNT";
+		}
+		return nullptr;
+	}
+
+	constexpr const char* ToString(const EThreadState state)
+	{
+		switch (state) {
+			case EThreadState::None:  return "None";
+			case EThreadState::Idle:  return "Idle";
+			case EThreadState::Busy:  return "Busy";
+			case EThreadState::COUNT: return "COUNT";
+		}
+		return nullptr;
+	}
 }

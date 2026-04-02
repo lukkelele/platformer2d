@@ -19,6 +19,7 @@
 #include "debugrenderer.h"
 #include "opengl.h"
 #include "rendercommandqueue.h"
+#include "renderthread.h"
 #include "ui/ui.h"
 #include "asset/assetmanager.h"
 #include "scene/effectmanager.h"
@@ -477,6 +478,21 @@ namespace platformer2d {
 		SetDepthFunction(GL_LESS); /* @fixme: Temporary ugly fix for Z-index issue for circles */
 
 		Data.ViewportFramebuffer->Unbind();
+	}
+
+	void CRenderer::Thread(CRenderThread& RenderThread)
+	{
+		LK_PROFILE_THREAD("Render Thread");
+
+		LK_TRACE_TAG("Renderer", "Enter render thread");
+		while (RenderThread.IsRunning()) {
+			if (RenderThread.ShouldTerminate()) {
+				LK_DEBUG_TAG("Renderer", "Terminating thread");
+				break;
+			}
+		}
+
+		LK_DEBUG_TAG("Renderer", "Exit render thread");
 	}
 
 	std::shared_ptr<CFramebuffer> CRenderer::GetViewportFramebuffer()

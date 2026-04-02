@@ -5,6 +5,7 @@
 #include "core/settings.h"
 #include "core/timer.h"
 #include "renderer/renderer.h"
+#include "renderer/renderthread.h"
 #include "renderer/ui/uilayer.h"
 
 namespace platformer2d {
@@ -31,6 +32,7 @@ namespace platformer2d {
 		bool bRunning = false;
 		std::unique_ptr<CWindow> Window;
 		std::shared_ptr<CUILayer> UILayer;
+		std::unique_ptr<CRenderThread> RenderThread;
 		CLayerStack LayerStack;
 		CTimer Timer;
 	};

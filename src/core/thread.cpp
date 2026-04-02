@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-namespace platformer2d::Core {
+namespace platformer2d {
 
 	static std::array<FThreadEntry, std::to_underlying(EThread::COUNT)> ThreadMap{};
 
@@ -35,9 +35,44 @@ namespace platformer2d::Core {
 		return ThreadMap.at(std::to_underlying(type));
 	}
 
-	CThread<EThreadPolicy::Detach>& Thread::Get(const EThread type)
+	CThread& Thread::Get(const EThread type)
 	{
 		return ThreadMap.at(std::to_underlying(type)).Thread;
+	}
+
+	CThread::~CThread()
+	{
+		if (Policy == EThreadPolicy::Detach && (WorkerThread.joinable() || bIsRunning)) {
+			LKLOG_ERROR_TAG("Thread", "Detached worker is still joinable");
+			WorkerThread.join();
+		} else if (Policy == EThreadPolicy::Join && (WorkerThread.joinable() || bIsRunning)) {
+			LKLOG_ERROR_TAG("Thread", "Worker is still joinable");
+			WorkerThread.join();
+		}
+	}
+
+	void CThread::Run(const EThreadPolicy InPolicy)
+	{
+		assert(Task.has_value() && "Thread has no task");
+		assert(!WorkerThread.joinable() && "Thread already running");
+		Policy = InPolicy;
+
+		WorkerThread = std::thread([this]
+		{
+			bIsRunning = true;
+			LKLOG_TRACE_TAG("Thread", "{}: Executing task", Thread::GetID());
+			(*Task)();
+			bIsRunning = false;
+		});
+
+		switch (Policy) {
+			case EThreadPolicy::Detach:
+				WorkerThread.detach();
+				break;
+			case EThreadPolicy::Join:
+				WorkerThread.join();
+				break;
+		}
 	}
 
 }

@@ -18,6 +18,8 @@
 
 namespace platformer2d {
 
+	class CRenderThread;
+
 	struct FQuadVertex
 	{
 		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
@@ -84,6 +86,8 @@ namespace platformer2d {
 			auto StorageBuffer = GetRenderCommandQueue().Allocate(RenderCommand, sizeof(Func));
 			new (StorageBuffer) TRenderFunction(std::forward<TRenderFunction>(Func));
 		}
+
+		static void Thread(CRenderThread& RenderThread);
 
 		static std::shared_ptr<CFramebuffer> GetViewportFramebuffer();
 		static uint16_t GetFrameIndex();
