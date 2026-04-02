@@ -339,11 +339,6 @@ namespace platformer2d {
 		Data.WhiteTexture = Data.Textures[ETexture::White];
 	}
 
-	void CRenderer::SwapQueues()
-	{
-		CommandQueueSubmissionIndex = (CommandQueueSubmissionIndex + 1) % CommandQueueCount;
-	}
-
 	uint8_t CRenderer::GetRenderQueueIndex()
 	{
 		return (CommandQueueSubmissionIndex + 1) % CommandQueueCount;
@@ -480,6 +475,20 @@ namespace platformer2d {
 		Data.ViewportFramebuffer->Unbind();
 	}
 
+	void CRenderer::SwapQueues()
+	{
+		CommandQueueSubmissionIndex = (CommandQueueSubmissionIndex + 1) % CommandQueueCount;
+	}
+
+	void CRenderer::Render(CRenderThread& RenderThread)
+	{
+		RenderThread.WaitFor(EThreadState::WakeUp);
+		RenderThread.Set(EThreadState::Busy);
+
+		CommandQueue[GetRenderQueueIndex()]->Execute();
+		RenderThread.Set(EThreadState::Idle);
+	}
+
 	void CRenderer::Thread(CRenderThread& RenderThread)
 	{
 		LK_PROFILE_THREAD("Render Thread");
@@ -490,6 +499,8 @@ namespace platformer2d {
 				LK_DEBUG_TAG("Renderer", "Terminating thread");
 				break;
 			}
+
+			Render(RenderThread);
 		}
 
 		LK_DEBUG_TAG("Renderer", "Exit render thread");

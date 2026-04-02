@@ -17,18 +17,25 @@ namespace platformer2d {
 		void Initialize();
 		void Run();
 		void Terminate();
+
 		bool IsRunning() const;
 		bool ShouldTerminate() const;
+
+		void NextFrame();
+		void WaitFor(EThreadState WaitForState);
+		void Set(EThreadState NewState);
+		void BlockUntilFinished();
+		void WakeUp();
+		void Pump();
 
 		std::mutex& GetMutex() { return Mutex; }
 
 	private:
-		void NextFrame();
-
 	private:
 		CThread Thread;
 		std::mutex Mutex;
-		EThreadState State = EThreadState::None;
+		std::condition_variable CondVar;
+		EThreadState State = EThreadState::Idle;
 		std::atomic_bool bShouldTerminate = false;
 	};
 
