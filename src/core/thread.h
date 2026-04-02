@@ -23,6 +23,7 @@ namespace platformer2d {
 		None,
 		Idle,
 		Busy,
+		WakeUp,
 		COUNT
 	};
 
@@ -104,10 +105,11 @@ namespace platformer2d::Enum {
 	constexpr const char* ToString(const EThreadState state)
 	{
 		switch (state) {
-			case EThreadState::None:  return "None";
-			case EThreadState::Idle:  return "Idle";
-			case EThreadState::Busy:  return "Busy";
-			case EThreadState::COUNT: return "COUNT";
+			case EThreadState::None:   return "None";
+			case EThreadState::Idle:   return "Idle";
+			case EThreadState::Busy:   return "Busy";
+			case EThreadState::WakeUp: return "WakeUp";
+			case EThreadState::COUNT:  return "COUNT";
 		}
 		return nullptr;
 	}
