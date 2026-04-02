@@ -59,6 +59,7 @@ namespace platformer2d {
 		CRenderer::Initialize();
 		RenderThread = std::make_unique<CRenderThread>();
 		RenderThread->Initialize();
+		RenderThread->Run();
 
 		CKeyboard::Initialize();
 		CMouse::Initialize();
@@ -106,7 +107,7 @@ namespace platformer2d {
 		GLFWwindow* GlfwWindow = Window->GetGlfwWindow();
 
 		CEffectManager& EffectManager = CEffectManager::Get(); /* @todo Integrate in layerstack somehow (?) */
-		RenderThread->Run();
+		RenderThread->Pump();
 
 		bRunning = true;
 		Timer.Reset();
@@ -116,9 +117,17 @@ namespace platformer2d {
 				break;
 			}
 
+			{
+				LK_PROFILE_SCOPE("Wait");
+				RenderThread->BlockUntilFinished();
+			}
+
 			CheckLayerQueues();
 
 			const float DeltaTime = Timer.GetDeltaTime();
+
+			RenderThread->NextFrame();
+			RenderThread->WakeUp();
 
 			Window->BeginFrame();
 			CKeyboard::Update();
