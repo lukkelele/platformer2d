@@ -24,13 +24,13 @@ namespace platformer2d {
 		  | Render Command | Size (uint32_t) | Command data |
 		  +----------------+-----------------+--------------+
 		 */
-		uint8_t* TargetBuf = CommandBuffer;
-		for (uint32_t i = 0; i < CommandCount; i++) {
+		std::uint8_t* TargetBuf = CommandBuffer;
+		for (std::uint32_t i = 0; i < CommandCount; i++) {
 			FRenderCommand RenderCommand = *(FRenderCommand*)TargetBuf;
 			TargetBuf += sizeof(FRenderCommand);
 
-			const uint32_t Size = *(uint32_t*)TargetBuf;
-			TargetBuf += sizeof(uint32_t);
+			const std::uint32_t Size = *(uint32_t*)TargetBuf;
+			TargetBuf += sizeof(std::uint32_t);
 
 			RenderCommand(TargetBuf);
 			TargetBuf += Size;
@@ -40,7 +40,7 @@ namespace platformer2d {
 		CommandCount = 0;
 	}
 
-	void* CRenderCommandQueue::Allocate(FRenderCommand RenderCommand, const uint32_t Size)
+	void* CRenderCommandQueue::Allocate(FRenderCommand RenderCommand, const std::uint32_t Size)
 	{
 		/*
 		  +----------------+-----------------+--------------+
@@ -50,8 +50,8 @@ namespace platformer2d {
 		*(FRenderCommand*)CommandBufferPtr = RenderCommand;
 		CommandBufferPtr += sizeof(FRenderCommand);
 
-		*(uint32_t*)(CommandBufferPtr) = Size;
-		CommandBufferPtr += sizeof(uint32_t);
+		*(std::uint32_t*)(CommandBufferPtr) = Size;
+		CommandBufferPtr += sizeof(std::uint32_t);
 
 		void* MemPtr = CommandBufferPtr;
 		CommandBufferPtr += Size;
