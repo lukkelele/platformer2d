@@ -87,8 +87,6 @@ namespace platformer2d {
 			new (StorageBuffer) TRenderFunction(std::forward<TRenderFunction>(Func));
 		}
 
-		static void Thread(CRenderThread& RenderThread);
-
 		static std::shared_ptr<CFramebuffer> GetViewportFramebuffer();
 		static uint16_t GetFrameIndex();
 
