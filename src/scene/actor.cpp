@@ -163,6 +163,15 @@ namespace platformer2d {
 		Outline.Color = InColor;
 	}
 
+	template<typename T>
+	static void SerializeComponentIfPresent(const CActor& Actor, YAML::Emitter& Out)
+	{
+		if (Actor.HasComponent<T>()) {
+			const auto& Comp = Actor.GetComponent<T>();
+			Serialization::Serialize(Comp, Out);
+		}
+	}
+
 	bool CActor::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
 	{
 		LK_TRACE_TAG("Actor", "Serialize: {} (Handle: {})", Name, Handle);
@@ -181,25 +190,10 @@ namespace platformer2d {
 		Out << YAML::Key << "Color" << YAML::Value << Outline.Color;
 		Out << YAML::EndMap;
 
-		if (HasComponent<FTransformComponent>()) {
-			const auto& TC = GetComponent<FTransformComponent>();
-			Serialization::Serialize(TC, Out);
-		}
-
-		if (HasComponent<FEffectComponent>()) {
-			const auto& EC = GetComponent<FEffectComponent>();
-			Serialization::Serialize(EC, Out);
-		}
-
-		if (HasComponent<FInteractionComponent>()) {
-			const auto& IC = GetComponent<FInteractionComponent>();
-			Serialization::Serialize(IC, Out);
-		}
-
-		if (HasComponent<FHealthComponent>()) {
-			const auto& HC = GetComponent<FHealthComponent>();
-			Serialization::Serialize(HC, Out);
-		}
+		SerializeComponentIfPresent<FTransformComponent>(*this, Out);
+		SerializeComponentIfPresent<FEffectComponent>(*this, Out);
+		SerializeComponentIfPresent<FInteractionComponent>(*this, Out);
+		SerializeComponentIfPresent<FHealthComponent>(*this, Out);
 
 		/* Body */
 		Out << YAML::Key << "Body";
