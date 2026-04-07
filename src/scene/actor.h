@@ -48,7 +48,7 @@ namespace platformer2d {
 		/**
 		 * @brief Check if actor has a specific flag.
 		 */
-		FORCEINLINE bool HasFlag(const EActorFlag Flag) const
+		bool HasFlag(const EActorFlag Flag) const
 		{
 			return ((ActorFlags & std::to_underlying(Flag)) == std::to_underlying(Flag));
 		}
@@ -56,12 +56,12 @@ namespace platformer2d {
 		/**
 		 * @brief Check if actor has any of the flags.
 		 */
-		FORCEINLINE bool HasAnyFlags(const EActorFlag Flags) const
+		bool HasAnyFlags(const EActorFlag Flags) const
 		{
 			return static_cast<bool>(ActorFlags & Flags);
 		}
 
-		FORCEINLINE void SetFlag(const EActorFlag Flag, bool Value = true)
+		void SetFlag(const EActorFlag Flag, bool Value = true)
 		{
 			if (Value) {
 				ActorFlags |= Flag;
