@@ -7,7 +7,7 @@ namespace platformer2d {
 
 	CRenderCommandQueue::CRenderCommandQueue()
 	{
-		CommandBuffer = new uint8_t[10 * 1024 * 1024];
+		CommandBuffer = new std::uint8_t[10 * 1024 * 1024];
 		CommandBufferPtr = CommandBuffer;
 		std::memset(CommandBuffer, 0, 10 * 1024 * 1024);
 	}
