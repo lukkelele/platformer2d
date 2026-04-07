@@ -27,14 +27,6 @@ namespace platformer2d {
 	{
 		lklog::init(lklog::level::debug, "platformer2d");
 		Thread::Init();
-
-		LKLOG_DEBUG("Thread 0: {}", Thread::GetEntry(EThread::Main).Name);
-		LKLOG_DEBUG("Thread 1: {}", Thread::GetEntry(EThread::Renderer).Name);
-		Thread::Get(EThread::Renderer).Setup([]()
-		{
-			LKLOG_WARN("Thread {}", Thread::GetID());
-		});
-		Thread::Get(EThread::Renderer).Run();
 	}
 
 	CApplication::~CApplication()
@@ -57,9 +49,6 @@ namespace platformer2d {
 		Window->Initialize();
 
 		CRenderer::Initialize();
-		RenderThread = std::make_unique<CRenderThread>();
-		RenderThread->Initialize();
-
 		CKeyboard::Initialize();
 		CMouse::Initialize();
 
@@ -83,8 +72,6 @@ namespace platformer2d {
 			const FSettings& Settings = FSettings::Get();
 			Settings.Serialize(SettingsFile);
 
-			RenderThread->Terminate();
-
 			UILayer.reset();
 			LK_TRACE_TAG("Application", "Release layerstack");
 			LayerStack.Destroy();
@@ -99,14 +86,13 @@ namespace platformer2d {
 
 	void CApplication::Run()
 	{
-		LK_VERIFY(Window && Window->GetGlfwWindow() && RenderThread);
+		LK_VERIFY(Window && Window->GetGlfwWindow());
 		LK_VERIFY(LayerStack.Count() > 0);
 
 		const FWindowData& WindowData = Window->GetData();
 		GLFWwindow* GlfwWindow = Window->GetGlfwWindow();
 
 		CEffectManager& EffectManager = CEffectManager::Get(); /* @todo Integrate in layerstack somehow (?) */
-		RenderThread->Run();
 
 		bRunning = true;
 		Timer.Reset();
