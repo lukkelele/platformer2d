@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace platformer2d {
@@ -13,12 +14,12 @@ namespace platformer2d {
 		~CRenderCommandQueue();
 
 		void Execute();
-		void* Allocate(FRenderCommand RenderCommand, uint32_t Size);
+		void* Allocate(FRenderCommand RenderCommand, std::uint32_t Size);
 
 	private:
-		uint8_t* CommandBuffer = nullptr;
-		uint8_t* CommandBufferPtr = nullptr;
-		uint32_t CommandCount = 0;
+		std::uint8_t* CommandBuffer = nullptr;
+		std::uint8_t* CommandBufferPtr = nullptr;
+		std::uint32_t CommandCount = 0;
 	};
 
 }

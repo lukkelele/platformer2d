@@ -76,14 +76,14 @@ namespace platformer2d {
 		template<typename TRenderFunction>
 		static void Submit(TRenderFunction&& Func)
 		{
-			auto RenderCommand = [](void* Ptr)
+			auto Cmd = [](void* Ptr)
 			{
 				auto FunctionPtr = (TRenderFunction*)Ptr;
 				(*FunctionPtr)();
 				FunctionPtr->~TRenderFunction();
 			};
 
-			auto StorageBuffer = GetRenderCommandQueue().Allocate(RenderCommand, sizeof(Func));
+			auto* StorageBuffer = GetRenderCommandQueue().Allocate(Cmd, sizeof(Func));
 			new (StorageBuffer) TRenderFunction(std::forward<TRenderFunction>(Func));
 		}
 
