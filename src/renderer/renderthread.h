@@ -31,7 +31,6 @@ namespace platformer2d {
 		std::mutex& GetMutex() { return Mutex; }
 
 	private:
-	private:
 		CThread Thread;
 		std::mutex Mutex;
 		std::condition_variable CondVar;
