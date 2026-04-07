@@ -22,9 +22,9 @@ namespace platformer2d {
 
 	struct FQuadVertex
 	{
-		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
-		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
-		glm::vec2 TexCoord = { 0.0f, 0.0f };
+		glm::vec3 Position = {0.0f, 0.0f, 0.0f};
+		glm::vec4 Color = {1.0f, 1.0f, 1.0f, 1.0f};
+		glm::vec2 TexCoord = {0.0f, 0.0f};
 		int TexIndex = 0;
 		float TileFactor = 1.0f;
 		float OutlineThickness = 0.0f;
@@ -33,16 +33,16 @@ namespace platformer2d {
 
 	struct FLineVertex
 	{
-		glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
-		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glm::vec3 Position = {0.0f, 0.0f, 0.0f};
+		glm::vec4 Color = {1.0f, 1.0f, 1.0f, 1.0f};
 	};
 
 	struct FCircleVertex
 	{
-		glm::vec3 WorldPosition = { 0.0f, 0.0f, 0.0f };
+		glm::vec3 WorldPosition = {0.0f, 0.0f, 0.0f};
 		float Thickness = 1.0f;
-		glm::vec2 LocalPosition = { 0.0f, 0.0f };
-		glm::vec4 Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glm::vec2 LocalPosition = {0.0f, 0.0f};
+		glm::vec4 Color = {1.0f, 1.0f, 1.0f, 1.0f};
 	};
 
 	struct FDrawStatistics
@@ -138,6 +138,9 @@ namespace platformer2d {
 
 		static void SetDebugRender(bool Enabled);
 
+		CRenderer& operator=(const CRenderer&) = delete;
+		CRenderer& operator=(CRenderer&&) = delete;
+
 	private:
 		static void CreateFramebuffer();
 		static void SetupQuadRenderer();
@@ -149,9 +152,6 @@ namespace platformer2d {
 		static uint8_t GetRenderQueueIndex();
 		static uint8_t GetRenderQueueSubmissionIndex();
 		static CRenderCommandQueue& GetRenderCommandQueue();
-
-		CRenderer& operator=(const CRenderer&) = delete;
-		CRenderer& operator=(CRenderer&&) = delete;
 
 	public:
 		static constexpr int MaxTextures = 16;
@@ -167,6 +167,7 @@ namespace platformer2d {
 			glm::vec2(0, 1), /* Top right */
 			glm::vec2(0, 0), /* Bottom right */
 		};
+
 	private:
 		static inline bool bInitialized = false;
 		static inline FBackendInfo BackendInfo;
@@ -176,11 +177,11 @@ namespace platformer2d {
 		static inline GLuint QuadEBO = 0;
 		static inline uint32_t QuadIndexCount = 0;
 		static constexpr glm::vec4 QuadVertexPositions[4] = {
-			{ -0.50f, -0.50f, 0.0f, 1.0f },
-			{ -0.50f,  0.50f, 0.0f, 1.0f },
-			{  0.50f,  0.50f, 0.0f, 1.0f },
-			{  0.50f, -0.50f, 0.0f, 1.0f }
-		};
+			{-0.50f, -0.50f, 0.0f, 1.0f},
+			{-0.50f,  0.50f, 0.0f, 1.0f},
+			{ 0.50f,  0.50f, 0.0f, 1.0f},
+			{ 0.50f, -0.50f, 0.0f, 1.0f}
+        };
 		static inline FQuadVertex* QuadVertexBufferBase = nullptr;
 		static inline FQuadVertex* QuadVertexBufferPtr = nullptr;
 		static inline std::shared_ptr<CShader> QuadShader = nullptr;
