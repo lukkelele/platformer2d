@@ -73,18 +73,18 @@ namespace platformer2d {
 		static void NextBatch();
 		static void Flush();
 
-		template<typename TRenderFunction>
-		static void Submit(TRenderFunction&& Func)
+		template<typename TFunc>
+		static void Submit(TFunc&& Func)
 		{
 			auto Cmd = [](void* Ptr)
 			{
-				auto FunctionPtr = (TRenderFunction*)Ptr;
-				(*FunctionPtr)();
-				FunctionPtr->~TRenderFunction();
+				auto CmdPtr = (TFunc*)Ptr;
+				(*CmdPtr)();
+				std::destroy_at(CmdPtr);
 			};
 
-			auto* StorageBuffer = GetRenderCommandQueue().Allocate(Cmd, sizeof(Func));
-			new (StorageBuffer) TRenderFunction(std::forward<TRenderFunction>(Func));
+			auto* Buffer = GetRenderCommandQueue().Allocate(Cmd, sizeof(Func));
+			new (Buffer) TFunc(std::forward<TFunc>(Func));
 		}
 
 		static std::shared_ptr<CFramebuffer> GetViewportFramebuffer();
