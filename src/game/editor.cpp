@@ -124,7 +124,7 @@ namespace platformer2d {
 		Deserialize(GameSpec.LevelFilepath);
 		OpenScene(SceneToOpen);
 		LastSceneFilepath = Scene->GetFilepath();
-		LK_TRACE_TAG("Editor", "Last scene filepath: {}", LastSceneFilepath);
+		LK_DEBUG_TAG("Editor", "Last scene filepath: {}", LastSceneFilepath);
 
 		CWindow::OnResized.Add(this, &CEditor::OnWindowResized);
 		CWindow* Window = CWindow::Get();
@@ -226,13 +226,13 @@ namespace platformer2d {
 
 	void CEditor::OnAttach()
 	{
-		LK_TRACE_TAG("Editor", "OnAttach");
+		LK_DEBUG_TAG("Editor", "OnAttach");
 		Initialize();
 	}
 
 	void CEditor::OnDetach()
 	{
-		LK_TRACE_TAG("Editor", "OnDetach");
+		LK_DEBUG_TAG("Editor", "OnDetach");
 		Destroy();
 	}
 
