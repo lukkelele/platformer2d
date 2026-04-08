@@ -7,6 +7,7 @@ namespace platformer2d {
 
 	struct FSettings : public ISerializable<ESerializable::File>
 	{
+		EQuickLoad QuickLoad = EQuickLoad::None;
 		struct
 		{
 			bool bStartMaximized = true;
@@ -15,8 +16,8 @@ namespace platformer2d {
 
 		static FSettings& Get();
 
-		virtual bool Serialize(const std::filesystem::path& OutFile) const override;
-		virtual bool Deserialize(const std::filesystem::path& InFile) override;
+		bool Serialize(const std::filesystem::path& OutFile) const override;
+		bool Deserialize(const std::filesystem::path& InFile) override;
 	};
 
 }

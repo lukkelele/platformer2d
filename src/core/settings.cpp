@@ -2,25 +2,30 @@
 
 #include <fstream>
 #include <istream>
+#include <mutex>
 
 #include "serialization/serialization.h"
 
 namespace platformer2d {
 
-	static FSettings Instance;
+	static std::mutex Mutex;
 
 	FSettings& FSettings::Get()
 	{
+		static FSettings Instance;
 		return Instance;
 	}
 
 	bool FSettings::Serialize(const std::filesystem::path& OutFile) const
 	{
 		const FSettings& Settings = Get();
+		std::scoped_lock Lock(Mutex);
 		LK_INFO_TAG("Settings", "Serialize: {}", OutFile);
 		YAML::Emitter Out;
 
 		Out << YAML::BeginMap; /* Settings */
+
+		Out << YAML::Key << "QuickLoad" << YAML::Value << static_cast<std::size_t>(Settings.QuickLoad);
 
 		Out << YAML::Key << "Window";
 		Out << YAML::BeginMap;
@@ -38,25 +43,24 @@ namespace platformer2d {
 
 	bool FSettings::Deserialize(const std::filesystem::path& InFile)
 	{
+		FSettings& Settings = Get();
+		std::scoped_lock Lock(Mutex);
+
 		/* Create file and directory if they don't exist. */
 		if (!std::filesystem::exists(InFile)) {
 			bool Result = false;
 			if (std::filesystem::exists(InFile.parent_path())) {
-				/* Create file as it is missing. */
-				LK_INFO("Creating settings file");
+				/* Create missing settings file. */
+				LK_INFO_TAG("Settings", "Creating settings file: {}", InFile);
 				std::ofstream OutFile(InFile);
-				if (OutFile.good()) {
-					Result = true;
-				}
+				Result = OutFile.good();
 			} else {
-				/* Create directory as it is missing. */
-				LK_INFO("Creating directory to store settings file");
+				/* Create missing directory. */
+				LK_INFO_TAG("Settings", "Creating directory to store settings file");
 				if (std::filesystem::create_directories(InFile.parent_path())) {
-					LK_INFO("Creating settings file");
+					LK_INFO_TAG("Settings", "Creating settings file: {}", InFile);
 					std::ofstream OutFile(InFile);
-					if (OutFile.good()) {
-						Result = true;
-					}
+					Result = OutFile.good();
 				} else {
 					LK_ERROR_TAG("Settings", "Failed to create directory: {}", InFile.parent_path());
 				}
@@ -70,23 +74,22 @@ namespace platformer2d {
 			return false;
 		}
 
-		FSettings& Settings = Get();
-
 		std::ifstream InputStream(InFile);
 		std::stringstream StringStream;
 		StringStream << InputStream.rdbuf();
 		const std::string YamlString = StringStream.str();
-		const YAML::Node Data = YAML::Load(YamlString);
+		const YAML::Node Node = YAML::Load(YamlString);
 
-		const YAML::Node& WindowNode = Data["Window"];
-		if (!WindowNode.IsDefined()) {
-			LK_WARN_TAG("Settings", "File is empty");
-			return false;
+		Serialization::DeserializeProperty("QuickLoad", Settings.QuickLoad, EQuickLoad::None, Node);
+
+		const YAML::Node& WindowNode = Node["Window"];
+		if (WindowNode.IsDefined()) {
+			LK_DESERIALIZE_PROPERTY(StartMaximized, Settings.Window.bStartMaximized, true, WindowNode);
+			LK_DESERIALIZE_PROPERTY(VSync, Settings.Window.bVSync, true, WindowNode);
+			LK_DEBUG_TAG("Settings", "StartMaximized={} VSync={}", Settings.Window.bStartMaximized, Settings.Window.bVSync);
+		} else {
+			LK_ERROR_TAG("Settings", "Missing 'Window' node in YAML data");
 		}
-
-		LK_DESERIALIZE_PROPERTY(StartMaximized, Settings.Window.bStartMaximized, true, WindowNode);
-		LK_DESERIALIZE_PROPERTY(VSync, Settings.Window.bVSync, true, WindowNode);
-		LK_DEBUG_TAG("Settings", "StartMaximized={} VSync={}", Settings.Window.bStartMaximized, Settings.Window.bVSync);
 
 		return true;
 	}
