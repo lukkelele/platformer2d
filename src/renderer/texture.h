@@ -76,7 +76,7 @@ namespace platformer2d {
 	};
 
 	namespace Enum {
-		inline constexpr const char* ToString(const ETexture Texture)
+		constexpr const char* ToString(const ETexture Texture)
 		{
 			switch (Texture) {
 				case ETexture::White:      return "White";
