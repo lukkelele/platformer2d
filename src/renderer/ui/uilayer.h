@@ -13,6 +13,8 @@ namespace platformer2d {
 		CUILayer(std::string_view InLayerName = "UI");
 		~CUILayer() = default;
 
+		void Initialize();
+
 		void OnAttach() override;
 		void OnDetach() override;
 

@@ -41,13 +41,28 @@ namespace platformer2d {
 	CUILayer::CUILayer(std::string_view InName)
 		: CLayer(InName)
 	{
-		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
 		NextMenu = ActiveMenu;
+	}
+
+	void CUILayer::Initialize()
+	{
+		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
+
+		auto& Settings = FSettings::Get();
+		switch (Settings.QuickLoad) {
+			case EQuickLoad::None:
+				break;
+			case EQuickLoad::Editor:
+				LK_DEBUG_TAG("UILayer", "Quickloading editor");
+				Core::Global.AddLayer(Core::ELayer::Editor);
+				break;
+		}
 	}
 
 	void CUILayer::OnAttach()
 	{
-		LK_TRACE_TAG("UILayer", "OnAttach");
+		LK_VERIFY(ImGuiLayer);
+		LK_DEBUG_TAG("UILayer", "OnAttach");
 		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CUILayer::OnKeyPressed);
 	}
 
@@ -59,7 +74,6 @@ namespace platformer2d {
 			LK_DEBUG_TAG("UILayer", "Destroy ImGui layer");
 			ImGuiLayer->Destroy();
 			ImGuiLayer.reset();
-			ImGuiLayer = nullptr;
 		}
 	}
 
@@ -423,9 +437,9 @@ namespace platformer2d {
 			return;
 		}
 
-		static constexpr float XFactor = 0.65f;
-		static constexpr float YFactor = 0.80f;
-		static constexpr float LabelColumnWidth = 180.0f;
+		constexpr float XFactor = 0.65f;
+		constexpr float YFactor = 0.80f;
+		constexpr float LabelColumnWidth = 180.0f;
 
 		const ImVec2 ViewportSize = ImVec2(
 			(std::clamp(Viewport->Size.x * XFactor, 620.0f, 940.0f)),
@@ -436,7 +450,7 @@ namespace platformer2d {
 
 		ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ViewportSize, ImGuiCond_Always);
-		static constexpr int WindowFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
+		constexpr int WindowFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 8);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 24);
@@ -461,6 +475,7 @@ namespace platformer2d {
 			ImGui::TableSetColumnIndex(0);
 		};
 
+		/* Table: Menu Buttons */
 		UI::Font::Push(EFont::Roboto, EFontSize::Header, EFontModifier::Bold);
 		if (ImGui::BeginTable("##Menu", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
 			ImGui::TableSetupColumn("L", 0, ImGui::GetContentRegionAvail().x);

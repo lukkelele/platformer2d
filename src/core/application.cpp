@@ -54,6 +54,7 @@ namespace platformer2d {
 
 		LK_TRACE_TAG("Application", "Adding UI layer to layerstack");
 		UILayer = std::make_shared<CUILayer>();
+		UILayer->Initialize();
 		LayerStack.PushOverlay(UILayer);
 
 #if LOAD_EDITOR_ON_STARTUP
