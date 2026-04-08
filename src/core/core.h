@@ -27,13 +27,12 @@
 	LK_VERIFY(false, "{} failed with value: {}", std::source_location::current().function_name(), std::to_underlying(EnumValue));
 
 namespace platformer2d {
+	using namespace std::chrono_literals;
 
 	class CApplication;
 	class CLayerStack;
 
 	using LRendererID = uint32_t;
-
-	using namespace std::chrono_literals;
 
 	namespace Core {
 		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
@@ -109,10 +108,16 @@ namespace platformer2d {
 		COUNT
 	};
 
+	enum class EQuickLoad : std::uint8_t
+	{
+		None,
+		Editor,
+	};
+
 	namespace Enum {
-		inline const char* ToString(const Core::ELayer Layer)
+		constexpr const char* ToString(const Core::ELayer Layer)
 		{
-			const char* S = "";
+			const char* S = nullptr;
 #define _(EnumValue)                                    \
 	case Core::ELayer::EnumValue: S = #EnumValue; break
 			switch (Layer) {
@@ -120,16 +125,24 @@ namespace platformer2d {
 				_(Editor);
 				_(COUNT);
 				default:
-					LK_THROW_ENUM_ERR(Layer);
 					break;
 			}
 #undef _
 			return S;
 		}
 
-		inline const char* ToString(const EDirection Direction)
+		constexpr const char* ToString(const EQuickLoad QuickLoad)
 		{
-			const char* S = "";
+			switch (QuickLoad) {
+				case EQuickLoad::None:   return "None";
+				case EQuickLoad::Editor: return "Editor";
+			}
+			return nullptr;
+		}
+
+		constexpr const char* ToString(const EDirection Direction)
+		{
+			const char* S = nullptr;
 #define _(EnumValue)                                  \
 	case EDirection::EnumValue: S = #EnumValue; break
 			switch (Direction) {
@@ -138,7 +151,6 @@ namespace platformer2d {
 				_(Left);
 				_(Right);
 				default:
-					LK_THROW_ENUM_ERR(Direction);
 					break;
 			}
 #undef _
