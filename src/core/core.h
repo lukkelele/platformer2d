@@ -32,7 +32,7 @@ namespace platformer2d {
 	class CApplication;
 	class CLayerStack;
 
-	using LRendererID = uint32_t;
+	using LRendererID = std::uint32_t;
 
 	namespace Core {
 		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
