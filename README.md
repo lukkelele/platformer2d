@@ -39,11 +39,10 @@ and thus this project was born.
 :black_square_button: I do NOT LIKE!!!!! the vcpkg dependency, might remove that (on hold for now)<br>
 :black_square_button: Projectile collision (for player weapon :boom:)<br>
 :black_square_button: Movable enemies<br>
-:black_square_button: Behaviour trees<br>
-:black_square_button: Network replication (?)<br>
+:black_square_button: Behaviour trees (Might skip)<br>
 :black_square_button: Font rendering<br>
-:black_square_button: tracy as dependency<br>
-:black_square_button: Fix ANNOYING!!! auto include with CMake extension in Visual Studio<br>
+:black_square_button: Editor: Shift-click actors in scene selection to select them<br>
+:black_square_button: Renderer: Improve debug draw capabilities<br>
 
 <br>
 
