@@ -5,7 +5,7 @@
 
 namespace platformer2d {
 
-	CUniformBuffer::CUniformBuffer(const uint64_t Size, std::string_view InName)
+	CUniformBuffer::CUniformBuffer(const std::uint64_t Size, std::string_view InName)
 		: Name(InName)
 	{
 		LK_ASSERT(!Name.empty());
@@ -36,16 +36,16 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glBindBuffer(GL_UNIFORM_BUFFER, 0));
 	}
 
-	void CUniformBuffer::SetData(const void* Data, const uint64_t Size, const uint64_t Offset) const
+	void CUniformBuffer::SetData(const void* Data, const std::uint64_t Size, const std::uint64_t Offset) const
 	{
 		LK_OpenGL_Verify(glBindBuffer(GL_UNIFORM_BUFFER, ID));
 		LK_OpenGL_Verify(glNamedBufferSubData(ID, Offset, Size, Data));
 		LK_OpenGL_Verify(glBindBuffer(GL_UNIFORM_BUFFER, 0));
 	}
 
-	void CUniformBuffer::SetBinding(const std::shared_ptr<CShader> Shader, std::string_view UBName, const uint32_t BlockIndex)
+	void CUniformBuffer::SetBinding(const std::shared_ptr<CShader> Shader, std::string_view UBName, const std::uint32_t BlockIndex)
 	{
-		uint32_t UBIndex;
+		std::uint32_t UBIndex;
 		LK_OpenGL_Verify(UBIndex = glGetUniformBlockIndex(Shader->GetRendererID(), UBName.data()));
 		if (UBIndex == BlockIndex) {
 			LK_TRACE_TAG("UniformBuffer", "[{}] Already bound to index {} in \"{}\"", Shader->GetFilepath().filename(), BlockIndex, UBName);
