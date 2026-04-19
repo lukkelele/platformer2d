@@ -46,7 +46,7 @@ namespace platformer2d {
 	void CScene::Render()
 	{
 		for (const auto& Actor : Actors) {
-			if (Actor->HasAnyFlags(EActorFlag_Transparent)) {
+			if (Actor->HasFlag(EActorFlag_Transparent)) {
 				continue;
 			}
 
