@@ -84,6 +84,7 @@ namespace platformer2d {
 
 	void CImGuiLayer::AddFonts()
 	{
+		LK_DEBUG_TAG("ImGuiLayer", "Adding fonts");
 		ImGuiIO& IO = ImGui::GetIO();
 
 		/********************

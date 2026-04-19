@@ -24,11 +24,11 @@ namespace platformer2d {
 
 		static void AddViewportFlags(ImGuiWindowFlags Flags);
 		static void RemoveViewportFlags(ImGuiWindowFlags Flags);
+		static void AddFonts();
 
 		static void SetDarkTheme();
 
 	private:
-		void AddFonts();
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 	};
 
