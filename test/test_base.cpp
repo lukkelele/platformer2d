@@ -30,40 +30,38 @@
 
 namespace platformer2d::test {
 
-	namespace {
-		constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
-			| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
-			| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDocking
-			| ImGuiWindowFlags_NoBackground;
+	static constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
+		| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDocking
+		| ImGuiWindowFlags_NoBackground;
 
-		constexpr ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
-			| ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoInputs
-			| ImGuiWindowFlags_NoBackground;
+	static constexpr ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
+		| ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoInputs
+		| ImGuiWindowFlags_NoBackground;
 
-		constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
-			| ImGuiDockNodeFlags_NoDockingInCentralNode;
+	static constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
+		| ImGuiDockNodeFlags_NoDockingInCentralNode;
 
-		#define UI_COMBO_OPTION(Value) { Value, #Value }
-		std::pair<GLenum, const char*> SourceBlendFuncs[] = {
-			UI_COMBO_OPTION(GL_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_DST_ALPHA),
-			UI_COMBO_OPTION(GL_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_ONE),
-			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
-		};
+	#define UI_COMBO_OPTION(Value) { Value, #Value }
+	static std::pair<GLenum, const char*> SourceBlendFuncs[] = {
+		UI_COMBO_OPTION(GL_SRC_ALPHA),
+		UI_COMBO_OPTION(GL_DST_ALPHA),
+		UI_COMBO_OPTION(GL_SRC_ALPHA),
+		UI_COMBO_OPTION(GL_ONE),
+		UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
+	};
 
-		std::pair<GLenum, const char*> DestBlendFuncs[] = {
-			UI_COMBO_OPTION(GL_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
-			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
-		};
-	}
+	static std::pair<GLenum, const char*> DestBlendFuncs[] = {
+		UI_COMBO_OPTION(GL_SRC_ALPHA),
+		UI_COMBO_OPTION(GL_DST_ALPHA),
+		UI_COMBO_OPTION(GL_ONE_MINUS_SRC_ALPHA),
+		UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
+		UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
+	};
 
 	static std::filesystem::path GetBinaryDir()
 	{
@@ -92,7 +90,7 @@ namespace platformer2d::test {
 		, BinaryDir(GetBinaryDir())
 	{
 		if (bInit) {
-			CLog::Initialize();
+			lklog::init(lklog::level::trace);
 			LK_INFO("{}", LK_TEST_NAME);
 			LK_TRACE("Binary dir: {}", BinaryDir.generic_string());
 			LK_TRACE("Assets dir: {}", AssetsDir.generic_string());
@@ -130,20 +128,8 @@ namespace platformer2d::test {
 		ImGui_ImplGlfw_InitForOpenGL(GlfwWindow, true);
 		ImGui_ImplOpenGL3_Init("#version 450");
 
+		CImGuiLayer::AddFonts();
 		CImGuiLayer::SetDarkTheme();
-
-		/** @todo Use generated header */
-		const char* SourceSansPro_Semibold = FONTS_DIR "/SourceCodePro/SourceSansPro-Semibold.ttf";
-
-		/* Add fonts. */
-		ImFontConfig FontConfig;
-		ImFont* Font = IO.Fonts->AddFontFromFileTTF(
-			SourceSansPro_Semibold,
-			22.0f,
-			&FontConfig,	
-			(FontConfig.GlyphRanges == nullptr ? IO.Fonts->GetGlyphRangesDefault() : FontConfig.GlyphRanges)
-		);
-		LK_ASSERT(Font, "Failed to load font");
 	}
 
 	void CTestBase::ImGui_NewFrame()
