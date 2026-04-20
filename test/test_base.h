@@ -12,6 +12,14 @@
 #include "core/window.h"
 #include "renderer/backendinfo.h"
 
+#ifndef LK_TEST_SUITE
+#	error "LK_TEST_SUITE not defined"
+#endif
+
+#ifndef LK_TEST_NAME
+#	error "LK_TEST_NAME not defined"
+#endif
+
 #define __LK_TEST_STRINGIFY(x) #x
 
 /**
@@ -26,6 +34,7 @@ namespace platformer2d::test {
 	{
 	protected:
 		explicit CTestBase(int Argc, char* Argv[], bool bInit = true);
+
 	public:
 		CTestBase() = delete;
 		virtual ~CTestBase() = default;
@@ -47,7 +56,8 @@ namespace platformer2d::test {
 
 	protected:
 		bool bRunning = false;
-		struct {
+		struct
+		{
 			int Argc;
 			char** Argv;
 		} Args;
@@ -55,9 +65,8 @@ namespace platformer2d::test {
 		FBackendInfo BackendInfo;
 
 		std::unique_ptr<CWindow> Window;
-		std::filesystem::path BinaryDir{};
-
-		inline static std::filesystem::path AssetsDir = ASSETS_DIR;
+		std::filesystem::path BinaryDir;
+		static inline std::filesystem::path AssetsDir = ASSETS_DIR;
 	};
-
 }
+

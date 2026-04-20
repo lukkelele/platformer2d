@@ -4,9 +4,9 @@
 #include <stdexcept>
 
 #if defined(_WIN32)
-#include <Windows.h>
+#	include <Windows.h>
 #elif defined(__linux__)
-#include <unistd.h>
+#	include <unistd.h>
 #endif
 
 #include <glad/glad.h>
@@ -20,33 +20,25 @@
 #include "renderer/opengl.h"
 #include "renderer/ui/imguilayer.h"
 
-#ifndef LK_TEST_SUITE
-#error "LK_TEST_SUITE not defined"
-#endif
-
-#ifndef LK_TEST_NAME
-#error "LK_TEST_NAME not defined"
-#endif
-
 namespace platformer2d::test {
 
-	static constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
+	constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
 		| ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
 		| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar
 		| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
 		| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDocking
 		| ImGuiWindowFlags_NoBackground;
 
-	static constexpr ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
+	constexpr ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
 		| ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
 		| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
 		| ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoInputs
 		| ImGuiWindowFlags_NoBackground;
 
-	static constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
+	constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoDockingInCentralNode;
 
-	#define UI_COMBO_OPTION(Value) { Value, #Value }
+#define UI_COMBO_OPTION(Value) {Value, #Value}
 	static std::pair<GLenum, const char*> SourceBlendFuncs[] = {
 		UI_COMBO_OPTION(GL_SRC_ALPHA),
 		UI_COMBO_OPTION(GL_DST_ALPHA),
@@ -81,7 +73,7 @@ namespace platformer2d::test {
 		Buffer[Count] = '\0';
 		return std::filesystem::path(Buffer).parent_path();
 #else
-#error "Unsupported platform"
+#	error "Unsupported platform"
 #endif
 	}
 
@@ -100,8 +92,7 @@ namespace platformer2d::test {
 				.Height = SCREEN_HEIGHT,
 				.Title = LK_TEST_NAME,
 				.bStartMaximized = true,
-				.bVSync = true
-			};
+				.bVSync = true};
 			Window = std::make_unique<CWindow>(WindowSpec);
 			Window->Initialize();
 			CImGuiLayer::AddViewportFlags(ImGuiWindowFlags_MenuBar);
@@ -141,9 +132,9 @@ namespace platformer2d::test {
 		ImGui::SetNextWindowPos(Viewport->Pos);
 		ImGui::SetNextWindowSize(Viewport->Size);
 		ImGui::SetNextWindowViewport(Viewport->ID);
-		
-		static constexpr int Flags = ImGuiWindowFlags_NoDecoration 
-			| ImGuiWindowFlags_NoScrollbar 
+
+		static constexpr int Flags = ImGuiWindowFlags_NoDecoration
+			| ImGuiWindowFlags_NoScrollbar
 			| ImGuiWindowFlags_NoBackground;
 		ImGui::Begin(LK_TEST_NAME, NULL, Flags); /* LK_TEST_SUITE */
 	}
@@ -152,7 +143,7 @@ namespace platformer2d::test {
 	{
 		ImGui::End(); /* LK_TEST_SUITE */
 		ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
 	bool CTestBase::UI_BlendFunction()
@@ -162,13 +153,10 @@ namespace platformer2d::test {
 
 		static int SelectedSourceBlendFunc = 0;
 		ImGui::SetNextItemWidth(ItemWidth);
-		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
-			{
+		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].second)) {
+			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++) {
 				const bool bSelected = (SelectedSourceBlendFunc == N);
-				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected))
-				{
+				if (ImGui::Selectable(SourceBlendFuncs[N].second, bSelected)) {
 					SelectedSourceBlendFunc = N;
 					LK_INFO("Source: {}", SourceBlendFuncs[N].second);
 					bSetBlendFunc = true;
@@ -179,13 +167,10 @@ namespace platformer2d::test {
 
 		static int SelectedDestBlendFunc = 0;
 		ImGui::SetNextItemWidth(ItemWidth);
-		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].second))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
-			{
+		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].second)) {
+			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++) {
 				const bool bSelected = (SelectedDestBlendFunc == N);
-				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected))
-				{
+				if (ImGui::Selectable(DestBlendFuncs[N].second, bSelected)) {
 					SelectedDestBlendFunc = N;
 					LK_INFO("Destination: {}", DestBlendFuncs[N].second);
 					bSetBlendFunc = true;
@@ -194,12 +179,10 @@ namespace platformer2d::test {
 			ImGui::EndCombo();
 		}
 
-		if (bSetBlendFunc)
-		{
+		if (bSetBlendFunc) {
 			glBlendFunc(
 				SourceBlendFuncs[SelectedSourceBlendFunc].first,
-				DestBlendFuncs[SelectedDestBlendFunc].first
-			);
+				DestBlendFuncs[SelectedDestBlendFunc].first);
 		}
 
 		return bSetBlendFunc;
