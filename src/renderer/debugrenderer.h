@@ -10,6 +10,9 @@
 
 namespace platformer2d {
 
+	class CActor;
+	class CBody;
+
 	class CDebugRenderer
 	{
 	public:
@@ -18,8 +21,15 @@ namespace platformer2d {
 		CDebugRenderer(const CDebugRenderer&) = delete;
 		CDebugRenderer(CDebugRenderer&&) = delete;
 
+		CDebugRenderer& operator=(const CDebugRenderer&) = delete;
+		CDebugRenderer& operator=(CDebugRenderer&&) = delete;
+
 		static void Initialize();
 		static void Destroy();
+
+		static void Draw(const std::shared_ptr<CActor> Actor);
+		static void Draw(const CBody* Body, const glm::vec4& Color = FColor::Magenta, const glm::vec4& OutlineColor = FColor::Transparent, float OutlineThickness = 0.0f);
+		static void DrawOutline(const CBody* Body, const glm::vec4& OutlineColor = FColor::Magenta, float OutlineThickness = 6.0f);
 
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, float RotationDeg = 0.0f);
 
@@ -37,10 +47,6 @@ namespace platformer2d {
 
 	public:
 		static inline glm::mat4 ViewProjection = glm::mat4(1.0f);
-
-	private:
-		CDebugRenderer& operator=(const CDebugRenderer&) = delete;
-		CDebugRenderer& operator=(CDebugRenderer&&) = delete;
 
 	private:
 		static inline GLuint QuadVAO = 0;

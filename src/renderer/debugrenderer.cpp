@@ -10,7 +10,9 @@
 
 #include "core/math/math.h"
 #include "renderer.h"
+#include "physics/body.h"
 #include "physics/physicsworld.h"
+#include "scene/actor.h"
 
 namespace platformer2d {
 
@@ -18,11 +20,11 @@ namespace platformer2d {
 
 	namespace {
 		constexpr glm::vec4 QuadVertexPositions[4] = {
-			{ -0.50f, -0.50f, 0.0f, 1.0f },
-			{ -0.50f,  0.50f, 0.0f, 1.0f },
-			{  0.50f,  0.50f, 0.0f, 1.0f },
-			{  0.50f, -0.50f, 0.0f, 1.0f }
-		};
+			{-0.50f, -0.50f, 0.0f, 1.0f},
+			{-0.50f,  0.50f, 0.0f, 1.0f},
+			{ 0.50f,  0.50f, 0.0f, 1.0f},
+			{ 0.50f, -0.50f, 0.0f, 1.0f}
+        };
 	}
 
 	glm::vec4 Decodeb2HexColor(const b2HexColor Hex);
@@ -60,7 +62,7 @@ namespace platformer2d {
 
 			LK_OpenGL_Verify(glBindVertexArray(LineVAO));
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
-			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW)); 
+			LK_OpenGL_Verify(glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW));
 			LK_OpenGL_Verify(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr));
 			LK_OpenGL_Verify(glEnableVertexAttribArray(0));
 
@@ -93,36 +95,35 @@ namespace platformer2d {
 		DebugDraw.drawContacts = true;
 		DebugDraw.drawShapes = true;
 		/** @todo Need drawString callback */
-		//DebugDraw.drawMass = true;
-		//DebugDraw.drawFrictionForces = true;
-		//DebugDraw.drawContactNormals = true;
-		//DebugDraw.drawContactForces = true;
+		// DebugDraw.drawMass = true;
+		// DebugDraw.drawFrictionForces = true;
+		// DebugDraw.drawContactNormals = true;
+		// DebugDraw.drawContactForces = true;
 
 		DebugDraw.DrawCircleFcn = [](b2Vec2 Center, float Radius, b2HexColor HexColor, void* Ctx)
 		{
-			const glm::vec3 P0 = { Center.x, Center.y, 0.0f };
+			const glm::vec3 P0 = {Center.x, Center.y, 0.0f};
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
-			//LK_WARN("DrawCircleFcn: ({}, {})", P0.x, P0.y);
-			CRenderer::DrawCircle(P0, { 0.0f, 0.0f, 0.0f }, Radius, Color);
+			// LK_WARN("DrawCircleFcn: ({}, {})", P0.x, P0.y);
+			CRenderer::DrawCircle(P0, {0.0f, 0.0f, 0.0f}, Radius, Color);
 		};
 
 		DebugDraw.DrawPointFcn = [](b2Vec2 Center, float Size, b2HexColor HexColor, void* Ctx)
 		{
-			const glm::vec3 P0 = { Center.x, Center.y, 0.0f };
+			const glm::vec3 P0 = {Center.x, Center.y, 0.0f};
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
-			//LK_WARN("DrawPointFcn: ({}, {})", P0.x, P0.y);
-			CRenderer::DrawCircle(P0, { 0.0f, 0.0f, 0.0f }, Size , Color);
+			// LK_WARN("DrawPointFcn: ({}, {})", P0.x, P0.y);
+			CRenderer::DrawCircle(P0, {0.0f, 0.0f, 0.0f}, Size, Color);
 		};
 
 		DebugDraw.DrawPolygonFcn = [](const b2Vec2* Vertices, const int Count, b2HexColor HexColor, void* Ctx)
 		{
-			//LK_WARN("DrawPolygonFcn: Count={}", Count);
+			// LK_WARN("DrawPolygonFcn: Count={}", Count);
 			constexpr float Rot = 0.0f;
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
 
 			/* Quad */
-			if (Count == 4)
-			{
+			if (Count == 4) {
 				/* AABB */
 				const b2Vec2& V0 = Vertices[0];
 				const b2Vec2& V1 = Vertices[1];
@@ -132,9 +133,9 @@ namespace platformer2d {
 				const float MinY = std::min(std::min(V0.y, V1.y), std::min(V2.y, V3.y));
 				const float MaxX = std::max(std::max(V0.x, V1.x), std::max(V2.x, V3.x));
 				const float MaxY = std::max(std::max(V0.y, V1.y), std::max(V2.y, V3.y));
-				const glm::vec2 Pos  = { (MinX + MaxX) * 0.50f, (MinY + MaxY) * 0.50f };
-				const glm::vec2 Size = { (MaxX - MinX), (MaxY - MinY) };
-				//CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
+				const glm::vec2 Pos = {(MinX + MaxX) * 0.50f, (MinY + MaxY) * 0.50f};
+				const glm::vec2 Size = {(MaxX - MinX), (MaxY - MinY)};
+				// CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
 
 				CRenderer::Submit([&]()
 				{
@@ -145,11 +146,11 @@ namespace platformer2d {
 
 		DebugDraw.DrawSegmentFcn = [](b2Vec2 InP0, b2Vec2 InP1, b2HexColor HexColor, void* Ctx)
 		{
-			const glm::vec3 P0 = { InP0.x, InP0.y, 0.0f };
-			const glm::vec3 P1 = { InP1.x, InP1.y, 0.0f };
+			const glm::vec3 P0 = {InP0.x, InP0.y, 0.0f};
+			const glm::vec3 P1 = {InP1.x, InP1.y, 0.0f};
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
 
-			//CDebugRenderer::DrawLine(P0, P1, Color, 4);
+			// CDebugRenderer::DrawLine(P0, P1, Color, 4);
 			CRenderer::Submit([&]()
 			{
 				CDebugRenderer::DrawLine(P0, P1, Color, 4);
@@ -157,35 +158,34 @@ namespace platformer2d {
 		};
 
 		DebugDraw.DrawSolidPolygonFcn = [](b2Transform Transform, const b2Vec2* Vertices, int Count,
-										   float Radius, b2HexColor HexColor, void* Ctx)
+											float Radius, b2HexColor HexColor, void* Ctx)
 		{
 			const float Rot = std::atan2(Transform.q.s, Transform.q.c);
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
-			//LK_WARN("DrawSolidPolygon: Count={} Radius={} Rot={}", Count, Radius, Rot);
+			// LK_WARN("DrawSolidPolygon: Count={} Radius={} Rot={}", Count, Radius, Rot);
 
 			/* Quad */
-			if (Count == 4)
-			{
-				const glm::vec2 Pos = { Transform.p.x, Transform.p.y };
-				const glm::vec2 E0 = { (Vertices[1].x - Vertices[0].x), (Vertices[1].y - Vertices[0].y) };
-				const glm::vec2 E1 = { (Vertices[2].x - Vertices[1].x), (Vertices[2].y - Vertices[1].y) };
-				const glm::vec2 Size = { glm::length(E0), glm::length(E1) };
+			if (Count == 4) {
+				const glm::vec2 Pos = {Transform.p.x, Transform.p.y};
+				const glm::vec2 E0 = {(Vertices[1].x - Vertices[0].x), (Vertices[1].y - Vertices[0].y)};
+				const glm::vec2 E1 = {(Vertices[2].x - Vertices[1].x), (Vertices[2].y - Vertices[1].y)};
+				const glm::vec2 Size = {glm::length(E0), glm::length(E1)};
 				CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
 			}
 		};
 
 		DebugDraw.DrawSolidCapsuleFcn = [](b2Vec2 InP0, b2Vec2 InP1, float Radius, b2HexColor HexColor, void* Ctx)
 		{
-			//LK_WARN("DrawSolidCapsule: P0({}, {}) P1({}, {}) Radius={}", InP0.x, InP0.y, InP1.x, InP1.y, Radius);
-			const glm::vec3 P0 = { InP0.x, InP0.y, 0.0f };
-			const glm::vec3 P1 = { InP1.x, InP1.y, 0.0f };
+			// LK_WARN("DrawSolidCapsule: P0({}, {}) P1({}, {}) Radius={}", InP0.x, InP0.y, InP1.x, InP1.y, Radius);
+			const glm::vec3 P0 = {InP0.x, InP0.y, 0.0f};
+			const glm::vec3 P1 = {InP1.x, InP1.y, 0.0f};
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
 			CRenderer::DrawCircle(P0, P1, Radius, Color);
 		};
 
 		DebugDraw.DrawSolidCircleFcn = [](const b2Transform Transform, const float Radius, b2HexColor HexColor, void* Ctx)
 		{
-			//LK_WARN("DrawSolicCircle: T.p.x={} T.p.y={} Radius={}", Transform.p.x, Transform.p.y, Radius);
+			// LK_WARN("DrawSolicCircle: T.p.x={} T.p.y={} Radius={}", Transform.p.x, Transform.p.y, Radius);
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
 			const glm::mat4 T = Math::ToMat4(Transform);
 #if 1
@@ -202,15 +202,54 @@ namespace platformer2d {
 	{
 	}
 
+	void CDebugRenderer::Draw(const std::shared_ptr<CActor> Actor)
+	{
+		LK_ASSERT(Actor);
+		const auto& TC = Actor->GetComponent<FTransformComponent>();
+		CRenderer::DrawQuad(
+			TC.Translation,
+			TC.Scale,
+			Actor->GetTexture(),
+			Actor->GetColor(),
+			glm::degrees(TC.GetRotation2D()),
+			Actor->IsOutlineEnabled() ? Actor->GetOutlineThickness() : 0.0f,
+			Actor->GetOutlineColor());
+	}
+
+	void CDebugRenderer::Draw(const CBody* const Body, const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineThickness)
+	{
+		LK_ASSERT(Body);
+		CRenderer::DrawQuad(
+			Body->GetPosition(),
+			glm::vec3(Body->GetSize(), 0.0f),
+			*CRenderer::GetTexture(ETexture::White),
+			Color,
+			glm::degrees(Body->GetRotation()),
+			OutlineThickness,
+			OutlineColor);
+	}
+
+	void CDebugRenderer::DrawOutline(const CBody* const Body, const glm::vec4& OutlineColor, const float OutlineThickness)
+	{
+		LK_ASSERT(Body && (OutlineThickness > 0.0f) && (OutlineColor != FColor::Transparent));
+		CRenderer::DrawQuad(
+			Body->GetPosition(),
+			glm::vec3(Body->GetSize(), 0.0f),
+			*CRenderer::GetTexture(ETexture::White),
+			FColor::Transparent,
+			glm::degrees(Body->GetRotation()),
+			OutlineThickness,
+			OutlineColor);
+	}
+
 	void CDebugRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const glm::vec4& Color, const float RotationDeg)
 	{
-		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), { Pos.x, Pos.y, 0.0f })
-            * glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
-            * glm::scale(glm::mat4(1.0f), { Size.x, Size.y, 1.0f });
+		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), {Pos.x, Pos.y, 0.0f})
+			* glm::rotate(glm::mat4(1.0f), glm::radians(RotationDeg), glm::vec3(0.0f, 0.0f, 1.0f))
+			* glm::scale(glm::mat4(1.0f), {Size.x, Size.y, 1.0f});
 
 		glm::vec2 Vertices[4] = {};
-		for (std::size_t Idx = 0; Idx < 4; Idx++)
-		{
+		for (std::size_t Idx = 0; Idx < 4; Idx++) {
 			Vertices[Idx] = Transform * QuadVertexPositions[Idx];
 		}
 
@@ -229,7 +268,7 @@ namespace platformer2d {
 
 	void CDebugRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)
 	{
-		DrawLine({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, Color, LineWidth);
+		DrawLine({P0.x, P0.y, 0.0f}, {P1.x, P1.y, 0.0f}, Color, LineWidth);
 	}
 
 	void CDebugRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, const uint16_t LineWidth)
@@ -237,7 +276,10 @@ namespace platformer2d {
 		LineShader->Set("u_viewproj", ViewProjection);
 		LineShader->Set("u_color", Color);
 
-		const float Vertices[2][2] = { { P0.x, P0.y }, { P1.x, P1.y } };
+		const float Vertices[2][2] = {
+			{P0.x, P0.y},
+			{P1.x, P1.y}
+        };
 		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
 		LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices));
 
@@ -248,15 +290,14 @@ namespace platformer2d {
 
 	void CDebugRenderer::DrawCapsule(const glm::vec2& P0, const glm::vec2& P1, const float Radius, const glm::vec4& Color)
 	{
-		DrawCapsule({ P0.x, P0.y, 0.0f }, { P1.x, P1.y, 0.0f }, Radius, Color);
+		DrawCapsule({P0.x, P0.y, 0.0f}, {P1.x, P1.y, 0.0f}, Radius, Color);
 	}
 
 	void CDebugRenderer::DrawCapsule(const glm::vec3& P0, const glm::vec3& P1, const float Radius, const glm::vec4& Color)
 	{
 		const glm::vec2 Axis = P1 - P0;
 		const float Length = glm::length(Axis);
-		if (Length < 1e-6f)
-		{
+		if (Length < 1e-6f) {
 			LK_WARN("Length < 1e-6");
 			return;
 		}
@@ -264,17 +305,17 @@ namespace platformer2d {
 		const glm::vec2 A = Axis / Length;
 		const glm::vec2 N = glm::normalize(Math::Perp(A));
 		const glm::vec2 OffsetVec2 = N * Radius;
-		const glm::vec4 Offset = { OffsetVec2.x, OffsetVec2.y, 0.0f, 0.0f };
+		const glm::vec4 Offset = {OffsetVec2.x, OffsetVec2.y, 0.0f, 0.0f};
 
 		const glm::mat4 Transform = glm::translate(glm::mat4(1.0f), P0)
-			* glm::scale(glm::mat4(1.0f), { Radius * 2.0f, Radius * 2.0f, 1.0f });
+			* glm::scale(glm::mat4(1.0f), {Radius * 2.0f, Radius * 2.0f, 1.0f});
 
 		const glm::vec2 V0 = Transform * (glm::vec4(P0.x, P0.y, P0.z, 0.0f) + Offset);
 		const glm::vec2 V1 = Transform * (glm::vec4(P1.x, P1.y, P1.z, 0.0f) + Offset);
 		const glm::vec2 V2 = Transform * (glm::vec4(P1.x, P1.y, P1.z, 0.0f) - Offset);
 		const glm::vec2 V3 = Transform * (glm::vec4(P0.x, P0.y, P0.z, 0.0f) - Offset);
 
-		const glm::vec2 Quad[4] = { V0, V1, V2, V3 };
+		const glm::vec2 Quad[4] = {V0, V1, V2, V3};
 
 		LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
@@ -290,19 +331,18 @@ namespace platformer2d {
 
 	void CDebugRenderer::DrawCircle(const glm::mat4& Transform, const float Radius, const glm::vec4& Color)
 	{
-		const glm::vec3 LocalP0 = { 0.0f, -0.5f, 0.0f };
-		const glm::vec3 LocalP1 = { 0.0f,  0.5f, 0.0f };
+		const glm::vec3 LocalP0 = {0.0f, -0.5f, 0.0f};
+		const glm::vec3 LocalP1 = {0.0f, 0.5f, 0.0f};
 
 		const glm::vec4 WorldP0 = Transform * glm::vec4(LocalP0, 1.0f);
 		const glm::vec4 WorldP1 = Transform * glm::vec4(LocalP1, 1.0f);
 
-		const glm::vec2 P0 = { WorldP0.x, WorldP0.y };
-		const glm::vec2 P1 = { WorldP1.x, WorldP1.y };
+		const glm::vec2 P0 = {WorldP0.x, WorldP0.y};
+		const glm::vec2 P1 = {WorldP1.x, WorldP1.y};
 
 		const glm::vec2 Axis = P1 - P0;
 		const float Length = glm::length(Axis);
-		if (Length < 1e-6f)
-		{
+		if (Length < 1e-6f) {
 			LK_WARN("Length < 1e-6");
 			return;
 		}
@@ -316,7 +356,7 @@ namespace platformer2d {
 		const glm::vec2 V2 = P1 - Offset;
 		const glm::vec2 V3 = P0 - Offset;
 
-		const glm::vec2 Quad[4] = { V0, V1, V2, V3 };
+		const glm::vec2 Quad[4] = {V0, V1, V2, V3};
 
 		LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 		LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
@@ -331,7 +371,7 @@ namespace platformer2d {
 	}
 
 	void CDebugRenderer::DrawRayHit(const FRayCast& RayCast, const float T, const uint16_t LineWidth, const glm::vec4& LineColor,
-									const float Radius, const glm::vec4& CircleColor)
+		const float Radius, const glm::vec4& CircleColor)
 	{
 		const glm::vec3 Origin = RayCast.Pos;
 		const glm::vec3 Dir = RayCast.Dir;
@@ -349,8 +389,8 @@ namespace platformer2d {
 		float A = 0.0f;
 		const uint32_t U = static_cast<uint32_t>(Hex);
 		const uint32_t R8 = (U >> 16) & 0xFF;
-		const uint32_t G8 = (U >> 8)  & 0xFF;
-		const uint32_t B8 = (U)       & 0xFF;
+		const uint32_t G8 = (U >> 8) & 0xFF;
+		const uint32_t B8 = (U) & 0xFF;
 
 		R = static_cast<float>(R8) / 255.0f;
 		G = static_cast<float>(G8) / 255.0f;
