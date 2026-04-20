@@ -13,6 +13,7 @@
 #include "physics/physicsworld.h"
 #include "renderer/opengl.h"
 #include "renderer/renderer.h"
+#include "renderer/debugrenderer.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
 
@@ -28,8 +29,11 @@ namespace platformer2d::test {
 	static bool bDrawCircleFilled = true;
 	static bool bDrawLine = true;
 	static bool bDrawRectangle = false;
+	static bool bDrawBody = false;
+	static bool bDrawBodyOutlined = true;
 
 	static void RenderViewportTexture();
+	static void AlignCenter(float WidthP);
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv, NO_TEST_INIT)
@@ -70,7 +74,7 @@ namespace platformer2d::test {
 			FActorSpecification Spec;
 			Spec.Name = lklog::format("Actor-{}", Idx);
 			Spec.Pos = {0.30f, 0.0f, 0.0f}; /* @fixme: Does not do anything, only BodySpec.Position is working */
-			Spec.OutlineColor = FColor::Magenta;
+			Spec.OutlineColor = FColor::LightGreen;
 			Spec.OutlineThickness = 8.0f;
 
 			FBodySpecification BodySpec;
@@ -114,14 +118,16 @@ namespace platformer2d::test {
 
 			for (const auto& Actor : Actors) {
 				const FTransformComponent& TC = Actor->GetTransformComponent();
-				CRenderer::DrawQuad(
-					Actor->GetPosition(),
-					TC.Scale,
-					Actor->GetTexture(),
-					Actor->GetColor(),
-					glm::degrees(TC.GetRotation2D()),
-					Actor->IsOutlineEnabled() ? Actor->GetOutlineThickness() : 0.0f,
-					Actor->GetOutlineColor());
+				if (bDrawBody) {
+					const CBody* Body = Actor->GetBody();
+					if (bDrawBodyOutlined) {
+						CDebugRenderer::DrawOutline(Body);
+					} else {
+						CDebugRenderer::Draw(Body, FColor::NiceBlue);
+					}
+				} else {
+					CDebugRenderer::Draw(Actor);
+				}
 			}
 
 			CRenderer::EndFrame();
@@ -132,6 +138,14 @@ namespace platformer2d::test {
 			ImGui::SetNextWindowFocus();
 			ImGui::Begin(TestName.c_str());
 			{
+				AlignCenter(0.30f);
+				ImGui::BeginChild("##Background", ImVec2(ImGui::GetWindowSize().x * 0.30f, 40.0f));
+				glm::vec4 ClearColor = CRenderer::GetClearColor();
+				if (UI::Widget::DragFloat3("Background", ClearColor, 0.0f, 0.0010f, 0.0f, 1.0f)) {
+					CRenderer::SetClearColor(ClearColor);
+				}
+				ImGui::EndChild();
+
 				ImGui::Checkbox("Draw Circle", &bDrawCircle);
 				ImGui::SameLine();
 				ImGui::Checkbox("Draw Circle Filled", &bDrawCircleFilled);
@@ -139,6 +153,11 @@ namespace platformer2d::test {
 				ImGui::Checkbox("Draw Line", &bDrawLine);
 				ImGui::SameLine();
 				ImGui::Checkbox("Draw Smaller Rectangle", &bDrawRectangle);
+
+				ImGui::SameLine(0, 24.0f);
+				ImGui::Checkbox("Draw Body", &bDrawBody);
+				ImGui::SameLine();
+				ImGui::Checkbox("Outlined", &bDrawBodyOutlined);
 
 				ImGui::BeginChild("##P0", ImVec2(ImGui::GetWindowSize().x * 0.30f, 40.0f));
 				UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
@@ -201,5 +220,11 @@ namespace platformer2d::test {
 
 		ImGui::End();
 	};
+
+	static void AlignCenter(const float WidthP)
+	{
+		ImGui::Dummy(ImVec2(ImGui::GetWindowSize().x * 0.50f - (ImGui::GetWindowSize().x * WidthP) * 0.50f, 0.0f));
+		ImGui::SameLine();
+	}
 
 }
