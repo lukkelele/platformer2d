@@ -221,7 +221,7 @@ namespace platformer2d {
 	};
 
 	namespace Enum {
-		inline const char* ToString(const EEffectType Type)
+		constexpr const char* ToString(const EEffectType Type)
 		{
 			const char* S = "";
 #define _(EnumValue)                                   \
@@ -230,14 +230,13 @@ namespace platformer2d {
 				_(None);
 				_(Rotate);
 				default:
-					LK_THROW_ENUM_ERR(Type);
 					break;
 			}
 #undef _
 			return S;
 		}
 
-		inline const char* ToString(const EInteraction Interaction)
+		constexpr const char* ToString(const EInteraction Interaction)
 		{
 			const char* S = "";
 #define _(EnumValue)                                    \
@@ -248,14 +247,13 @@ namespace platformer2d {
 				_(Pickup);
 				_(COUNT);
 				default:
-					LK_THROW_ENUM_ERR(Interaction);
 					break;
 			}
 #undef _
 			return S;
 		}
 
-		inline const char* ToString(const EPickupKind Kind)
+		constexpr const char* ToString(const EPickupKind Kind)
 		{
 			const char* S = "";
 #define _(EnumValue)                                   \
@@ -265,7 +263,6 @@ namespace platformer2d {
 				_(Weapon);
 				_(COUNT);
 				default:
-					LK_THROW_ENUM_ERR(Kind);
 					break;
 			}
 #undef _
