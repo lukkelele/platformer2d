@@ -9,15 +9,16 @@ namespace platformer2d {
 	public:
 		CSelectionContext() = default;
 		~CSelectionContext() = default;
+		CSelectionContext(CSelectionContext&&) = delete;
+		CSelectionContext(const CSelectionContext&) = delete;
+
+		CSelectionContext& operator=(CSelectionContext&&) = delete;
+		CSelectionContext& operator=(const CSelectionContext&) = delete;
 
 		static void Select(LUUID Handle);
 		static LUUID GetSelected() { return Selected; }
 		static bool IsSelected(const LUUID Handle) { return (Handle == Selected); }
-		static bool AnySelected() { return (Selected != 0); }
-
-	private:
-		CSelectionContext(const CSelectionContext&) = delete;
-		CSelectionContext(CSelectionContext&&) = delete;
+		static bool IsAnySelected() { return (Selected != 0); }
 
 	private:
 		static inline LUUID Selected = 0;
