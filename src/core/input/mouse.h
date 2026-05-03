@@ -23,23 +23,24 @@ namespace platformer2d {
 	public:
 		CMouse() = delete;
 		~CMouse() = delete;
-		CMouse(const CMouse&) = delete;
 		CMouse(CMouse&&) = delete;
+		CMouse(const CMouse&) = delete;
+
+		CMouse& operator=(CMouse&&) = delete;
+		CMouse& operator=(const CMouse&) = delete;
 
 		static void Initialize();
 		static void Enable();
 		static void Disable();
 
+		static bool IsDown(EMouseButton Button);
+		static EMouseButtonState GetState(EMouseButton Button);
 		static FMouseButtonData& UpdateButtonState(EMouseButton Button, EMouseButtonState NewState);
 		static void UpdateScrollState(EMouseScrollDirection Direction);
 
 		static float GetX();
 		static float GetY();
 		static std::pair<float, float> GetPos();
-
-	private:
-		CMouse& operator=(const CMouse&) = delete;
-		CMouse& operator=(CMouse&&) = delete;
 
 	public:
 		static inline FOnButtonPressed OnButtonPressed;
