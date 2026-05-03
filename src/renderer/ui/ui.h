@@ -41,43 +41,50 @@ namespace platformer2d::UI {
 	LK_DECLARE_MULTICAST_DELEGATE(FOnPauseMenuOpened, bool);
 	extern FOnPauseMenuOpened OnPauseMenuOpened;
 
-	FORCEINLINE bool InTable()
+	inline bool InTable()
 	{
 		return ImGui::GetCurrentTable() != nullptr;
 	}
 
 	namespace Table {
-		FORCEINLINE void Label(std::string_view Str, const float IndentX = 0.0f)
+		inline void Label(std::string_view Str, const float IndentX = 0.0f)
 		{
 			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f + IndentX, 0.0f);
+			UI::ShiftCursorX(17.0f + IndentX);
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text(Str.data());
 		}
 
-		FORCEINLINE void NextColumn()
+		inline void NextColumn()
 		{
 			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
+			UI::ShiftCursorX(7);
+			ImGui::AlignTextToFramePadding();
+		};
+
+		inline void NextRow()
+		{
+			ImGui::TableNextRow();
 		};
 	}
 
 	inline bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 0.0f)
 	{
 		bool Active = false;
-		char LabelBuf[64] = {0};
-		std::snprintf(LabelBuf, sizeof(LabelBuf), "##%s", Str.data());
+		std::array<char, 64> LabelBuf = {0};
+		std::snprintf(LabelBuf.data(), LabelBuf.size(), "##%s", Str.data());
 
 		if (InTable()) {
 			Table::Label(Str);
 			Table::NextColumn();
 			ShiftCursorX(IndentX);
-			if (ImGui::Checkbox(LabelBuf, &Value)) {
+			if (ImGui::Checkbox(LabelBuf.data(), &Value)) {
 				Active = true;
 			}
 		} else {
 			ImGui::Text(Str.data());
 			ImGui::SameLine(0.0f, IndentX);
-			if (ImGui::Checkbox(LabelBuf, &Value)) {
+			if (ImGui::Checkbox(LabelBuf.data(), &Value)) {
 				Active = true;
 			}
 		}
