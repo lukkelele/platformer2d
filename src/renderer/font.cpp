@@ -69,6 +69,13 @@ namespace platformer2d::UI {
 		ImGui::PushFont(FontRef);
 	}
 
+	void Font::Push(const EFontSize Size, const EFontModifier Modifier)
+	{
+		ImFont* FontRef = FontMap.at(Modifier)[Font::GetDefault()][static_cast<int>(Size)];
+		LK_ASSERT(FontRef, "Invalid font: {} ({}), {}", Enum::ToString(Font::GetDefault()), Enum::ToString(Size), Enum::ToString(Modifier));
+		ImGui::PushFont(FontRef);
+	}
+
 	void Font::Pop()
 	{
 		ImGui::PopFont();
