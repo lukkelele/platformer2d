@@ -272,6 +272,10 @@ namespace platformer2d {
 		Camera.SetViewportSize(EditorViewportWidth, EditorViewportHeight);
 		CRenderer::BeginScene(Camera);
 
+		if (std::shared_ptr<CActor> Selected = Scene->GetActor(CSelectionContext::GetSelected())) {
+			SelectedActor = Selected;
+		}
+
 		Player->Tick(DeltaTime);
 		Scene->Tick(DeltaTime);
 
@@ -1203,6 +1207,12 @@ namespace platformer2d {
 			case EKey::Escape:
 				if (Data.State == EKeyState::Pressed) {
 					UI::TogglePauseMenu();
+				}
+				break;
+			case EKey::GraveAccent:
+				if (Data.State == EKeyState::Pressed) {
+					SelectedActor.reset();
+					CSelectionContext::Select(LUUID::Null);
 				}
 				break;
 		}
