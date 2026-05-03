@@ -58,8 +58,14 @@ namespace platformer2d {
 	namespace UI::Font {
 		void Add(const FFontConfiguration& FontConfig, bool IsDefault = false);
 		void Push(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
+		void Push(EFontSize Size, EFontModifier Modifier = EFontModifier::Normal);
 		void Pop();
 		ImFont* Get(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
+
+		constexpr EFont GetDefault()
+		{
+			return EFont::SourceSansPro;
+		}
 	}
 
 	namespace Enum {
