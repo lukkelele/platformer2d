@@ -308,8 +308,11 @@ namespace platformer2d::UI {
 
 		UI::Font::Push(EFontSize::Large, EFontModifier::Normal);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-		const bool Opened = ImGui::TreeNodeEx("Chain (Terrain)", ImGuiTreeNodeFlags_SpanAvailWidth);
+		const bool Opened = ImGui::TreeNodeEx("Terrain", ImGuiTreeNodeFlags_SpanAvailWidth);
 		UI::Font::Pop();
+		if (UI::IsItemHovered(1.0f)) {
+			UI::SetTooltip("Using chain segments");
+		}
 		if (!Opened) {
 			return;
 		}
