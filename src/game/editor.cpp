@@ -305,6 +305,8 @@ namespace platformer2d {
 			CRenderer::DrawLine(glm::vec3(0.0f, 0.0f, 1.0f), P1, FColor::Black, 6);
 		}
 
+		UI::RenderChainPreview(Scene);
+
 		Scene->Render();
 	}
 
@@ -814,45 +816,12 @@ namespace platformer2d {
 		}
 
 		ImGui::Spacing();
-		UI::Widget::EditorViewportInfo(bEditorViewportFocused, bEditorViewportHovered);
-
 		if (Scene) {
-			ImGui::Spacing();
-
-			UI::BeginPropertyGrid();
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Gravity", GRAVITY, 0.0f, 0.010f);
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Checkbox("Draw Circle", bDrawCircle);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Checkbox("Draw Circle Filled", bDrawCircleFilled);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Checkbox("Draw Line", bDrawLine);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
-
-			UI::EndPropertyGrid();
+			UI::CreatorMenu(Scene);
 		}
 
 		if (Player) {
+			ImGui::Spacing();
 			UI::Widget::Rifle(Player->GetRifle());
 		}
 
@@ -936,6 +905,9 @@ namespace platformer2d {
 				}
 			}
 
+			ImGui::Spacing();
+			UI::Widget::EditorViewportInfo(bEditorViewportFocused, bEditorViewportHovered);
+
 			ImGui::TreePop();
 		}
 
@@ -951,8 +923,45 @@ namespace platformer2d {
 
 		ImGui::Spacing();
 
-		if (Scene) {
-			UI::CreatorMenu(Scene);
+		const bool SceneActive = HasScene();
+		if (SceneActive) {
+			ImGui::BeginDisabled();
+		}
+		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			UI::BeginPropertyGrid();
+
+			ImGui::TableNextRow();
+			UI::Widget::DragFloat2("Gravity", GRAVITY, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
+			UI::Widget::DragFloat2("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
+			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
+			UI::Checkbox("Draw Circle", bDrawCircle);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
+			UI::Checkbox("Draw Circle Filled", bDrawCircleFilled);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
+			UI::Checkbox("Draw Line", bDrawLine);
+
+			ImGui::TableNextRow();
+			ImGui::Spacing();
+			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
+			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
+
+			UI::EndPropertyGrid();
+		}
+		if (SceneActive) {
+			ImGui::EndDisabled();
 		}
 
 		UI::Font::Pop();
@@ -1213,6 +1222,7 @@ namespace platformer2d {
 				if (Data.State == EKeyState::Pressed) {
 					SelectedActor.reset();
 					CSelectionContext::Select(LUUID::Null);
+					UI::ChainCreator.OnDeselect();
 				}
 				break;
 		}

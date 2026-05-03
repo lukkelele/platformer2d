@@ -52,8 +52,7 @@ namespace platformer2d::UI {
 	bool Begin(const char* WindowTitle, bool* Open, ImGuiWindowFlags WindowFlags)
 	{
 		UI::PushID();
-		ImGui::Begin(WindowTitle, Open, WindowFlags);
-
+		const bool WindowOpen = ImGui::Begin(WindowTitle, Open, WindowFlags);
 		if (ImGuiWindow* ThisWindow = ImGui::GetCurrentWindow(); ThisWindow != nullptr) {
 			if (ThisWindow->SkipItems) {
 				ImGui::End();
@@ -62,7 +61,7 @@ namespace platformer2d::UI {
 			}
 		}
 
-		return true;
+		return WindowOpen;
 	}
 
 	void End()
@@ -143,6 +142,7 @@ namespace platformer2d::UI {
 
 			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, RightSidebarFraction, nullptr, &DockID_Main);
 			ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.52f, nullptr, &DockID_Right);
+			ImGuiID DockID_Right_Bottom = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Down, 0.30f, nullptr, &DockID_Right);
 
 			ImGuiID DockID_Bottom = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Down, 0.32f, nullptr, &DockID_Main);
 			ImGuiID DockID_Bottom_Right = ImGui::DockBuilderSplitNode(DockID_Bottom, ImGuiDir_Right, 0.42f, nullptr, &DockID_Bottom);
@@ -158,6 +158,7 @@ namespace platformer2d::UI {
 			ImGui::DockBuilderDockWindow(PanelID::ContentBrowser, DockID_Bottom);
 			ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left);
 			ImGui::DockBuilderDockWindow(PanelID::SceneManager, DockID_Right);
+			ImGui::DockBuilderDockWindow(PanelID::TerrainCreator, DockID_Right_Bottom);
 
 			/* Finish the dockspace. */
 			ImGui::DockBuilderFinish(DockspaceID);
@@ -213,10 +214,6 @@ namespace platformer2d::UI {
 		UI::PrepareViewport();
 		const bool ViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
 		ImGui::PopStyleVar(2);
-		if (!ViewportOpen) {
-			UI::End(); /* ~Viewport */
-		}
-
 		return ViewportOpen;
 	}
 

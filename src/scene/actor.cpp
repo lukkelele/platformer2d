@@ -10,6 +10,7 @@ namespace platformer2d {
 		, Name(InSpec.Name)
 		, Texture(InSpec.Texture)
 		, Color(InSpec.Color)
+		, ActorFlags(InSpec.Flags)
 		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
 	{
 	}
@@ -19,6 +20,7 @@ namespace platformer2d {
 		, Name(InSpec.Name)
 		, Texture(InSpec.Texture)
 		, Color(InSpec.Color)
+		, ActorFlags(InSpec.Flags)
 		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
 	{
 		LK_TRACE_TAG("Actor", "Create: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);

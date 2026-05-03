@@ -3,4 +3,5 @@ project_library_sources(
 	math.h
 	math.cpp
 	shapes.h
+	shapes.cpp
 )

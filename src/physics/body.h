@@ -117,7 +117,7 @@ namespace platformer2d {
 		 * Destroys the current chain and rebuilds it from the new points.
 		 * Requires at least 4 points.
 		 */
-		void SetChainPoints(std::span<const glm::vec2> NewPoints, bool bLoop);
+		void SetChainPoints(std::span<const glm::vec2> NewPoints, bool bLoop, bool bBlockBothSides);
 
 		void SetScale(float Factor);
 		void SetScale(const glm::vec2& Factor);
@@ -183,10 +183,16 @@ namespace platformer2d {
 		FBodySpecification BodySpec;
 		b2BodyId ID = b2_nullBodyId;
 		b2ShapeId ShapeID = b2_nullShapeId; /* @todo: Should support multiple shapes */
-		b2ChainId ChainID = b2_nullChainId;
 		b2ShapeDef ShapeDef;
 		TShape Shape;
 		EShape ShapeType = EShape::None;
+
+		/**
+		 * @todo: Not a big fan of this at all... I would like to aggregate chains to a body in a better way.
+		 * Should be possible to do this once multiple shapes are supported.
+		 */
+		b2ChainId ChainID = b2_nullChainId;
+		b2ChainId ChainID2 = b2_nullChainId; /* Twin for two-sided chains. */
 
 		float DeltaTime = 0.0f;
 		bool bDirty = false;

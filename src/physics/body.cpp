@@ -210,6 +210,7 @@ namespace platformer2d {
 			ID = b2_nullBodyId;
 			ShapeID = b2_nullShapeId;
 			ChainID = b2_nullChainId;
+			ChainID2 = b2_nullChainId;
 		}
 
 		Build(NewSpec, Owner);
@@ -220,38 +221,59 @@ namespace platformer2d {
 		}
 	}
 
-	void CBody::SetChainPoints(std::span<const glm::vec2> NewPoints, const bool bLoop)
+	void CBody::SetChainPoints(std::span<const glm::vec2> NewPoints, const bool bLoop, const bool bBlockBothSides)
 	{
 		LK_ASSERT(ShapeType == EShape::Chain, "Body is not a chain");
 		LK_ASSERT(NewPoints.size() >= 4, "Chain requires at least 4 points");
-
 		FChain& LocalRef = std::get<FChain>(Shape);
 		LocalRef.Points.assign(NewPoints.begin(), NewPoints.end());
 		LocalRef.bLoop = bLoop;
+		LocalRef.bBlockBothSides = bBlockBothSides;
 		BodySpec.Shape.emplace<FChain>(LocalRef);
 
 		if (b2Chain_IsValid(ChainID)) {
 			b2DestroyChain(ChainID);
 			ChainID = b2_nullChainId;
 		}
-
-		std::vector<b2Vec2> Box2DPoints;
-		Box2DPoints.reserve(NewPoints.size());
-		for (const glm::vec2& P : NewPoints) {
-			Box2DPoints.push_back({P.x, P.y});
+		if (b2Chain_IsValid(ChainID2)) {
+			b2DestroyChain(ChainID2);
+			ChainID2 = b2_nullChainId;
 		}
 
 		const b2SurfaceMaterial Material = {
 			.friction = LocalRef.Friction,
 		};
+
+		/* Primary chain. */
+		constexpr bool REVERSED = true;
+		std::vector<b2Vec2> Primary = Utility::MakeBox2DChainPoints(NewPoints, bLoop, REVERSED);
 		b2ChainDef ChainDef = b2DefaultChainDef();
-		ChainDef.points = Box2DPoints.data();
-		ChainDef.count = static_cast<int>(Box2DPoints.size());
+		ChainDef.points = Primary.data();
+		ChainDef.count = static_cast<int>(Primary.size());
 		ChainDef.materials = &Material;
 		ChainDef.materialCount = 1;
 		ChainDef.isLoop = bLoop;
 		ChainDef.userData = ShapeDef.userData;
 		ChainID = b2CreateChain(ID, &ChainDef);
+
+		/**
+		 * Twin chain for two-sided collision.
+		 *
+		 * @fixme: This could probably be solved some other way that isn't this clunky
+		 * I really need to fix this entire class. It is growing large and ugly.
+		 */
+		constexpr bool NOT_REVERSED = true;
+		if (bBlockBothSides) {
+			std::vector<b2Vec2> Secondary = Utility::MakeBox2DChainPoints(NewPoints, bLoop, NOT_REVERSED);
+			b2ChainDef SecondaryDef = b2DefaultChainDef();
+			SecondaryDef.points = Secondary.data();
+			SecondaryDef.count = static_cast<int>(Secondary.size());
+			SecondaryDef.materials = &Material;
+			SecondaryDef.materialCount = 1;
+			SecondaryDef.isLoop = bLoop;
+			SecondaryDef.userData = ShapeDef.userData;
+			ChainID2 = b2CreateChain(ID, &SecondaryDef);
+		}
 
 		bDirty = true;
 	}
@@ -271,7 +293,7 @@ namespace platformer2d {
 			case EShape::Chain:
 			{
 				const FChain& ChainRef = std::get<FChain>(Shape);
-				SetChainPoints(ChainRef.Points, ChainRef.bLoop);
+				SetChainPoints(ChainRef.Points, ChainRef.bLoop, ChainRef.bBlockBothSides);
 				Ret = true;
 				break;
 			}
@@ -308,7 +330,7 @@ namespace platformer2d {
 					P.x *= Factor.x;
 					P.y *= Factor.y;
 				}
-				SetChainPoints(LocalRef.Points, LocalRef.bLoop);
+				SetChainPoints(LocalRef.Points, LocalRef.bLoop, LocalRef.bBlockBothSides);
 				break;
 			}
 			case EShape::None:
@@ -423,6 +445,7 @@ namespace platformer2d {
 			{
 				const auto& ShapeRef = std::get<FChain>(Shape);
 				Out << YAML::Key << "Loop" << YAML::Value << ShapeRef.bLoop;
+				Out << YAML::Key << "BlockBothSides" << YAML::Value << ShapeRef.bBlockBothSides;
 				Out << YAML::Key << "Friction" << YAML::Value << ShapeRef.Friction;
 				Out << YAML::Key << "Points" << YAML::Value << YAML::BeginSeq;
 				for (const glm::vec2& P : ShapeRef.Points) {
@@ -648,23 +671,33 @@ namespace platformer2d {
 				const FChain& ShapeRef = std::get<FChain>(Spec.Shape);
 				LK_ASSERT(ShapeRef.Points.size() >= 4, "Chain requires at least 4 points");
 
-				std::vector<b2Vec2> Box2DPoints;
-				Box2DPoints.reserve(ShapeRef.Points.size());
-				for (const glm::vec2& P : ShapeRef.Points) {
-					Box2DPoints.push_back({P.x, P.y});
-				}
-
 				const b2SurfaceMaterial Material = {
 					.friction = ShapeRef.Friction,
 				};
+
+				constexpr bool REVERSED = true;
+				std::vector<b2Vec2> Primary = Utility::MakeBox2DChainPoints(ShapeRef.Points, ShapeRef.bLoop, REVERSED);
 				b2ChainDef ChainDef = b2DefaultChainDef();
-				ChainDef.points = Box2DPoints.data();
-				ChainDef.count = static_cast<int>(Box2DPoints.size());
+				ChainDef.points = Primary.data();
+				ChainDef.count = static_cast<int>(Primary.size());
 				ChainDef.materials = &Material;
 				ChainDef.materialCount = 1;
 				ChainDef.isLoop = ShapeRef.bLoop;
 				ChainDef.userData = Owner;
 				ChainID = b2CreateChain(ID, &ChainDef);
+
+				constexpr bool NOT_REVERSED = false;
+				if (ShapeRef.bBlockBothSides) {
+					std::vector<b2Vec2> Secondary = Utility::MakeBox2DChainPoints(ShapeRef.Points, ShapeRef.bLoop, NOT_REVERSED);
+					b2ChainDef SecondaryDef = b2DefaultChainDef();
+					SecondaryDef.points = Secondary.data();
+					SecondaryDef.count = static_cast<int>(Secondary.size());
+					SecondaryDef.materials = &Material;
+					SecondaryDef.materialCount = 1;
+					SecondaryDef.isLoop = ShapeRef.bLoop;
+					SecondaryDef.userData = Owner;
+					ChainID2 = b2CreateChain(ID, &SecondaryDef);
+				}
 				break;
 			}
 			case EShape::Line:
