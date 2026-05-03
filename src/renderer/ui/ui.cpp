@@ -187,15 +187,15 @@ namespace platformer2d::UI {
 
 			ActorAttributes(ActorAttr);
 
+			UI::ShiftCursorY(30);
+			ChainCreatorWidget(Scene);
+
 			/* Menu: Physics body */
 			UI::ShiftCursorY(30);
 			PhysicsBodyMenu(PhysicsBodyData);
 			UI::ShiftCursorY(30);
 
 			ActorCreateButtons(Scene);
-
-			UI::ShiftCursorY(20);
-			ChainCreatorWidget(Scene);
 
 			ImGui::TreePop();
 		} else {
@@ -303,13 +303,14 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		static const std::string FuncID = LK_FUNCSIG;
-		ImGui::PushID(FuncID.c_str());
+		constexpr std::string_view FUNC_NAME = LK_FUNCSIG;
+		UI::FScopedID ScopedID(FUNC_NAME.data());
 
+		UI::Font::Push(EFontSize::Large, EFontModifier::Normal);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		const bool Opened = ImGui::TreeNodeEx("Chain (Terrain)", ImGuiTreeNodeFlags_SpanAvailWidth);
+		UI::Font::Pop();
 		if (!Opened) {
-			ImGui::PopID();
 			return;
 		}
 
@@ -327,16 +328,33 @@ namespace platformer2d::UI {
 			}
 		}
 
-		ImGui::Text("Editing: %s", EditActor ? std::string(EditActor->GetName()).c_str() : "<New chain>");
-		if (EditActor) {
-			ImGui::SameLine();
-			if (ImGui::SmallButton("Clear##ChainEdit")) {
-				State.bHasEditTarget = false;
+		const bool NewChain = (EditActor == nullptr);
+		if (BeginPropertyGrid(100)) {
+			Table::NextRow();
+			{
+				UI::FScopedFont ScopedFont(EFontSize::Large, EFontModifier::Normal);
+				Table::Label("Editing");
 			}
+			Table::NextColumn();
+			if (NewChain) {
+				UI::FScopedFont Font(EFontModifier::BoldItalic);
+				ImGui::Text("<New chain>");
+			} else {
+				ImGui::Text("%s", std::string(EditActor->GetName()).c_str());
+			}
+
+			if (EditActor) {
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Clear##ChainEdit")) {
+					State.bHasEditTarget = false;
+				}
+			}
+			EndPropertyGrid();
 		}
 
 		if (ImGui::SmallButton("Bind Selected")) {
 			const LUUID SelectedID = CSelectionContext::GetSelected();
+			LK_DEBUG_TAG("UI", "Attempting to bind selected: {}", SelectedID);
 			if (auto SelectedActor = Scene->GetActor(SelectedID); SelectedActor != nullptr) {
 				if (CBody* Body = SelectedActor->GetBody(); Body != nullptr) {
 					if (const FChain* Chain = Body->TryGetShape<EShape::Chain>(); Chain != nullptr) {
@@ -361,7 +379,7 @@ namespace platformer2d::UI {
 		bool PointsModified = false;
 		for (std::size_t Idx = 0; Idx < State.Points.size(); Idx++) {
 			ImGui::PushID(static_cast<int>(Idx));
-			ImGui::Text("[%2zu]", Idx);
+			ImGui::Text("%2zu", Idx);
 			ImGui::SameLine();
 
 			ImGui::SetNextItemWidth(160.0f);
@@ -451,7 +469,6 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::TreePop();
-		ImGui::PopID();
 	}
 
 	bool DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)

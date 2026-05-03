@@ -158,7 +158,7 @@ namespace platformer2d::UI::Widget {
 		FTransformComponent& TC = Actor->GetTransformComponent();
 		const CBody* Body = Actor->GetBody();
 
-		/* Actor name */
+		/* Actor name. */
 		auto Iter = ActorDataMap.find(Handle);
 		if (Iter != ActorDataMap.end()) {
 			ImGui::TableNextRow();
@@ -178,8 +178,8 @@ namespace platformer2d::UI::Widget {
 			}
 		}
 
-		/* Texture */
-		ImGui::TableNextRow();
+		/* Texture. */
+		Table::NextRow();
 		{
 			ETexture Texture = Actor->GetTexture();
 			if (UI::Widget::Combo::TextureDropdown(Texture)) {
@@ -188,8 +188,8 @@ namespace platformer2d::UI::Widget {
 			}
 		}
 
-		/* Color */
-		ImGui::TableNextRow();
+		/* Color. */
+		Table::NextRow();
 		{
 			const glm::vec4& ColorRef = Actor->GetColor();
 			EColor Color = EColor::White;
@@ -207,10 +207,10 @@ namespace platformer2d::UI::Widget {
 		}
 
 		/* Tick info. */
-		ImGui::TableNextRow();
+		UI::Table::NextRow();
 		{
-			UI::Table::Label("Tick");
-			UI::Table::NextColumn();
+			Table::Label("Tick");
+			Table::NextColumn();
 			ImGui::Text("%s", Actor->IsTickEnabled() ? "Enabled" : "Disabled");
 		}
 
@@ -218,43 +218,43 @@ namespace platformer2d::UI::Widget {
 			/* Body Type. */
 			ImGui::TableNextRow();
 			{
-				UI::Table::Label("Body Type");
-				UI::Table::NextColumn();
+				Table::Label("Body Type");
+				Table::NextColumn();
 				ImGui::Text("%s", Enum::ToString(Body->GetType()));
 			}
 
 			/* Body Size. */
 			ImGui::TableNextRow();
 			{
-				UI::Table::Label("Body Size");
-				UI::Table::NextColumn();
+				Table::Label("Body Size");
+				Table::NextColumn();
 				const glm::vec2 Size = Body->GetSize();
 				ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
 			}
 
 			/* Linear Velocity. */
-			ImGui::TableNextRow();
+			Table::NextRow();
 			{
-				UI::Table::Label("Linear Velocity");
-				UI::Table::NextColumn();
+				Table::Label("Linear Velocity");
+				Table::NextColumn();
 				const glm::vec2 V = Body->GetLinearVelocity();
 				ImGui::Text("(%.2f, %.2f)", V.x, V.y);
 			}
 
 			/* Angular Velocity. */
-			ImGui::TableNextRow();
+			Table::NextRow();
 			{
-				UI::Table::Label("Angular Velocity");
-				UI::Table::NextColumn();
+				Table::Label("Angular Velocity");
+				Table::NextColumn();
 				const float V = Body->GetAngularVelocity();
 				ImGui::Text("%.2f", V);
 			}
 
 			/* AABB. */
-			ImGui::TableNextRow();
+			Table::NextRow();
 			{
-				UI::Table::Label("AABB");
-				UI::Table::NextColumn();
+				Table::Label("AABB");
+				Table::NextColumn();
 				const FAABB AABB = Body->GetAABB();
 				ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
 				ImGui::SameLine(0.0f, 16.0f);
@@ -273,16 +273,16 @@ namespace platformer2d::UI::Widget {
 			/* Awake. */
 			ImGui::TableNextRow();
 			{
-				UI::Table::Label("Awake");
-				UI::Table::NextColumn();
+				Table::Label("Awake");
+				Table::NextColumn();
 				ImGui::Text("%s", Body->IsAwake() ? "Yes" : "No");
 			}
 
 			/* Sensor. */
 			ImGui::TableNextRow();
 			{
-				UI::Table::Label("Sensor");
-				UI::Table::NextColumn();
+				Table::Label("Sensor");
+				Table::NextColumn();
 				ImGui::Text("%s", Body->IsSensor() ? "Yes" : "No");
 			}
 		}
@@ -294,7 +294,7 @@ namespace platformer2d::UI::Widget {
 			UI::BeginPropertyGrid();
 
 			/* Outline enabled. */
-			ImGui::TableNextRow();
+			Table::NextRow();
 			{
 				UI::Table::Label("Enabled");
 				UI::Table::NextColumn();
@@ -305,7 +305,7 @@ namespace platformer2d::UI::Widget {
 			}
 
 			/* Outline thickness. */
-			ImGui::TableNextRow();
+			Table::NextRow();
 			{
 				float Thickness = Actor->GetOutlineThickness();
 				if (UI::Widget::DragFloat("Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
@@ -314,7 +314,7 @@ namespace platformer2d::UI::Widget {
 			}
 
 			/* Outline color. */
-			ImGui::TableNextRow();
+			Table::NextRow();
 			{
 				const glm::vec4& Color = Actor->GetOutlineColor();
 				glm::vec3 C = {Color.x, Color.y, Color.z};
@@ -334,25 +334,30 @@ namespace platformer2d::UI::Widget {
 	{
 		LK_ASSERT(Actor && Scene);
 		const LUUID Handle = Actor->GetHandle();
-		ImGui::PushID(Handle);
 
 		const bool IsSelected = CSelectionContext::IsSelected(Handle);
-
 		ImGuiTreeNodeFlags TreeNodeFlags = (IsSelected ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None);
 		TreeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(uint64_t)(uint32_t)Handle);
+		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(std::uint64_t)(std::uint32_t)Handle);
 		std::string_view Name = Actor->GetName();
-		char NodeName[84];
-		std::snprintf(NodeName, sizeof(NodeName), "%s", Name.data());
+		std::array<char, 84> NodeName = {0};
+		std::snprintf(NodeName.data(), NodeName.size(), "%s", Name.data());
 
-		const bool WasNodeOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
-		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName);
+		const bool WasOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
+		ImGui::SetNextItemStorageID(ActorImGuiID);
+		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName.data());
+		ImGui::PushID(Handle);
 		if (NodeOpened) {
 			ActorNode::Data(Actor);
 			UI::Widget::DrawComponents(Actor);
 			UI::Widget::ActorNode::DeleteButton(Actor, Scene);
 			ImGui::TreePop();
+
+			if (!WasOpen && !CSelectionContext::IsAnySelected()) {
+				LK_DEBUG_TAG("UI", "Selecting: {} ({})", NodeName.data(), Handle);
+				CSelectionContext::Select(Handle);
+			}
 		}
 
 		ImGui::PopID();
@@ -869,12 +874,13 @@ namespace platformer2d::UI::Widget {
 		const auto Actors = InScene->GetActors();
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large);
-		UI::BeginPropertyGrid(100);
-		ImGui::TableNextRow();
-		UI::Table::Label("Actors");
-		UI::Table::NextColumn();
-		ImGui::Text("%d", Actors.size() + 1); /* +1 for player */
-		UI::EndPropertyGrid();
+		if (UI::BeginPropertyGrid(80)) {
+			Table::NextRow();
+			UI::Table::Label("Actors");
+			UI::Table::NextColumn();
+			ImGui::Text("%d", Actors.size() + 1); /* +1 for player */
+			UI::EndPropertyGrid();
+		}
 		UI::Font::Pop();
 
 		ImGui::Dummy(ImVec2(0, 4));
