@@ -56,7 +56,7 @@ namespace platformer2d {
 		constexpr std::uint32_t MaxVertices = MaxQuads * 4;
 		constexpr std::uint32_t MaxIndices = MaxQuads * 6;
 		constexpr std::uint32_t MaxLineVertices = MaxLines * 2;
-		constexpr std::uint32_t MaxLineIndices = MaxLines * 6;
+		constexpr std::uint32_t MaxLineIndices = MaxLines * 2;
 
 		FRendererData Data{};
 		FDrawStatistics DrawStats;
@@ -85,7 +85,8 @@ namespace platformer2d {
 	void CRenderer::Initialize()
 	{
 		LK_VERIFY(bInitialized == false, "Initialize called multiple times");
-		const GLenum GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		const int GladInitResult = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		LK_VERIFY(GladInitResult != 0, "Failed to initialize GLAD");
 		LK_OpenGL_Verify(glEnable(GL_BLEND));
 		SetBlendFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		SetDepthTest(true);
@@ -98,7 +99,7 @@ namespace platformer2d {
 		OpenGL::Internal::SetupDebugContext(nullptr);
 #endif
 
-		for (int Idx = 0; Idx < CommandQueue.size(); Idx++) {
+		for (std::size_t Idx = 0; Idx < CommandQueue.size(); Idx++) {
 			CommandQueue[Idx] = new CRenderCommandQueue();
 		}
 
@@ -252,8 +253,8 @@ namespace platformer2d {
 		};
 
 		LineVAO = OpenGL::VertexArray::Create();
-		LineVBO = OpenGL::VertexBuffer::Create(MaxVertices * sizeof(FLineVertex), LineLayout);
-		LineVertexBufferBase = new FLineVertex[MaxVertices];
+		LineVBO = OpenGL::VertexBuffer::Create(MaxLineVertices * sizeof(FLineVertex), LineLayout);
+		LineVertexBufferBase = new FLineVertex[MaxLineVertices];
 		LineVertexBufferPtr = LineVertexBufferBase;
 
 		uint32_t* LineIndices = new uint32_t[MaxLineIndices];
@@ -550,7 +551,7 @@ namespace platformer2d {
 	void CRenderer::DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords,
 		const glm::vec4& Color, const float RotationDeg, const float OutlineThickness, const glm::vec4& OutlineColor)
 	{
-		DrawQuad({Pos.x, Pos.y, 0.0f}, Size, Texture, TexCoords, Color, RotationDeg);
+		DrawQuad({Pos.x, Pos.y, 0.0f}, Size, Texture, TexCoords, Color, RotationDeg, OutlineThickness, OutlineColor);
 	}
 
 	void CRenderer::DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, std::span<const glm::vec2, 4> TexCoords,

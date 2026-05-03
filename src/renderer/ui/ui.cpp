@@ -2,6 +2,7 @@
 
 #include "core/window.h"
 #include "core/input/keyboard.h"
+#include "core/selectioncontext.h"
 #include "game/instance.h"
 #include "game/gameplaysystem.h"
 #include "renderer/color.h"
@@ -19,6 +20,7 @@ namespace platformer2d::UI {
 	FViewportData ViewportData;
 	FActorAttributes ActorAttr;
 	FPhysicsBodyData PhysicsBodyData;
+	FChainCreatorState ChainCreator;
 
 	namespace {
 		constexpr auto& ColorArray = FColor::GetArray();
@@ -192,6 +194,9 @@ namespace platformer2d::UI {
 
 			ActorCreateButtons(Scene);
 
+			UI::ShiftCursorY(20);
+			ChainCreatorWidget(Scene);
+
 			ImGui::TreePop();
 		} else {
 			UI::Font::Pop();
@@ -264,6 +269,189 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::EndTable();
+	}
+
+	namespace {
+		void ApplyChainToActor(std::shared_ptr<CActor> Actor, FChainCreatorState& State)
+		{
+			LK_ASSERT(Actor);
+			LK_ASSERT(State.Points.size() >= 4);
+
+			CBody* Body = Actor->GetBody();
+			if (Body && Body->TryGetShape<EShape::Chain>() != nullptr) {
+				Body->SetChainPoints(State.Points, State.bLoop);
+			} else {
+				FBodySpecification BodySpec;
+				BodySpec.Type = EBodyType::Static;
+				BodySpec.Position = Actor->GetPosition();
+				BodySpec.Flags = EBodyFlag_PreSolveEvents;
+
+				FChain Chain;
+				Chain.Points = State.Points;
+				Chain.bLoop = State.bLoop;
+				BodySpec.Shape.emplace<FChain>(Chain);
+
+				Actor->ReplaceBody(BodySpec);
+			}
+			Actor->SetColor(FColor::Get(State.Color));
+		}
+	}
+
+	void ChainCreatorWidget(std::shared_ptr<CScene> Scene)
+	{
+		if (!Scene) {
+			return;
+		}
+
+		static const std::string FuncID = LK_FUNCSIG;
+		ImGui::PushID(FuncID.c_str());
+
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		const bool Opened = ImGui::TreeNodeEx("Chain (Terrain)", ImGuiTreeNodeFlags_SpanAvailWidth);
+		if (!Opened) {
+			ImGui::PopID();
+			return;
+		}
+
+		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
+		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+
+		FChainCreatorState& State = ChainCreator;
+
+		/* Edit target binding. */
+		std::shared_ptr<CActor> EditActor = nullptr;
+		if (State.bHasEditTarget) {
+			EditActor = Scene->GetActor(State.EditTarget);
+			if (!EditActor) {
+				State.bHasEditTarget = false;
+			}
+		}
+
+		ImGui::Text("Editing: %s", EditActor ? std::string(EditActor->GetName()).c_str() : "<New chain>");
+		if (EditActor) {
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Clear##ChainEdit")) {
+				State.bHasEditTarget = false;
+			}
+		}
+
+		if (ImGui::SmallButton("Bind Selected")) {
+			const LUUID SelectedID = CSelectionContext::GetSelected();
+			if (auto SelectedActor = Scene->GetActor(SelectedID); SelectedActor != nullptr) {
+				if (CBody* Body = SelectedActor->GetBody(); Body != nullptr) {
+					if (const FChain* Chain = Body->TryGetShape<EShape::Chain>(); Chain != nullptr) {
+						State.EditTarget = SelectedID;
+						State.bHasEditTarget = true;
+						State.Points = Chain->Points;
+						State.bLoop = Chain->bLoop;
+					} else {
+						LK_WARN_TAG("UI", "Selected actor does not have a chain shape");
+					}
+				}
+			}
+		}
+
+		ImGui::InputText("Name", State.NameBuf.data(), State.NameBuf.size());
+		ImGui::Checkbox("Loop", &State.bLoop);
+		ColorDropdown(State.Color);
+
+		ImGui::Separator();
+		ImGui::Text("Points (%zu)", State.Points.size());
+
+		bool PointsModified = false;
+		for (std::size_t Idx = 0; Idx < State.Points.size(); Idx++) {
+			ImGui::PushID(static_cast<int>(Idx));
+			ImGui::Text("[%2zu]", Idx);
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(160.0f);
+			if (ImGui::DragFloat2("##Point", &State.Points[Idx].x, 0.05f, 0.0f, 0.0f, "%.3f")) {
+				PointsModified = true;
+			}
+
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Insert")) {
+				const glm::vec2 InsertAt = (Idx + 1 < State.Points.size())
+					? (State.Points[Idx] + State.Points[Idx + 1]) * 0.5f
+					: State.Points[Idx] + glm::vec2(0.5f, 0.0f);
+				State.Points.insert(State.Points.begin() + Idx + 1, InsertAt);
+				PointsModified = true;
+				ImGui::PopID();
+				break;
+			}
+			ImGui::SameLine();
+			const bool CanDelete = (State.Points.size() > 4);
+			if (!CanDelete) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::SmallButton("X")) {
+				State.Points.erase(State.Points.begin() + Idx);
+				PointsModified = true;
+				if (!CanDelete) {
+					ImGui::EndDisabled();
+				}
+				ImGui::PopID();
+				break;
+			}
+			if (!CanDelete) {
+				ImGui::EndDisabled();
+			}
+			ImGui::PopID();
+		}
+
+		if (ImGui::Button("Append Point")) {
+			const glm::vec2 Tail = State.Points.empty()
+				? glm::vec2(0.0f, 0.0f)
+				: (State.Points.back() + glm::vec2(0.5f, 0.0f));
+			State.Points.push_back(Tail);
+			PointsModified = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Reset")) {
+			State.Points = {
+				{ -1.0f, 0.0f},
+				{-0.50f, 0.0f},
+				{ 0.50f, 0.0f},
+				{  1.0f, 0.0f},
+			};
+			PointsModified = true;
+		}
+
+		ImGui::Separator();
+
+		const bool ValidPoints = State.Points.size() >= 4;
+		if (!ValidPoints) {
+			ImGui::TextColored(FColor::Convert<ImVec4>(RGBA32::Red), "Need at least 4 points");
+		}
+
+		if (!ValidPoints) {
+			ImGui::BeginDisabled();
+		}
+
+		if (EditActor) {
+			if (ImGui::Button("Apply", ImVec2(120, 32)) || (PointsModified && ValidPoints)) {
+				ApplyChainToActor(EditActor, State);
+			}
+		} else {
+			if (ImGui::Button("Create Chain", ImVec2(140, 32))) {
+				std::shared_ptr<CActor> Actor = CSpawner::CreateChain(
+					State.NameBuf.data(),
+					State.Points,
+					State.bLoop,
+					FColor::Get(State.Color));
+				if (Actor) {
+					State.EditTarget = Actor->GetHandle();
+					State.bHasEditTarget = true;
+				}
+			}
+		}
+
+		if (!ValidPoints) {
+			ImGui::EndDisabled();
+		}
+
+		ImGui::TreePop();
+		ImGui::PopID();
 	}
 
 	bool DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
