@@ -50,6 +50,23 @@ namespace platformer2d {
 				continue;
 			}
 
+			if (const CBody* Body = Actor->GetBody(); Body != nullptr) {
+				if (const FChain* Chain = Body->TryGetShape<EShape::Chain>(); Chain != nullptr) {
+					const glm::vec2 Origin = Body->GetPosition();
+					const glm::vec4& Color = Actor->GetColor();
+					const std::size_t Count = Chain->Points.size();
+					if (Count >= 2) {
+						const std::size_t Last = Chain->bLoop ? Count : (Count - 1);
+						for (std::size_t Idx = 0; Idx < Last; Idx++) {
+							const glm::vec2 P0 = Origin + Chain->Points[Idx];
+							const glm::vec2 P1 = Origin + Chain->Points[(Idx + 1) % Count];
+							CRenderer::DrawLine(P0, P1, Color, 4);
+						}
+					}
+					continue;
+				}
+			}
+
 			const FTransformComponent& TC = Actor->GetTransformComponent();
 			CRenderer::DrawQuad(
 				Actor->GetPosition(),

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 #include <box2d/box2d.h>
 #include <glm/glm.hpp>
 
@@ -64,6 +66,7 @@ namespace platformer2d {
 
 		const b2BodyId& GetID() const { return ID; }
 		const b2ShapeId& GetShapeID() const { return ShapeID; }
+		const b2ChainId& GetChainID() const { return ChainID; }
 		EBodyType GetType() const;
 
 		bool IsEnabled() const;
@@ -96,6 +99,25 @@ namespace platformer2d {
 		void SetShape(const b2Capsule& Capsule);
 		void SetShape(const b2Segment& Line);
 		bool Rebuild();
+
+		/**
+		 * @brief Update the size of the underlying shape in-place.
+		 * Currently supported for polygon shapes.
+		 */
+		void SetSize(const glm::vec2& InSize);
+
+		/**
+		 * @brief Replace the body's underlying spec, destroying and recreating
+		 * the box2d body and shape with the new parameters.
+		 */
+		void Replace(const FBodySpecification& NewSpec, CActor* Owner);
+
+		/**
+		 * @brief Update the chain's points in place.
+		 * Destroys the current chain and rebuilds it from the new points.
+		 * Requires at least 4 points.
+		 */
+		void SetChainPoints(std::span<const glm::vec2> NewPoints, bool bLoop);
 
 		void SetScale(float Factor);
 		void SetScale(const glm::vec2& Factor);
@@ -143,10 +165,12 @@ namespace platformer2d {
 	private:
 		void SetBodyDef(b2BodyDef& BodyDef, const FBodySpecification& Spec) const;
 
-		void ScalePolygon(const glm::vec2& Factor) const;
-		void ScaleLine(const glm::vec2& Factor) const;
-		void ScaleCapsule(const glm::vec2& Factor) const;
+		void ScalePolygon(const glm::vec2& Factor);
+		void ScaleLine(const glm::vec2& Factor);
+		void ScaleCapsule(const glm::vec2& Factor);
 		void RebuildPolygon();
+
+		void Build(const FBodySpecification& Spec, CActor* Owner);
 
 		static EBodyType DetermineBodyType(b2BodyType Type);
 
@@ -156,12 +180,13 @@ namespace platformer2d {
 		 * I don't want to duplicate values but I also do not
 		 * want to use it as mutable during the lifetime of the body.
 		 */
-		const FBodySpecification BodySpec;
-		b2BodyId ID;
-		b2ShapeId ShapeID; /* @todo: Should support multiple shapes */
+		FBodySpecification BodySpec;
+		b2BodyId ID = b2_nullBodyId;
+		b2ShapeId ShapeID = b2_nullShapeId; /* @todo: Should support multiple shapes */
+		b2ChainId ChainID = b2_nullChainId;
 		b2ShapeDef ShapeDef;
 		TShape Shape;
-		EShape ShapeType;
+		EShape ShapeType = EShape::None;
 
 		float DeltaTime = 0.0f;
 		bool bDirty = false;

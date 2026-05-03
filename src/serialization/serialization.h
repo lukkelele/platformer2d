@@ -328,6 +328,28 @@ namespace platformer2d::Serialization {
 				BodySpec.Shape.emplace<FCapsule>(Capsule);
 				break;
 			}
+			case EShape::Chain:
+			{
+				FChain Chain;
+				if (ShapeNode["Loop"]) {
+					Chain.bLoop = ShapeNode["Loop"].as<bool>();
+				}
+				if (ShapeNode["Friction"]) {
+					Chain.Friction = ShapeNode["Friction"].as<float>();
+				}
+				const YAML::Node Points = ShapeNode["Points"];
+				if (Points && Points.IsSequence()) {
+					Chain.Points.reserve(Points.size());
+					for (const YAML::Node& PointNode : Points) {
+						Chain.Points.push_back(PointNode.as<glm::vec2>());
+					}
+				}
+				LK_DEBUG("Deserialize: Chain: Points={} Loop={}", Chain.Points.size(), Chain.bLoop);
+				BodySpec.Shape.emplace<FChain>(Chain);
+				break;
+			}
+			case EShape::None:
+				break;
 		}
 
 		using PosType = decltype(BodySpec.Position);
