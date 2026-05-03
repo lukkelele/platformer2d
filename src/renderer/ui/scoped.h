@@ -13,7 +13,7 @@ namespace platformer2d::UI {
 	{
 	public:
 		template<typename T>
-		FORCEINLINE FScopedStyle(const ImGuiStyleVar StyleVar, const T Value) { ImGui::PushStyleVar(StyleVar, Value); }
+		FScopedStyle(const ImGuiStyleVar StyleVar, const T Value) { ImGui::PushStyleVar(StyleVar, Value); }
 		~FScopedStyle() { ImGui::PopStyleVar(); }
 
 	private:
@@ -25,11 +25,11 @@ namespace platformer2d::UI {
 	{
 	public:
 		template<typename T>
-		FORCEINLINE FScopedColor(const ImGuiCol ColorID, const T Color) { ImGui::PushStyleColor(ColorID, ImColor(Color).Value); }
+		FScopedColor(const ImGuiCol ColorID, const T Color) { ImGui::PushStyleColor(ColorID, ImColor(Color).Value); }
 		~FScopedColor() { ImGui::PopStyleColor(); }
-
-	private:
+		FScopedColor(FScopedColor&&) = delete;
 		FScopedColor(const FScopedColor&) = delete;
+		FScopedColor& operator=(FScopedColor&&) = delete;
 		FScopedColor& operator=(const FScopedColor&) = delete;
 	};
 
@@ -37,11 +37,11 @@ namespace platformer2d::UI {
 	{
 	public:
 		template<typename T>
-		FORCEINLINE FScopedID(const T ID) { ImGui::PushID(ID); }
+		FScopedID(const T ID) { ImGui::PushID(ID); }
 		~FScopedID() { ImGui::PopID(); }
-
-	private:
+		FScopedID(FScopedID&) = delete;
 		FScopedID(const FScopedID&) = delete;
+		FScopedID& operator=(FScopedID&&) = delete;
 		FScopedID& operator=(const FScopedID&) = delete;
 	};
 
@@ -49,7 +49,7 @@ namespace platformer2d::UI {
 	{
 	public:
 		template<typename ColorType, typename... OtherColors>
-		FORCEINLINE FScopedColorStack(const ImGuiCol FirstColorID,
+		FScopedColorStack(const ImGuiCol FirstColorID,
 			const ColorType FirstColor,
 			OtherColors&&... OtherColorPairs)
 			: Count((sizeof...(OtherColorPairs) / 2) + 1)
@@ -59,16 +59,16 @@ namespace platformer2d::UI {
 		}
 
 		~FScopedColorStack() { ImGui::PopStyleColor(Count); }
-
-	private:
+		FScopedColorStack(FScopedColorStack&&) = delete;
 		FScopedColorStack(const FScopedColorStack&) = delete;
+		FScopedColorStack& operator=(FScopedColorStack&&) = delete;
 		FScopedColorStack& operator=(const FScopedColorStack&) = delete;
 
 	private:
 		int Count = 0;
 
 		template<typename ColorType, typename... OtherColors>
-		FORCEINLINE void PushColor(const ImGuiCol ColorID,
+		void PushColor(const ImGuiCol ColorID,
 			const ColorType Color,
 			OtherColors&&... OtherColorPairs)
 		{
@@ -85,7 +85,7 @@ namespace platformer2d::UI {
 	{
 	public:
 		template<typename ValueType, typename... OtherStylePairs>
-		FORCEINLINE FScopedStyleStack(const ImGuiStyleVar FirstStyleVar,
+		FScopedStyleStack(const ImGuiStyleVar FirstStyleVar,
 			const ValueType FirstValue,
 			OtherStylePairs&&... OtherPairs)
 			: StackCount((sizeof...(OtherPairs) / 2) + 1)
@@ -95,16 +95,16 @@ namespace platformer2d::UI {
 		}
 
 		~FScopedStyleStack() { ImGui::PopStyleVar(StackCount); }
-
-	private:
+		FScopedStyleStack(FScopedStyleStack&&) = delete;
 		FScopedStyleStack(const FScopedStyleStack&) = delete;
+		FScopedStyleStack& operator=(FScopedStyleStack&&) = delete;
 		FScopedStyleStack& operator=(const FScopedStyleStack&) = delete;
 
 	private:
 		int StackCount = 0;
 
 		template<typename ValueType, typename... OtherStylePairs>
-		FORCEINLINE void PushStyle(const ImGuiStyleVar StyleVar,
+		void PushStyle(const ImGuiStyleVar StyleVar,
 			const ValueType Value,
 			OtherStylePairs&&... OtherPairs)
 		{
@@ -120,15 +120,23 @@ namespace platformer2d::UI {
 	class FScopedFont
 	{
 	public:
-		FORCEINLINE FScopedFont(ImFont* Font) { ImGui::PushFont(Font); }
-		FORCEINLINE FScopedFont(const EFont Font, const EFontSize Size = EFontSize::Regular, const EFontModifier Modifier = EFontModifier::Normal)
+		FScopedFont(ImFont* Font) { ImGui::PushFont(Font); }
+		FScopedFont(const EFont Font, const EFontSize Size = EFontSize::Regular, const EFontModifier Modifier = EFontModifier::Normal)
 		{
 			ImGui::PushFont(UI::Font::Get(Font, Size, Modifier));
 		}
+		FScopedFont(const EFontSize Size = EFontSize::Regular, const EFontModifier Modifier = EFontModifier::Normal)
+		{
+			ImGui::PushFont(UI::Font::Get(UI::Font::GetDefault(), Size, Modifier));
+		}
+		FScopedFont(const EFontModifier Modifier = EFontModifier::Normal, const EFontSize Size = EFontSize::Regular)
+		{
+			ImGui::PushFont(UI::Font::Get(UI::Font::GetDefault(), Size, Modifier));
+		}
 		~FScopedFont() { ImGui::PopFont(); }
-
-	private:
+		FScopedFont(FScopedFont&&) = delete;
 		FScopedFont(const FScopedFont&) = delete;
+		FScopedFont& operator=(FScopedFont&&) = delete;
 		FScopedFont& operator=(const FScopedFont&) = delete;
 	};
 
