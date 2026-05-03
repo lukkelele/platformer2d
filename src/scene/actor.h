@@ -87,6 +87,7 @@ namespace platformer2d {
 		const FTransformComponent& GetTransformComponent() const { return TransformComp; }
 		CBody* GetBody() { return Body ? Body.get() : nullptr; }
 		const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
+		void ReplaceBody(const FBodySpecification& NewSpec);
 		bool IsMoving() const;
 
 		bool IsTickEnabled() const { return bTickEnabled; }

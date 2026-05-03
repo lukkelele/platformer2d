@@ -66,11 +66,29 @@ namespace platformer2d {
 
 	void CActor::SetSize(const glm::vec2& InSize)
 	{
+		TransformComp.Scale.x = InSize.x;
+		TransformComp.Scale.y = InSize.y;
 		if (Body) {
-			LK_FATAL_TAG("Actor", "Not supported yet: {}", LK_FUNCSIG);
+			Body->SetSize(InSize);
+		}
+	}
+
+	void CActor::ReplaceBody(const FBodySpecification& NewSpec)
+	{
+		LK_TRACE_TAG("Actor", "ReplaceBody: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
+		if (Body) {
+			Body->Replace(NewSpec, this);
 		} else {
-			TransformComp.Scale.x = InSize.x;
-			TransformComp.Scale.y = InSize.y;
+			Body = std::make_unique<CBody>(NewSpec, this);
+		}
+
+		const glm::vec2 BodyPos = Body->GetPosition();
+		TransformComp.Translation.x = BodyPos.x;
+		TransformComp.Translation.y = BodyPos.y;
+		TransformComp.SetRotation2D(Body->GetRotation());
+
+		if (const FPolygon* Polygon = std::get_if<FPolygon>(&NewSpec.Shape); Polygon != nullptr) {
+			TransformComp.SetScale(Polygon->Size);
 		}
 	}
 

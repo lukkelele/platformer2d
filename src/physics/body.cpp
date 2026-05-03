@@ -7,54 +7,8 @@
 namespace platformer2d {
 
 	CBody::CBody(const FBodySpecification& Spec, CActor* Owner)
-		: BodySpec(Spec)
-		, GravityScale(Spec.GravityScale)
 	{
-		ShapeType = DetermineShapeType(Spec.Shape);
-
-		b2BodyDef BodyDef = b2DefaultBodyDef();
-		SetBodyDef(BodyDef, Spec);
-
-		ShapeDef = b2DefaultShapeDef();
-		ShapeDef.userData = Owner;
-
-		if (Spec.Flags & EBodyFlag_PreSolveEvents) {
-			ShapeDef.enablePreSolveEvents = true;
-		}
-		if (Spec.Flags & EBodyFlag_ContactEvents) {
-			ShapeDef.enableContactEvents = true;
-		}
-		if (Spec.Flags & EBodyFlag_SensorEvents) {
-			ShapeDef.enableSensorEvents = true;
-		}
-
-		ShapeDef.material.friction = Spec.Friction;
-		ShapeDef.isSensor = Spec.bSensor;
-
-		ID = CPhysicsWorld::CreateBody(BodyDef);
-		Shape = Spec.Shape;
-
-		if (std::holds_alternative<FPolygon>(Spec.Shape)) {
-			LK_ASSERT(ShapeType == EShape::Polygon);
-			const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
-			LK_ASSERT((ShapeRef.Size.x > 0.0f) && (ShapeRef.Size.y > 0.0f), "Invalid size");
-			/* Body-local space. */
-			b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
-			ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
-		} else if (std::holds_alternative<FLine>(Spec.Shape)) {
-			LK_ASSERT(ShapeType == EShape::Line);
-			LK_ASSERT(false);
-		} else if (std::holds_alternative<FCapsule>(Spec.Shape)) {
-			LK_ASSERT(ShapeType == EShape::Capsule);
-			const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
-			/* Body-local space. */
-			const b2Capsule Capsule = {
-				{ShapeRef.P0.x, ShapeRef.P0.y},
-				{ShapeRef.P1.x, ShapeRef.P1.y},
-				ShapeRef.Radius
-            };
-			ShapeID = b2CreateCapsuleShape(ID, &ShapeDef, &Capsule);
-		}
+		Build(Spec, Owner);
 
 		/* @fixme: Ugly fix since no scaling system is used between box2d scaling and pixels. */
 		SetMass(1.0f); /* @todo: Use body spec */
@@ -64,6 +18,7 @@ namespace platformer2d {
 	{
 		if (b2Body_IsValid(ID)) {
 			LK_TRACE_TAG("Body", "Destroy: {}", ID.index1);
+			/* Destroying the body destroys all attached shapes and chains. */
 			b2DestroyBody(ID);
 		}
 	}
@@ -209,6 +164,98 @@ namespace platformer2d {
 		b2Shape_SetSegment(ShapeID, &Line);
 	}
 
+	void CBody::SetSize(const glm::vec2& InSize)
+	{
+		LK_ASSERT((InSize.x > 0.0f) && (InSize.y > 0.0f), "Invalid size");
+		switch (ShapeType) {
+			case EShape::Polygon:
+			{
+				FPolygon& ShapeRef = std::get<FPolygon>(Shape);
+				ShapeRef.Size = InSize;
+				BodySpec.Shape.emplace<FPolygon>(ShapeRef);
+
+				const b2Polygon Polygon = b2MakeBox(InSize.x * 0.50f, InSize.y * 0.50f);
+				b2Shape_SetPolygon(ShapeID, &Polygon);
+
+				if (b2Body_GetType(ID) == b2_dynamicBody) {
+					b2Body_ApplyMassFromShapes(ID);
+				}
+
+				bDirty = true;
+				break;
+			}
+			case EShape::Capsule:
+			{
+				/* Uniformly scale the capsule along its existing axis. */
+				FCapsule& ShapeRef = std::get<FCapsule>(Shape);
+				const glm::vec2 Bounds = GetBoundingBox(ShapeRef);
+				const float ScaleX = (Bounds.x > 0.0f) ? (InSize.x / Bounds.x) : 1.0f;
+				const float ScaleY = (Bounds.y > 0.0f) ? (InSize.y / Bounds.y) : 1.0f;
+				ScaleCapsule({ScaleX, ScaleY});
+				break;
+			}
+			case EShape::Chain:
+			case EShape::Line:
+			case EShape::None:
+				LK_MARK_NOT_IMPLEMENTED();
+				break;
+		}
+	}
+
+	void CBody::Replace(const FBodySpecification& NewSpec, CActor* Owner)
+	{
+		LK_TRACE_TAG("Body", "Replace: {}", b2Body_IsValid(ID) ? ID.index1 : -1);
+		if (b2Body_IsValid(ID)) {
+			b2DestroyBody(ID);
+			ID = b2_nullBodyId;
+			ShapeID = b2_nullShapeId;
+			ChainID = b2_nullChainId;
+		}
+
+		Build(NewSpec, Owner);
+
+		/* @fixme: Mirror constructor behavior until mass is sourced from spec. */
+		if (ShapeType != EShape::Chain) {
+			SetMass(1.0f);
+		}
+	}
+
+	void CBody::SetChainPoints(std::span<const glm::vec2> NewPoints, const bool bLoop)
+	{
+		LK_ASSERT(ShapeType == EShape::Chain, "Body is not a chain");
+		LK_ASSERT(NewPoints.size() >= 4, "Chain requires at least 4 points");
+
+		FChain& LocalRef = std::get<FChain>(Shape);
+		LocalRef.Points.assign(NewPoints.begin(), NewPoints.end());
+		LocalRef.bLoop = bLoop;
+		BodySpec.Shape.emplace<FChain>(LocalRef);
+
+		if (b2Chain_IsValid(ChainID)) {
+			b2DestroyChain(ChainID);
+			ChainID = b2_nullChainId;
+		}
+
+		std::vector<b2Vec2> Box2DPoints;
+		Box2DPoints.reserve(NewPoints.size());
+		for (const glm::vec2& P : NewPoints) {
+			Box2DPoints.push_back({P.x, P.y});
+		}
+
+		const b2SurfaceMaterial Material = {
+			.friction = LocalRef.Friction,
+		};
+		b2ChainDef ChainDef = b2DefaultChainDef();
+		ChainDef.points = Box2DPoints.data();
+		ChainDef.count = static_cast<int>(Box2DPoints.size());
+		ChainDef.materials = &Material;
+		ChainDef.materialCount = 1;
+		ChainDef.isLoop = bLoop;
+		ChainDef.userData = ShapeDef.userData;
+		ChainID = b2CreateChain(ID, &ChainDef);
+
+		bDirty = true;
+	}
+
 	bool CBody::Rebuild()
 	{
 		bool Ret = false;
@@ -221,6 +268,13 @@ namespace platformer2d {
 				break;
 			case EShape::Capsule:
 				break;
+			case EShape::Chain:
+			{
+				const FChain& ChainRef = std::get<FChain>(Shape);
+				SetChainPoints(ChainRef.Points, ChainRef.bLoop);
+				Ret = true;
+				break;
+			}
 			case EShape::None:
 				LK_ASSERT(false);
 				break;
@@ -247,6 +301,16 @@ namespace platformer2d {
 			case EShape::Capsule:
 				ScaleCapsule(Factor);
 				break;
+			case EShape::Chain:
+			{
+				FChain& LocalRef = std::get<FChain>(Shape);
+				for (glm::vec2& P : LocalRef.Points) {
+					P.x *= Factor.x;
+					P.y *= Factor.y;
+				}
+				SetChainPoints(LocalRef.Points, LocalRef.bLoop);
+				break;
+			}
 			case EShape::None:
 				LK_ASSERT(false);
 				break;
@@ -289,6 +353,9 @@ namespace platformer2d {
 		} else if (ShapeType == EShape::Capsule) {
 			auto& Ref = std::get<FCapsule>(Shape);
 			return GetBoundingBox(Ref);
+		} else if (ShapeType == EShape::Chain) {
+			auto& Ref = std::get<FChain>(Shape);
+			return GetBoundingBox(Ref);
 		}
 
 		return {0.0f, 0.0f};
@@ -296,6 +363,21 @@ namespace platformer2d {
 
 	FAABB CBody::GetAABB() const
 	{
+		if (ShapeType == EShape::Chain) {
+			const FChain& ChainRef = std::get<FChain>(Shape);
+			if (ChainRef.Points.empty()) {
+				return FAABB{glm::vec2(0.0f), glm::vec2(0.0f)};
+			}
+			glm::vec2 Min = ChainRef.Points.front();
+			glm::vec2 Max = ChainRef.Points.front();
+			for (const glm::vec2& P : ChainRef.Points) {
+				Min = glm::min(Min, P);
+				Max = glm::max(Max, P);
+			}
+			const glm::vec2 BodyPos = GetPosition();
+			return FAABB{Min + BodyPos, Max + BodyPos};
+		}
+
 		const b2AABB AABB = b2Shape_GetAABB(ShapeID);
 		const glm::vec2 Min = glm::vec2(AABB.lowerBound.x, AABB.lowerBound.y);
 		const glm::vec2 Max = glm::vec2(AABB.upperBound.x, AABB.upperBound.y);
@@ -336,6 +418,22 @@ namespace platformer2d {
 				Out << YAML::Key << "Radius" << YAML::Value << ShapeRef.Radius;
 				break;
 			}
+
+			case EShape::Chain:
+			{
+				const auto& ShapeRef = std::get<FChain>(Shape);
+				Out << YAML::Key << "Loop" << YAML::Value << ShapeRef.bLoop;
+				Out << YAML::Key << "Friction" << YAML::Value << ShapeRef.Friction;
+				Out << YAML::Key << "Points" << YAML::Value << YAML::BeginSeq;
+				for (const glm::vec2& P : ShapeRef.Points) {
+					Out << P;
+				}
+				Out << YAML::EndSeq;
+				break;
+			}
+
+			case EShape::None:
+				break;
 		}
 		Out << YAML::EndMap;
 		/* ~Shape */
@@ -351,17 +449,7 @@ namespace platformer2d {
 
 	std::string CBody::ToString(const FBodySpecification& Spec)
 	{
-		EShape ShapeType = EShape::None;
-		if (IsShape<EShape::Polygon>(Spec.Shape)) {
-			ShapeType = EShape::Polygon;
-		} else if (IsShape<EShape::Line>(Spec.Shape)) {
-			ShapeType = EShape::Line;
-		} else if (IsShape<EShape::Capsule>(Spec.Shape)) {
-			ShapeType = EShape::Capsule;
-		} else {
-			ShapeType = EShape::None;
-		}
-
+		const EShape ShapeType = DetermineShapeType(Spec.Shape);
 		return Format("[BodySpecification] ShapeType={} Pos={} Flags={} MotionLock={} Density={}",
 			Enum::ToString(ShapeType), Spec.Position, Spec.Flags, Spec.MotionLock, Spec.Density);
 	}
@@ -401,6 +489,8 @@ namespace platformer2d {
 			const auto& ShapeRef = std::get<FCapsule>(Spec.Shape);
 			LK_UNUSED(ShapeRef);
 			BodyDef.rotation = b2MakeRot(0);
+		} else if (ShapeType == EShape::Chain) {
+			BodyDef.rotation = b2MakeRot(0);
 		}
 
 		if (Spec.MotionLock != EMotionLock_None) {
@@ -419,44 +509,65 @@ namespace platformer2d {
 		}
 	}
 
-	void CBody::ScalePolygon(const glm::vec2& Factor) const
+	void CBody::ScalePolygon(const glm::vec2& Factor)
 	{
 		LK_ASSERT(ShapeType == EShape::Polygon);
-		b2Polygon Shape = b2Shape_GetPolygon(ShapeID);
-		for (int Idx = 0; Idx < Shape.count; Idx++) {
-			Shape.vertices[Idx].x *= Factor.x;
-			Shape.vertices[Idx].y *= Factor.y;
-			LK_DEBUG_TAG("Body", "Vertex[{}]: ({}, {})", Idx, Shape.vertices[Idx].x, Shape.vertices[Idx].y);
-		}
-		Shape.radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
-		LK_DEBUG_TAG("Body", "Polygon radius: {}", Shape.radius);
+		FPolygon& LocalRef = std::get<FPolygon>(Shape);
+		LocalRef.Size.x *= Factor.x;
+		LocalRef.Size.y *= Factor.y;
+		LocalRef.Radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
+		BodySpec.Shape.emplace<FPolygon>(LocalRef);
 
-		b2Shape_SetPolygon(ShapeID, &Shape);
+		b2Polygon Box2DShape = b2Shape_GetPolygon(ShapeID);
+		for (int Idx = 0; Idx < Box2DShape.count; Idx++) {
+			Box2DShape.vertices[Idx].x *= Factor.x;
+			Box2DShape.vertices[Idx].y *= Factor.y;
+			LK_DEBUG_TAG("Body", "Vertex[{}]: ({}, {})", Idx, Box2DShape.vertices[Idx].x, Box2DShape.vertices[Idx].y);
+		}
+		Box2DShape.radius *= Factor.x;
+		LK_DEBUG_TAG("Body", "Polygon radius: {}", Box2DShape.radius);
+
+		b2Shape_SetPolygon(ShapeID, &Box2DShape);
 	}
 
-	void CBody::ScaleLine(const glm::vec2& Factor) const
+	void CBody::ScaleLine(const glm::vec2& Factor)
 	{
 		LK_ASSERT(ShapeType == EShape::Line);
-		b2Segment Shape = b2Shape_GetSegment(ShapeID);
-		Shape.point1.x *= Factor.x;
-		Shape.point1.y *= Factor.y;
-		Shape.point2.x *= Factor.x;
-		Shape.point2.y *= Factor.y;
-		b2Shape_SetSegment(ShapeID, &Shape);
+		FLine& LocalRef = std::get<FLine>(Shape);
+		LocalRef.P0.x *= Factor.x;
+		LocalRef.P0.y *= Factor.y;
+		LocalRef.P1.x *= Factor.x;
+		LocalRef.P1.y *= Factor.y;
+		BodySpec.Shape.emplace<FLine>(LocalRef);
+
+		b2Segment Box2DShape = b2Shape_GetSegment(ShapeID);
+		Box2DShape.point1.x *= Factor.x;
+		Box2DShape.point1.y *= Factor.y;
+		Box2DShape.point2.x *= Factor.x;
+		Box2DShape.point2.y *= Factor.y;
+		b2Shape_SetSegment(ShapeID, &Box2DShape);
 	}
 
-	void CBody::ScaleCapsule(const glm::vec2& Factor) const
+	void CBody::ScaleCapsule(const glm::vec2& Factor)
 	{
 		LK_ASSERT(ShapeType == EShape::Capsule);
-		b2Capsule Shape = b2Shape_GetCapsule(ShapeID);
-		Shape.center1.x *= Factor.x;
-		Shape.center1.y *= Factor.y;
-		Shape.center2.x *= Factor.x;
-		Shape.center2.y *= Factor.y;
-		Shape.radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
-		LK_DEBUG_TAG("Body", "New capsule radius: {}", Shape.radius);
+		FCapsule& LocalRef = std::get<FCapsule>(Shape);
+		LocalRef.P0.x *= Factor.x;
+		LocalRef.P0.y *= Factor.y;
+		LocalRef.P1.x *= Factor.x;
+		LocalRef.P1.y *= Factor.y;
+		LocalRef.Radius *= Factor.x; /* @fixme: Determine way to unify the use of xy here */
+		BodySpec.Shape.emplace<FCapsule>(LocalRef);
 
-		b2Shape_SetCapsule(ShapeID, &Shape);
+		b2Capsule Box2DShape = b2Shape_GetCapsule(ShapeID);
+		Box2DShape.center1.x *= Factor.x;
+		Box2DShape.center1.y *= Factor.y;
+		Box2DShape.center2.x *= Factor.x;
+		Box2DShape.center2.y *= Factor.y;
+		Box2DShape.radius *= Factor.x;
+		LK_DEBUG_TAG("Body", "New capsule radius: {}", Box2DShape.radius);
+
+		b2Shape_SetCapsule(ShapeID, &Box2DShape);
 	}
 
 	void CBody::RebuildPolygon()
@@ -470,13 +581,99 @@ namespace platformer2d {
 		b2Polygon Polygon = b2MakeBox(HalfX, HalfY);
 		Polygon.radius = ShapeRef.Radius;
 
-		b2Shape_SetPolygon(ShapeID, &Polygon);
+		/* Destroy and recreate the shape so the body's broad-phase entry rebuilds cleanly. */
+		if (b2Shape_IsValid(ShapeID)) {
+			b2DestroyShape(ShapeID, false);
+		}
+		ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
+		BodySpec.Shape.emplace<FPolygon>(ShapeRef);
 
 		if (b2Body_GetType(ID) == b2_dynamicBody) {
 			b2Body_ApplyMassFromShapes(ID);
 		}
 
 		bDirty = true;
+	}
+
+	void CBody::Build(const FBodySpecification& Spec, CActor* Owner)
+	{
+		BodySpec = Spec;
+		GravityScale = Spec.GravityScale;
+		ShapeType = DetermineShapeType(Spec.Shape);
+
+		b2BodyDef BodyDef = b2DefaultBodyDef();
+		SetBodyDef(BodyDef, Spec);
+
+		ShapeDef = b2DefaultShapeDef();
+		ShapeDef.userData = Owner;
+
+		if (Spec.Flags & EBodyFlag_PreSolveEvents) {
+			ShapeDef.enablePreSolveEvents = true;
+		}
+		if (Spec.Flags & EBodyFlag_ContactEvents) {
+			ShapeDef.enableContactEvents = true;
+		}
+		if (Spec.Flags & EBodyFlag_SensorEvents) {
+			ShapeDef.enableSensorEvents = true;
+		}
+
+		ShapeDef.material.friction = Spec.Friction;
+		ShapeDef.isSensor = Spec.bSensor;
+
+		ID = CPhysicsWorld::CreateBody(BodyDef);
+		Shape = Spec.Shape;
+
+		switch (ShapeType) {
+			case EShape::Polygon:
+			{
+				const FPolygon& ShapeRef = std::get<FPolygon>(Spec.Shape);
+				LK_ASSERT((ShapeRef.Size.x > 0.0f) && (ShapeRef.Size.y > 0.0f), "Invalid size");
+				const b2Polygon Polygon = b2MakeBox(ShapeRef.Size.x * 0.50f, ShapeRef.Size.y * 0.50f);
+				ShapeID = b2CreatePolygonShape(ID, &ShapeDef, &Polygon);
+				break;
+			}
+			case EShape::Capsule:
+			{
+				const FCapsule& ShapeRef = std::get<FCapsule>(Spec.Shape);
+				const b2Capsule Capsule = {
+					{ShapeRef.P0.x, ShapeRef.P0.y},
+					{ShapeRef.P1.x, ShapeRef.P1.y},
+					ShapeRef.Radius
+                };
+				ShapeID = b2CreateCapsuleShape(ID, &ShapeDef, &Capsule);
+				break;
+			}
+			case EShape::Chain:
+			{
+				const FChain& ShapeRef = std::get<FChain>(Spec.Shape);
+				LK_ASSERT(ShapeRef.Points.size() >= 4, "Chain requires at least 4 points");
+
+				std::vector<b2Vec2> Box2DPoints;
+				Box2DPoints.reserve(ShapeRef.Points.size());
+				for (const glm::vec2& P : ShapeRef.Points) {
+					Box2DPoints.push_back({P.x, P.y});
+				}
+
+				const b2SurfaceMaterial Material = {
+					.friction = ShapeRef.Friction,
+				};
+				b2ChainDef ChainDef = b2DefaultChainDef();
+				ChainDef.points = Box2DPoints.data();
+				ChainDef.count = static_cast<int>(Box2DPoints.size());
+				ChainDef.materials = &Material;
+				ChainDef.materialCount = 1;
+				ChainDef.isLoop = ShapeRef.bLoop;
+				ChainDef.userData = Owner;
+				ChainID = b2CreateChain(ID, &ChainDef);
+				break;
+			}
+			case EShape::Line:
+				LK_ASSERT(false);
+				break;
+			case EShape::None:
+				LK_ASSERT(false);
+				break;
+		}
 	}
 
 	EBodyType CBody::DetermineBodyType(const b2BodyType Type)

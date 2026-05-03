@@ -64,6 +64,41 @@ namespace platformer2d {
 		return Actor;
 	}
 
+	std::shared_ptr<CActor> CSpawner::CreateChain(std::string_view Name, std::span<const glm::vec2> Points,
+		const bool bLoop, const glm::vec4& Color)
+	{
+		LK_VERIFY(Points.size() >= 4, "Chain requires at least 4 points");
+
+		std::string ActorName(Name);
+		if (ActorName.empty()) {
+			ActorName = Format("Chain{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+		}
+		CGameInstance* GameInstance = CGameInstance::Get();
+		LK_VERIFY(GameInstance);
+		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+
+		FActorSpecification ActorSpec;
+		ActorSpec.Name = ActorName;
+		ActorSpec.Texture = ETexture::White;
+		ActorSpec.Color = Color;
+		/* Chain actors don't render as a quad - skip the default sprite. */
+		ActorSpec.OutlineEnabled = false;
+
+		FBodySpecification BodySpec;
+		BodySpec.Type = EBodyType::Static;
+		BodySpec.Position = {0.0f, 0.0f};
+		BodySpec.Flags = EBodyFlag_PreSolveEvents;
+
+		FChain Chain;
+		Chain.Points.assign(Points.begin(), Points.end());
+		Chain.bLoop = bLoop;
+		BodySpec.Shape.emplace<FChain>(Chain);
+
+		LK_INFO_TAG("Spawner", "Create chain: {} ({} points, loop={})", ActorName, Points.size(), bLoop);
+		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
+		return Actor;
+	}
+
 	std::shared_ptr<CActor> CSpawner::CreateSpawnpoint(std::string_view Name, const glm::vec2& Pos)
 	{
 		LK_VERIFY(!Name.empty(), "Name cannot be empty");

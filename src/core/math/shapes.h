@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -12,10 +13,11 @@ namespace platformer2d {
 
 	enum class EShape
 	{
-		None    = 0,
+		None = 0,
 		Polygon = LK_BIT(1),
-		Line    = LK_BIT(2),
+		Line = LK_BIT(2),
 		Capsule = LK_BIT(3),
+		Chain = LK_BIT(4),
 	};
 
 	struct FPolygon
@@ -38,7 +40,19 @@ namespace platformer2d {
 		glm::vec2 P1 = {0.0f, 0.0f};
 	};
 
-	using TShape = std::variant<std::monostate, FPolygon, FCapsule, FLine>;
+	/**
+	 * @struct FChain
+	 * @brief A polygonal chain (open or closed) used for terrain.
+	 * Points are stored in body-local space.
+	 */
+	struct FChain
+	{
+		std::vector<glm::vec2> Points;
+		bool bLoop = false;
+		float Friction = 0.60f;
+	};
+
+	using TShape = std::variant<std::monostate, FPolygon, FCapsule, FLine, FChain>;
 
 	template<EShape>
 	struct TShapeMap;
@@ -57,6 +71,11 @@ namespace platformer2d {
 	{
 		using Type = FCapsule;
 	};
+	template<>
+	struct TShapeMap<EShape::Chain>
+	{
+		using Type = FChain;
+	};
 
 	template<EShape S>
 	using TShapeType = typename TShapeMap<S>::Type;
@@ -66,7 +85,8 @@ namespace platformer2d {
 		concept IsShapeVariant = std::disjunction_v<
 			std::is_same<T, FPolygon>,
 			std::is_same<T, FLine>,
-			std::is_same<T, FCapsule>>;
+			std::is_same<T, FCapsule>,
+			std::is_same<T, FChain>>;
 
 		template<typename T>
 		struct TAlwaysFalse
@@ -92,6 +112,8 @@ namespace platformer2d {
 			return EShape::Line;
 		} else if (std::holds_alternative<FCapsule>(S)) {
 			return EShape::Capsule;
+		} else if (std::holds_alternative<FChain>(S)) {
+			return EShape::Chain;
 		} else {
 			return EShape::None;
 		}
@@ -133,6 +155,21 @@ namespace platformer2d {
 		return AbsSeg + glm::vec2(2.0f * S.Radius, 2.0f * S.Radius);
 	}
 
+	template<>
+	inline glm::vec2 GetBoundingBox<FChain>(const FChain& S)
+	{
+		if (S.Points.empty()) {
+			return glm::vec2(0.0f, 0.0f);
+		}
+		glm::vec2 Min = S.Points.front();
+		glm::vec2 Max = S.Points.front();
+		for (const glm::vec2& P : S.Points) {
+			Min = glm::min(Min, P);
+			Max = glm::max(Max, P);
+		}
+		return Max - Min;
+	}
+
 	namespace Enum {
 		inline const char* ToString(const EShape Shape)
 		{
@@ -144,6 +181,7 @@ namespace platformer2d {
 				_(Polygon);
 				_(Line);
 				_(Capsule);
+				_(Chain);
 				default:
 					LK_THROW_ENUM_ERR(Shape);
 					break;
