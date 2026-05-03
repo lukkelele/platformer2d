@@ -4,7 +4,7 @@
 
 namespace platformer2d {
 
-	enum class EMouseButton : uint16_t
+	enum class EMouseButton : std::uint16_t
 	{
 		Button0, /* Left   */
 		Button1, /* Right  */
@@ -13,6 +13,7 @@ namespace platformer2d {
 		Button4,
 		Button5,
 		None,
+		COUNT,
 
 		/* Keep aliases below the rest. */
 		Left = Button0,
@@ -52,6 +53,7 @@ namespace platformer2d {
 				case EMouseButton::Button4: return "Button4";
 				case EMouseButton::Button5: return "Button5";
 				case EMouseButton::None:    return "None";
+				case EMouseButton::COUNT:   return "COUNT";
 			}
 			return nullptr;
 		}

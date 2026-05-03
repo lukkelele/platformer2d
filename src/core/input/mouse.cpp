@@ -12,6 +12,10 @@ namespace platformer2d {
 	{
 		ActiveWindow = CWindow::Get()->GetGlfwWindow();
 		LK_VERIFY(ActiveWindow);
+
+		for (std::size_t Idx = 0; Idx < std::to_underlying(EMouseButton::COUNT); Idx++) {
+			ButtonDataMap[static_cast<EMouseButton>(Idx)] = {};
+		}
 	}
 
 	void CMouse::Enable()
@@ -22,15 +26,25 @@ namespace platformer2d {
 	{
 	}
 
+	bool CMouse::IsDown(const EMouseButton Button)
+	{
+		const EMouseButtonState State = ButtonDataMap.at(Button).State;
+		return (State == EMouseButtonState::Pressed) || (State == EMouseButtonState::Held);
+	}
+
+	EMouseButtonState CMouse::GetState(const EMouseButton Button)
+	{
+		return ButtonDataMap.at(Button).State;
+	}
+
 	FMouseButtonData& CMouse::UpdateButtonState(const EMouseButton Button, const EMouseButtonState NewState)
 	{
-		FMouseButtonData& Data = ButtonDataMap[Button];
+		FMouseButtonData& Data = ButtonDataMap.at(Button);
 		Data.Button = Button;
 		Data.OldState = Data.State;
 		Data.State = NewState;
 
 		OnButtonPressed.Broadcast(Data);
-
 		return Data;
 	}
 
