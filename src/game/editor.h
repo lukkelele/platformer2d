@@ -14,42 +14,42 @@ namespace platformer2d {
 		CEditor();
 		~CEditor();
 
-		virtual void Initialize() override;
-		virtual void Destroy() override;
+		void Initialize() override;
+		void Destroy() override;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
+		void OnAttach() override;
+		void OnDetach() override;
 
-		virtual void Tick(float InDeltaTime) override;
-		virtual void RenderUI() override;
+		void Tick(float InDeltaTime) override;
+		void RenderUI() override;
 
-		virtual CCamera* GetActiveCamera() const override;
-		virtual std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
-		virtual std::shared_ptr<CScene> GetScene() const override { return Scene; }
-		virtual void OpenScene(const std::filesystem::path& ScenePath) override;
-		virtual void CloseScene() override;
+		CCamera* GetActiveCamera() const override;
+		std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
+		std::shared_ptr<CScene> GetScene() const override { return Scene; }
+		void OpenScene(const std::filesystem::path& ScenePath) override;
+		void CloseScene() override;
 
-		virtual void PauseGame() override;
-		virtual void ResumeGame() override;
-		virtual bool IsGamePaused() override;
+		void PauseGame() override;
+		void ResumeGame() override;
+		bool IsGamePaused() override;
 
-		virtual uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
-		virtual uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
+		uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
+		uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
-		virtual void OnSensorBeginEvent(const CSensorBeginEvent& Event) override;
-		virtual void OnSensorEndEvent(const CSensorEndEvent& Event) override;
-		virtual void OnContactBeginEvent(const CContactBeginEvent& Event) override;
-		virtual void OnContactEndEvent(const CContactEndEvent& Event) override;
+		void OnSensorBeginEvent(const CSensorBeginEvent& Event) override;
+		void OnSensorEndEvent(const CSensorEndEvent& Event) override;
+		void OnContactBeginEvent(const CContactBeginEvent& Event) override;
+		void OnContactEndEvent(const CContactEndEvent& Event) override;
 
-		virtual bool Serialize(const std::filesystem::path& OutFile) const override;
-		virtual bool Deserialize(const std::filesystem::path& InFile) override;
+		bool Serialize(const std::filesystem::path& OutFile) const override;
+		bool Deserialize(const std::filesystem::path& InFile) override;
 
 	private:
 		void UpdateEditorViewportState();
 		void UpdateEditorViewportBounds();
-		virtual void UpdateViewportBounds() override;
-		virtual glm::vec2 GetMouseInViewportSpace() override;
-		virtual glm::vec2 GetMouseInWorldSpace(const CCamera& Camera) override;
+		void UpdateViewportBounds() override;
+		glm::vec2 GetMouseInViewportSpace() override;
+		glm::vec2 GetMouseInWorldSpace(const CCamera& Camera) override;
 
 		void CreatePlayer();
 
