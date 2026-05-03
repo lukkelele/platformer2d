@@ -27,8 +27,11 @@ namespace platformer2d {
 	public:
 		CKeyboard() = delete;
 		~CKeyboard() = default;
-		CKeyboard(const CKeyboard&) = delete;
 		CKeyboard(CKeyboard&&) = delete;
+		CKeyboard(const CKeyboard&) = delete;
+
+		CKeyboard& operator=(CKeyboard&&) = delete;
+		CKeyboard& operator=(const CKeyboard&) = delete;
 
 		static void Initialize();
 		static void Update();
@@ -40,6 +43,16 @@ namespace platformer2d {
 		static bool IsAnyKeysDown(std::span<const EKey> Keys);
 		static bool IsAnyKeysDown(std::span<const EKey> Keys, std::vector<EKey>& Result);
 		static bool IsAnyKeysDown(const EKey* KeysArray, std::size_t N);
+
+		template<typename... T>
+			requires(sizeof...(T) > 0) && (std::same_as<std::remove_cvref_t<T>, EKey> && ...)
+		static bool IsAnyKeysDown(T&&... Keys)
+		{
+			if (!ActiveWindow) {
+				return false;
+			}
+			return (IsKeyDownUnchecked(Keys) || ...);
+		}
 
 		static FKeyData& GetKeyData(EKey Key);
 		static std::size_t GetPressedKeys(std::vector<EKey>& InKeys);
@@ -57,13 +70,13 @@ namespace platformer2d {
 		}
 
 	private:
-		CKeyboard& operator=(const CKeyboard&) = delete;
-		CKeyboard& operator=(CKeyboard&&) = delete;
+		static bool IsKeyDownUnchecked(EKey Key);
 
 	public:
 		static inline FOnKeyPressed OnKeyPressed;
 
 	private:
+		static inline GLFWwindow* ActiveWindow = nullptr;
 		static inline std::map<EKey, FKeyData> KeyDataMap{};
 
 		using FKeyHeldData = std::pair<std::chrono::steady_clock::time_point, std::chrono::steady_clock::time_point>;

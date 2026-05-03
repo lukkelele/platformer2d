@@ -5,10 +5,6 @@
 
 namespace platformer2d {
 
-	namespace {
-		GLFWwindow* ActiveWindow = nullptr;
-	}
-
 	void CKeyboard::Initialize()
 	{
 		ActiveWindow = CWindow::Get()->GetGlfwWindow();
@@ -45,6 +41,12 @@ namespace platformer2d {
 			return false;
 		}
 
+		const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
+		return ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT));
+	}
+
+	bool CKeyboard::IsKeyDownUnchecked(const EKey Key)
+	{
 		const int KeyState = glfwGetKey(ActiveWindow, static_cast<int32_t>(Key));
 		return ((KeyState == GLFW_PRESS) || (KeyState == GLFW_REPEAT));
 	}
