@@ -146,6 +146,24 @@ namespace platformer2d::UI {
 	void ActorCreateButtons(std::shared_ptr<CScene> Scene);
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
+	struct FChainCreatorState
+	{
+		std::vector<glm::vec2> Points = {
+			{ -1.0f, 0.0f},
+			{-0.50f, 0.0f},
+			{ 0.50f, 0.0f},
+			{  1.0f, 0.0f},
+		};
+		bool bLoop = false;
+		EColor Color = EColor::White;
+		std::array<char, 64> NameBuf = {0};
+		/* When non-null, the widget binds to an existing chain actor for live editing. */
+		LUUID EditTarget{};
+		bool bHasEditTarget = false;
+	};
+	extern FChainCreatorState ChainCreator;
+	void ChainCreatorWidget(std::shared_ptr<CScene> Scene);
+
 	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 		const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 
