@@ -10,6 +10,7 @@ namespace platformer2d {
 	struct LUUID
 	{
 		using SizeType = std::uint64_t;
+		static constexpr SizeType Null = {0};
 
 		LUUID();
 		LUUID(const SizeType InUUID);
