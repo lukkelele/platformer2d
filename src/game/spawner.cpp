@@ -59,16 +59,15 @@ namespace platformer2d {
 		};
 		BodySpec.Shape.emplace<FPolygon>(Polygon);
 
-		LK_INFO_TAG("Spawner", "Create: {}  Texture={} Color={}", Name, Enum::ToString(Texture), Color);
+		LK_INFO_TAG("Spawner", "Create: {} (Texture={} Color={})", Name, Enum::ToString(Texture), Color);
 		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
 	}
 
 	std::shared_ptr<CActor> CSpawner::CreateChain(std::string_view Name, std::span<const glm::vec2> Points,
-		const bool bLoop, const glm::vec4& Color)
+		const bool Loop, const bool BlockBothSides, const glm::vec4& Color)
 	{
-		LK_VERIFY(Points.size() >= 4, "Chain requires at least 4 points");
-
+		LK_ASSERT(Points.size() >= 4, "Chain requires at least 4 points");
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
 			ActorName = Format("Chain{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
@@ -81,8 +80,8 @@ namespace platformer2d {
 		ActorSpec.Name = ActorName;
 		ActorSpec.Texture = ETexture::White;
 		ActorSpec.Color = Color;
-		/* Chain actors don't render as a quad - skip the default sprite. */
 		ActorSpec.OutlineEnabled = false;
+		ActorSpec.Flags = EActorFlag::EActorFlag_Terrain;
 
 		FBodySpecification BodySpec;
 		BodySpec.Type = EBodyType::Static;
@@ -91,10 +90,12 @@ namespace platformer2d {
 
 		FChain Chain;
 		Chain.Points.assign(Points.begin(), Points.end());
-		Chain.bLoop = bLoop;
+		Chain.bLoop = Loop;
+		Chain.bBlockBothSides = BlockBothSides;
 		BodySpec.Shape.emplace<FChain>(Chain);
 
-		LK_INFO_TAG("Spawner", "Create chain: {} ({} points, loop={})", ActorName, Points.size(), bLoop);
+		LK_INFO_TAG("Spawner", "Create chain: {} ({} points, loop={} both-sides={})",
+			ActorName, Points.size(), Loop, BlockBothSides);
 		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
 	}

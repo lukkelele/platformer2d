@@ -16,6 +16,13 @@ namespace platformer2d {
 		COUNT
 	};
 
+	enum EActorFlag : std::uint64_t
+	{
+		EActorFlag_None = 0,
+		EActorFlag_Transparent = LK_BIT(1),
+		EActorFlag_Terrain = LK_BIT(2),
+	};
+
 	struct FActorSpecification
 	{
 		LUUID Handle{};
@@ -24,6 +31,7 @@ namespace platformer2d {
 		glm::vec4 Color = FColor::White;
 		glm::vec3 Pos = {0.0f, 0.0f, 0.0f};
 		std::string Name;
+		EActorFlag Flags = EActorFlag::EActorFlag_None;
 
 		bool OutlineEnabled = true;
 		float OutlineThickness = 0.0f;

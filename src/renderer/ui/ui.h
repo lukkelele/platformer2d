@@ -68,7 +68,7 @@ namespace platformer2d::UI {
 		};
 	}
 
-	inline bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 0.0f)
+	inline bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 6.0f)
 	{
 		bool Active = false;
 		std::array<char, 64> LabelBuf = {0};
@@ -161,15 +161,42 @@ namespace platformer2d::UI {
 			{ 0.50f, 0.0f},
 			{  1.0f, 0.0f},
 		};
+		glm::vec2 PreviewOrigin = {0.0f, 0.0f}; /* World-space position used for new chains and the preview. */
 		bool bLoop = false;
+		bool bBlockBothSides = false;
 		EColor Color = EColor::White;
 		std::array<char, 64> NameBuf = {0};
-		/* When non-null, the widget binds to an existing chain actor for live editing. */
-		LUUID EditTarget{};
+		LUUID EditTarget = LUUID::Null;
 		bool bHasEditTarget = false;
+		bool bPreviewVisible = true;
+
+		struct
+		{
+			bool bLastNodeState = false;
+			bool bPreviewVisible = true;
+		} Cache;
+
+		void ResetPoints()
+		{
+			Points = {
+				{ -1.0f, 0.0f},
+				{-0.50f, 0.0f},
+				{ 0.50f, 0.0f},
+				{  1.0f, 0.0f},
+			};
+		}
+
+		void OnDeselect()
+		{
+			ResetPoints();
+			EditTarget = LUUID::Null;
+			bHasEditTarget = false;
+			PreviewOrigin = {0.0f, 0.0f};
+		}
 	};
 	extern FChainCreatorState ChainCreator;
 	void ChainCreatorWidget(std::shared_ptr<CScene> Scene);
+	void RenderChainPreview(const std::shared_ptr<CScene>& Scene);
 
 	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 		const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));

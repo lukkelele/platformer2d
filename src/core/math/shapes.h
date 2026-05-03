@@ -3,6 +3,7 @@
 #include <variant>
 #include <vector>
 
+#include <box2d/box2d.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
@@ -49,6 +50,7 @@ namespace platformer2d {
 	{
 		std::vector<glm::vec2> Points;
 		bool bLoop = false;
+		bool bBlockBothSides = false;
 		float Friction = 0.60f;
 	};
 
@@ -168,6 +170,10 @@ namespace platformer2d {
 			Max = glm::max(Max, P);
 		}
 		return Max - Min;
+	}
+
+	namespace Utility {
+		std::vector<b2Vec2> MakeBox2DChainPoints(std::span<const glm::vec2> Points, bool Looped, bool Reversed);
 	}
 
 	namespace Enum {

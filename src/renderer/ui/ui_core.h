@@ -26,6 +26,7 @@ namespace platformer2d::UI {
 		inline constexpr const char* const Selection = "Selection";
 		inline constexpr const char* const SceneManager = "##SceneManager";
 		inline constexpr const char* const ContentBrowser = "##ContentBrowser";
+		inline constexpr const char* const TerrainCreator = "Terrain Creator";
 	}
 
 	inline ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
