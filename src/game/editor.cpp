@@ -777,13 +777,11 @@ namespace platformer2d {
 			return;
 		}
 
-		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
+		UI::Widget::SceneManagerPanel(Scene);
+		UI::CreatorMenu(Scene);
+		UI::ChainCreatorWidget(Scene);
 
-		if (Scene) {
-			UI::Widget::SceneManagerPanel(Scene);
-			ImGui::Separator();
-			ImGui::Spacing();
-		}
+		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
 		ImGui::Spacing();
 		{
@@ -813,11 +811,6 @@ namespace platformer2d {
 			}
 
 			UI::EnemiesInfo(Scene);
-		}
-
-		ImGui::Spacing();
-		if (Scene) {
-			UI::CreatorMenu(Scene);
 		}
 
 		if (Player) {
@@ -911,6 +904,10 @@ namespace platformer2d {
 			ImGui::TreePop();
 		}
 
+		const bool SceneActive = HasScene();
+		if (!SceneActive) {
+			ImGui::BeginDisabled();
+		}
 		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
 			UI::SetTooltip(LastSceneFilepath.generic_string());
@@ -918,16 +915,6 @@ namespace platformer2d {
 			UI::SetTooltip(SceneToOpen.generic_string());
 			ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
 
-			ImGui::TreePop();
-		}
-
-		ImGui::Spacing();
-
-		const bool SceneActive = HasScene();
-		if (SceneActive) {
-			ImGui::BeginDisabled();
-		}
-		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			UI::BeginPropertyGrid();
 
 			ImGui::TableNextRow();
@@ -959,13 +946,20 @@ namespace platformer2d {
 			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
 
 			UI::EndPropertyGrid();
+			ImGui::TreePop();
 		}
-		if (SceneActive) {
+		if (!SceneActive) {
 			ImGui::EndDisabled();
 		}
 
 		UI::Font::Pop();
-		UI::End();
+		UI::End(); /* Sidebar2 */
+
+		/* BottomBar */
+		UI::PrepareBottomBar();
+		if (UI::Begin(UI::PanelID::BottomBar)) {
+			UI::End();
+		}
 	}
 
 	void CEditor::UI_Player()

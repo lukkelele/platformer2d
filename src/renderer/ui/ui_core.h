@@ -15,17 +15,18 @@
 namespace platformer2d::UI {
 
 	namespace PanelID {
-		inline constexpr const char* const CoreViewport = "##CoreViewport";
-		inline constexpr const char* const Viewport = "##Viewport";
+		inline constexpr const char* const CoreViewport = "CoreViewport";
+		inline constexpr const char* const Viewport = "Viewport";
+		inline constexpr const char* const HostWindow = "HostWindow";
 		inline constexpr const char* const Dockspace = "##Dockspace";
-		inline constexpr const char* const HostWindow = "##HostWindow";
 		inline constexpr const char* const Topbar = "##Topbar";
-		inline constexpr const char* const Sidebar1 = "##Sidebar1";
-		inline constexpr const char* const Sidebar2 = "##Sidebar2";
+		inline constexpr const char* const Sidebar1 = "Sidebar1";
+		inline constexpr const char* const Sidebar2 = "Sidebar2";
 		inline constexpr const char* const Menubar = "##Menubar";
+		inline constexpr const char* const BottomBar = "##BottomBar";
 		inline constexpr const char* const Selection = "Selection";
-		inline constexpr const char* const SceneManager = "##SceneManager";
-		inline constexpr const char* const ContentBrowser = "##ContentBrowser";
+		inline constexpr const char* const SceneManager = "Scene##Manager";
+		inline constexpr const char* const CreatorMenu = "Creator Menu";
 		inline constexpr const char* const TerrainCreator = "Terrain Creator";
 	}
 
@@ -55,8 +56,7 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoMove;
 
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
-		| ImGuiDockNodeFlags_NoDockingOverCentralNode
-		| ImGuiDockNodeFlags_AutoHideTabBar;
+		| ImGuiDockNodeFlags_NoWindowMenuButton;
 
 	struct FViewportData
 	{

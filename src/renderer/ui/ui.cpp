@@ -134,7 +134,12 @@ namespace platformer2d::UI {
 
 	void CreatorMenu(std::shared_ptr<CScene> Scene)
 	{
+		const bool WindowOpened = UI::Begin(PanelID::CreatorMenu, nullptr);
+		if (!WindowOpened) {
+			return;
+		}
 		if (!Scene) {
+			UI::End();
 			return;
 		}
 
@@ -189,7 +194,6 @@ namespace platformer2d::UI {
 			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
 
 			ActorAttributes(ActorAttr);
-			ChainCreatorWidget(Scene);
 
 			/* Menu: Physics body */
 			UI::ShiftCursorY(20);
@@ -202,6 +206,7 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::PopID();
+		UI::End();
 	}
 
 	void ActorCreateButtons(std::shared_ptr<CScene> Scene)
@@ -277,7 +282,7 @@ namespace platformer2d::UI {
 			LK_ASSERT(State.Points.size() >= 4);
 
 			CBody* Body = Actor->GetBody();
-			if (Body && Body->TryGetShape<EShape::Chain>() != nullptr) {
+			if (Body && (Body->TryGetShape<EShape::Chain>() != nullptr)) {
 				Body->SetChainPoints(State.Points, State.bLoop, State.bBlockBothSides);
 			} else {
 				FBodySpecification BodySpec;
@@ -299,8 +304,8 @@ namespace platformer2d::UI {
 
 	void ChainCreatorWidget(std::shared_ptr<CScene> Scene)
 	{
-		constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None;
-		if (!UI::Begin(PanelID::TerrainCreator, nullptr, WindowFlags)) {
+		const bool Opened = UI::Begin(PanelID::TerrainCreator, nullptr);
+		if (!Opened) {
 			return;
 		}
 		if (!Scene) {
@@ -311,31 +316,6 @@ namespace platformer2d::UI {
 		FChainCreatorState& State = ChainCreator;
 		const LUUID SelectedHandle = CSelectionContext::GetSelected();
 		std::shared_ptr<CActor> SelectedActor = Scene->GetActor(SelectedHandle);
-
-		UI::Font::Push(EFontSize::Large, EFontModifier::Normal);
-		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-		const bool Opened = ImGui::TreeNodeEx("Terrain", ImGuiTreeNodeFlags_SpanAvailWidth);
-		const bool LastNodeState = State.Cache.bLastNodeState;
-		State.Cache.bLastNodeState = Opened;
-		UI::Font::Pop();
-		if (UI::IsItemHovered(1.0f)) {
-			UI::SetTooltip("Using chain segments");
-		}
-
-		/* Restore value to what was before node was closed last time. */
-		if (Opened) {
-			if (!LastNodeState) {
-				State.bPreviewVisible = State.Cache.bPreviewVisible;
-				LK_TRACE_TAG("UI", "Restored preview visiblity: {}", State.bPreviewVisible);
-			}
-		} else {
-			if (LastNodeState) {
-				State.Cache.bPreviewVisible = State.bPreviewVisible;
-				LK_TRACE_TAG("UI", "Caching preview visiblity: {}", State.bPreviewVisible);
-			}
-			State.bPreviewVisible = false;
-			return;
-		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
@@ -480,7 +460,7 @@ namespace platformer2d::UI {
 
 		bool PointsModified = false;
 		for (std::size_t Idx = 0; Idx < State.Points.size(); Idx++) {
-			ImGui::PushID(static_cast<int>(Idx));
+			UI::FScopedID ScopedID(static_cast<int>(Idx));
 			ImGui::Text("%2zu", Idx);
 			ImGui::SameLine();
 
@@ -496,7 +476,6 @@ namespace platformer2d::UI {
 					: State.Points[Idx] + glm::vec2(0.50f, 0.0f);
 				State.Points.insert(State.Points.begin() + Idx + 1, InsertAt);
 				PointsModified = true;
-				ImGui::PopID();
 				break;
 			}
 
@@ -511,13 +490,11 @@ namespace platformer2d::UI {
 				if (!CanDelete) {
 					ImGui::EndDisabled();
 				}
-				ImGui::PopID();
 				break;
 			}
 			if (!CanDelete) {
 				ImGui::EndDisabled();
 			}
-			ImGui::PopID();
 		}
 
 		if (ImGui::Button("Append Point")) {
@@ -573,9 +550,7 @@ namespace platformer2d::UI {
 			}
 		}
 
-		ImGui::TreePop();
 		ImGui::PopStyleVar(2);
-
 		UI::End();
 	}
 
@@ -1006,10 +981,15 @@ namespace platformer2d::UI {
 		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs;
 
 		const ImVec2 WindowPos = ImGui::GetWindowPos();
-		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
+		const float PaddingX = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
+		float PaddingY = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
+
+		if (ImGuiWindow* BottomBar = ImGui::FindWindowByName(PanelID::BottomBar)) {
+			PaddingY += BottomBar->Size.y;
+		}
 
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		ImGui::SetNextWindowPos(ImVec2(WindowPos.x + Padding, Viewport->Size.y - (WindowSize.y + Padding)), ImGuiCond_Always);
+		ImGui::SetNextWindowPos(ImVec2(WindowPos.x + PaddingX, Viewport->Size.y - (WindowSize.y + PaddingY)), ImGuiCond_Always);
 		ImGui::SetNextWindowSize(WindowSize, ImGuiCond_Always);
 		ImGui::SetNextWindowBgAlpha(0.40f);
 
@@ -1266,6 +1246,51 @@ namespace platformer2d::UI {
 			| ImGuiDockNodeFlags_NoWindowMenuButton
 			| ImGuiDockNodeFlags_NoTabBar
 			| ImGuiDockNodeFlags_NoResize;
+	}
+
+	void PrepareBottomBar()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(PanelID::BottomBar);
+		if (Window == nullptr) {
+			return;
+		}
+
+		ImGuiDockNode* DockNode = Window->DockNode;
+		if (DockNode == nullptr) {
+			return;
+		}
+
+		if ((DockNode->Size.x <= 0.0f) || (DockNode->Size.y <= 0.0f)) {
+			return;
+		}
+
+		auto& V = ViewportData;
+		ImGuiViewport* Viewport = ImGui::GetWindowViewport();
+
+		V.RightSidebarSize = {DockNode->Size.x, DockNode->Size.y};
+		Window->Pos = ImVec2(Viewport->Size.x - V.RightSidebarSize.x, V.MenuBarSize.y);
+		Window->Size = ImVec2(V.RightSidebarSize.x, V.RightSidebarSize.y);
+
+		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
+		DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDockingSplit;
+
+		/* Dock node has no other windows docked in it. */
+		if (DockNode->Windows.Size <= 1) {
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+			Window->Flags &= ~ImGuiWindowFlags_NoTitleBar;
+
+			if (DockNode->VisibleWindow) {
+				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
+			}
+		} else if (DockNode->Windows.Size > 1) {
+			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoTabBar;
+			Window->Flags &= ~ImGuiWindowFlags_NoTitleBar;
+
+			if (DockNode->VisibleWindow) {
+				DockNode->VisibleWindow->Flags &= ~ImGuiWindowFlags_NoTitleBar;
+			}
+		}
 	}
 
 }

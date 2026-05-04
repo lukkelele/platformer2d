@@ -216,6 +216,7 @@ namespace platformer2d::UI {
 	void PrepareRightSidebar();
 	void PrepareTopBar();
 	void PrepareMenuBar();
+	void PrepareBottomBar();
 
 	namespace Array {
 		inline constexpr std::array<EDirection, std::to_underlying(EDirection::COUNT)> Direction = {

@@ -29,15 +29,6 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		ImGuiWindow* Window = ImGui::GetCurrentWindow();
-		Window->Flags &= ~ImGuiWindowFlags_NoTitleBar;
-
-		if (ImGuiDockNode* DockNode = ImGui::GetWindowDockNode()) {
-			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking
-				| ImGuiDockNodeFlags_NoWindowMenuButton;
-			DockNode->LocalFlags &= ~(ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_HiddenTabBar);
-		}
-
 		const LUUID SelectedID = CSelectionContext::GetSelected();
 		if (std::shared_ptr<CActor> Actor = Scene->GetActor(SelectedID); Actor != nullptr) {
 			UI::Widget::ActorNode::Data(Actor);

@@ -866,13 +866,17 @@ namespace platformer2d::UI::Widget {
 
 	void SceneManagerPanel(std::shared_ptr<CScene> InScene)
 	{
+		const bool WindowOpened = UI::Begin(PanelID::SceneManager, nullptr);
+		if (!WindowOpened) {
+			return;
+		}
 		if (!InScene) {
+			UI::End();
 			return;
 		}
 
-		UI::HeaderTextCentralized("Scene");
+		//UI::HeaderTextCentralized("Scene");
 		const auto Actors = InScene->GetActors();
-
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large);
 		if (UI::BeginPropertyGrid(80)) {
 			Table::NextRow();
@@ -891,6 +895,8 @@ namespace platformer2d::UI::Widget {
 		for (auto& Actor : Actors) {
 			UI::Widget::ActorNode::Entry(Actor, InScene);
 		}
+
+		UI::End();
 	}
 
 	void EditorViewportInfo(bool Focused, bool Hovered)
