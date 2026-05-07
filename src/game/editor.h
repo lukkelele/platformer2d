@@ -33,8 +33,8 @@ namespace platformer2d {
 		void ResumeGame() override;
 		bool IsGamePaused() override;
 
-		uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
-		uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
+		std::uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
+		std::uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
 		void OnSensorBeginEvent(const CSensorBeginEvent& Event) override;
 		void OnSensorEndEvent(const CSensorEndEvent& Event) override;
@@ -83,11 +83,13 @@ namespace platformer2d {
 		bool bOpenSceneNextTick = false;
 		bool bCloseSceneNextTick = false;
 
-		uint16_t EditorViewportWidth = 0;
-		uint16_t EditorViewportHeight = 0;
+		std::uint16_t EditorViewportWidth = 0;
+		std::uint16_t EditorViewportHeight = 0;
 		std::array<glm::vec2, 2> EditorViewportBounds{};
 		bool bEditorViewportHovered = false;
 		bool bEditorViewportFocused = true;
+
+		bool bPendingViewportResize = false;
 	};
 
 }

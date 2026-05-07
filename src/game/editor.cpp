@@ -22,6 +22,7 @@
 #include "renderer/ui/editor_resources.h"
 #include "renderer/ui/pausemenu.h"
 #include "renderer/ui/selectionpanel.h"
+#include "renderer/ui/terraincreator.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
 #include "physics/body.h"
@@ -93,7 +94,6 @@ namespace platformer2d {
 	}
 
 	static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
-
 	static void UpdateInputBuffer(const std::size_t Count)
 	{
 		std::snprintf(UI::ActorAttr.NameBuf.data(), sizeof(UI::ActorAttr.NameBuf), "Actor-%lld", Count + 2);
@@ -239,6 +239,11 @@ namespace platformer2d {
 	void CEditor::Tick(const float InDeltaTime)
 	{
 		LK_PROFILE_FUNC();
+		if (bPendingViewportResize) {
+			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
+			bPendingViewportResize = false;
+		}
+
 		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
 		if (SceneState == ESceneState::Play) {
 			DeltaTime = InDeltaTime;
@@ -441,7 +446,39 @@ namespace platformer2d {
 		return static_cast<uint16_t>(HitResults.size());
 	}
 
-	uint16_t CEditor::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
+	static bool PickAABB(const glm::vec2& MouseWorld, const CActor& Actor, float& OutDistance)
+	{
+		const glm::vec2 Pos = Actor.GetPosition();
+		if (Math::IsPointInPolygon(MouseWorld, Pos, Actor.GetSize(), Actor.GetRotation())) {
+			OutDistance = glm::length(MouseWorld - Pos);
+			return true;
+		}
+		return false;
+	};
+
+	static bool PickChain(const FChain& Chain, const glm::vec2& Origin, const glm::vec2& Point, const float Threshold)
+	{
+		const std::size_t N = Chain.Points.size();
+		if (N < 2) {
+			return false;
+		}
+
+		const std::size_t Last = Chain.bLoop ? N : (N - 1);
+		for (std::size_t Idx = 0; Idx < Last; Idx++) {
+			const glm::vec2 A = Origin + Chain.Points[Idx];
+			const glm::vec2 B = Origin + Chain.Points[(Idx + 1) % N];
+			const glm::vec2 AB = B - A;
+			const float Len2 = glm::dot(AB, AB);
+			const float T = (Len2 > 0.0f) ? glm::clamp(glm::dot(Point - A, AB) / Len2, 0.0f, 1.0f) : 0.0f;
+			if (glm::length(Point - (A + T * AB)) <= Threshold) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	std::uint16_t CEditor::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
 		HitResults.clear();
 		const CCamera& Camera = *GetActiveCamera();
@@ -450,18 +487,35 @@ namespace platformer2d {
 			return 0;
 		}
 
+		constexpr float ChainPickThreshold = 0.03f;
 		for (const auto& Actor : TargetScene->GetActors()) {
-			const glm::vec2 Pos = Actor->GetPosition();
-			const glm::vec2 Size = Actor->GetSize();
-			const float Rotation = Actor->GetRotation();
-			if (Math::IsPointInPolygon(MouseWorld, Pos, Size, Rotation)) {
+			float Distance = 0.0f;
+			bool Hit = false;
+
+			if (const CBody* Body = Actor->GetBody(); Body != nullptr) {
+				std::visit([&]<typename T>(const T& Shape)
+				{
+					if constexpr (std::is_same_v<T, FChain>) {
+						const glm::vec2 Origin = Body->GetPosition();
+						if (PickChain(Shape, Origin, MouseWorld, ChainPickThreshold)) {
+							Hit = true;
+							Distance = glm::length(MouseWorld - Origin);
+						}
+					} else if constexpr (std::is_same_v<T, FPolygon>
+						|| std::is_same_v<T, FCapsule>
+						|| std::is_same_v<T, FLine>) {
+						Hit = PickAABB(MouseWorld, *Actor, Distance);
+					}
+				}, Body->GetShape());
+			} else {
+				Hit = PickAABB(MouseWorld, *Actor, Distance);
+			}
+
+			if (Hit) {
 				FHitResult Entry{};
 				Entry.Handle = Actor->GetHandle();
 				Entry.Ref = Actor;
-
-				const glm::vec2 Delta = MouseWorld - Pos;
-				Entry.Distance = glm::length(Delta);
-
+				Entry.Distance = Distance;
 				HitResults.push_back(Entry);
 			}
 		}
@@ -474,7 +528,7 @@ namespace platformer2d {
 		{
 			return Lhs.Distance < Rhs.Distance;
 		});
-		return static_cast<uint16_t>(HitResults.size());
+		return static_cast<std::uint16_t>(HitResults.size());
 	}
 
 	void CEditor::OnSensorBeginEvent(const CSensorBeginEvent& Event)
@@ -485,31 +539,21 @@ namespace platformer2d {
 			return;
 		}
 
-		/**
-		 * Player is overlapping the sensor.
-		 * Determine the type of sensor.
-		 */
 		if (Event.Visitor == Player.get()) {
 			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
 				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(true);
 
-				switch (IC->GetType()) {
-					case EInteraction::Damage:
-					{
-						auto& Data = std::get<FDamageInteraction>(IC->GetData());
+				std::visit([&](auto&& Data)
+				{
+					using T = std::decay_t<decltype(Data)>;
+					if constexpr (std::is_same_v<T, FDamageInteraction>) {
 						LK_WARN("Damage={}", Data.Damage);
-						break;
-					}
-					case EInteraction::Pickup:
-					{
+					} else if constexpr (std::is_same_v<T, FPickupInteraction>) {
 						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 						OnPickupEvent(PlayerRef, *IC);
-						break;
 					}
-					default:
-						break;
-				}
+				}, IC->GetData());
 			}
 		}
 	}
@@ -522,10 +566,6 @@ namespace platformer2d {
 			return;
 		}
 
-		/**
-		 * Player is overlapping the sensor.
-		 * Determine the type of sensor.
-		 */
 		if (Event.Visitor == Player.get()) {
 			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
 				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
@@ -704,7 +744,7 @@ namespace platformer2d {
 		if ((EditorViewportWidth != static_cast<uint16_t>(VpWidth)) || (EditorViewportHeight != static_cast<uint16_t>(VpHeight))) {
 			EditorViewportWidth = static_cast<uint16_t>(VpWidth);
 			EditorViewportHeight = static_cast<uint16_t>(VpHeight);
-			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
+			bPendingViewportResize = true;
 		}
 	}
 
@@ -779,7 +819,7 @@ namespace platformer2d {
 
 		UI::Widget::SceneManagerPanel(Scene);
 		UI::CreatorMenu(Scene);
-		UI::ChainCreatorWidget(Scene);
+		UI::RenderTerrainCreator(Scene);
 
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
 
@@ -873,16 +913,6 @@ namespace platformer2d {
 				if (!bRaycastScene) {
 					ImGui::EndDisabled();
 				}
-			}
-
-			ImGui::Dummy(ImVec2(0, 12));
-			ImGui::SeparatorText("Selection");
-			{
-				std::string Selected = "None";
-				if (std::shared_ptr<CActor> Actor = SelectedActor.lock(); Actor != nullptr) {
-					Selected = Actor->GetName();
-				}
-				ImGui::Text("Selected: %s", Selected.c_str());
 			}
 
 			ImGui::Dummy(ImVec2(0, 12));
@@ -1007,9 +1037,9 @@ namespace platformer2d {
 
 	void CEditor::UI_Topbar()
 	{
-		static constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
+		constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
+		constexpr float EdgeOffset = 4.0f;
 		static constexpr float ButtonSize = 42.0f + 5.0f;
-		static constexpr float EdgeOffset = 4.0f;
 
 		auto ToolbarButton = [](const std::shared_ptr<CTexture>& Icon, const ImColor& Tint, float PaddingY = 0.0f)
 		{
@@ -1216,7 +1246,7 @@ namespace platformer2d {
 				if (Data.State == EKeyState::Pressed) {
 					SelectedActor.reset();
 					CSelectionContext::Select(LUUID::Null);
-					UI::ChainCreator.OnDeselect();
+					UI::TerrainCreator.OnDeselect();
 				}
 				break;
 		}
@@ -1384,7 +1414,7 @@ namespace platformer2d {
 		}
 	}
 
-	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
+	static bool PreSolve(const b2ShapeId ShapeA, const b2ShapeId ShapeB, const b2Vec2 Point, b2Vec2 Normal, void* const Ctx)
 	{
 		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
 		if (!Ctx) {

@@ -116,11 +116,11 @@ namespace platformer2d::UI::Widget::Combo {
 		static const std::string Label = "Texture";
 		if (ImGui::GetCurrentTable() != nullptr) {
 			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 0.0f);
+			UI::ShiftCursorX(17.0f);
 			ImGui::Text(Label.c_str());
 
 			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
+			UI::ShiftCursorX(7);
 		} else {
 			ImGui::Text(Label.c_str());
 			ImGui::SameLine();

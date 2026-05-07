@@ -137,7 +137,7 @@ namespace platformer2d {
 				const glm::vec2 Size = {(MaxX - MinX), (MaxY - MinY)};
 				// CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
 
-				CRenderer::Submit([&]()
+				CRenderer::Submit([=]()
 				{
 					CDebugRenderer::DrawQuad(Pos, Size, Color, Rot);
 				});
@@ -151,7 +151,7 @@ namespace platformer2d {
 			const glm::vec4 Color = Decodeb2HexColor(HexColor);
 
 			// CDebugRenderer::DrawLine(P0, P1, Color, 4);
-			CRenderer::Submit([&]()
+			CRenderer::Submit([=]()
 			{
 				CDebugRenderer::DrawLine(P0, P1, Color, 4);
 			});

@@ -153,51 +153,6 @@ namespace platformer2d::UI {
 	void ActorCreateButtons(std::shared_ptr<CScene> Scene);
 	void PhysicsBodyMenu(FPhysicsBodyData& Data);
 
-	struct FChainCreatorState
-	{
-		std::vector<glm::vec2> Points = {
-			{ -1.0f, 0.0f},
-			{-0.50f, 0.0f},
-			{ 0.50f, 0.0f},
-			{  1.0f, 0.0f},
-		};
-		glm::vec2 PreviewOrigin = {0.0f, 0.0f}; /* World-space position used for new chains and the preview. */
-		bool bLoop = false;
-		bool bBlockBothSides = false;
-		EColor Color = EColor::White;
-		std::array<char, 64> NameBuf = {0};
-		LUUID EditTarget = LUUID::Null;
-		bool bHasEditTarget = false;
-		bool bPreviewVisible = true;
-
-		struct
-		{
-			bool bLastNodeState = false;
-			bool bPreviewVisible = true;
-		} Cache;
-
-		void ResetPoints()
-		{
-			Points = {
-				{ -1.0f, 0.0f},
-				{-0.50f, 0.0f},
-				{ 0.50f, 0.0f},
-				{  1.0f, 0.0f},
-			};
-		}
-
-		void OnDeselect()
-		{
-			ResetPoints();
-			EditTarget = LUUID::Null;
-			bHasEditTarget = false;
-			PreviewOrigin = {0.0f, 0.0f};
-		}
-	};
-	extern FChainCreatorState ChainCreator;
-	void ChainCreatorWidget(std::shared_ptr<CScene> Scene);
-	void RenderChainPreview(const std::shared_ptr<CScene>& Scene);
-
 	bool DrawGizmo(uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 		const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));
 

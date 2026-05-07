@@ -139,6 +139,7 @@ namespace platformer2d {
 	void CFramebuffer::Bind() const
 	{
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
+		LK_OpenGL_Verify(glViewport(0, 0, Spec.Width, Spec.Height));
 	}
 
 	void CFramebuffer::Unbind() const
@@ -148,10 +149,7 @@ namespace platformer2d {
 
 	void CFramebuffer::Clear() const
 	{
-		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
-		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
-		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, ID));
+		Bind();
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
@@ -172,7 +170,6 @@ namespace platformer2d {
 		Spec.Width = InWidth;
 		Spec.Height = InHeight;
 		Invalidate();
-		LK_OpenGL_Verify(glViewport(0, 0, Spec.Width, Spec.Height));
 	}
 
 	int CFramebuffer::ReadPixel(const uint32_t AttachmentIndex, const int PosX, const int PosY)

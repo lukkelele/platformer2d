@@ -36,7 +36,7 @@ namespace platformer2d {
 			TargetBuf += Size;
 		}
 
-		CommandBufferPtr = TargetBuf;
+		CommandBufferPtr = CommandBuffer;
 		CommandCount = 0;
 	}
 

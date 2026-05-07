@@ -875,7 +875,6 @@ namespace platformer2d::UI::Widget {
 			return;
 		}
 
-		//UI::HeaderTextCentralized("Scene");
 		const auto Actors = InScene->GetActors();
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large);
 		if (UI::BeginPropertyGrid(80)) {

@@ -337,6 +337,9 @@ namespace platformer2d::Serialization {
 				if (ShapeNode["Friction"]) {
 					Chain.Friction = ShapeNode["Friction"].as<float>();
 				}
+				if (ShapeNode["TextureHeight"]) {
+					Chain.TextureHeight = ShapeNode["TextureHeight"].as<float>();
+				}
 				const YAML::Node Points = ShapeNode["Points"];
 				if (Points && Points.IsSequence()) {
 					Chain.Points.reserve(Points.size());

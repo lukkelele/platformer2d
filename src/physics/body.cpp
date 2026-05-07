@@ -447,6 +447,7 @@ namespace platformer2d {
 				Out << YAML::Key << "Loop" << YAML::Value << ShapeRef.bLoop;
 				Out << YAML::Key << "BlockBothSides" << YAML::Value << ShapeRef.bBlockBothSides;
 				Out << YAML::Key << "Friction" << YAML::Value << ShapeRef.Friction;
+				Out << YAML::Key << "TextureHeight" << YAML::Value << ShapeRef.TextureHeight;
 				Out << YAML::Key << "Points" << YAML::Value << YAML::BeginSeq;
 				for (const glm::vec2& P : ShapeRef.Points) {
 					Out << P;

@@ -45,15 +45,15 @@ namespace platformer2d::UI {
 			float ValueMin = 0.0f, float ValueMax = 0.0f,
 			const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
 		{
-			static constexpr int LABEL_BUFSIZE = 72;
+			constexpr int LABEL_BUFSIZE = 72;
 
 			const int LabelSize = std::strlen(Label);
 			std::array<char, LABEL_BUFSIZE> LabelBuf{};
 			std::snprintf(LabelBuf.data(), LabelBuf.size(), "##%s", Label);
 
-			static constexpr float SpacingX = 8.0f;
-			static constexpr float FramePadding = 4.0f;
-			static constexpr float OutlineSpacing = 1.0f;
+			constexpr float SpacingX = 8.0f;
+			constexpr float FramePadding = 4.0f;
+			constexpr float OutlineSpacing = 1.0f;
 			const float LineHeight = GImGui->Font->LegacySize + FramePadding * 2.0f;
 			const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 
@@ -104,8 +104,8 @@ namespace platformer2d::UI {
 			const float ValueSpeed = 0.10f, const float ValueMin = 0.0f, const float ValueMax = 0.0f,
 			const float ColumnWidth = 100.0f, const char* Format = "%.2f")
 		{
-			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
-			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
+			constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
+			constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
 
 			bool Modified = false;
 
@@ -137,8 +137,8 @@ namespace platformer2d::UI {
 					);
 				}
 
-				static constexpr float FramePadding = 4.0f;
-				static constexpr float OutlineSpacing = 1.0f;
+				constexpr float FramePadding = 4.0f;
+				constexpr float OutlineSpacing = 1.0f;
 				const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
 				const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 				const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f) - ButtonSize.x;
@@ -180,7 +180,7 @@ namespace platformer2d::UI {
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
 				/* Draw: V1 */
-				static constexpr float Diff = 0.08f;
+				constexpr float Diff = 0.08f;
 				static const ImVec4 ColorX = FColor::Convert<ImVec4>(RGBA32::DarkCyan);
 				DrawControl(
 					V1,
@@ -213,9 +213,9 @@ namespace platformer2d::UI {
 			const float ValueMax = 0.0f, const float ColumnWidth = 100.0f,
 			const char* Format = "%.2f")
 		{
-			static constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
-			static constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
-			static constexpr const char* V3 = (VecSemantic == EVectorSemantic::XYZ) ? "Z" : "B";
+			constexpr const char* V1 = (VecSemantic == EVectorSemantic::XYZ) ? "X" : "R";
+			constexpr const char* V2 = (VecSemantic == EVectorSemantic::XYZ) ? "Y" : "G";
+			constexpr const char* V3 = (VecSemantic == EVectorSemantic::XYZ) ? "Z" : "B";
 
 			bool Modified = false;
 
@@ -248,8 +248,8 @@ namespace platformer2d::UI {
 					);
 				}
 
-				static constexpr float FramePadding = 4.0f;
-				static constexpr float OutlineSpacing = 1.0f;
+				constexpr float FramePadding = 4.0f;
+				constexpr float OutlineSpacing = 1.0f;
 				const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
 				const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 				const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 3.0f) - ButtonSize.x;
@@ -331,7 +331,7 @@ namespace platformer2d::UI {
 				return;
 			}
 
-			static constexpr ImGuiTreeNodeFlags TreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen
+			constexpr ImGuiTreeNodeFlags TreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen
 				| ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth
 				| ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_FramePadding;
 			auto& Comp = Actor->GetComponent<TComponent>();

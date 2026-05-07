@@ -10,6 +10,7 @@ project_library_sources(
 	selectionpanel.h
 	selectionpanel.cpp
 	scoped.h
+	terraincreator.cpp
 	text.cpp
 	ui.h
 	ui.cpp

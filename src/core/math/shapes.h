@@ -52,6 +52,7 @@ namespace platformer2d {
 		bool bLoop = false;
 		bool bBlockBothSides = false;
 		float Friction = 0.60f;
+		float TextureHeight = 0.20f;
 	};
 
 	using TShape = std::variant<std::monostate, FPolygon, FCapsule, FLine, FChain>;

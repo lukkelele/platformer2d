@@ -12,6 +12,7 @@ namespace platformer2d {
 
 	static void UI_PauseMenu_Default();
 	static void UI_PauseMenu_Settings();
+	static void UI_RenderWindows();
 
 	struct FNextLevel
 	{
@@ -136,6 +137,8 @@ namespace platformer2d {
 		}
 
 		ActiveMenu = NextMenu;
+
+		UI_RenderWindows();
 	}
 
 	void CUILayer::BeginFrame()
@@ -155,7 +158,7 @@ namespace platformer2d {
 			return;
 		}
 
-		static constexpr float YFactor = 0.80f;
+		constexpr float YFactor = 0.80f;
 		const ImVec2 WindowSize = ImVec2(
 			(std::clamp(Viewport->Size.x * 0.33f, 630.0f, 680.0f)),
 			(Viewport->Size.y * YFactor));
@@ -165,7 +168,7 @@ namespace platformer2d {
 
 		ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize(WindowSize, ImGuiCond_Always);
-		static constexpr int WindowFlags = ImGuiWindowFlags_NoResize
+		constexpr int WindowFlags = ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoDecoration
 			| ImGuiWindowFlags_NoDocking
 			| ImGuiWindowFlags_NoCollapse;
@@ -215,8 +218,8 @@ namespace platformer2d {
 
 		UI::Font::Push(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
 
-		static constexpr float PaddingX = 12.0f;
-		static constexpr float PaddingY = 12.0f;
+		constexpr float PaddingX = 12.0f;
+		constexpr float PaddingY = 12.0f;
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 
@@ -302,30 +305,15 @@ namespace platformer2d {
 			}
 		}
 
-		ImGui::PopStyleVar(2);
-
-		/************************
-		 *     Menu Options
-		 ************************/
 		ImGui::Dummy(ImVec2(0.0f, 12.0f + PaddingY * 0.50f));
 		if (ImGui::Button("Style Editor", ButtonSize)) {
 			Settings.bStyleEditor = !Settings.bStyleEditor;
 		}
-		if (Settings.bStyleEditor) {
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal));
-			if (ImGui::Begin("##StyleEditor", &Settings.bStyleEditor)) {
-				ImGui::ShowStyleEditor(&Style);
-				ImGui::End();
-			}
-		}
-
 		if (ImGui::Button("ID Tool", ButtonSize)) {
 			Settings.bIDStackTool = !Settings.bIDStackTool;
 		}
-		if (Settings.bIDStackTool) {
-			ImGui::ShowIDStackToolWindow(&Settings.bIDStackTool);
-		}
 
+		ImGui::PopStyleVar(2);
 		UI::Font::Pop();
 
 		/* Button: Backward */
@@ -359,6 +347,22 @@ namespace platformer2d {
 		/* @todo Versioning info here */
 
 		ImGui::Dummy(ImVec2(0.0f, 52.0f));
+	}
+
+	static void UI_RenderWindows()
+	{
+		ImGuiStyle& Style = ImGui::GetStyle();
+		UI::FPauseMenu::FSettings& Settings = UI::PauseMenu.Settings;
+		if (Settings.bStyleEditor) {
+			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal));
+			if (ImGui::Begin("Style Editor", &Settings.bStyleEditor)) {
+				ImGui::ShowStyleEditor(&Style);
+				ImGui::End();
+			}
+		}
+		if (Settings.bIDStackTool) {
+			ImGui::ShowIDStackToolWindow(&Settings.bIDStackTool);
+		}
 	}
 
 	void UI_PauseMenu_Default()
