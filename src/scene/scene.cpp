@@ -13,6 +13,48 @@
 
 namespace platformer2d {
 
+	static void RenderQuad(const CActor& Actor)
+	{
+		const FTransformComponent& TC = Actor.GetTransformComponent();
+		CRenderer::DrawQuad(
+			Actor.GetPosition(),
+			TC.Scale,
+			Actor.GetTexture(),
+			Actor.GetColor(),
+			glm::degrees(TC.GetRotation2D()),
+			Actor.IsOutlineEnabled() ? Actor.GetOutlineThickness() : 0.0f,
+			Actor.GetOutlineColor());
+	}
+
+	static void RenderChain(const CActor& Actor, const CBody& Body, const FChain& Chain)
+	{
+		const std::size_t Count = Chain.Points.size();
+		if (Count < 2) {
+			return;
+		}
+
+		const glm::vec2 Origin = Body.GetPosition();
+		const glm::vec4& Color = Actor.GetColor();
+		const ETexture Texture = Actor.GetTexture();
+		const std::size_t Last = Chain.bLoop ? Count : (Count - 1);
+		const bool Textured = (Texture != ETexture::White) && (Chain.TextureHeight > 0.0f);
+		if (Textured) {
+			for (std::size_t Idx = 0; Idx < Last; Idx++) {
+				const glm::vec2 P0 = Origin + Chain.Points[Idx];
+				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
+				const glm::vec2 Center = (P0 + P1) * 0.50f;
+				const float AngleDeg = glm::degrees(std::atan2(P1.y - P0.y, P1.x - P0.x));
+				CRenderer::DrawQuad(Center, glm::vec2(glm::length(P1 - P0), Chain.TextureHeight), Texture, Color, AngleDeg);
+			}
+		} else {
+			for (std::size_t Idx = 0; Idx < Last; Idx++) {
+				const glm::vec2 P0 = Origin + Chain.Points[Idx];
+				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
+				CRenderer::DrawLine(P0, P1, Color, 4);
+			}
+		}
+	}
+
 	CScene::CScene(std::string_view InName)
 		: Name(InName)
 	{
@@ -50,32 +92,20 @@ namespace platformer2d {
 				continue;
 			}
 
-			if (const CBody* Body = Actor->GetBody(); Body != nullptr) {
-				if (const FChain* Chain = Body->TryGetShape<EShape::Chain>(); Chain != nullptr) {
-					const glm::vec2 Origin = Body->GetPosition();
-					const glm::vec4& Color = Actor->GetColor();
-					const std::size_t Count = Chain->Points.size();
-					if (Count >= 2) {
-						const std::size_t Last = Chain->bLoop ? Count : (Count - 1);
-						for (std::size_t Idx = 0; Idx < Last; Idx++) {
-							const glm::vec2 P0 = Origin + Chain->Points[Idx];
-							const glm::vec2 P1 = Origin + Chain->Points[(Idx + 1) % Count];
-							CRenderer::DrawLine(P0, P1, Color, 4);
-						}
-					}
-					continue;
-				}
+			const CBody* Body = Actor->GetBody();
+			if (Body == nullptr) {
+				RenderQuad(*Actor);
+				continue;
 			}
 
-			const FTransformComponent& TC = Actor->GetTransformComponent();
-			CRenderer::DrawQuad(
-				Actor->GetPosition(),
-				TC.Scale,
-				Actor->GetTexture(),
-				Actor->GetColor(),
-				glm::degrees(TC.GetRotation2D()),
-				Actor->IsOutlineEnabled() ? Actor->GetOutlineThickness() : 0.0f,
-				Actor->GetOutlineColor());
+			std::visit([&]<typename T>(const T& ShapeRef)
+			{
+				if constexpr (std::is_same_v<T, FChain>) {
+					RenderChain(*Actor, *Body, ShapeRef);
+				} else {
+					RenderQuad(*Actor);
+				}
+			}, Body->GetShape());
 		}
 	}
 
