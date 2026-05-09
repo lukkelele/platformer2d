@@ -84,8 +84,8 @@ namespace platformer2d {
 
 		const YAML::Node& WindowNode = Node["Window"];
 		if (WindowNode.IsDefined()) {
-			LK_DESERIALIZE_PROPERTY(StartMaximized, Settings.Window.bStartMaximized, true, WindowNode);
-			LK_DESERIALIZE_PROPERTY(VSync, Settings.Window.bVSync, true, WindowNode);
+			Serialization::DeserializeProperty("StartMaximized", Settings.Window.bStartMaximized, true, WindowNode);
+			Serialization::DeserializeProperty("VSync", Settings.Window.bVSync, true, WindowNode);
 			LK_DEBUG_TAG("Settings", "StartMaximized={} VSync={}", Settings.Window.bStartMaximized, Settings.Window.bVSync);
 		} else {
 			LK_ERROR_TAG("Settings", "Missing 'Window' node in YAML data");
