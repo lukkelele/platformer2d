@@ -22,7 +22,7 @@ AllowShortFunctionsOnASingleLine: Inline
 AllowShortLoopsOnASingleLine: false
 AllowShortLambdasOnASingleLine: None
 AllowShortCaseLabelsOnASingleLine: true
-AlignTrailingComments: true
+AlignTrailingComments: false
 BinPackArguments: true
 BinPackParameters: BinPack
 BitFieldColonSpacing: Both
