@@ -92,6 +92,7 @@ SpaceBeforeJsonColon: false
 SpacesInAngles: Never
 SpacesBeforeTrailingComments: 1
 SpaceAfterCStyleCast: false
+LineEnding: LF
 TabWidth: 4
 UseTab: ForContinuationAndIndentation
 InsertNewlineAtEOF: true
