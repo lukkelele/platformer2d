@@ -20,7 +20,7 @@ namespace platformer2d {
 		COUNT
 	};
 	LK_ENUM(EMovementState);
-	
+
 	struct FPlayerData
 	{
 		uint64_t ID = 0;
@@ -44,30 +44,30 @@ namespace platformer2d {
 		EActorType GetActorType() const override { return EActorType::Player; }
 		void Jump();
 
-		const FPlayerData& GetData() const { return Data; }
-		CInventory& GetInventory() { return Inventory; }
-		const CInventory& GetInventory() const { return Inventory; }
-		const CSprite& GetSprite() const { return *Sprite; }
+		[[nodiscard]] const FPlayerData& GetData() const { return Data; }
+		[[nodiscard]] CInventory& GetInventory() { return Inventory; }
+		[[nodiscard]] const CInventory& GetInventory() const { return Inventory; }
+		[[nodiscard]] const CSprite& GetSprite() const { return *Sprite; }
 
-		float GetJumpImpulse() const { return JumpImpulse; }
+		[[nodiscard]] float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);
-		float GetDirectionForce() const { return DirForce; }
+		[[nodiscard]] float GetDirectionForce() const { return DirForce; }
 		void SetDirectionForce(float Force);
-		float GetLastDirectionForce() const { return LastDirForce; }
-		EDirection GetLookDirection() const { return LookDir; }
+		[[nodiscard]] float GetLastDirectionForce() const { return LastDirForce; }
+		[[nodiscard]] EDirection GetLookDirection() const { return LookDir; }
 		void SetAwake(bool Awake) const;
 
 		void SetLookDirection(EDirection InDirection);
 
-		CCamera& GetCamera() { return *Camera; }
-		const CCamera& GetCamera() const { return *Camera; }
-		bool IsCameraLocked() const { return bCameraLock; }
+		[[nodiscard]] CCamera& GetCamera() { return *GetComponent<FCameraComponent>().Camera; }
+		[[nodiscard]] const CCamera& GetCamera() const { return *GetComponent<FCameraComponent>().Camera; }
+		[[nodiscard]] bool IsCameraLocked() const { return bCameraLock; }
 		void SetCameraLock(bool Locked);
 
-		std::pair<FSpriteCoord, FSpriteCoord> GetCurrentAndNextSpriteFrame() const { return std::make_pair(SpriteFrame.Current, SpriteFrame.Next); }
-		const FSpriteSheet& GetSpriteSheet() const { return SpriteSheet; }
+		[[nodiscard]] std::pair<FSpriteCoord, FSpriteCoord> GetCurrentAndNextSpriteFrame() const { return std::make_pair(SpriteFrame.Current, SpriteFrame.Next); }
+		[[nodiscard]] const FSpriteSheet& GetSpriteSheet() const { return SpriteSheet; }
 
-		bool HasRifle();
+		[[nodiscard]] bool HasRifle();
 		std::shared_ptr<CRifle> GetRifle();
 
 		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::Yes) const override;
@@ -101,7 +101,6 @@ namespace platformer2d {
 	private:
 		FPlayerData Data{};
 		CTimer Timer;
-		std::unique_ptr<CCamera> Camera = nullptr;
 		bool bCameraLock = true;
 		CInventory Inventory;
 

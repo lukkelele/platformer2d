@@ -29,7 +29,8 @@ namespace platformer2d {
 			Name = "Player";
 		}
 
-		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
+		FCameraComponent& CamComp = AddComponent<FCameraComponent>();
+		CamComp.Camera = std::make_shared<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		SetDeletable(false);
 
 		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
@@ -47,7 +48,7 @@ namespace platformer2d {
 		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet.TileSize);
 
 		Timer.Reset();
-		LK_VERIFY(Body && Sprite);
+		LK_VERIFY(Body && Sprite && CamComp.Camera);
 
 		/* Set z-index. */
 		TransformComp.Translation.z = -0.010f;
@@ -96,11 +97,12 @@ namespace platformer2d {
 
 		Inventory.Tick(DeltaTime);
 
+		CCamera& Camera = GetCamera();
 		if (bCameraLock) {
 			/* Perform a smooth transition for the target lock even if paused. */
-			Camera->Target(Body->GetPosition(), (DeltaTime > 0.0f ? DeltaTime : 0.0060));
+			Camera.Target(Body->GetPosition(), (DeltaTime > 0.0f ? DeltaTime : 0.0060));
 		}
-		Camera->Update();
+		Camera.Update();
 	}
 
 	void CPlayer::Jump()
@@ -349,11 +351,12 @@ namespace platformer2d {
 
 	void CPlayer::OnWindowResized(const uint16_t Width, const uint16_t Height)
 	{
-		if (Camera) {
+		if (auto* CamComp = TryGetComponent<FCameraComponent>(); CamComp && CamComp->Camera) {
 			LK_TRACE_TAG("Player", "Window resized: ({}, {})", Width, Height);
-			Camera->SetViewportSize(Width, Height);
-			Camera->UpdateView();
-			Camera->UpdateProjection();
+			CCamera& Camera = *CamComp->Camera;
+			Camera.SetViewportSize(Width, Height);
+			Camera.UpdateView();
+			Camera.UpdateProjection();
 		}
 	}
 
@@ -391,7 +394,7 @@ namespace platformer2d {
 				if (Data.Button == EMouseButton::Button0) {
 					std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>();
 					if (Rifle && Rifle->IsEnabled()) {
-						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(*Camera);
+						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(GetCamera());
 						if (Math::IsValid(TargetPos)) {
 							Rifle->Fire(TargetPos);
 						}
@@ -405,11 +408,12 @@ namespace platformer2d {
 	{
 		LK_TRACE_TAG("Player", "Mouse scroll: {}", Enum::ToString(Direction));
 		if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl)) {
-			if (Camera) {
+			if (FCameraComponent* CamComp = TryGetComponent<FCameraComponent>(); CamComp && CamComp->Camera) {
+				CCamera& Camera = *CamComp->Camera;
 				const float ZoomDiff = (Direction == EMouseScrollDirection::Up)
 					? -CCamera::ZOOM_DIFF
 					: CCamera::ZOOM_DIFF;
-				Camera->SetZoom(Camera->GetZoom() + ZoomDiff);
+				Camera.SetZoom(Camera.GetZoom() + ZoomDiff);
 			}
 		}
 	}
