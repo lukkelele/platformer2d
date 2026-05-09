@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 
 #include "renderer/opengl.h"
+#include "profiler.h"
 #include "input/keyboard.h"
 #include "input/mouse.h"
 
@@ -135,11 +136,13 @@ namespace platformer2d {
 
 	void CWindow::BeginFrame()
 	{
+		LK_PROFILE_FUNC();
 		glfwPollEvents();
 	}
 
 	void CWindow::EndFrame()
 	{
+		LK_PROFILE_FUNC();
 		glfwSwapBuffers(GlfwWindow);
 	}
 
