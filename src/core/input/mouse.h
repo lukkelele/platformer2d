@@ -33,14 +33,14 @@ namespace platformer2d {
 		static void Enable();
 		static void Disable();
 
-		static bool IsDown(EMouseButton Button);
-		static EMouseButtonState GetState(EMouseButton Button);
+		[[nodiscard]] static bool IsDown(EMouseButton Button);
+		[[nodiscard]] static EMouseButtonState GetState(EMouseButton Button);
 		static FMouseButtonData& UpdateButtonState(EMouseButton Button, EMouseButtonState NewState);
 		static void UpdateScrollState(EMouseScrollDirection Direction);
 
 		static float GetX();
 		static float GetY();
-		static std::pair<float, float> GetPos();
+		static std::pair<float, float> GetPos(); /* @todo: Change to glm::vec2 */
 
 	public:
 		static inline FOnButtonPressed OnButtonPressed;
