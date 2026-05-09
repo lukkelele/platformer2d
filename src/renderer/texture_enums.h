@@ -1,12 +1,10 @@
 #pragma once
 
 #include "core/assert.h"
+#include "core/enum.h"
 
 namespace platformer2d {
 
-	/**
-	 * @enum EImageFormat
-	 */
 	enum class EImageFormat
 	{
 		None = 0,
@@ -36,31 +34,28 @@ namespace platformer2d {
 		DEPTH32F,
 		DEPTH24STENCIL8,
 
-		Depth = DEPTH24STENCIL8,
+		COUNT,
+		Depth = DEPTH24STENCIL8, /* Alias */
 	};
+	LK_ENUM(EImageFormat);
 
-	/**
-	 * @enum ETextureWrap
-	 */
 	enum class ETextureWrap
 	{
 		Clamp,
-		Repeat
+		Repeat,
+		COUNT
 	};
+	LK_ENUM(ETextureWrap);
 
-	/**
-	 * @enum ETextureFilter
-	 */
 	enum class ETextureFilter
 	{
 		Nearest,
-		Linear
+		Linear,
+		COUNT
 	};
+	LK_ENUM(ETextureFilter);
 
-	/**
-	 * @enum ETextureUniformType
-	 */
-	enum class ETextureUniformType : uint8_t
+	enum class ETextureUniformType : std::uint8_t
 	{
 		Diffuse = 0,
 		Specular,
@@ -68,15 +63,17 @@ namespace platformer2d {
 		Height,
 		Emissive,
 		DiffuseRoughness,
+		COUNT
 	};
+	LK_ENUM(ETextureUniformType);
 
 	struct FTextureSpecification
 	{
 		std::filesystem::path Path{};
 		std::string Name{};
-		uint32_t Width = 1;
-		uint32_t Height = 1;
-		uint8_t Mips = 1;
+		std::uint32_t Width = 1;
+		std::uint32_t Height = 1;
+		std::uint8_t Mips = 1;
 		bool bFlipVertical = true;
 		bool bInvert = false;
 
@@ -89,46 +86,5 @@ namespace platformer2d {
 		bool bStorage = false;
 		bool bStoreLocally = false;
 	};
-
-	namespace Enum {
-		inline const char* ToString(const EImageFormat Format)
-		{
-			switch (Format) {
-				case EImageFormat::RG8:             return "RG8";
-				case EImageFormat::RG16F:           return "RG16F";
-				case EImageFormat::RG32F:           return "RG32F";
-				case EImageFormat::RGB:             return "RGB";
-				case EImageFormat::RGB8:            return "RGB8";
-				case EImageFormat::RGBA:            return "RGBA";
-				case EImageFormat::RGBA8:           return "RGBA8";
-				case EImageFormat::RGBA16F:         return "RGBA16F";
-				case EImageFormat::RGBA32F:         return "RGBA32F";
-				case EImageFormat::SRGB:            return "SRGB";
-				case EImageFormat::DEPTH24STENCIL8: return "DEPTH24STENCIL8";
-			}
-			LK_VERIFY(false, "Unknown image format: {}", static_cast<int>(Format));
-			return nullptr;
-		}
-
-		inline const char* ToString(const ETextureWrap Wrap)
-		{
-			switch (Wrap) {
-				case ETextureWrap::Clamp:  return "Clamp";
-				case ETextureWrap::Repeat: return "Repeat";
-			}
-			LK_VERIFY(false, "Unknown texture wrap: {}", static_cast<int>(Wrap));
-			return nullptr;
-		}
-
-		inline const char* ToString(const ETextureFilter Filter)
-		{
-			switch (Filter) {
-				case ETextureFilter::Linear:  return "Linear";
-				case ETextureFilter::Nearest: return "Nearest";
-			}
-			LK_VERIFY(false, "Unknown texture filter: {}", static_cast<int>(Filter));
-			return nullptr;
-		}
-	}
-
 }
+
