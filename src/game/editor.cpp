@@ -67,7 +67,7 @@ namespace platformer2d {
 		std::weak_ptr<CActor> SelectedActor;
 		std::weak_ptr<CActor> RotatingPlatform;
 
-		const std::array<const char*, CRenderer::MaxTextures> TextureNames = {
+		const std::array<std::string_view, CRenderer::MaxTextures> TextureNames = {
 			Enum::ToString(ETexture::White),
 			Enum::ToString(ETexture::Background),
 			Enum::ToString(ETexture::Player),
@@ -692,9 +692,9 @@ namespace platformer2d {
 
 		const YAML::Node Data = YAML::Load(YamlString);
 
-		LK_DESERIALIZE_PROPERTY(Gravity, GRAVITY, glm::vec2(0.0f, -5.0f), Data);
-		LK_DESERIALIZE_PROPERTY(PlayerSpawn, PLAYER_SPAWN, glm::vec2(0.0f, 0.0f), Data);
-		LK_DESERIALIZE_PROPERTY(CameraZoom, SCENE_LOAD_CAMERA_ZOOM, 0.40f, Data);
+		Serialization::DeserializeProperty("Gravity", GRAVITY, glm::vec2(0.0f, -5.0f), Data);
+		Serialization::DeserializeProperty("PlayerSpawn", PLAYER_SPAWN, glm::vec2(0.0f, 0.0f), Data);
+		Serialization::DeserializeProperty("CameraZoom", SCENE_LOAD_CAMERA_ZOOM, 0.40f, Data);
 
 		/* Load the scene. */
 		const YAML::Node& SceneNode = Data["Scene"];
