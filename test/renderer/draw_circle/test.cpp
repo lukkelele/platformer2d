@@ -25,7 +25,7 @@ namespace platformer2d::test {
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv, NO_TEST_INIT)
 	{
-		CLog::Initialize();
+		lklog::init(lklog::level::debug);
 
 		const FWindowSpecification WindowSpec = {
 			.Width = SCREEN_WIDTH,
