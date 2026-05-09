@@ -11,7 +11,9 @@
 namespace platformer2d {
 
 	CCamera::CCamera(const float InWidth, const float InHeight, const float InNearP, const float InFarP)
-		: OrthographicNear(InNearP)
+		: ViewportWidth(InWidth)
+		, ViewportHeight(InHeight)
+		, OrthographicNear(InNearP)
 		, OrthographicFar(InFarP)
 		, AspectRatio(InWidth / InHeight)
 	{

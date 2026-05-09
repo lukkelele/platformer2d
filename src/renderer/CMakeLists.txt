@@ -4,6 +4,8 @@ project_library_sources(
 	debugrenderer.cpp
 	camera.h
 	camera.cpp
+	editorcamera.h
+	editorcamera.cpp
 	color.h
 	font.h
 	font.cpp

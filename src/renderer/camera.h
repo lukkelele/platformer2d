@@ -16,30 +16,38 @@ namespace platformer2d {
 	public:
 		CCamera(float InWidth, float InHeight, float InNearP = -1.0f, float InFarP = 1.0f);
 		CCamera() = delete;
+		CCamera(CCamera&&) = delete;
+		CCamera(const CCamera&) = delete;
 		virtual ~CCamera() = default;
+
+		CCamera& operator=(const CCamera&) = delete;
+		CCamera& operator=(CCamera&&) = delete;
 
 		void Update();
 		void SetViewportSize(uint16_t InWidth, uint16_t InHeight);
 
-		FORCEINLINE const glm::mat4& GetViewMatrix() const { return ViewMatrix; }
-		FORCEINLINE const glm::mat4& GetProjectionMatrix() const { return ProjectionMatrix; }
-		FORCEINLINE glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * ViewMatrix; }
-		inline glm::vec2 GetPosition() const { return Center; }
-		inline float GetRotation() const { return glm::radians(Rotation); }
-		inline float GetRotationSpeed() const { return RotationSpeed; }
+		[[nodiscard]] const glm::mat4& GetViewMatrix() const { return ViewMatrix; }
+		[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return ProjectionMatrix; }
+		[[nodiscard]] glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * ViewMatrix; }
+		[[nodiscard]] glm::vec2 GetPosition() const { return Center; }
+		void SetPosition(const glm::vec2& Pos) { Center = Pos; UpdateView(); }
+		[[nodiscard]] float GetRotation() const { return glm::radians(Rotation); }
+		[[nodiscard]] float GetRotationSpeed() const { return RotationSpeed; }
+		[[nodiscard]] float GetViewportWidth() const { return ViewportWidth; }
+		[[nodiscard]] float GetViewportHeight() const { return ViewportHeight; }
 
 		void SetOrthographic(float InWidth, float InHeight, float InNearClip = -1.0f, float InFarClip = 1.0f);
 
 		void SetZoom(float InZoom);
-		float GetZoom() const { return Zoom; }
+		[[nodiscard]] float GetZoom() const { return Zoom; }
 
 		void Target(const glm::vec2& TargetPos, float DeltaTime = 0.0f);
 		void SetFollowSpeed(float InFollowSpeed);
 		void SetDeadzone(const glm::vec2& InDeadzone);
-		glm::vec2 GetHalfSize() const;
+		[[nodiscard]] glm::vec2 GetHalfSize() const;
 
-		std::pair<float, float> GetMinRange() const;
-		std::pair<float, float> GetMaxRange() const;
+		[[nodiscard]] std::pair<float, float> GetMinRange() const;
+		[[nodiscard]] std::pair<float, float> GetMaxRange() const;
 		std::pair<glm::vec2, glm::vec2> GetMinMaxRange() const;
 
 		FORCEINLINE void UpdateProjection()
