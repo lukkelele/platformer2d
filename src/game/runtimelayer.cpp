@@ -5,6 +5,7 @@
 #include <numeric>
 
 #include "core/window.h"
+#include "core/profiler.h"
 #include "core/timer.h"
 #include "core/selectioncontext.h"
 #include "core/string.h"
@@ -175,6 +176,7 @@ namespace platformer2d {
 
 	void CRuntimeLayer::Tick(const float InDeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
 		if (SceneState == ESceneState::Play) {
 			DeltaTime = InDeltaTime;
