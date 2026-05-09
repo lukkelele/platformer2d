@@ -1,7 +1,7 @@
 /******************************************************************
  * @file
  * @description CDelegate and CMulticastDelegate
- * 
+ *
  * Implementations for single and multicast delegates.
  *
  * The creation of a delegate should use the following macros:
@@ -19,29 +19,28 @@
 #include "core.h"
 #include "template.h"
 
-#define LK_DECLARE_DELEGATE(DelegateName, ...) \
-	using DelegateName = ::platformer2d::Core::CDelegate<#DelegateName, void __VA_OPT__(,__VA_ARGS__)>
+#define LK_DECLARE_DELEGATE(DelegateName, ...)                                                          \
+	using DelegateName = ::platformer2d::Core::CDelegate<#DelegateName, void __VA_OPT__(, __VA_ARGS__)>
 
-#define LK_DECLARE_DELEGATE_RET(DelegateName, ReturnValue, ...) \
-	using DelegateName = ::platformer2d::Core::CDelegate<#DelegateName, ReturnValue __VA_OPT__(,__VA_ARGS__)>
+#define LK_DECLARE_DELEGATE_RET(DelegateName, ReturnValue, ...)                                                \
+	using DelegateName = ::platformer2d::Core::CDelegate<#DelegateName, ReturnValue __VA_OPT__(, __VA_ARGS__)>
 
-#define LK_DECLARE_MULTICAST_DELEGATE(DelegateName, ...) \
-	using DelegateName = ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>; \
-	using DelegateName ## _DelegateType = ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::TDelegate
+#define LK_DECLARE_MULTICAST_DELEGATE(DelegateName, ...)                                                 \
+	using DelegateName = ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>;                          \
+	using DelegateName##_DelegateType = ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::TDelegate
 
-#define LK_DECLARE_EVENT(EventName, EventOwner, ...) \
+#define LK_DECLARE_EVENT(EventName, EventOwner, ...)                               \
 	class EventName : public ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__> \
-	{ \
-	private: \
-		friend class EventOwner; \
-		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::Broadcast; \
-		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::RemoveAll; \
+	{                                                                              \
+	private:                                                                       \
+		friend class EventOwner;                                                   \
+		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::Broadcast;    \
+		using ::platformer2d::Core::CMulticastDelegate<__VA_ARGS__>::RemoveAll;    \
 	};
 
 namespace platformer2d::Core {
 
-	namespace DelegateCore
-	{
+	namespace DelegateCore {
 		static constexpr std::size_t BUFSIZE_NAME = 100;
 
 		/**
@@ -50,21 +49,20 @@ namespace platformer2d::Core {
 		 */
 		static constexpr int INLINE_ALLOCATION_SIZE = 48;
 
-		static void* (*Alloc)(std::size_t Size) = [](std::size_t Size) 
-		{ 
-			return std::malloc(Size); 
+		static void* (*Alloc)(std::size_t Size) = [](std::size_t Size)
+		{
+			return std::malloc(Size);
 		};
 
-		static void(*Free)(void* InHeapPointer) = [](void* InHeapPointer) 
-		{ 
-			std::free(InHeapPointer); 
+		static void (*Free)(void* InHeapPointer) = [](void* InHeapPointer)
+		{
+			std::free(InHeapPointer);
 		};
 	}
 
-	namespace DelegateMemory
-	{
-		using FAllocateCallback = void*(*)(std::size_t Size);
-		using FFreeCallback = void(*)(void* HeapPointer);
+	namespace DelegateMemory {
+		using FAllocateCallback = void* (*)(std::size_t Size);
+		using FFreeCallback = void (*)(void* HeapPointer);
 
 		inline void SetAllocationCallbacks(FAllocateCallback AllocateCallback, FFreeCallback FreeCallback)
 		{
@@ -87,8 +85,8 @@ namespace platformer2d::Core {
 		virtual void Clone(void* Destination) = 0;
 	};
 
-	/** 
-	 * @class IDelegate 
+	/**
+	 * @class IDelegate
 	 * @brief Delegate interface.
 	 */
 	template<typename TReturnValue, typename... TArgs>
@@ -98,22 +96,14 @@ namespace platformer2d::Core {
 		virtual TReturnValue Execute(TArgs&&... Args) = 0;
 	};
 
-
-	/** 
-	 * @class CStaticDelegate
-	 */
 	template<typename TReturnValue, typename... Args2>
 	class CStaticDelegate;
 
-	/** 
-	 * @class CStaticDelegate
-	 * @brief Delegate specialization.
-	 */
 	template<typename TReturnValue, typename... TArgs, typename... Args2>
 	class CStaticDelegate<TReturnValue(TArgs...), Args2...> : public IDelegate<TReturnValue, TArgs...>
 	{
 	public:
-		using DelegateFunction = TReturnValue(*)(TArgs..., Args2...);
+		using DelegateFunction = TReturnValue (*)(TArgs..., Args2...);
 
 		CStaticDelegate(DelegateFunction InFunction, Args2&&... InPayload)
 			: Function(InFunction)
@@ -127,19 +117,19 @@ namespace platformer2d::Core {
 		{
 		}
 
-		virtual inline TReturnValue Execute(TArgs&&... Args) override
+		TReturnValue Execute(TArgs&&... Args) override
 		{
 			return Execute_Internal(std::forward<TArgs>(Args)..., std::index_sequence_for<Args2...>());
 		}
 
-		virtual void Clone(void* Destination) override
+		void Clone(void* Destination) override
 		{
 			new (Destination) CStaticDelegate(Function, Payload);
 		}
 
 	private:
 		template<std::size_t... Is>
-		inline TReturnValue Execute_Internal(TArgs&&... Args, std::index_sequence<Is...>)
+		TReturnValue Execute_Internal(TArgs&&... Args, std::index_sequence<Is...>)
 		{
 			return Function(std::forward<TArgs>(Args)..., std::get<Is>(Payload)...);
 		}
@@ -147,7 +137,6 @@ namespace platformer2d::Core {
 		DelegateFunction Function;
 		std::tuple<Args2...> Payload;
 	};
-
 
 	/**
 	 * @class CRawDelegate
@@ -183,21 +172,21 @@ namespace platformer2d::Core {
 			LK_ASSERT(InFunction, "Passed function is invalid");
 		}
 
-		virtual inline TReturnValue Execute(TArgs&&... Args) override
+		TReturnValue Execute(TArgs&&... Args) override
 		{
 			return Execute_Internal(std::forward<TArgs>(Args)..., std::index_sequence_for<Args2...>());
 		}
 
-		virtual const void* GetOwner() const override { return ObjectRef; }
+		const void* GetOwner() const override { return ObjectRef; }
 
-		virtual void Clone(void* Destination) override
+		void Clone(void* Destination) override
 		{
 			new (Destination) CRawDelegate(ObjectRef, Function, Payload);
 		}
 
 	private:
 		template<std::size_t... Is>
-		inline TReturnValue Execute_Internal(TArgs&&... Args, std::index_sequence<Is...>)
+		TReturnValue Execute_Internal(TArgs&&... Args, std::index_sequence<Is...>)
 		{
 			return (ObjectRef->*Function)(std::forward<TArgs>(Args)..., std::get<Is>(Payload)...);
 		}
@@ -207,17 +196,9 @@ namespace platformer2d::Core {
 		std::tuple<Args2...> Payload;
 	};
 
-
-	/**
-	 * @class CLambdaDelegate
-	 */
 	template<typename TLambda, typename TReturnValue, typename... TArgs>
 	class CLambdaDelegate;
 
-	/**
-	 * @class CLambdaDelegate
-	 * @brief Template specialization.
-	 */
 	template<typename TLambda, typename TReturnValue, typename... TArgs, typename... Args2>
 	class CLambdaDelegate<TLambda, TReturnValue(TArgs...), Args2...> : public IDelegate<TReturnValue, TArgs...>
 	{
@@ -234,12 +215,12 @@ namespace platformer2d::Core {
 		{
 		}
 
-		inline TReturnValue Execute(TArgs&&... Args) override
+		TReturnValue Execute(TArgs&&... Args) override
 		{
 			return Execute_Internal(std::forward<TArgs>(Args)..., std::index_sequence_for<Args2...>());
 		}
 
-		virtual void Clone(void* Destination) override
+		void Clone(void* Destination) override
 		{
 			new (Destination) CLambdaDelegate(Lambda, Payload);
 		}
@@ -255,11 +236,6 @@ namespace platformer2d::Core {
 		std::tuple<Args2...> Payload;
 	};
 
-
-	/**
-	 * @class CSharedPtrDelegate
-	 * @brief Shared pointer template specialization.
-	 */
 	template<bool bIsConst, typename T, typename TReturnValue, typename... TArgs>
 	class CSharedPtrDelegate;
 
@@ -269,35 +245,35 @@ namespace platformer2d::Core {
 	public:
 		using DelegateFunction = typename Core::MemberFunction<bIsConst, T, TReturnValue, TArgs..., Args2...>::type;
 
-		CSharedPtrDelegate(std::shared_ptr<T> InObjectRef, 
-						   const DelegateFunction InFunction, 
-						   Args2&&... InPayload)
+		CSharedPtrDelegate(std::shared_ptr<T> InObjectRef,
+			const DelegateFunction InFunction,
+			Args2&&... InPayload)
 			: ObjectRef(InObjectRef)
 			, Function(InFunction)
 			, Payload(std::forward<Args2>(InPayload)...)
 		{
 		}
 
-		CSharedPtrDelegate(std::weak_ptr<T> InObjectRef, 
-						   const DelegateFunction InFunction, 
-						   const std::tuple<Args2...>& InPayload)
+		CSharedPtrDelegate(std::weak_ptr<T> InObjectRef,
+			const DelegateFunction InFunction,
+			const std::tuple<Args2...>& InPayload)
 			: ObjectRef(InObjectRef)
 			, Function(InFunction)
 			, Payload(InPayload)
 		{
 		}
 
-		virtual inline TReturnValue Execute(TArgs&&... Args) override
+		TReturnValue Execute(TArgs&&... Args) override
 		{
 			return Execute_Internal(std::forward<TArgs>(Args)..., std::index_sequence_for<Args2...>());
 		}
 
-		virtual const void* GetOwner() const override
+		const void* GetOwner() const override
 		{
 			return (ObjectRef.expired() ? nullptr : ObjectRef.lock().get());
 		}
 
-		virtual void Clone(void* Destination) override
+		void Clone(void* Destination) override
 		{
 			new (Destination) CSharedPtrDelegate(ObjectRef, Function, Payload);
 		}
@@ -306,12 +282,9 @@ namespace platformer2d::Core {
 		template<std::size_t... Is>
 		TReturnValue Execute_Internal(TArgs&&... Args, std::index_sequence<Is...>)
 		{
-			if (ObjectRef.expired())
-			{
+			if (ObjectRef.expired()) {
 				return TReturnValue();
-			}
-			else
-			{
+			} else {
 				std::shared_ptr<T> Object = ObjectRef.lock();
 				return (Object.get()->*Function)(std::forward<TArgs>(Args)..., std::get<Is>(Payload)...);
 			}
@@ -322,7 +295,6 @@ namespace platformer2d::Core {
 		std::tuple<Args2...> Payload;
 	};
 
-
 	/**
 	 * @struct FDelegateHandle
 	 * @brief Unique identifier for delegate objects.
@@ -331,11 +303,15 @@ namespace platformer2d::Core {
 	struct FDelegateHandle
 	{
 	public:
-		constexpr FDelegateHandle() noexcept : ID(NullID) {}
-		explicit FDelegateHandle(bool) noexcept : ID(GetNewID()) {}
+		constexpr FDelegateHandle() noexcept
+			: ID(NullID)
+		{}
+		explicit FDelegateHandle(bool) noexcept
+			: ID(GetNewID())
+		{}
+		FDelegateHandle(const FDelegateHandle&) = default;
+		FDelegateHandle& operator=(const FDelegateHandle&) = default;
 		~FDelegateHandle() noexcept = default;
-		FDelegateHandle(const FDelegateHandle& Other) = default;
-		FDelegateHandle& operator=(const FDelegateHandle& Other) = default;
 
 		FDelegateHandle(FDelegateHandle&& Other) noexcept
 			: ID(Other.ID)
@@ -347,30 +323,28 @@ namespace platformer2d::Core {
 		{
 			ID = Other.ID;
 			Other.Reset();
-
 			return *this;
 		}
 
-		inline operator bool() const noexcept { return IsValid(); }
-		inline bool operator==(const FDelegateHandle& Other) const noexcept { return (ID == Other.ID); }
-		inline bool operator<(const FDelegateHandle& Other) const noexcept { return (ID < Other.ID); }
+		operator bool() const noexcept { return IsValid(); }
+		bool operator==(const FDelegateHandle& Other) const noexcept { return (ID == Other.ID); }
+		bool operator<(const FDelegateHandle& Other) const noexcept { return (ID < Other.ID); }
 
-		inline bool IsValid() const noexcept { return (ID != NullID); }
-		inline void Reset() noexcept { ID = NullID; }
+		bool IsValid() const noexcept { return (ID != NullID); }
+		void Reset() noexcept { ID = NullID; }
 
-		inline static constexpr unsigned int NullID = std::numeric_limits<unsigned int>::max();
+		static constexpr std::uint32_t NullID = std::numeric_limits<std::uint32_t>::max();
 
 	private:
-		unsigned int ID = 0;
+		std::uint32_t ID = 0;
 
 		/** Count of the created and assigned ID's. */
-		inline static unsigned int IDCounter = 0;
+		static inline std::uint32_t IDCounter = 0;
 
 		static inline int GetNewID()
 		{
-			const unsigned int Output = FDelegateHandle::IDCounter++;
-			if (FDelegateHandle::IDCounter == NullID)
-			{
+			const std::uint32_t Output = FDelegateHandle::IDCounter++;
+			if (FDelegateHandle::IDCounter == NullID) {
 				FDelegateHandle::IDCounter = 0;
 			}
 
@@ -380,7 +354,7 @@ namespace platformer2d::Core {
 
 	/**
 	 * @class CInlineAllocator
-	 * @brief Memory allocator that makes use of small memory allocations by 
+	 * @brief Memory allocator that makes use of small memory allocations by
 	 * using a fixed-size stack buffer whenever the requested memory is
 	 * small. Utilizes heap for larger allocations.
 	 */
@@ -399,9 +373,7 @@ namespace platformer2d::Core {
 		CInlineAllocator(const CInlineAllocator& Other)
 			: Size(0)
 		{
-			if (Other.HasAllocation())
-			{
-				/* Deep copy. */
+			if (Other.HasAllocation()) {
 				std::memcpy(Allocate(Other.Size), Other.GetAllocation(), Other.Size);
 			}
 			Size = Other.Size;
@@ -411,21 +383,16 @@ namespace platformer2d::Core {
 			: Size(Other.Size)
 		{
 			Other.Size = 0;
-			if (Size > MaxStackSize)
-			{
+			if (Size > MaxStackSize) {
 				std::swap(HeapPointer, Other.HeapPointer);
-			}
-			else
-			{
+			} else {
 				std::memcpy(Buffer, Other.Buffer, Size);
 			}
 		}
 
 		FORCEINLINE CInlineAllocator& operator=(const CInlineAllocator& Other)
 		{
-			if (Other.HasAllocation())
-			{
-				/* Deep copy. */
+			if (Other.HasAllocation()) {
 				std::memcpy(Allocate(Other.Size), Other.GetAllocation(), Other.Size);
 			}
 			Size = Other.Size;
@@ -439,31 +406,23 @@ namespace platformer2d::Core {
 			Size = Other.Size;
 			Other.Size = 0;
 
-			if (Size > MaxStackSize)
-			{
+			if (Size > MaxStackSize) {
 				std::swap(HeapPointer, Other.HeapPointer);
-			}
-			else
-			{
+			} else {
 				std::memcpy(Buffer, Other.Buffer, Size);
 			}
 
 			return *this;
 		}
 
-		/** 
-		 * @brief Allocate memory of given size.
-		 * Allocates on the heap if the size is larger than the max allowed stack size.
-		 */
 		FORCEINLINE void* Allocate(const size_t InSize)
 		{
-			if (Size != InSize)
-			{
+			if (Size != InSize) {
 				Free();
 				Size = InSize;
 
-				if (InSize > MaxStackSize)
-				{
+				/* Alloc on heap if size too large. */
+				if (InSize > MaxStackSize) {
 					HeapPointer = DelegateCore::Alloc(InSize);
 					return HeapPointer;
 				}
@@ -472,25 +431,23 @@ namespace platformer2d::Core {
 			return (void*)Buffer;
 		}
 
-		/** 
+		/**
 		 * @brief Release heap memory if any has been assigned.
 		 */
 		FORCEINLINE void Free()
 		{
-			if (Size > MaxStackSize)
-			{
+			if (Size > MaxStackSize) {
 				DelegateCore::Free(HeapPointer);
 			}
 			Size = 0;
 		}
 
-		/** 
+		/**
 		 * @brief Return allocated memory.
 		 */
 		FORCEINLINE void* GetAllocation() const
 		{
-			if (!HasAllocation())
-			{
+			if (!HasAllocation()) {
 				return nullptr;
 			}
 
@@ -502,15 +459,13 @@ namespace platformer2d::Core {
 		FORCEINLINE bool HasHeapAllocation() const { return (Size > MaxStackSize); }
 
 	private:
-		union
-		{
+		union {
 			char Buffer[MaxStackSize] = {};
 			void* HeapPointer;
 		};
 
 		size_t Size = 0;
 	};
-
 
 	/**
 	 * @class CDelegateBase
@@ -519,31 +474,30 @@ namespace platformer2d::Core {
 	class CDelegateBase
 	{
 	public:
-		constexpr CDelegateBase() noexcept : Allocator() {}
+		constexpr CDelegateBase() noexcept
+			: Allocator()
+		{}
 		virtual ~CDelegateBase() noexcept { Release(); }
 
 		CDelegateBase(const CDelegateBase& Other)
 		{
-			if (Other.Allocator.HasAllocation())
-			{
+			if (Other.Allocator.HasAllocation()) {
 				Allocator.Allocate(Other.Allocator.GetSize());
 				Other.GetDelegate()->Clone(Allocator.GetAllocation());
 			}
 		}
 
-		CDelegateBase(CDelegateBase&& Other) noexcept : Allocator(std::move(Other.Allocator)) {}
+		CDelegateBase(CDelegateBase&& Other) noexcept
+			: Allocator(std::move(Other.Allocator))
+		{}
 
-		/**
-		 * @brief Check if the delegate is bound.
-		 */
-		inline bool IsBound() const { return Allocator.HasAllocation(); }
+		bool IsBound() const { return Allocator.HasAllocation(); }
 
 	protected:
 		CDelegateBase& operator=(const CDelegateBase& Other)
 		{
 			Release();
-			if (Other.Allocator.HasAllocation())
-			{
+			if (Other.Allocator.HasAllocation()) {
 				Allocator.Allocate(Other.Allocator.GetSize());
 				Other.GetDelegate()->Clone(Allocator.GetAllocation());
 			}
@@ -564,28 +518,20 @@ namespace platformer2d::Core {
 			return (Allocator.HasAllocation() ? GetDelegate()->GetOwner() : nullptr);
 		}
 
-		inline size_t GetSize() const
-		{
-			return Allocator.GetSize();
-		}
+		std::size_t GetSize() const { return Allocator.GetSize(); }
+
+		void Clear() { Release(); }
 
 		void ClearIfBoundTo(void* InObject)
 		{
-			if (InObject && IsBoundTo(InObject))
-			{
+			if (InObject && IsBoundTo(InObject)) {
 				Release();
 			}
 		}
 
-		void Clear()
+		bool IsBoundTo(void* InObject) const
 		{
-			Release();
-		}
-
-		inline bool IsBoundTo(void* InObject) const
-		{
-			if (!InObject || !Allocator.HasAllocation())
-			{
+			if (!InObject || !Allocator.HasAllocation()) {
 				return false;
 			}
 
@@ -593,10 +539,9 @@ namespace platformer2d::Core {
 		}
 
 	protected:
-		inline void Release()
+		void Release()
 		{
-			if (Allocator.HasAllocation())
-			{
+			if (Allocator.HasAllocation()) {
 				GetDelegate()->~IDelegateBase();
 				Allocator.Free();
 			}
@@ -610,48 +555,38 @@ namespace platformer2d::Core {
 		CInlineAllocator<DelegateCore::INLINE_ALLOCATION_SIZE> Allocator;
 	};
 
-
-	/**
-	 * @class CDelegate
-	 * @brief Supports binding to all types of functions.
-	 */
 	template<typename TReturnValue, typename... TArgs>
 	class CDelegate : public CDelegateBase
 	{
 	public:
 		CDelegate() = default;
 		~CDelegate() = default;
+		CDelegate(CDelegate&&) = default;
+		CDelegate(const CDelegate&) = default;
+		CDelegate& operator=(CDelegate&&) = delete;
+		CDelegate& operator=(const CDelegate&) = default;
 
 	private:
+		using TDelegateInterface = IDelegate<TReturnValue, TArgs...>;
+
 		template<typename T, typename... Args2>
 		using ConstMemberFunction = typename Core::MemberFunction<true, T, TReturnValue, TArgs..., Args2...>::type;
 
 		template<typename T, typename... Args2>
 		using NonConstMemberFunction = typename Core::MemberFunction<false, T, TReturnValue, TArgs..., Args2...>::type;
 
-		using TDelegateInterface = IDelegate<TReturnValue, TArgs...>;
-
 	public:
-		/**
-		 * @brief Direct execution of the delegate.
-		 */
-		[[nodiscard]] inline TReturnValue Execute(TArgs... Args) const
+		[[nodiscard]] TReturnValue Execute(TArgs... Args) const
 		{
 			LK_ASSERT(Allocator.HasAllocation(), "Delegate '{}' is not bound", typeid(this).name());
 			return ((TDelegateInterface*)GetDelegate())->Execute(std::forward<TArgs>(Args)...);
 		}
 
-		/**
-		 * @brief Attempt to execute the delegate if it bound, otherwise ignore.
-		 * A safe way to execute.
-		 */
-		[[nodiscard]] inline TReturnValue ExecuteIfBound(TArgs... Args) const
+		[[nodiscard]] TReturnValue ExecuteIfBound(TArgs... Args) const
 		{
-			if (IsBound())
-			{
+			if (IsBound()) {
 				return ((TDelegateInterface*)GetDelegate())->Execute(std::forward<TArgs>(Args)...);
 			}
-
 			return TReturnValue();
 		}
 
@@ -661,11 +596,9 @@ namespace platformer2d::Core {
 		{
 			CDelegate Handler;
 			Handler.Bind_Internal<CRawDelegate<false, T, TReturnValue(TArgs...), TArgs2...>>(
-				InObject, 
-				InFunction, 
-				std::forward<TArgs2>(Args)...
-			);
-			
+				InObject,
+				InFunction,
+				std::forward<TArgs2>(Args)...);
 			return Handler;
 		}
 
@@ -674,51 +607,45 @@ namespace platformer2d::Core {
 		{
 			CDelegate Handler;
 			Handler.Bind_Internal<CRawDelegate<true, T, TReturnValue(TArgs...), TArgs2...>>(
-				InObject, 
-				InFunction, 
-				std::forward<TArgs2>(Args)...
-			);
+				InObject,
+				InFunction,
+				std::forward<TArgs2>(Args)...);
 			return Handler;
 		}
 
 		template<typename... TArgs2>
-		[[nodiscard]] static CDelegate CreateStatic(TReturnValue(*InFunction)(TArgs..., TArgs2...), TArgs2... Args)
+		[[nodiscard]] static CDelegate CreateStatic(TReturnValue (*InFunction)(TArgs..., TArgs2...), TArgs2... Args)
 		{
 			CDelegate Handler;
 			Handler.Bind_Internal<CStaticDelegate<TReturnValue(TArgs...), TArgs2...>>(
-				InFunction, 
-				std::forward<TArgs2>(Args)...
-			);
+				InFunction,
+				std::forward<TArgs2>(Args)...);
 			return Handler;
 		}
 
 		template<typename T, typename... TArgs2>
-		[[nodiscard]] static CDelegate CreateShared(const std::shared_ptr<T>& ObjectRef, 
-													 NonConstMemberFunction<T, TArgs2...> InFunction, 
-													 TArgs2... Args)
+		[[nodiscard]] static CDelegate CreateShared(const std::shared_ptr<T>& ObjectRef,
+			NonConstMemberFunction<T, TArgs2...> InFunction,
+			TArgs2... Args)
 		{
 			CDelegate Handler;
 			Handler.Bind_Internal<CSharedPtrDelegate<false, T, TReturnValue(TArgs...), TArgs2...>>(
-				ObjectRef, 
-				InFunction, 
-				std::forward<TArgs2>(Args)...
-			);
-
+				ObjectRef,
+				InFunction,
+				std::forward<TArgs2>(Args)...);
 			return Handler;
 		}
 
 		template<typename T, typename... TArgs2>
-		[[nodiscard]] static CDelegate CreateShared(const std::shared_ptr<T>& ObjectRef, 
-													 ConstMemberFunction<T, TArgs2...> InFunction, 
-													 TArgs2... Args)
+		[[nodiscard]] static CDelegate CreateShared(const std::shared_ptr<T>& ObjectRef,
+			ConstMemberFunction<T, TArgs2...> InFunction,
+			TArgs2... Args)
 		{
 			CDelegate Handler;
 			Handler.Bind_Internal<CSharedPtrDelegate<true, T, TReturnValue(TArgs...), TArgs2...>>(
-				ObjectRef, 
-				InFunction, 
-				std::forward<TArgs2>(Args)...
-			);
-
+				ObjectRef,
+				InFunction,
+				std::forward<TArgs2>(Args)...);
 			return Handler;
 		}
 
@@ -728,10 +655,8 @@ namespace platformer2d::Core {
 			using LambdaType = std::decay_t<TLambda>;
 			CDelegate Handler;
 			Handler.Bind_Internal<CLambdaDelegate<LambdaType, TReturnValue(TArgs...), TArgs2...>>(
-				std::forward<LambdaType>(InLambda), 
-				std::forward<TArgs2>(Args)...
-			);
-
+				std::forward<LambdaType>(InLambda),
+				std::forward<TArgs2>(Args)...);
 			return Handler;
 		}
 
@@ -753,7 +678,7 @@ namespace platformer2d::Core {
 
 		/* Bind: Static. */
 		template<typename... TArgs2>
-		void Bind(TReturnValue(*InFunction)(TArgs..., TArgs2...), TArgs2&&... Args)
+		void Bind(TReturnValue (*InFunction)(TArgs..., TArgs2...), TArgs2&&... Args)
 		{
 			*this = CreateStatic<TArgs2...>(InFunction, std::forward<TArgs2>(Args)...);
 		}
@@ -791,18 +716,14 @@ namespace platformer2d::Core {
 
 	private:
 		/** Allow access to the Create<TFunction> functions. */
-	#if defined(LK_COMPILER_MSVC)
+#if defined(LK_COMPILER_MSVC)
 		template<typename... TArgs>
-	#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
+#elif defined(LK_COMPILER_GCC) || defined(LK_COMPILER_CLANG)
 		template<typename... TArgs2>
-	#endif
+#endif
 		friend class CMulticastDelegate;
 	};
 
-
-	/**
-	 * @class CMulticastDelegate
-	 */
 	template<typename... TArgs>
 	class CMulticastDelegate : public CDelegateBase
 	{
@@ -816,9 +737,10 @@ namespace platformer2d::Core {
 	public:
 		using TDelegate = CDelegate<void, TArgs...>;
 
-		constexpr CMulticastDelegate() : Locks(0) {}
+		constexpr CMulticastDelegate()
+			: Locks(0)
+		{}
 		~CMulticastDelegate() noexcept = default;
-
 		CMulticastDelegate(const CMulticastDelegate& Other) = default;
 		CMulticastDelegate(CMulticastDelegate&& Other) noexcept
 			: Dispatchers(std::move(Other.Dispatchers))
@@ -827,7 +749,6 @@ namespace platformer2d::Core {
 		}
 
 		CMulticastDelegate& operator=(const CMulticastDelegate& Other) = default;
-
 		CMulticastDelegate& operator=(CMulticastDelegate&& Other) noexcept
 		{
 			Dispatchers = std::move(Other.Dispatchers);
@@ -835,45 +756,31 @@ namespace platformer2d::Core {
 			return *this;
 		}
 
-		/**
-		 * @brief Invoke all bound callbacks.
-		 */
-		inline void Broadcast(TArgs... Args)
+		void Broadcast(TArgs... Args)
 		{
 			Lock();
-			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++)
-			{
-				if (Dispatchers[Idx].Handle.IsValid())
-				{
+			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++) {
+				if (Dispatchers[Idx].Handle.IsValid()) {
 					Dispatchers[Idx].Callback.Execute(Args...);
 				}
 			}
 			Unlock();
 		}
 
-		/**
-		 * @brief Remove a bound delegate.
-		 */
 		bool Remove(FDelegateHandle& Handle)
 		{
-			if (!Handle.IsValid())
-			{
+			if (!Handle.IsValid()) {
 				return false;
 			}
 
-			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++)
-			{
-				if (Dispatchers[Idx].Handle != Handle)
-				{
+			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++) {
+				if (Dispatchers[Idx].Handle != Handle) {
 					continue;
 				}
 
-				if (IsLocked())
-				{
+				if (IsLocked()) {
 					Dispatchers[Idx].Callback.Clear();
-				}
-				else
-				{
+				} else {
 					std::swap(Dispatchers[Idx], Dispatchers[Dispatchers.size() - 1]);
 					Dispatchers.pop_back();
 				}
@@ -885,20 +792,13 @@ namespace platformer2d::Core {
 			return false;
 		}
 
-		/** 
-		 * @brief Clear all bound callbacks.
-		 */
 		void RemoveAll()
 		{
-			if (IsLocked())
-			{
-				for (FDelegateHandlerPair& Handler : Dispatchers)
-				{
+			if (IsLocked()) {
+				for (FDelegateHandlerPair& Handler : Dispatchers) {
 					Handler.Callback.Clear();
 				}
-			}
-			else
-			{
+			} else {
 				Dispatchers.clear();
 			}
 		}
@@ -906,8 +806,8 @@ namespace platformer2d::Core {
 		/**
 		 * @brief Return the count of bound callbacks.
 		 */
-		inline size_t GetSize() const { return Dispatchers.size(); }
-		inline std::string_view GetName() const { return typeid(decltype(this)).name(); }
+		std::size_t GetSize() const { return Dispatchers.size(); }
+		std::string_view GetName() const { return typeid(decltype(this)).name(); }
 
 		/** Raw Pointer, non-const function. */
 		template<typename T, typename... TArgs2>
@@ -928,9 +828,8 @@ namespace platformer2d::Core {
 		FDelegateHandle Add(LambdaType&& InLambda, TArgs2&&... LambdaArgs)
 		{
 			return AddHandler(TDelegate::CreateLambda(
-				std::forward<LambdaType>(InLambda), 
-				std::forward<TArgs2>(LambdaArgs)...)
-			);
+				std::forward<LambdaType>(InLambda),
+				std::forward<TArgs2>(LambdaArgs)...));
 		}
 
 		/** Shared Pointer, non-const function. */
@@ -938,10 +837,9 @@ namespace platformer2d::Core {
 		FDelegateHandle Add(std::shared_ptr<T> ObjectRef, NonConstMemberFunction<T, TArgs2...> InFunction, TArgs2&&... Args)
 		{
 			return AddHandler(TDelegate::CreateShared(
-				ObjectRef, 
-				InFunction, 
-				std::forward<TArgs2>(Args)...)
-			);
+				ObjectRef,
+				InFunction,
+				std::forward<TArgs2>(Args)...));
 		}
 
 		/** Shared Pointer, const function. */
@@ -949,15 +847,14 @@ namespace platformer2d::Core {
 		FDelegateHandle Add(std::shared_ptr<T> ObjectRef, ConstMemberFunction<T, TArgs2...> InFunction, TArgs2&&... Args)
 		{
 			return AddHandler(TDelegate::CreateShared(
-				ObjectRef, 
-				InFunction, 
-				std::forward<TArgs2>(Args)...)
-			);
+				ObjectRef,
+				InFunction,
+				std::forward<TArgs2>(Args)...));
 		}
 
 		/** Static function. */
 		template<typename... TArgs2>
-		FDelegateHandle Add(void(*InFunction)(TArgs..., TArgs2...), TArgs2&&... Args)
+		FDelegateHandle Add(void (*InFunction)(TArgs..., TArgs2...), TArgs2&&... Args)
 		{
 			return AddHandler(TDelegate::CreateStatic(InFunction, std::forward<TArgs2>(Args)...));
 		}
@@ -974,20 +871,17 @@ namespace platformer2d::Core {
 			return AddHandler(std::forward<TDelegate>(InHandler));
 		}
 
-		bool operator-=(FDelegateHandle& InHandle) 
-		{ 
-			return Remove(InHandle); 
+		bool operator-=(FDelegateHandle& InHandle)
+		{
+			return Remove(InHandle);
 		}
 
 		FDelegateHandle AddHandler(TDelegate&& Handler) noexcept
 		{
-			for (size_t i = 0; i < Dispatchers.size(); ++i)
-			{
-				if (Dispatchers[i].Handle.IsValid() == false)
-				{
-					Dispatchers[i] = FDelegateHandlerPair(FDelegateHandle(true), std::move(Handler));
-
-					return Dispatchers[i].Handle;
+			for (std::size_t Idx = 0; Idx < Dispatchers.size(); Idx++) {
+				if (!Dispatchers[Idx].Handle.IsValid()) {
+					Dispatchers[Idx] = FDelegateHandlerPair(FDelegateHandle(true), std::move(Handler));
+					return Dispatchers[Idx].Handle;
 				}
 			}
 
@@ -1000,24 +894,18 @@ namespace platformer2d::Core {
 		 */
 		void RemoveObject(void* InObjectRef)
 		{
-			if (!InObjectRef)
-			{
+			if (!InObjectRef) {
 				return;
 			}
 
-			for (size_t i = 0; i < Dispatchers.size(); ++i)
-			{
-				if (Dispatchers[i].Callback.GetOwner() != InObjectRef)
-				{
+			for (size_t i = 0; i < Dispatchers.size(); ++i) {
+				if (Dispatchers[i].Callback.GetOwner() != InObjectRef) {
 					continue;
 				}
 
-				if (IsLocked())
-				{
+				if (IsLocked()) {
 					Dispatchers[i].Callback.Clear();
-				}
-				else
-				{
+				} else {
 					std::swap(Dispatchers[i], Dispatchers[Dispatchers.size() - 1]);
 					Dispatchers.pop_back();
 				}
@@ -1026,15 +914,12 @@ namespace platformer2d::Core {
 
 		inline bool IsBoundTo(const FDelegateHandle& Handle) const
 		{
-			if (!Handle.IsValid())
-			{
+			if (!Handle.IsValid()) {
 				return false;
 			}
 
-			for (std::size_t i = 0; i < Dispatchers.size(); i++)
-			{
-				if (Dispatchers[i].Handle == Handle)
-				{
+			for (std::size_t i = 0; i < Dispatchers.size(); i++) {
+				if (Dispatchers[i].Handle == Handle) {
 					return true;
 				}
 			}
@@ -1044,23 +929,19 @@ namespace platformer2d::Core {
 
 		inline void Compress(const size_t MaxSpace = 0)
 		{
-			if (IsLocked())
-			{
+			if (IsLocked()) {
 				return;
 			}
 
 			std::size_t ToDelete = 0;
-			for (size_t i = 0; i < Dispatchers.size() - ToDelete; i++)
-			{
-				if (!Dispatchers[i].Handle.IsValid())
-				{
+			for (size_t i = 0; i < Dispatchers.size() - ToDelete; i++) {
+				if (!Dispatchers[i].Handle.IsValid()) {
 					std::swap(Dispatchers[i], Dispatchers[ToDelete]);
 					ToDelete++;
 				}
 			}
 
-			if (ToDelete > MaxSpace)
-			{
+			if (ToDelete > MaxSpace) {
 				Dispatchers.resize(Dispatchers.size() - ToDelete);
 			}
 		}
@@ -1088,16 +969,18 @@ namespace platformer2d::Core {
 			FDelegateHandle Handle;
 			TDelegate Callback;
 
-			FDelegateHandlerPair() : Handle(false) {}
-			FDelegateHandlerPair(const FDelegateHandle& InHandle, const TDelegate& InCallback) 
+			FDelegateHandlerPair()
+				: Handle(false)
+			{}
+			FDelegateHandlerPair(const FDelegateHandle& InHandle, const TDelegate& InCallback)
 				: Handle(InHandle)
-				, Callback(InCallback) 
+				, Callback(InCallback)
 			{
 			}
 
-			FDelegateHandlerPair(const FDelegateHandle& InHandle, TDelegate&& InCallback) 
+			FDelegateHandlerPair(const FDelegateHandle& InHandle, TDelegate&& InCallback)
 				: Handle(InHandle)
-				, Callback(std::move(InCallback)) 
+				, Callback(std::move(InCallback))
 			{
 			}
 		};
