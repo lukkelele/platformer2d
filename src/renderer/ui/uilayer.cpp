@@ -99,7 +99,7 @@ namespace platformer2d {
 			CWindow* Window = CWindow::Get();
 			if (Window && GameInstance->HasScene() && UI::IsPauseMenuOpen()) {
 				const glm::vec2 WindowSize = Window->GetSize();
-				static constexpr glm::vec4 OverlayColor = {0.10f, 0.10f, 0.10f, 0.90f};
+				constexpr glm::vec4 OverlayColor = {0.10f, 0.10f, 0.10f, 0.90f};
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
 			}
 		}
@@ -173,7 +173,7 @@ namespace platformer2d {
 
 		ImGui::SetNextWindowPos(WindowPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize(WindowSize, ImGuiCond_Always);
-		constexpr int WindowFlags = ImGuiWindowFlags_NoResize
+		constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoDecoration
 			| ImGuiWindowFlags_NoDocking
 			| ImGuiWindowFlags_NoCollapse;
@@ -407,23 +407,27 @@ namespace platformer2d {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
 		/* Quit button. */
-		ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(255, 45, 45, 200));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 45, 45, 90));
-		ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
-		if (ImGui::Button("Quit Game", HalfButtonSize)) {
-			Core::Global.bShouldShutdown = true;
+		{
+			UI::FScopedColorStack ColorStack(
+				ImGuiCol_Button, IM_COL32(255, 45, 45, 200),
+				ImGuiCol_ButtonHovered, IM_COL32(255, 45, 45, 90));
+			ImGui::SetCursorPosX(((1.0f - OptionPercentage) * 0.50f) * MenuSize.x);
+			if (ImGui::Button("Quit Game", HalfButtonSize)) {
+				Core::Global.bShouldShutdown = true;
+			}
 		}
-		ImGui::PopStyleColor(2);
 
 		/* Play button. */
 		ImGui::SameLine();
-		ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::NiceGreen);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
-		if (ImGui::Button(LK_ICON_PLAY " Play", HalfButtonSize)) {
-			UI::ClosePauseMenu();
+		{
+			UI::FScopedColorStack ColorStack(
+				ImGuiCol_Button, RGBA32::NiceGreen,
+				ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
+			if (ImGui::Button(LK_ICON_PLAY " Play", HalfButtonSize)) {
+				UI::ClosePauseMenu();
+			}
 		}
-		ImGui::PopStyleColor(2);
-		ImGui::PopStyleVar(1);
+		ImGui::PopStyleVar(1); /* FrameRounding */
 
 		UI::Font::Pop();
 	}
