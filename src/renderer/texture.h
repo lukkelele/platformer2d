@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "core/core.h"
+#include "core/enum.h"
 #include "core/assert.h"
 #include "core/buffer.h"
 #include "opengl.h"
@@ -25,13 +26,14 @@ namespace platformer2d {
 		Enemy2,
 		COUNT
 	};
+	LK_ENUM(ETexture);
 
 	class CTexture
 	{
 	public:
 		CTexture(const FTextureSpecification& Specification);
 		CTexture(const FTextureSpecification& Specification, const FBuffer& InData);
-		CTexture(uint32_t InWidth, uint32_t InHeight, void* InData = nullptr);
+		CTexture(std::uint32_t InWidth, std::uint32_t InHeight, void* InData = nullptr);
 		CTexture() = delete;
 		~CTexture();
 
@@ -61,10 +63,10 @@ namespace platformer2d {
 		FBuffer ImageBuffer;
 		std::size_t Slot;
 
-		uint32_t Width = 1;
-		uint32_t Height = 1;
-		uint8_t Channels = 0;
-		uint8_t Mips = 1;
+		std::uint32_t Width = 1;
+		std::uint32_t Height = 1;
+		std::uint8_t Channels = 0;
+		std::uint8_t Mips = 1;
 		std::filesystem::path Path{};
 		std::string Name{};
 
@@ -74,27 +76,4 @@ namespace platformer2d {
 
 		static_assert(std::is_same_v<LRendererID, GLuint>, "LRendererID type mismatch");
 	};
-
-	namespace Enum {
-		constexpr const char* ToString(const ETexture Texture)
-		{
-			switch (Texture) {
-				case ETexture::White:      return "White";
-				case ETexture::Background: return "Background";
-				case ETexture::Player:     return "Player";
-				case ETexture::Bricks:     return "Bricks";
-				case ETexture::Metal:      return "Metal";
-				case ETexture::Wood:       return "Wood";
-				case ETexture::Swoosh:     return "Swoosh";
-				case ETexture::Cloud:      return "Cloud";
-				case ETexture::Rifle:      return "Rifle";
-				case ETexture::Enemy1:     return "Enemy1";
-				case ETexture::Enemy2:     return "Enemy2";
-				case ETexture::COUNT:      return "COUNT";
-				default:                   break;
-			}
-			return nullptr;
-		}
-	}
-
 }
