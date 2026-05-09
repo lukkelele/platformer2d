@@ -7,28 +7,13 @@
 
 namespace platformer2d::Serialization {
 
-/**
- * @def LK_DESERIALIZE_PROPERTY
- * @brief Get a value from a node with a fallback value incase it doesn't exist.
- */
-#define LK_DESERIALIZE_PROPERTY(PropertyName, Destination, DefaultValue, Node)                             \
-	if (Node.IsDefined()) {                                                                                \
-		if (auto NodeRef = Node[#PropertyName]) {                                                          \
-			try {                                                                                          \
-				Destination = NodeRef.as<decltype(DefaultValue)>();                                        \
-			} catch (const std::exception& Exception) {                                                    \
-				LK_ERROR_TAG("Deserializer", "Failed to get \"{}\": {}", #PropertyName, Exception.what()); \
-				Destination = DefaultValue;                                                                \
-			}                                                                                              \
-		} else {                                                                                           \
-			LK_WARN_TAG("Deserializer", "Property not found: {}", #PropertyName);                          \
-		}                                                                                                  \
-	} else {                                                                                               \
-		LK_ERROR_TAG("Deserializer", "Default value used for: {}", #PropertyName);                         \
-		Destination = DefaultValue;                                                                        \
-	}
+	enum EProperty : std::uint8_t
+	{
+		Required,
+		Optional,
+	};
 
-	template<typename TDest, typename TDefault>
+	template<EProperty PropertyOption = EProperty::Required, typename TDest, typename TDefault>
 	static void DeserializeProperty(std::string_view PropertyName, TDest& Destination, const TDefault& DefaultValue, const YAML::Node& Node)
 	{
 		if (!Node.IsDefined()) {
@@ -39,7 +24,11 @@ namespace platformer2d::Serialization {
 
 		const YAML::Node& NodeRef = Node[PropertyName];
 		if (!NodeRef.IsDefined()) {
-			LK_ERROR_TAG("Deserializer", R"(Property not found: "{}")", PropertyName);
+			if constexpr (PropertyOption == EProperty::Required) {
+				LK_ERROR_TAG("Deserializer", R"(Property not found: "{}")", PropertyName);
+			} else {
+				LK_TRACE_TAG("Deserializer", R"(Property not found: "{}")", PropertyName);
+			}
 			return;
 		}
 
@@ -219,7 +208,7 @@ namespace platformer2d::Serialization {
 			case EInteraction::Damage:
 			{
 				FDamageInteraction Data;
-				LK_DESERIALIZE_PROPERTY(Damage, Data.Damage, 0.0f, Node);
+				DeserializeProperty("Damage", Data.Damage, 0.0f, Node);
 				IC.Data = Data;
 				LK_DEBUG_TAG("Deserializer", "FDamageInteraction::Damage: {}", Data.Damage);
 				break;
@@ -227,8 +216,8 @@ namespace platformer2d::Serialization {
 			case EInteraction::Pickup:
 			{
 				FPickupInteraction Data;
-				LK_DESERIALIZE_PROPERTY(PickupKind, Data.Kind, EPickupKind::Item, Node);
-				LK_DESERIALIZE_PROPERTY(ExpireWhenPickedUp, Data.bExpireWhenPickedUp, false, Node);
+				DeserializeProperty("PickupKind", Data.Kind, EPickupKind::Item, Node);
+				DeserializeProperty("ExpireWhenPickedUp", Data.bExpireWhenPickedUp, false, Node);
 
 				int ObjectTypeValue = 0;
 				try {
@@ -254,7 +243,7 @@ namespace platformer2d::Serialization {
 						if (Object.Type == EWeaponType::Rifle) {
 							const YAML::Node& SpecNode = ObjectNode["Specification"];
 							FRifleSpecification Spec;
-							LK_DESERIALIZE_PROPERTY(MagazineSize, Spec.MagazineSize, 30, SpecNode);
+							DeserializeProperty("MagazineSize", Spec.MagazineSize, 30, SpecNode);
 							Object.Spec = Spec;
 							Data.Object = Object;
 						}
@@ -287,7 +276,7 @@ namespace platformer2d::Serialization {
 		LK_ASSERT(Node["Type"] && Node["Shape"]);
 		BodySpec.Type = static_cast<EBodyType>(Node["Type"].as<int>());
 
-		LK_DESERIALIZE_PROPERTY(GravityScale, BodySpec.GravityScale, 1.0f, Node);
+		DeserializeProperty("GravityScale", BodySpec.GravityScale, 1.0f, Node);
 
 		const YAML::Node ShapeNode = Node["Shape"];
 		LK_VERIFY(ShapeNode["ShapeType"], "ShapeType missing in yaml");
@@ -364,7 +353,7 @@ namespace platformer2d::Serialization {
 		BodySpec.Density = Node["Mass"].as<float>(); /** @todo Density <-> Mass, equivalent in terms of body creation? */
 		BodySpec.MotionLock = Node["MotionLock"].as<std::underlying_type_t<EMotionLock>>();
 
-		LK_DESERIALIZE_PROPERTY(Sensor, BodySpec.bSensor, false, Node);
+		DeserializeProperty("Sensor", BodySpec.bSensor, false, Node);
 	}
 
 }
