@@ -4,14 +4,18 @@
 
 #include <array>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <optional>
+#include <string_view>
 #include <type_traits>
 #include <source_location>
 #include <span>
 #include <queue>
+#include <utility>
 
 #include <glm/glm.hpp>
 
@@ -115,6 +119,35 @@ namespace platformer2d {
 	};
 
 	namespace Enum {
+		namespace Internal {
+			template<typename T>
+			concept CountedEnum = std::is_enum_v<T> && requires {
+				T::COUNT;
+			};
+
+			/* Unused for now. The goal is to be able evaluate existance of Enum::ToString for enum T and that it is constexpr. */
+			template<typename T>
+			concept HasToString = std::is_enum_v<T> && requires(T Value) {
+				{ ToString(Value) } -> std::convertible_to<std::string_view>;
+				{ std::bool_constant<(ToString(T{}), true)>{} };
+			};
+
+			template<typename T>
+			concept StringConvertable = CountedEnum<T>;
+
+			template<CountedEnum T, std::predicate<T> Predicate>
+			constexpr T FindIf(Predicate Pred)
+			{
+				for (std::underlying_type_t<T> Idx = 0; Idx < std::to_underlying(T::COUNT); Idx++) {
+					const T Value = static_cast<T>(Idx);
+					if (Pred(Value)) {
+						return Value;
+					}
+				}
+				return T::COUNT;
+			}
+		}
+
 		constexpr const char* ToString(const Core::ELayer Layer)
 		{
 			const char* S = nullptr;
@@ -155,6 +188,14 @@ namespace platformer2d {
 			}
 #undef _
 			return S;
+		}
+
+		template<Internal::StringConvertable T>
+		constexpr T FromString(const std::string_view S)
+		{
+			return Internal::FindIf<T>([S](const T Value) {
+				return S == std::string_view{ Enum::ToString(Value) };
+			});
 		}
 	}
 
