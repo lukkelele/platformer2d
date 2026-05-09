@@ -26,10 +26,50 @@ namespace platformer2d::Enum::Internal {
 		Flags,
 	};
 
+	/* clang-format off */
+	/**
+	 * Tags are used for sorting out issues with ADL (argument-dependent lookup) when
+	 * using the LK_ENUM macros in other namespaces than platformer2d.
+	 */
+	struct UnregisteredTag {};
+	struct ContiguousTag {};
+	struct FlagsTag {};
+	struct RangeTag
+	{
+		std::int64_t Min;
+		std::int64_t Max;
+	};
+
+	template<typename T>
+	consteval UnregisteredTag lk_enum_traits(T*) noexcept { return {}; }
+
+	consteval ERangeKind TagToKind(UnregisteredTag) { return ERangeKind::Contiguous; }
+	consteval ERangeKind TagToKind(ContiguousTag)   { return ERangeKind::Contiguous; }
+	consteval ERangeKind TagToKind(RangeTag)        { return ERangeKind::Range; }
+	consteval ERangeKind TagToKind(FlagsTag)        { return ERangeKind::Flags; }
+
+	consteval std::int64_t TagMin(RangeTag T) { return T.Min; }
+	template<typename T>
+	consteval std::int64_t TagMin(T)          { return 0; } /* Unused for all tags except RangeTag. */
+
+	consteval std::int64_t TagMax(RangeTag T) { return T.Max; }
+	template<typename T>
+	consteval std::int64_t TagMax(T)          { return 0; } /* Unused for all tags except RangeTag. */
+	/* clang-format on */
+
 	template<typename E>
 	struct Range
 	{
-		static constexpr bool Defined = false;
+	private:
+		/* The trait solves the ADL issue. */
+		static constexpr auto Trait = lk_enum_traits(static_cast<E*>(nullptr));
+		using TraitType = decltype(Trait);
+
+	public:
+		static constexpr bool Defined = !std::is_same_v<TraitType, UnregisteredTag>;
+		static constexpr ERangeKind Kind = TagToKind(Trait);
+		static constexpr std::int64_t Min = TagMin(Trait);
+		static constexpr std::int64_t Max = TagMax(Trait);
 	};
 
 	template<auto V>
@@ -248,35 +288,29 @@ namespace platformer2d::Enum {
 	}
 }
 
-#define LK_ENUM(EnumType)                                                                                                          \
-	template<>                                                                                                                     \
-	struct ::platformer2d::Enum::Internal::Range<EnumType>                                                                         \
-	{                                                                                                                              \
-		static_assert(::std::is_enum_v<EnumType>, #EnumType " must be an enum");                                                   \
-		static_assert(requires { EnumType::COUNT; }, #EnumType " requires COUNT for LK_ENUM");                                     \
-		static constexpr bool Defined = true;                                                                                      \
-		static constexpr ::platformer2d::Enum::Internal::ERangeKind Kind = ::platformer2d::Enum::Internal::ERangeKind::Contiguous; \
+/* clang-format off */
+#define LK_ENUM(EnumType)                                                                  \
+	static_assert(::std::is_enum_v<EnumType>, #EnumType " must be an enum");               \
+	static_assert(requires { EnumType::COUNT; }, #EnumType " requires COUNT for LK_ENUM"); \
+	[[maybe_unused]] consteval auto lk_enum_traits(EnumType*) noexcept                     \
+		-> ::platformer2d::Enum::Internal::ContiguousTag { return {}; }
+
+#define LK_ENUM_RANGE(EnumType, MinValue, MaxValue)                                              \
+	static_assert(::std::is_enum_v<EnumType>, #EnumType " must be an enum");                     \
+	static_assert(requires { EnumType::COUNT; }, #EnumType " requires COUNT for LK_ENUM_RANGE"); \
+	[[maybe_unused]] consteval auto lk_enum_traits(EnumType*) noexcept                           \
+		-> ::platformer2d::Enum::Internal::RangeTag                                              \
+	{                                                                                            \
+		return ::platformer2d::Enum::Internal::RangeTag{                                         \
+			.Min = static_cast<::std::int64_t>(MinValue),                                        \
+			.Max = static_cast<::std::int64_t>(MaxValue),                                        \
+		};                                                                                       \
 	}
 
-#define LK_ENUM_RANGE(EnumType, MinValue, MaxValue)                                                                           \
-	template<>                                                                                                                \
-	struct ::platformer2d::Enum::Internal::Range<EnumType>                                                                    \
-	{                                                                                                                         \
-		static_assert(::std::is_enum_v<EnumType>, #EnumType " must be an enum");                                              \
-		static_assert(requires { EnumType::COUNT; }, #EnumType " requires COUNT for LK_ENUM_RANGE");                          \
-		static constexpr bool Defined = true;                                                                                 \
-		static constexpr ::platformer2d::Enum::Internal::ERangeKind Kind = ::platformer2d::Enum::Internal::ERangeKind::Range; \
-		static constexpr ::std::int64_t Min = static_cast<::std::int64_t>(MinValue);                                          \
-		static constexpr ::std::int64_t Max = static_cast<::std::int64_t>(MaxValue);                                          \
-	}
-
-#define LK_ENUM_FLAGS(EnumType)                                                                                               \
-	template<>                                                                                                                \
-	struct ::platformer2d::Enum::Internal::Range<EnumType>                                                                    \
-	{                                                                                                                         \
-		static_assert(::std::is_enum_v<EnumType>, #EnumType " must be an enum");                                              \
-		static_assert(requires { EnumType::COUNT; }, #EnumType " requires COUNT for LK_ENUM_FLAGS");                          \
-		static constexpr bool Defined = true;                                                                                 \
-		static constexpr ::platformer2d::Enum::Internal::ERangeKind Kind = ::platformer2d::Enum::Internal::ERangeKind::Flags; \
-	}
+#define LK_ENUM_FLAGS(EnumType)                                                                  \
+	static_assert(::std::is_enum_v<EnumType>, #EnumType " must be an enum");                     \
+	static_assert(requires { EnumType::COUNT; }, #EnumType " requires COUNT for LK_ENUM_FLAGS"); \
+	[[maybe_unused]] consteval auto lk_enum_traits(EnumType*) noexcept                           \
+		-> ::platformer2d::Enum::Internal::FlagsTag { return {}; }
+/* clang-format on */
 
