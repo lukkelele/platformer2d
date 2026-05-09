@@ -78,7 +78,6 @@ namespace platformer2d {
 
 		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
 		bool bRaycastScene = false;
-		bool bSceneStateChanged = false;
 		glm::vec2 PLAYER_SPAWN = {0.0f, 0.0f};
 		glm::vec2 GRAVITY = {0.0f, -5.0f};
 		glm::vec2 GRAVITY_CACHED = GRAVITY; /* Updated during scene termination. */
@@ -264,18 +263,15 @@ namespace platformer2d {
 			return;
 		}
 
-		if (bSceneStateChanged) {
-			if (SceneState == ESceneState::Play) {
-				CPhysicsWorld::Unpause();
-			} else {
-				CPhysicsWorld::Pause();
-			}
-			bSceneStateChanged = false;
+		CCamera* ActiveCamera = GetActiveCamera();
+		LK_VERIFY(ActiveCamera);
+		ActiveCamera->SetViewportSize(EditorViewportWidth, EditorViewportHeight);
+
+		if (CEditorCamera* EC = GetEditorCamera(); EC && bUseEditorCamera) {
+			EC->Tick(InDeltaTime, bEditorViewportHovered);
 		}
 
-		CCamera& Camera = Player->GetCamera();
-		Camera.SetViewportSize(EditorViewportWidth, EditorViewportHeight);
-		CRenderer::BeginScene(Camera);
+		CRenderer::BeginScene(*ActiveCamera);
 
 		if (std::shared_ptr<CActor> Selected = Scene->GetActor(CSelectionContext::GetSelected())) {
 			SelectedActor = Selected;
@@ -367,7 +363,24 @@ namespace platformer2d {
 
 	CCamera* CEditor::GetActiveCamera() const
 	{
+		if (bUseEditorCamera) {
+			if (CEditorCamera* EC = GetEditorCamera()) {
+				return EC;
+			}
+		}
 		return (Player ? &Player->GetCamera() : nullptr);
+	}
+
+	CEditorCamera* CEditor::GetEditorCamera() const
+	{
+		if (!EditorCameraActor) {
+			return nullptr;
+		}
+		FCameraComponent* CamComp = EditorCameraActor->TryGetComponent<FCameraComponent>();
+		if (!CamComp || !CamComp->Camera) {
+			return nullptr;
+		}
+		return static_cast<CEditorCamera*>(CamComp->Camera.get());
 	}
 
 	std::shared_ptr<CPlayer> CEditor::GetPlayer(const std::size_t Idx) const
@@ -392,6 +405,28 @@ namespace platformer2d {
 		if (Scene) {
 			Scene->SetState(ESceneState::Play);
 		}
+	}
+
+	void CEditor::PossessEditorCamera()
+	{
+		CEditorCamera* EC = GetEditorCamera();
+		if (!EC || !Player) {
+			return;
+		}
+		const CCamera& PlayerCam = Player->GetCamera();
+		EC->BeginSwitchLerp(PlayerCam.GetPosition(), PlayerCam.GetZoom());
+		EC->SetActive(true);
+		bUseEditorCamera = true;
+	}
+
+	void CEditor::PossessPlayerCamera()
+	{
+		CEditorCamera* EC = GetEditorCamera();
+		if (!EC) {
+			return;
+		}
+		EC->SetActive(false);
+		bUseEditorCamera = false;
 	}
 
 	bool CEditor::IsGamePaused()
@@ -656,6 +691,14 @@ namespace platformer2d {
 		Out << YAML::Key << "PlayerSpawn" << YAML::Value << PLAYER_SPAWN;
 		Out << YAML::Key << "CameraZoom" << YAML::Value << SCENE_LOAD_CAMERA_ZOOM;
 
+		const CEditorCamera* EC = GetEditorCamera();
+		const glm::vec2 EditorCamPos = EC ? EC->GetPosition() : EditorCameraSavedPos;
+		const float EditorCamZoom = EC ? EC->GetZoom() : EditorCameraSavedZoom;
+		const bool EditorCamLerp = EC ? EC->IsLerpEnabled() : PendingEditorCameraLerp;
+		Out << YAML::Key << "EditorCameraPos" << YAML::Value << EditorCamPos;
+		Out << YAML::Key << "EditorCameraZoom" << YAML::Value << EditorCamZoom;
+		Out << YAML::Key << "EditorCameraLerp" << YAML::Value << EditorCamLerp;
+
 		/* Physics */
 		Out << YAML::Key << "Physics";
 		Out << YAML::BeginMap;
@@ -695,6 +738,18 @@ namespace platformer2d {
 		Serialization::DeserializeProperty("Gravity", GRAVITY, glm::vec2(0.0f, -5.0f), Data);
 		Serialization::DeserializeProperty("PlayerSpawn", PLAYER_SPAWN, glm::vec2(0.0f, 0.0f), Data);
 		Serialization::DeserializeProperty("CameraZoom", SCENE_LOAD_CAMERA_ZOOM, 0.40f, Data);
+
+		if (Data["EditorCameraPos"]) {
+			Serialization::DeserializeProperty("EditorCameraPos", EditorCameraSavedPos, PLAYER_SPAWN, Data);
+			Serialization::DeserializeProperty("EditorCameraZoom", EditorCameraSavedZoom, SCENE_LOAD_CAMERA_ZOOM, Data);
+			bHasSavedEditorCameraState = true;
+		}
+		bool LerpEnabledInit = true;
+		Serialization::DeserializeProperty("EditorCameraLerp", LerpEnabledInit, true, Data);
+		if (CEditorCamera* EC = GetEditorCamera()) {
+			EC->SetLerpEnabled(LerpEnabledInit);
+		}
+		PendingEditorCameraLerp = LerpEnabledInit;
 
 		/* Load the scene. */
 		const YAML::Node& SceneNode = Data["Scene"];
@@ -956,6 +1011,21 @@ namespace platformer2d {
 			ImGui::TableNextRow();
 			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
 
+			if (CEditorCamera* EC = GetEditorCamera()) {
+				ImGui::TableNextRow();
+				bool LerpEnabled = EC->IsLerpEnabled();
+				if (UI::Checkbox("Editor Camera Lerp", LerpEnabled)) {
+					EC->SetLerpEnabled(LerpEnabled);
+					PendingEditorCameraLerp = LerpEnabled;
+				}
+
+				ImGui::TableNextRow();
+				float LerpSnap = EC->GetLerpSnapDistance();
+				if (UI::Widget::DragFloat("Lerp Snap Distance", LerpSnap, 0.05f, 0.0f, 100.0f)) {
+					EC->SetLerpSnapDistance(LerpSnap);
+				}
+			}
+
 			ImGui::TableNextRow();
 			ImGui::Spacing();
 			UI::Checkbox("Draw Circle", bDrawCircle);
@@ -1009,10 +1079,10 @@ namespace platformer2d {
 		ImGui::Image(
 			static_cast<ImTextureID>(ViewportTexture->GetID()),
 			WindowSize,
-			ImVec2(0, 1),       /* UV0 */
-			ImVec2(1, 0),       /* UV1 */
+			ImVec2(0, 1), /* UV0 */
+			ImVec2(1, 0), /* UV1 */
 			ImVec4(1, 1, 1, 1), /* Tint Color   */
-			ImVec4(1, 1, 1, 0)  /* Border Color */
+			ImVec4(1, 1, 1, 0) /* Border Color */
 		);
 	}
 
@@ -1026,8 +1096,8 @@ namespace platformer2d {
 		if (ImGuiWindow* Window = ImGui::FindWindowByName(UI::PanelID::Viewport)) {
 			ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
 
-			CCamera& Camera = Player->GetCamera();
-			if (UI::DrawGizmo(Gizmo, *SelectedRef, Camera.GetViewMatrix(), Camera.GetProjectionMatrix())) {
+			CCamera* Camera = GetActiveCamera();
+			if (Camera && UI::DrawGizmo(Gizmo, *SelectedRef, Camera->GetViewMatrix(), Camera->GetProjectionMatrix())) {
 				Player->SetAwake(true);
 			}
 
@@ -1078,14 +1148,53 @@ namespace platformer2d {
 			if (ToolbarButton(Image, Color)) {
 				LK_ASSERT(Scene); /* Button should only be active if a scene is active. */
 				if (SceneState == ESceneState::Play) {
-					Scene->SetState(ESceneState::Pause);
-					bSceneStateChanged = true;
+					PauseGame();
 				} else if (SceneState == ESceneState::Pause) {
-					Scene->SetState(ESceneState::Play);
-					bSceneStateChanged = true;
+					ResumeGame();
 				}
 			}
 			if (SceneState == ESceneState::None) {
+				ImGui::EndDisabled();
+			}
+		}
+
+		/* Camera switch buttons. */
+		{
+			const bool SceneExists = HasScene();
+			const bool PlayerActive = !bUseEditorCamera;
+			const bool EditorActive = bUseEditorCamera;
+
+			const ImGuiStyle& Style = ImGui::GetStyle();
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+
+			const float CamButtonWidth = ImGui::CalcTextSize("Editor Camera").x + (2.0f * Style.FramePadding.x);
+			const float CamButtonHeight = Avail.y;
+			constexpr float CamButtonGap = 8.0f;
+			const float TotalWidth = (CamButtonWidth * 2.0f) + CamButtonGap;
+			ImGui::SameLine();
+			UI::ShiftCursorX(40);
+
+			if (!SceneExists) {
+				ImGui::BeginDisabled();
+			}
+			{
+				UI::FScopedColor ButtonCol(ImGuiCol_Button, PlayerActive ? RGBA32::SmoothGreen : RGBA32::Titlebar::Default);
+				if (ImGui::Button("Player", ImVec2(CamButtonWidth, CamButtonHeight))) {
+					if (SceneExists && bUseEditorCamera) {
+						PossessPlayerCamera();
+					}
+				}
+			}
+			ImGui::SameLine(0.0f, CamButtonGap);
+			{
+				UI::FScopedColor ButtonCol(ImGuiCol_Button, EditorActive ? RGBA32::SmoothGreen : RGBA32::Titlebar::Default);
+				if (ImGui::Button("Editor", ImVec2(CamButtonWidth, CamButtonHeight))) {
+					if (SceneExists && !bUseEditorCamera) {
+						PossessEditorCamera();
+					}
+				}
+			}
+			if (!SceneExists) {
 				ImGui::EndDisabled();
 			}
 		}
@@ -1237,6 +1346,17 @@ namespace platformer2d {
 					}
 				}
 				break;
+			case EKey::Space:
+				if (Data.State == EKeyState::Pressed) {
+					if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl)) {
+						if (IsGamePaused()) {
+							ResumeGame();
+						} else {
+							PauseGame();
+						}
+					}
+				}
+				break;
 			case EKey::Escape:
 				if (Data.State == EKeyState::Pressed) {
 					UI::TogglePauseMenu();
@@ -1326,9 +1446,25 @@ namespace platformer2d {
 		LK_VERIFY(Player);
 		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
 
-		CCamera* Camera = GetActiveCamera();
-		LK_VERIFY(Camera);
-		Camera->SetZoom(SCENE_LOAD_CAMERA_ZOOM);
+		Player->GetCamera().SetZoom(SCENE_LOAD_CAMERA_ZOOM);
+
+		const float InitWidth = (EditorViewportWidth > 0) ? static_cast<float>(EditorViewportWidth) : SCREEN_WIDTH;
+		const float InitHeight = (EditorViewportHeight > 0) ? static_cast<float>(EditorViewportHeight) : SCREEN_HEIGHT;
+
+		FActorSpecification EditorCamSpec;
+		EditorCamSpec.Name = "EditorCamera";
+		EditorCameraActor = std::make_shared<CActor>(EditorCamSpec);
+		FCameraComponent& EditorCamComp = EditorCameraActor->AddComponent<FCameraComponent>();
+		std::shared_ptr<CEditorCamera> EditorCamera = std::make_shared<CEditorCamera>(InitWidth, InitHeight);
+		EditorCamComp.Camera = EditorCamera;
+
+		const glm::vec2 InitPos = bHasSavedEditorCameraState ? EditorCameraSavedPos : PLAYER_SPAWN;
+		const float InitZoom = bHasSavedEditorCameraState ? EditorCameraSavedZoom : SCENE_LOAD_CAMERA_ZOOM;
+		EditorCamera->SetPosition(InitPos);
+		EditorCamera->SetZoom(InitZoom);
+		EditorCamera->SetLerpEnabled(PendingEditorCameraLerp);
+		EditorCamera->SetActive(true);
+		bUseEditorCamera = true;
 
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		Framebuffer->GetImage(0)->Invalidate();
@@ -1345,6 +1481,13 @@ namespace platformer2d {
 			return;
 		}
 
+		if (CEditorCamera* EC = GetEditorCamera()) {
+			EditorCameraSavedPos = EC->GetPosition();
+			EditorCameraSavedZoom = EC->GetZoom();
+			bHasSavedEditorCameraState = true;
+			EC->SetActive(false);
+		}
+
 		UI::ClosePauseMenu();
 		SaveScene();
 
@@ -1353,6 +1496,9 @@ namespace platformer2d {
 		Scene = nullptr;
 		Player.reset();
 		Player = nullptr;
+		EditorCameraActor.reset();
+		EditorCameraActor = nullptr;
+		bUseEditorCamera = true;
 
 		GRAVITY_CACHED = CPhysicsWorld::GetGravity();
 		CPhysicsWorld::Destroy();

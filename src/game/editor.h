@@ -2,6 +2,7 @@
 
 #include "core/layer.h"
 #include "game/instance.h"
+#include "renderer/editorcamera.h"
 #include "renderer/texture.h"
 #include "physics/events.h"
 #include "scene/scene.h"
@@ -23,15 +24,15 @@ namespace platformer2d {
 		void Tick(float InDeltaTime) override;
 		void RenderUI() override;
 
-		CCamera* GetActiveCamera() const override;
-		std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
-		std::shared_ptr<CScene> GetScene() const override { return Scene; }
+		[[nodiscard]] CCamera* GetActiveCamera() const override;
+		[[nodiscard]] std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
+		[[nodiscard]] std::shared_ptr<CScene> GetScene() const override { return Scene; }
 		void OpenScene(const std::filesystem::path& ScenePath) override;
 		void CloseScene() override;
 
 		void PauseGame() override;
 		void ResumeGame() override;
-		bool IsGamePaused() override;
+		[[nodiscard]] bool IsGamePaused() override;
 
 		std::uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 		std::uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
@@ -48,8 +49,8 @@ namespace platformer2d {
 		void UpdateEditorViewportState();
 		void UpdateEditorViewportBounds();
 		void UpdateViewportBounds() override;
-		glm::vec2 GetMouseInViewportSpace() override;
-		glm::vec2 GetMouseInWorldSpace(const CCamera& Camera) override;
+		[[nodiscard]] glm::vec2 GetMouseInViewportSpace() override;
+		[[nodiscard]] glm::vec2 GetMouseInWorldSpace(const CCamera& Camera) override;
 
 		void CreatePlayer();
 
@@ -70,6 +71,9 @@ namespace platformer2d {
 		void RaycastScene();
 		void SaveScene();
 
+		void PossessEditorCamera();
+		void PossessPlayerCamera();
+
 		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
 		void OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer);
 		void OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer);
@@ -77,6 +81,14 @@ namespace platformer2d {
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
+		std::shared_ptr<CActor> EditorCameraActor = nullptr;
+		bool bUseEditorCamera = true;
+		glm::vec2 EditorCameraSavedPos{0.0f, 0.0f};
+		float EditorCameraSavedZoom = 0.30f;
+		bool bHasSavedEditorCameraState = false;
+		bool PendingEditorCameraLerp = true;
+
+		CEditorCamera* GetEditorCamera() const;
 
 		std::filesystem::path LastSceneFilepath{};
 		std::filesystem::path SceneToOpen{};
