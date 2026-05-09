@@ -1,6 +1,8 @@
 #include "player.h"
 
+#include "lk_config.h"
 #include "core/log.h"
+#include "core/profiler.h"
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "renderer/renderer.h"
@@ -9,59 +11,19 @@
 
 namespace platformer2d {
 
-	namespace {
-		constexpr int SPRITE_TILEPOS_Y = 2; /* Row in the spritesheet. */
+	constexpr float VelocityThresholdX = CBody::LINEAR_VELOCITY_X_EPSILON;
+	constexpr float VelocityThresholdY = CBody::LINEAR_VELOCITY_Y_EPSILON;
 
-		/* @todo: Should not be hardcoded */
-		enum class ESpriteFrame : uint16_t
-		{
-			/* Cycle: 0->1->2->3 */
-			WalkStart = 0,
-			Walk1 = 1,
-			Walk2 = 2,
-			WalkEnd = 3,
-
-			JumpPreparation = 4,
-			JumpAscend = 5,
-			JumpDescend = 6,
-			JumpLanding = 7,
-
-			/* Cycle: 8->9->8 */
-			Hit1 = 8,
-			Hit2 = 9,
-
-			/* 10->11->12 (With preparation: 11->10->11->12) */
-			Slash1 = 10,
-			Slash2 = 11,
-			Slash3 = 12,
-
-			/* 13->11 (Variation: 11->13->11) */
-			Punch1 = 11,
-			Punch2 = 13,
-
-			WalkReversedStart = 18,
-			WalkReversed1 = 19,
-			WalkReversed2 = 20,
-			WalkReversedEnd = 21,
-
-			COUNT
-		};
-
-		constexpr float VelocityThresholdX = CBody::LINEAR_VELOCITY_X_EPSILON;
-		constexpr float VelocityThresholdY = CBody::LINEAR_VELOCITY_Y_EPSILON;
-
-		constexpr std::array<EKey, 5> MovementKeys = {
-			EKey::W,
-			EKey::A,
-			EKey::S,
-			EKey::D,
-			EKey::Space};
-	}
+	constexpr std::array<EKey, 5> MovementKeys = {
+		EKey::W,
+		EKey::A,
+		EKey::S,
+		EKey::D,
+		EKey::Space};
 
 	CPlayer::CPlayer(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
 		: CActor(InSpec, BodySpec)
 		, Inventory("PlayerInventory")
-		, NextSpriteFrame(std::to_underlying(ESpriteFrame::COUNT))
 	{
 		if (Name.empty()) {
 			Name = "Player";
@@ -70,14 +32,19 @@ namespace platformer2d {
 		Camera = std::make_unique<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
 		SetDeletable(false);
 
-		constexpr glm::vec2 TilePos = {ESpriteFrame::WalkStart, SPRITE_TILEPOS_Y};
-		WalkAnim.StartTileX = TilePos.x;
-		WalkAnim.StartTileY = TilePos.y;
-		WalkAnim.FrameCount = 4;
-		WalkAnim.TicksPerFrame = WalkAnim.FrameCount * 5;
-		constexpr glm::vec2 TileSize = {32, 32};
 		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
-		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, TileSize);
+
+		FSpriteReader Reader;
+		std::optional<FSpriteSheet> LoadedSheet = Reader.Read(TEXTURES_DIR "/sprites/Player.lsprite");
+		LK_VERIFY(LoadedSheet, "Failed to read Player.lsprite");
+		SpriteSheet = std::move(*LoadedSheet);
+
+		const FSpriteCoord InitialFrame = SpriteSheet.Get(ESpriteFrame::Idle).First();
+		SpriteFrame.Current = InitialFrame;
+		SpriteFrame.Next = InitialFrame;
+
+		const glm::vec2 TilePos{InitialFrame.X, InitialFrame.Y};
+		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet.TileSize);
 
 		Timer.Reset();
 		LK_VERIFY(Body && Sprite);
@@ -112,6 +79,7 @@ namespace platformer2d {
 
 	void CPlayer::Tick(const float DeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		CActor::Tick(DeltaTime);
 
 		if (DeltaTime > 0.0f) {
@@ -142,7 +110,7 @@ namespace platformer2d {
 			SetMovementState(EMovementState::Airborne);
 			Body->ApplyImpulse({0.0f, JumpImpulse});
 
-			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpPreparation);
+			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Jump).First();
 			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms);
 
 			OnJumped.Broadcast(Data);
@@ -205,21 +173,18 @@ namespace platformer2d {
 			OnInputReceived();
 		}
 		if (CKeyboard::IsKeyDown(EKey::A)) {
-			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({-DirForce, 0.0f});
 			LookDir = EDirection::Left;
 			LastDirForce = -DirForce;
 			OnInputReceived();
 		}
 		if (CKeyboard::IsKeyDown(EKey::D)) {
-			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			Body->ApplyForce({DirForce, 0.0f});
 			LastDirForce = DirForce;
 			LookDir = EDirection::Right;
 			OnInputReceived();
 		}
 		if (CKeyboard::IsKeyDown(EKey::Space)) {
-			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::JumpPreparation);
 			Jump();
 			LastDirForce = 0.0f;
 			OnInputReceived();
@@ -269,7 +234,7 @@ namespace platformer2d {
 				break;
 		}
 
-		bShouldUpdateSprite = (CurrentSpriteFrame != NextSpriteFrame);
+		bShouldUpdateSprite = (SpriteFrame.Current != SpriteFrame.Next);
 	}
 
 	void CPlayer::MovementState_Idle()
@@ -277,22 +242,16 @@ namespace platformer2d {
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
-		/* Movement in X-axis */
 		if (std::abs(LinearVelocity.x) > VelocityThresholdX) {
 			if (MovingByInput) {
 				SetMovementState(EMovementState::Running);
-				WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
 			} else {
-				/* Player is moving because of external forces. */
-				NextSpriteFrame = std::to_underlying(ESpriteFrame::Hit1);
+				SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Hit).First();
 			}
 		} else {
-			/* Player character is idle. */
 			const auto TimeNow = std::chrono::steady_clock::now();
 			if (TimeNow - LastInputTime > 150ms) {
-				/* Always turn the player character frontward after a brief delay. */
-				WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
-				NextSpriteFrame = WalkAnim.StartTileX;
+				SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Idle).First();
 			}
 		}
 	}
@@ -300,17 +259,14 @@ namespace platformer2d {
 	void CPlayer::MovementState_Running()
 	{
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
-		const uint16_t FrameIndex = CRenderer::GetFrameIndex();
+		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
 		if (std::abs(LinearVelocity.x) > VelocityThresholdX) {
-			const uint16_t AnimFrame = WalkAnim.CalculateAnimFrame(FrameIndex);
-			NextSpriteFrame = AnimFrame;
+			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Walk).GetFrame(FrameIndex);
 		} else if (!MovingByInput && std::abs(LinearVelocity.x) < VelocityThresholdX) {
-			/* Player is idle. */
 			SetMovementState(EMovementState::Idle);
-			WalkAnim.StartTileX = std::to_underlying(ESpriteFrame::WalkStart);
-			NextSpriteFrame = WalkAnim.StartTileX;
+			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Idle).First();
 		}
 	}
 
@@ -318,11 +274,10 @@ namespace platformer2d {
 	{
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 
-		/* Check if ascending or descending. */
 		if (LinearVelocity.y > VelocityThresholdY) {
-			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpAscend);
+			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::JumpAscend).First();
 		} else if (LinearVelocity.y < -VelocityThresholdY) {
-			NextSpriteFrame = std::to_underlying(ESpriteFrame::JumpDescend);
+			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::JumpDescend).First();
 		}
 	}
 
@@ -332,7 +287,6 @@ namespace platformer2d {
 			return;
 		}
 
-		LK_TRACE_TAG("Player", "{} -> {}", Enum::ToString(Data.MovementState), Enum::ToString(State));
 		Data.MovementState = State;
 	}
 
@@ -370,22 +324,22 @@ namespace platformer2d {
 
 	void CPlayer::UpdateSprite()
 	{
-		SetSpriteTilePos(NextSpriteFrame);
-		LK_ASSERT(CurrentSpriteFrame == NextSpriteFrame);
+		SetSpriteTilePos(SpriteFrame.Next);
+		LK_ASSERT(SpriteFrame.Current == SpriteFrame.Next);
 	}
 
 	void CPlayer::ForceUpdateSprite()
 	{
-		SetSpriteTilePos(NextSpriteFrame, true);
-		LK_ASSERT(CurrentSpriteFrame == NextSpriteFrame);
+		SetSpriteTilePos(SpriteFrame.Next, true);
+		LK_ASSERT(SpriteFrame.Current == SpriteFrame.Next);
 	}
 
-	void CPlayer::SetSpriteTilePos(const uint16_t X, const bool ForceUpdate)
+	void CPlayer::SetSpriteTilePos(const FSpriteCoord& InCoord, const bool ForceUpdate)
 	{
-		if (ForceUpdate || (CurrentSpriteFrame != X)) {
+		if (ForceUpdate || (SpriteFrame.Current != InCoord)) {
 			const bool FlipHorizontal = (LookDir == EDirection::Left);
-			Sprite->SetTilePos(X, SPRITE_TILEPOS_Y, FlipHorizontal);
-			CurrentSpriteFrame = X;
+			Sprite->SetTilePos(InCoord.X, InCoord.Y, FlipHorizontal);
+			SpriteFrame.Current = InCoord;
 
 			if (std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>()) {
 				Rifle->SetLookDirection(LookDir);

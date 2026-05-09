@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/delegate.h"
+#include "core/enum.h"
 #include "core/timer.h"
 #include "renderer/camera.h"
 #include "renderer/sprite.h"
 #include "scene/actor.h"
 #include "inventory.h"
 #include "rifle.h"
+#include "spritereader.h"
 
 namespace platformer2d {
 
@@ -15,8 +17,10 @@ namespace platformer2d {
 		Idle,
 		Running,
 		Airborne,
+		COUNT
 	};
-
+	LK_ENUM(EMovementState);
+	
 	struct FPlayerData
 	{
 		uint64_t ID = 0;
@@ -60,7 +64,8 @@ namespace platformer2d {
 		bool IsCameraLocked() const { return bCameraLock; }
 		void SetCameraLock(bool Locked);
 
-		std::pair<uint16_t, uint16_t> GetCurrentAndNextSpriteFrame() const { return std::make_pair(CurrentSpriteFrame, NextSpriteFrame); }
+		std::pair<FSpriteCoord, FSpriteCoord> GetCurrentAndNextSpriteFrame() const { return std::make_pair(SpriteFrame.Current, SpriteFrame.Next); }
+		const FSpriteSheet& GetSpriteSheet() const { return SpriteSheet; }
 
 		bool HasRifle();
 		std::shared_ptr<CRifle> GetRifle();
@@ -82,7 +87,7 @@ namespace platformer2d {
 		void SyncTransformComponent();
 		void UpdateSprite();
 		void ForceUpdateSprite();
-		void SetSpriteTilePos(uint16_t X, bool ForceUpdate = false);
+		void SetSpriteTilePos(const FSpriteCoord& InCoord, bool ForceUpdate = false);
 
 		void OnWindowResized(uint16_t Width, uint16_t Height);
 		void OnKeyPressed(const FKeyData& Data);
@@ -113,33 +118,13 @@ namespace platformer2d {
 		bool bShouldUpdateSprite = false;
 
 		std::unique_ptr<CSprite> Sprite = nullptr;
-		FSpriteAnimation WalkAnim;
-		uint16_t CurrentSpriteFrame = 0;
-		uint16_t NextSpriteFrame = 0;
+		FSpriteSheet SpriteSheet;
+		FSpriteFrame SpriteFrame;
 
 		Core::FDelegateHandle OnWindowResizedHandle;
 		Core::FDelegateHandle OnKeyPressedHandle;
 		Core::FDelegateHandle OnMouseButtonPressedHandle;
 		Core::FDelegateHandle OnMouseScrolledHandle;
 	};
-
-	namespace Enum {
-		inline const char* ToString(const EMovementState State)
-		{
-			const char* S = "";
-#define _(EnumValue)                                      \
-	case EMovementState::EnumValue: S = #EnumValue; break
-			switch (State) {
-				_(Idle);
-				_(Running);
-				_(Airborne);
-				default:
-					LK_THROW_ENUM_ERR(State);
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+
