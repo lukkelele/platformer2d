@@ -1,5 +1,6 @@
 #include "effectmanager.h"
 
+#include "core/profiler.h"
 #include "renderer/renderer.h"
 
 namespace platformer2d {
@@ -49,6 +50,7 @@ namespace platformer2d {
 
 	void CEffectManager::Tick(const float DeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		using namespace std::chrono;
 		const auto CurrentTime = steady_clock::now();
 
