@@ -4,6 +4,7 @@
 #include <fstream>
 #include <istream>
 
+#include "core/profiler.h"
 #include "core/string.h"
 #include "game/enemy.h"
 #include "game/instance.h"
@@ -80,6 +81,7 @@ namespace platformer2d {
 
 	void CScene::Tick(const float DeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		for (const auto& Actor : Actors) {
 			Actor->Tick(DeltaTime);
 		}
@@ -87,6 +89,7 @@ namespace platformer2d {
 
 	void CScene::Render()
 	{
+		LK_PROFILE_FUNC();
 		for (const auto& Actor : Actors) {
 			if (Actor->HasFlag(EActorFlag_Transparent)) {
 				continue;
