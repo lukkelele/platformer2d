@@ -1,0 +1,32 @@
+Name: Player
+Type: Character
+Texture: Player
+TileSize: [32, 32]
+Row: 2
+Animations:
+  Idle:
+    Frames: [0]
+    TicksPerFrame: 8
+  Walk:
+    Frames: [0, 1, 2, 3]
+    TicksPerFrame: 20
+  Jump:
+    Frames: [4]
+  JumpAscend:
+    Frames: [5]
+  JumpDescend:
+    Frames: [6]
+  JumpLanding:
+    Frames: [7]
+  Hit:
+    Frames: [8, 9]
+    TicksPerFrame: 8
+  Slash:
+    Frames: [10, 11, 12]
+    TicksPerFrame: 6
+  Punch:
+    Frames: [13, 11]
+    TicksPerFrame: 6
+  WalkReversed:
+    Frames: [18, 19, 20, 21]
+    TicksPerFrame: 20
