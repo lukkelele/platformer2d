@@ -53,6 +53,42 @@ namespace platformer2d {
 		UpdateProjection();
 	}
 
+	void CCamera::BeginSwitchLerp(const glm::vec2& StartPos, const float StartZoom)
+	{
+		if (!bSwitchLerping) {
+			SwitchTargetPos = Center;
+			SwitchTargetZoom = Zoom;
+		}
+
+		Center = StartPos;
+		Zoom = std::max(ZOOM_MIN, std::min(ZOOM_MAX, StartZoom));
+		UpdateView();
+		UpdateProjection();
+
+		bSwitchLerping = true;
+	}
+
+	void CCamera::TickSwitchLerp(const float Dt)
+	{
+		if (!bSwitchLerping || (Dt <= 0.0f)) {
+			return;
+		}
+
+		const float T = 1.0f - std::exp(-SWITCH_LERP_SPEED * Dt);
+		Center += (SwitchTargetPos - Center) * T;
+		Zoom += (SwitchTargetZoom - Zoom) * T;
+
+		if ((glm::length(SwitchTargetPos - Center) < SWITCH_LERP_EPSILON_POS)
+			&& (std::abs(SwitchTargetZoom - Zoom) < SWITCH_LERP_EPSILON_ZOOM)) {
+			Center = SwitchTargetPos;
+			Zoom = SwitchTargetZoom;
+			bSwitchLerping = false;
+		}
+
+		UpdateView();
+		UpdateProjection();
+	}
+
 	void CCamera::OnKeyPressed(const FKeyData& KeyData)
 	{
 		LK_TRACE_TAG("Camera", "OnKeyPressed: {} (Count: {})", Enum::ToString(KeyData.Key), KeyData.RepeatCount);

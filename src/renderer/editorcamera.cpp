@@ -32,7 +32,7 @@ namespace platformer2d {
 			CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
 			bPanning = false;
 			bWasMiddleDown = false;
-			bSwitchLerping = false;
+			CancelSwitchLerp();
 		}
 	}
 
@@ -73,48 +73,10 @@ namespace platformer2d {
 			LastMousePos = Mouse;
 		}
 
-		if (bSwitchLerping && (RealDeltaTime > 0.0f)) {
-			const float T = 1.0f - std::exp(-SwitchLerpSpeed * RealDeltaTime);
-
-			const glm::vec2 Pos = GetPosition();
-			const glm::vec2 NewPos = Pos + (SwitchTargetPos - Pos) * T;
-			SetPosition(NewPos);
-
-			const float Zoom = GetZoom();
-			const float NewZoom = Zoom + (SwitchTargetZoom - Zoom) * T;
-			SetZoom(NewZoom);
-
-			if ((glm::length(SwitchTargetPos - NewPos) < SwitchLerpEpsilonPos)
-				&& (std::abs(SwitchTargetZoom - NewZoom) < SwitchLerpEpsilonZoom)) {
-				SetPosition(SwitchTargetPos);
-				SetZoom(SwitchTargetZoom);
-				bSwitchLerping = false;
-			}
-		}
+		TickSwitchLerp(RealDeltaTime);
 
 		bWasMiddleDown = MiddleDown;
 		Update();
-	}
-
-	void CEditorCamera::BeginSwitchLerp(const glm::vec2& StartPos, const float StartZoom)
-	{
-		SwitchTargetPos = GetPosition();
-		SwitchTargetZoom = GetZoom();
-
-		if (!bLerpEnabled) {
-			bSwitchLerping = false;
-			return;
-		}
-
-		const float Distance = glm::length(SwitchTargetPos - StartPos);
-		if (Distance > LerpSnapDistance) {
-			bSwitchLerping = false;
-			return;
-		}
-
-		SetPosition(StartPos);
-		SetZoom(StartZoom);
-		bSwitchLerping = true;
 	}
 
 	void CEditorCamera::SetLerpEnabled(const bool Enabled)
@@ -127,13 +89,6 @@ namespace platformer2d {
 		LerpSnapDistance = Distance;
 	}
 
-	void CEditorCamera::CancelSwitchLerp()
-	{
-		if (bSwitchLerping) {
-			bSwitchLerping = false;
-		}
-	}
-
 	void CEditorCamera::OnMouseScrolled(const EMouseScrollDirection Direction)
 	{
 		if (!bActive) {
@@ -142,7 +97,7 @@ namespace platformer2d {
 
 		CancelSwitchLerp();
 
-		float Step = ZoomScrollStep;
+		float Step = ZOOM_SCROLL_STEP;
 		if (CKeyboard::IsKeyDown(EKey::LeftShift) || CKeyboard::IsKeyDown(EKey::RightShift)) {
 			Step *= 3.0f;
 		}
@@ -152,3 +107,4 @@ namespace platformer2d {
 	}
 
 }
+

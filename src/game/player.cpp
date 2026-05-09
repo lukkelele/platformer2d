@@ -11,8 +11,8 @@
 
 namespace platformer2d {
 
-	constexpr float VelocityThresholdX = CBody::LINEAR_VELOCITY_X_EPSILON;
-	constexpr float VelocityThresholdY = CBody::LINEAR_VELOCITY_Y_EPSILON;
+	constexpr float VELOCITY_THRESHOLD_X = CBody::LINEAR_VELOCITY_X_EPSILON;
+	constexpr float VELOCITY_THRESHOLD_Y = CBody::LINEAR_VELOCITY_Y_EPSILON;
 
 	constexpr std::array<EKey, 5> MovementKeys = {
 		EKey::W,
@@ -98,9 +98,13 @@ namespace platformer2d {
 		Inventory.Tick(DeltaTime);
 
 		CCamera& Camera = GetCamera();
-		if (bCameraLock) {
+		const float CamDt = (DeltaTime > 0.0f ? DeltaTime : 0.0060f);
+		if (Camera.IsSwitchLerping()) {
+			Camera.SetSwitchTargetPos(Body->GetPosition());
+			Camera.TickSwitchLerp(CamDt);
+		} else if (bCameraLock) {
 			/* Perform a smooth transition for the target lock even if paused. */
-			Camera.Target(Body->GetPosition(), (DeltaTime > 0.0f ? DeltaTime : 0.0060));
+			Camera.Target(Body->GetPosition(), CamDt);
 		}
 		Camera.Update();
 	}
@@ -244,7 +248,7 @@ namespace platformer2d {
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
-		if (std::abs(LinearVelocity.x) > VelocityThresholdX) {
+		if (std::abs(LinearVelocity.x) > VELOCITY_THRESHOLD_X) {
 			if (MovingByInput) {
 				SetMovementState(EMovementState::Running);
 			} else {
@@ -264,9 +268,9 @@ namespace platformer2d {
 		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
-		if (std::abs(LinearVelocity.x) > VelocityThresholdX) {
+		if (std::abs(LinearVelocity.x) > VELOCITY_THRESHOLD_X) {
 			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Walk).GetFrame(FrameIndex);
-		} else if (!MovingByInput && std::abs(LinearVelocity.x) < VelocityThresholdX) {
+		} else if (!MovingByInput && std::abs(LinearVelocity.x) < VELOCITY_THRESHOLD_X) {
 			SetMovementState(EMovementState::Idle);
 			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Idle).First();
 		}
@@ -276,9 +280,9 @@ namespace platformer2d {
 	{
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 
-		if (LinearVelocity.y > VelocityThresholdY) {
+		if (LinearVelocity.y > VELOCITY_THRESHOLD_Y) {
 			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::JumpAscend).First();
-		} else if (LinearVelocity.y < -VelocityThresholdY) {
+		} else if (LinearVelocity.y < -VELOCITY_THRESHOLD_Y) {
 			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::JumpDescend).First();
 		}
 	}

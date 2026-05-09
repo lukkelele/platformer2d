@@ -30,7 +30,11 @@ namespace platformer2d {
 		[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return ProjectionMatrix; }
 		[[nodiscard]] glm::mat4 GetViewProjection() const { return GetProjectionMatrix() * ViewMatrix; }
 		[[nodiscard]] glm::vec2 GetPosition() const { return Center; }
-		void SetPosition(const glm::vec2& Pos) { Center = Pos; UpdateView(); }
+		void SetPosition(const glm::vec2& Pos)
+		{
+			Center = Pos;
+			UpdateView();
+		}
 		[[nodiscard]] float GetRotation() const { return glm::radians(Rotation); }
 		[[nodiscard]] float GetRotationSpeed() const { return RotationSpeed; }
 		[[nodiscard]] float GetViewportWidth() const { return ViewportWidth; }
@@ -45,6 +49,12 @@ namespace platformer2d {
 		void SetFollowSpeed(float InFollowSpeed);
 		void SetDeadzone(const glm::vec2& InDeadzone);
 		[[nodiscard]] glm::vec2 GetHalfSize() const;
+
+		void BeginSwitchLerp(const glm::vec2& StartPos, float StartZoom);
+		void TickSwitchLerp(float Dt);
+		void CancelSwitchLerp() { bSwitchLerping = false; }
+		void SetSwitchTargetPos(const glm::vec2& Pos) { SwitchTargetPos = Pos; }
+		[[nodiscard]] bool IsSwitchLerping() const { return bSwitchLerping; }
 
 		[[nodiscard]] std::pair<float, float> GetMinRange() const;
 		[[nodiscard]] std::pair<float, float> GetMaxRange() const;
@@ -75,6 +85,14 @@ namespace platformer2d {
 		static constexpr float ZOOM_MIN = 0.010f;
 		static constexpr float ZOOM_MAX = 1.0f;
 		static constexpr float ZOOM_DIFF = 0.010f;
+		static constexpr float SWITCH_LERP_SPEED = 9.0f;
+		static constexpr float SWITCH_LERP_EPSILON_POS = 0.005f;
+		static constexpr float SWITCH_LERP_EPSILON_ZOOM = 0.0005f;
+
+	protected:
+		bool bSwitchLerping = false;
+		glm::vec2 SwitchTargetPos{0.0f};
+		float SwitchTargetZoom = 0.30f;
 
 	private:
 		glm::vec2 Center = {0.0f, 0.0f};

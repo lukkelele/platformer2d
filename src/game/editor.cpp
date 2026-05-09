@@ -414,7 +414,12 @@ namespace platformer2d {
 			return;
 		}
 		const CCamera& PlayerCam = Player->GetCamera();
-		EC->BeginSwitchLerp(PlayerCam.GetPosition(), PlayerCam.GetZoom());
+		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
+		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
+			EC->BeginSwitchLerp(PlayerCam.GetPosition(), PlayerCam.GetZoom());
+		} else {
+			EC->CancelSwitchLerp();
+		}
 		EC->SetActive(true);
 		bUseEditorCamera = true;
 	}
@@ -422,8 +427,15 @@ namespace platformer2d {
 	void CEditor::PossessPlayerCamera()
 	{
 		CEditorCamera* EC = GetEditorCamera();
-		if (!EC) {
+		if (!EC || !Player) {
 			return;
+		}
+		CCamera& PlayerCam = Player->GetCamera();
+		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
+		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
+			PlayerCam.BeginSwitchLerp(EC->GetPosition(), EC->GetZoom());
+		} else {
+			PlayerCam.CancelSwitchLerp();
 		}
 		EC->SetActive(false);
 		bUseEditorCamera = false;
@@ -1167,31 +1179,45 @@ namespace platformer2d {
 			const ImGuiStyle& Style = ImGui::GetStyle();
 			const ImVec2 Avail = ImGui::GetContentRegionAvail();
 
-			const float CamButtonWidth = ImGui::CalcTextSize("Editor Camera").x + (2.0f * Style.FramePadding.x);
+			UI::FScopedFont ScopedFont(EFontSize::Large);
+			UI::FScopedStyleStack StyleStack(
+				ImGuiStyleVar_FrameRounding, 8,
+				ImGuiStyleVar_FramePadding, ImVec2(8, 6));
+
+			const float CamButtonWidth = ImGui::CalcTextSize("Editor Camera").x + (2.0f * (Style.FramePadding.x));
 			const float CamButtonHeight = Avail.y;
-			constexpr float CamButtonGap = 8.0f;
-			const float TotalWidth = (CamButtonWidth * 2.0f) + CamButtonGap;
+			constexpr float CamButtonGap = 16.0f;
 			ImGui::SameLine();
-			UI::ShiftCursorX(40);
+			UI::ShiftCursorX(80);
 
 			if (!SceneExists) {
 				ImGui::BeginDisabled();
 			}
 			{
-				UI::FScopedColor ButtonCol(ImGuiCol_Button, PlayerActive ? RGBA32::SmoothGreen : RGBA32::Titlebar::Default);
+				if (PlayerActive) {
+					ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::SmoothGreen);
+				}
 				if (ImGui::Button("Player", ImVec2(CamButtonWidth, CamButtonHeight))) {
 					if (SceneExists && bUseEditorCamera) {
 						PossessPlayerCamera();
 					}
 				}
+				if (PlayerActive) {
+					ImGui::PopStyleColor();
+				}
 			}
 			ImGui::SameLine(0.0f, CamButtonGap);
 			{
-				UI::FScopedColor ButtonCol(ImGuiCol_Button, EditorActive ? RGBA32::SmoothGreen : RGBA32::Titlebar::Default);
+				if (EditorActive) {
+					ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::SmoothGreen);
+				}
 				if (ImGui::Button("Editor", ImVec2(CamButtonWidth, CamButtonHeight))) {
 					if (SceneExists && !bUseEditorCamera) {
 						PossessEditorCamera();
 					}
+				}
+				if (EditorActive) {
+					ImGui::PopStyleColor();
 				}
 			}
 			if (!SceneExists) {
