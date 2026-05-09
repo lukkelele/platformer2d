@@ -96,6 +96,30 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FCameraComponent& CActor::AddComponent<FCameraComponent>()
+	{
+		LK_DEBUG_TAG("Actor", "{}: Add camera component", Name);
+		if (!CameraComp.has_value()) {
+			CameraComp.emplace();
+		}
+
+		return CameraComp.value();
+	}
+
+	template<>
+	inline FCameraComponent& CActor::AddComponent<FCameraComponent>(const FCameraComponent& Other)
+	{
+		LK_DEBUG_TAG("Actor", "{}: Add camera component", Name);
+		if (!CameraComp.has_value()) {
+			CameraComp = Other;
+		} else {
+			CameraComp.value() = Other;
+		}
+
+		return CameraComp.value();
+	}
+
+	template<>
 	inline bool CActor::RemoveComponent<FTransformComponent>()
 	{
 		return false;
@@ -134,6 +158,18 @@ namespace platformer2d {
 		}
 
 		HealthComp.reset();
+		return true;
+	}
+
+	template<>
+	inline bool CActor::RemoveComponent<FCameraComponent>()
+	{
+		LK_DEBUG_TAG("Actor", "{}: Remove camera component", Name);
+		if (!CameraComp.has_value()) {
+			return false;
+		}
+
+		CameraComp.reset();
 		return true;
 	}
 
@@ -192,6 +228,20 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FCameraComponent& CActor::GetComponent<FCameraComponent>()
+	{
+		LK_ASSERT_GET_COMP(CameraComp.has_value());
+		return CameraComp.value();
+	}
+
+	template<>
+	inline const FCameraComponent& CActor::GetComponent<FCameraComponent>() const
+	{
+		LK_ASSERT_GET_COMP(CameraComp.has_value());
+		return CameraComp.value();
+	}
+
+	template<>
 	inline FTransformComponent* CActor::TryGetComponent<FTransformComponent>()
 	{
 		return &TransformComp;
@@ -240,6 +290,18 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FCameraComponent* CActor::TryGetComponent<FCameraComponent>()
+	{
+		return (CameraComp.has_value() ? std::addressof(CameraComp.value()) : nullptr);
+	}
+
+	template<>
+	inline const FCameraComponent* CActor::TryGetComponent<FCameraComponent>() const
+	{
+		return (CameraComp.has_value() ? std::addressof(CameraComp.value()) : nullptr);
+	}
+
+	template<>
 	inline bool CActor::HasComponent<FTransformComponent>() const
 	{
 		return true;
@@ -263,6 +325,12 @@ namespace platformer2d {
 		return HealthComp.has_value();
 	}
 
+	template<>
+	inline bool CActor::HasComponent<FCameraComponent>() const
+	{
+		return CameraComp.has_value();
+	}
 }
 
 #undef LK_ASSERT_GET_COMP
+

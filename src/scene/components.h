@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <memory>
 #include <utility>
 #include <string>
 #include <variant>
@@ -21,6 +22,13 @@
 #include "game/weapontype.h"
 
 namespace platformer2d {
+
+	class CCamera;
+
+	struct FCameraComponent
+	{
+		std::shared_ptr<CCamera> Camera; /* @todo: Should be unique_ptr but need to sort out CCamera forward decl first. */
+	};
 
 	struct FTransformComponent
 	{

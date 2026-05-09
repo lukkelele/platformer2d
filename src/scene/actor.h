@@ -191,6 +191,7 @@ namespace platformer2d {
 		std::optional<FEffectComponent> EffectComp;
 		std::optional<FInteractionComponent> InteractionComp;
 		std::optional<FHealthComponent> HealthComp;
+		std::optional<FCameraComponent> CameraComp;
 
 		std::string Name;
 		uint64_t ActorFlags = EActorFlag_None;
