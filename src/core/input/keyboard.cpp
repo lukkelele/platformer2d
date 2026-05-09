@@ -1,6 +1,7 @@
 #include "keyboard.h"
 
 #include "core/log.h"
+#include "core/profiler.h"
 #include "core/window.h"
 
 namespace platformer2d {
@@ -13,6 +14,7 @@ namespace platformer2d {
 
 	void CKeyboard::Update()
 	{
+		LK_PROFILE_FUNC();
 		/* Held keys. */
 		for (auto& [Key, HeldData] : KeyHeldMap) {
 			KeyDataMap[Key].RepeatCount++;
