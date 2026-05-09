@@ -3,6 +3,8 @@
 #include <cstring>
 #include <memory>
 
+#include "core/profiler.h"
+
 namespace platformer2d {
 
 	CRenderCommandQueue::CRenderCommandQueue()
@@ -19,6 +21,7 @@ namespace platformer2d {
 
 	void CRenderCommandQueue::Execute()
 	{
+		LK_PROFILE_FUNC();
 		/*
 		  +----------------+-----------------+--------------+
 		  | Render Command | Size (uint32_t) | Command data |
