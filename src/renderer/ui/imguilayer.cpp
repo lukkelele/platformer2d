@@ -9,6 +9,7 @@
 
 #include "core/core.h"
 #include "core/log.h"
+#include "core/profiler.h"
 #include "core/window.h"
 #include "renderer/font.h"
 #include "scoped.h"
@@ -56,6 +57,7 @@ namespace platformer2d {
 
 	void CImGuiLayer::BeginFrame()
 	{
+		LK_PROFILE_FUNC();
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -66,6 +68,7 @@ namespace platformer2d {
 
 	void CImGuiLayer::EndFrame()
 	{
+		LK_PROFILE_FUNC();
 		ImGui::End(); /* Viewport */
 
 		ImGui::Render();

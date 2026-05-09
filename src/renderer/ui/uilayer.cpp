@@ -1,5 +1,6 @@
 #include "uilayer.h"
 
+#include "core/profiler.h"
 #include "core/window.h"
 #include "core/settings.h"
 #include "game/instance.h"
@@ -80,6 +81,7 @@ namespace platformer2d {
 
 	void CUILayer::Tick(const float DeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		CGameInstance* GameInstance = CGameInstance::Get();
 		if (NextLevel.bSelected) {
 			LK_ASSERT(GameInstance);
@@ -105,6 +107,7 @@ namespace platformer2d {
 
 	void CUILayer::RenderUI()
 	{
+		LK_PROFILE_FUNC();
 		const bool MenuHasChanged = (ActiveMenu != NextMenu);
 		if (MenuHasChanged) {
 			LK_DEBUG_TAG("UILayer", "Menu changed to: {}", Enum::ToString(NextMenu));
@@ -143,11 +146,13 @@ namespace platformer2d {
 
 	void CUILayer::BeginFrame()
 	{
+		LK_PROFILE_FUNC();
 		ImGuiLayer->BeginFrame();
 	}
 
 	void CUILayer::EndFrame()
 	{
+		LK_PROFILE_FUNC();
 		ImGuiLayer->EndFrame();
 	}
 

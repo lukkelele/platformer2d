@@ -4,6 +4,7 @@
 #include <imgui/imgui_internal.h>
 
 #include "core/core.h"
+#include "core/enum.h"
 #include "core/delegate.h"
 #include "core/math/math.h"
 #include "game/enemy.h"
@@ -181,17 +182,17 @@ namespace platformer2d::UI {
 			EDirection::Right};
 
 		inline constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
-			Enum::ToString(ETexture::White),
-			Enum::ToString(ETexture::Background),
-			Enum::ToString(ETexture::Player),
-			Enum::ToString(ETexture::Metal),
-			Enum::ToString(ETexture::Bricks),
-			Enum::ToString(ETexture::Wood),
-			Enum::ToString(ETexture::Swoosh),
-			Enum::ToString(ETexture::Cloud),
-			Enum::ToString(ETexture::Rifle),
-			Enum::ToString(ETexture::Enemy1),
-			Enum::ToString(ETexture::Enemy2),
+			Enum::ToString(ETexture::White).data(),
+			Enum::ToString(ETexture::Background).data(),
+			Enum::ToString(ETexture::Player).data(),
+			Enum::ToString(ETexture::Metal).data(),
+			Enum::ToString(ETexture::Bricks).data(),
+			Enum::ToString(ETexture::Wood).data(),
+			Enum::ToString(ETexture::Swoosh).data(),
+			Enum::ToString(ETexture::Cloud).data(),
+			Enum::ToString(ETexture::Rifle).data(),
+			Enum::ToString(ETexture::Enemy1).data(),
+			Enum::ToString(ETexture::Enemy2).data(),
 		};
 		static_assert(TextureNames.at(std::to_underlying(ETexture::COUNT) - 1) != nullptr);
 

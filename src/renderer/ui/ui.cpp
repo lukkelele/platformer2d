@@ -388,13 +388,13 @@ namespace platformer2d::UI {
 		{
 			Label("Current Sprite Frame");
 			NextColumn();
-			ImGui::Text("%d", CurrentSpriteFrame);
+			ImGui::Text("(%u, %u)", CurrentSpriteFrame.X, CurrentSpriteFrame.Y);
 		}
 		ImGui::TableNextRow();
 		{
 			Label("Next Sprite Frame");
 			NextColumn();
-			ImGui::Text("%d", NextSpriteFrame);
+			ImGui::Text("(%u, %u)", NextSpriteFrame.X, NextSpriteFrame.Y);
 		}
 
 		/* Size. */
