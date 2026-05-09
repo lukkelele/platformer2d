@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <glm/glm.hpp>
 
 #include "core/core.h"
@@ -7,6 +9,20 @@
 namespace platformer2d {
 
 	class CTexture;
+
+	struct FSpriteCoord
+	{
+		std::uint16_t X = 0;
+		std::uint16_t Y = 0;
+
+		bool operator==(const FSpriteCoord&) const = default;
+	};
+
+	struct FSpriteFrame
+	{
+		FSpriteCoord Current;
+		FSpriteCoord Next;
+	};
 
 	struct FSpriteUV
 	{
@@ -18,17 +34,34 @@ namespace platformer2d {
 
 	struct FSpriteAnimation
 	{
+		std::vector<FSpriteCoord> Frames;
 		uint16_t StartTileX = 0;
 		uint16_t StartTileY = 0;
 		std::size_t FrameCount = 0;
 		uint16_t TicksPerFrame = 1;
 
-		/**
-		 * @brief Calculate the frame to use for the animation.
-		 */
-		inline uint16_t CalculateAnimFrame(const uint16_t FrameIndex) const
+		[[nodiscard]] FSpriteCoord GetFrame(const std::uint16_t FrameIndex) const
+		{
+			if (!Frames.empty()) {
+				return Frames[(FrameIndex / TicksPerFrame) % Frames.size()];
+			}
+			const std::uint16_t X = StartTileX + ((FrameIndex / TicksPerFrame) % FrameCount);
+			return {X, StartTileY};
+		}
+
+		[[nodiscard]] std::uint16_t CalculateAnimFrame(const std::uint16_t FrameIndex) const
 		{
 			return StartTileX + ((FrameIndex / TicksPerFrame) % FrameCount);
+		}
+
+		[[nodiscard]] std::size_t Count() const
+		{
+			return !Frames.empty() ? Frames.size() : FrameCount;
+		}
+
+		[[nodiscard]] FSpriteCoord First() const
+		{
+			return !Frames.empty() ? Frames.front() : FSpriteCoord{StartTileX, StartTileY};
 		}
 	};
 
@@ -41,22 +74,22 @@ namespace platformer2d {
 		CSprite() = delete;
 		~CSprite();
 
-		const FSpriteUV& GetUV() const { return UV; }
-		std::shared_ptr<CTexture> GetTexture() const { return Texture; }
+		[[nodiscard]] const FSpriteUV& GetUV() const { return UV; }
+		[[nodiscard]] std::shared_ptr<CTexture> GetTexture() const { return Texture; }
 
-		const glm::vec2& GetSize() const { return Size; }
-		float GetWidth() const { return Size.x; }
-		float GetHeight() const { return Size.y; }
-		const glm::vec2& GetTilePos() const { return TilePos; }
-		uint16_t GetTilePosX() const { return TilePos.x; }
-		uint16_t GetTilePosY() const { return TilePos.y; }
-		const glm::vec2& GetTileSize() const { return TileSize; }
-		const FSpriteAnimation& GetAnimation() const { return Anim; }
+		[[nodiscard]] const glm::vec2& GetSize() const { return Size; }
+		[[nodiscard]] float GetWidth() const { return Size.x; }
+		[[nodiscard]] float GetHeight() const { return Size.y; }
+		[[nodiscard]] const glm::vec2& GetTilePos() const { return TilePos; }
+		[[nodiscard]] std::uint16_t GetTilePosX() const { return TilePos.x; }
+		[[nodiscard]] std::uint16_t GetTilePosY() const { return TilePos.y; }
+		[[nodiscard]] const glm::vec2& GetTileSize() const { return TileSize; }
+		[[nodiscard]] const FSpriteAnimation& GetAnimation() const { return Anim; }
 
-		void SetTilePos(uint16_t X, uint16_t Y, bool FlipHorizontal = false, bool FlipVertical = false);
+		void SetTilePos(std::uint16_t X, std::uint16_t Y, bool FlipHorizontal = false, bool FlipVertical = false);
 		void SetTilePos(const glm::vec2& InTilePos, bool FlipHorizontal = false, bool FlipVertical = false);
-		uint16_t IncrementTilePosX(std::size_t Times = 1);
-		uint16_t DecrementTilePosX(std::size_t Times = 1);
+		std::uint16_t IncrementTilePosX(std::size_t Times = 1);
+		std::uint16_t DecrementTilePosX(std::size_t Times = 1);
 
 		void FlipHorizontal();
 		void FlipVertical();
@@ -70,7 +103,7 @@ namespace platformer2d {
 		void UpdateSprite(bool FlipHorizontal = false, bool FlipVertical = false);
 
 	private:
-		std::shared_ptr<CTexture> Texture = nullptr;
+		std::shared_ptr<CTexture> Texture;
 		FSpriteUV UV;
 		glm::vec2 Size;
 		glm::vec2 TilePos;

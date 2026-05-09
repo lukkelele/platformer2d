@@ -27,7 +27,7 @@ namespace platformer2d {
 		}
 	}
 
-	void CSprite::SetTilePos(const uint16_t X, const uint16_t Y, const bool FlipHorizontal, const bool FlipVertical)
+	void CSprite::SetTilePos(const std::uint16_t X, const std::uint16_t Y, const bool FlipHorizontal, const bool FlipVertical)
 	{
 		SetTilePos({X, Y}, FlipHorizontal, FlipVertical);
 	}
