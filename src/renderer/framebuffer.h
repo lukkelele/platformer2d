@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/core.h"
+#include "core/enum.h"
+#include "renderer/color.h"
 #include "renderer/texture.h"
 
 namespace platformer2d {
@@ -11,8 +13,10 @@ namespace platformer2d {
 		RGBA8,
 		RED_INTEGER,
 		DEPTH24STENCIL8, /* Depth/Stencil */
-		Depth = DEPTH24STENCIL8
+		COUNT,
+		Depth = DEPTH24STENCIL8, /* Alias */
 	};
+	LK_ENUM(EFramebufferTextureFormat);
 
 	struct FFramebufferTextureSpecification
 	{
@@ -65,57 +69,42 @@ namespace platformer2d {
 		void Destroy();
 		void Invalidate();
 
-		void BindTexture(uint32_t AttachmentIdx, uint32_t Slot) const;
+		void BindTexture(std::uint32_t AttachmentIdx, std::uint32_t Slot) const;
 		void Bind() const;
 		void Unbind() const;
-		FORCEINLINE void TargetSwapChain() const { Unbind(); }
+		void TargetSwapChain() const { Unbind(); }
 
-		LRendererID GetID() const { return ID; }
-		uint32_t GetWidth() const { return Spec.Width; }
-		uint32_t GetHeight() const { return Spec.Height; }
-		uint64_t GetSize() const { return (Spec.Width * Spec.Height); }
+		[[nodiscard]] LRendererID GetID() const { return ID; }
+		[[nodiscard]] std::uint32_t GetWidth() const { return Spec.Width; }
+		[[nodiscard]] std::uint32_t GetHeight() const { return Spec.Height; }
+		[[nodiscard]] std::uint64_t GetSize() const { return (Spec.Width * Spec.Height); }
+
+		/** @brief Clear the default framebuffer. */
+		static void ClearDefault();
+		static void SetDefaultClearColor(const glm::vec4& InClearColor) { DefaultClearColor = InClearColor; }
 
 		void Clear() const;
-		void ClearAttachment(uint32_t AttachmentIdx, int Value);
-		uint32_t GetColorAttachmentID(uint32_t Idx = 0) const;
+		void ClearAttachment(std::uint32_t AttachmentIdx, int Value);
+		[[nodiscard]] std::uint32_t GetColorAttachmentID(uint32_t Idx = 0) const;
 
-		std::shared_ptr<CTexture> GetImage(uint32_t AttachmentIdx = 0);
-		void Resize(uint32_t InWidth, uint32_t InHeight);
-		int ReadPixel(uint32_t AttachmentIdx, int PosX, int PosY);
+		[[nodiscard]] std::shared_ptr<CTexture> GetImage(uint32_t AttachmentIdx = 0);
+		void Resize(std::uint32_t InWidth, std::uint32_t InHeight);
+		[[nodiscard]] int ReadPixel(std::uint32_t AttachmentIdx, int PosX, int PosY);
 
 		void SetClearColor(const glm::vec4& InClearColor) { ClearColor = InClearColor; }
-		const glm::vec4& GetClearColor() const { return ClearColor; }
+		[[nodiscard]] const glm::vec4& GetClearColor() const { return ClearColor; }
 
 	private:
 		LRendererID ID = 0;
 		glm::vec4 ClearColor;
+		static inline glm::vec4 DefaultClearColor = FColor::Convert(RGBA32::DarkerGray); /* FB0 */
 
 		std::vector<std::shared_ptr<CTexture>> ColorAttachments{};
-		uint32_t DepthAttachment = 0;
+		std::uint32_t DepthAttachment = 0;
 
 		FFramebufferSpecification Spec;
 		FFramebufferTextureSpecification DepthAttachmentSpec{};
 		std::vector<FFramebufferTextureSpecification> ColorAttachmentSpecs{};
 	};
-
-	namespace Enum {
-		inline const char* ToString(const EFramebufferTextureFormat Format)
-		{
-			const char* S = "";
-#define _(EnumValue)                                                 \
-	case EFramebufferTextureFormat::EnumValue: S = #EnumValue; break
-			switch (Format) {
-				_(None);
-				_(RGBA8);
-				_(RED_INTEGER);
-				_(DEPTH24STENCIL8);
-				default:
-					LK_THROW_ENUM_ERR(Format);
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+

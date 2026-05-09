@@ -359,6 +359,7 @@ namespace platformer2d {
 		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
 		SwapQueues();
 
+		CFramebuffer::ClearDefault();
 		Data.ViewportFramebuffer->Clear();
 
 		QuadShader->Bind();

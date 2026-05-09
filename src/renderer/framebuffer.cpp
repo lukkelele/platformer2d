@@ -6,9 +6,9 @@
 
 namespace platformer2d {
 
-	static bool IsDepthFormat(const EImageFormat ImageFormat);
-	static GLenum GetTextureTarget(const bool Multisampled);
-	static void AttachDepthTexture(const uint32_t ID, const int Samples, const GLenum Format, const GLenum AttachmentType, const uint32_t Width, const uint32_t Height);
+	static bool IsDepthFormat(EImageFormat ImageFormat);
+	static GLenum GetTextureTarget(bool Multisampled);
+	static void AttachDepthTexture(std::uint32_t ID, int Samples, GLenum Format, GLenum AttachmentType, std::uint32_t Width, std::uint32_t Height);
 
 	CFramebuffer::CFramebuffer(const FFramebufferSpecification& InSpec)
 		: Spec(InSpec)
@@ -145,6 +145,13 @@ namespace platformer2d {
 	void CFramebuffer::Unbind() const
 	{
 		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	}
+
+	void CFramebuffer::ClearDefault()
+	{
+		LK_OpenGL_Verify(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+		LK_OpenGL_Verify(glClearColor(DefaultClearColor.r, DefaultClearColor.g, DefaultClearColor.b, DefaultClearColor.a));
+		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
 
 	void CFramebuffer::Clear() const
