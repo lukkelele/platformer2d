@@ -23,6 +23,8 @@ project_library_sources(
 	projectile.cpp
 	spawner.h
 	spawner.cpp
+	spritereader.h
+	spritereader.cpp
 	weapon.h
 	weapontype.h
 )
