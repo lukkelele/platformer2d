@@ -158,28 +158,6 @@ namespace platformer2d::UI {
 				auto Player = CGameInstance::Get()->GetPlayer(0);
 				CGameplaySystem::Teleport(Player, {0.0f, 0.0f});
 			}
-
-#if 0 /* @todo Should be replaced by chain segments */
-			ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::Orange);
-			if (ImGui::Button("Template: Floor", {ButtonSize.x + 64, ButtonSize.y})) {
-				auto Player = CGameInstance::Get()->GetPlayer(0);
-				ActorAttr.Size = glm::vec2(1.46, 0.11);
-				const glm::vec3 PlayerPos = Player->GetPosition();
-				ActorAttr.Position = {PlayerPos.x, PlayerPos.y + 0.15f};
-				PhysicsBodyData.Position = glm::vec3(ActorAttr.Position, 0.0f);
-			}
-			ImGui::PopStyleColor(1);
-
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Button, RGBA32::Orange);
-			if (ImGui::Button("Template: Large Floor", {ButtonSize.x + 64, ButtonSize.y})) {
-				auto Player = CGameInstance::Get()->GetPlayer(0);
-				ActorAttr.Size = glm::vec2(2.24, 0.11);
-				const glm::vec3 PlayerPos = Player->GetPosition();
-				ActorAttr.Position = {PlayerPos.x, PlayerPos.y + 0.15f};
-			}
-			ImGui::PopStyleColor(1);
-#endif
 		}
 
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
