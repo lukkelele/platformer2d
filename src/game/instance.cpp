@@ -52,12 +52,7 @@ namespace platformer2d {
 	void CGameInstance::UpdateViewportBounds()
 	{
 		ViewportBounds[0] = {0.0f, 0.0f};
-		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
-			ViewportBounds[1] = Window->GetSize();
-		} else {
-			LK_WARN_TAG("GameInstance", "Cannot update viewport bounds");
-			ViewportBounds[1] = {0.0f, 0.0f};
-		}
+		ViewportBounds[1] = CWindow::Get().GetSize();
 	}
 
 }

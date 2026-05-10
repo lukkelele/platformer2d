@@ -14,20 +14,18 @@
 
 namespace platformer2d {
 
-	CWindow::CWindow(const FWindowSpecification& InSpec)
-		: Spec(InSpec)
-		, Data(InSpec.Width, InSpec.Height, InSpec.Title)
+	CWindow& CWindow::Get()
 	{
-		Instance = this;
-	}
-
-	CWindow* CWindow::Get()
-	{
+		static CWindow Instance;
 		return Instance;
 	}
 
-	void CWindow::Initialize()
+	void CWindow::Initialize(const FWindowSpecification& Spec)
 	{
+		Data.Width = Spec.Width;
+		Data.Height = Spec.Height;
+		Data.Title = Spec.Title;
+
 		const int GlfwInit = glfwInit();
 		glfwSetErrorCallback([](const int Error, const char* Description)
 		{

@@ -98,6 +98,7 @@ namespace platformer2d {
 			Core::FDelegateHandle OnWindowResized;
 			Core::FDelegateHandle OnKeyPressed;
 			Core::FDelegateHandle OnMouseButtonPressed;
+			Core::FDelegateHandle OnMouseScrolled;
 			Core::FDelegateHandle OnSensorBeginEvent;
 			Core::FDelegateHandle OnSensorEndEvent;
 			Core::FDelegateHandle OnContactBeginEvent;

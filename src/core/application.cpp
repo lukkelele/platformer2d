@@ -45,8 +45,7 @@ namespace platformer2d {
 			.bStartMaximized = Settings.Window.bStartMaximized,
 			.bVSync = Settings.Window.bVSync,
 		};
-		Window = std::make_unique<CWindow>(WindowSpec);
-		Window->Initialize();
+		CWindow::Get().Initialize(WindowSpec);
 
 		CRenderer::Initialize();
 		CKeyboard::Initialize();
@@ -80,18 +79,18 @@ namespace platformer2d {
 			CEffectManager::Get().Destroy();
 			CRenderer::Destroy();
 
-			Window->Destroy();
-			Window.reset();
+			CWindow::Get().Destroy();
 		}
 	}
 
 	void CApplication::Run()
 	{
-		LK_VERIFY(Window && Window->GetGlfwWindow());
+		auto& Window = CWindow::Get();
+		LK_VERIFY(Window.GetGlfwWindow());
 		LK_VERIFY(LayerStack.Count() > 0);
 
-		const FWindowData& WindowData = Window->GetData();
-		GLFWwindow* GlfwWindow = Window->GetGlfwWindow();
+		const FWindowData& WindowData = Window.GetData();
+		GLFWwindow* GlfwWindow = Window.GetGlfwWindow();
 
 		CEffectManager& EffectManager = CEffectManager::Get(); /* @todo Integrate in layerstack somehow (?) */
 
@@ -109,7 +108,7 @@ namespace platformer2d {
 
 			const float DeltaTime = Timer.GetDeltaTime();
 
-			Window->BeginFrame();
+			Window.BeginFrame();
 			CKeyboard::Update();
 			CRenderer::BeginFrame();
 
@@ -126,7 +125,7 @@ namespace platformer2d {
 			RenderUI();
 
 			CKeyboard::TransitionPressedKeys();
-			Window->EndFrame();
+			Window.EndFrame();
 
 			LK_PROFILE_MARK_FRAME();
 		}

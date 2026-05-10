@@ -14,7 +14,12 @@ namespace platformer2d {
 	public:
 		CApplication(int Argc, char* Argv[]);
 		CApplication() = delete;
+		CApplication(const CApplication&) = delete;
+		CApplication(CApplication&&) = delete;
 		virtual ~CApplication();
+
+		CApplication& operator=(const CApplication&) = delete;
+		CApplication& operator=(CApplication&&) = delete;
 
 		virtual void Initialize();
 		virtual void Shutdown();
@@ -28,10 +33,10 @@ namespace platformer2d {
 
 	protected:
 		bool bRunning = false;
-		std::unique_ptr<CWindow> Window;
 		std::shared_ptr<CUILayer> UILayer;
 		CLayerStack LayerStack;
 		CTimer Timer;
 	};
 
 }
+

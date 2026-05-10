@@ -13,6 +13,7 @@
 #include "core/input/mouse.h"
 #include "core/math/math.h"
 #include "game/gameplaysystem.h"
+#include "game/healthsystem.h"
 #include "game/enemy.h"
 #include "game/player.h"
 #include "game/spawner.h"
@@ -81,8 +82,8 @@ namespace platformer2d {
 		LK_TRACE_TAG("RuntimeLayer", "Last scene filepath: {}", LastSceneFilepath);
 
 		CWindow::OnResized.Add(this, &CRuntimeLayer::OnWindowResized);
-		CWindow* Window = CWindow::Get();
-		Window->Maximize();
+		CWindow& Window = CWindow::Get();
+		Window.Maximize();
 		UpdateViewportBounds();
 
 		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CRuntimeLayer::OnKeyPressed);
@@ -344,22 +345,31 @@ namespace platformer2d {
 				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(true);
 
-				switch (IC->GetType()) {
-					case EInteraction::Damage:
-					{
-						auto& Data = std::get<FDamageInteraction>(IC->GetData());
-						LK_WARN("Damage={}", Data.Damage);
-						break;
-					}
-					case EInteraction::Pickup:
-					{
+				std::visit([&](auto&& Data)
+				{
+					using T = std::decay_t<decltype(Data)>;
+					if constexpr (std::is_same_v<T, FDamageInteraction>) {
+						CHealthSystem::ApplyDamage(Event.Visitor, Data.Damage);
+					} else if constexpr (std::is_same_v<T, FPickupInteraction>) {
 						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 						OnPickupEvent(PlayerRef, *IC);
-						break;
+					} else if constexpr (std::is_same_v<T, FHealInteraction>) {
+						CHealthSystem::Heal(Event.Visitor, Data.Amount);
+						if (Data.bConsumeOnUse) {
+							LK_DEBUG_TAG("RuntimeLayer", "[TODO] Despawn heal source {}", Event.Sensor->GetName());
+						}
+					} else if constexpr (std::is_same_v<T, FKillzoneInteraction>) {
+						CHealthSystem::Kill(Event.Visitor);
+					} else if constexpr (std::is_same_v<T, FJumppadInteraction>) {
+						if (CBody* B = Event.Visitor->GetBody()) {
+							const glm::vec2 Vel = B->GetLinearVelocity();
+							const float NewX = Data.bPreserveHorizontalVelocity ? Vel.x : 0.0f;
+							B->SetLinearVelocity({NewX, Data.Impulse.y});
+						}
+					} else if constexpr (std::is_same_v<T, FClimbableInteraction>) {
+						static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
 					}
-					default:
-						break;
-				}
+				}, IC->GetData());
 			}
 		}
 	}
@@ -380,6 +390,10 @@ namespace platformer2d {
 			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
 				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(false);
+
+				if (IC->GetType() == EInteraction::Climbable) {
+					static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(false);
+				}
 			}
 		}
 	}
@@ -397,22 +411,7 @@ namespace platformer2d {
 		LK_ASSERT(HitActor, "Invalid rojectile hit");
 		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
 
-		if (HitActor->HasComponent<FHealthComponent>()) {
-			auto& HC = HitActor->GetComponent<FHealthComponent>();
-			if (HC.IsDamageable()) {
-				if (HitActor->GetActorType() == EActorType::Enemy) {
-					CEnemy& EnemyRef = HitActor->As<CEnemy>();
-					const float Damage = Projectile->GetDamage();
-					HC.SetHealth(HC.GetHealth() - Damage);
-					if (HC.IsDead()) {
-						LK_INFO_TAG("RuntimeLayer", "Killed {}", HitActor->GetName());
-						EnemyRef.Kill();
-					}
-				}
-			} else {
-				LK_DEBUG_TAG("RuntimeLayer", "Hit actor {} has health component but is not damageable", HitActor->GetName());
-			}
-		}
+		CHealthSystem::ApplyDamage(HitActor, Projectile->GetDamage());
 
 		if (Projectile->ExplodesOnImpact()) {
 			Projectile->Destroy();
@@ -597,7 +596,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(Format("platformer2d - {} ({})", Scene->GetName(), Core::GetPlatformName()));
+		CWindow::Get().SetTitle(Format("platformer2d - {} ({})", Scene->GetName(), Core::GetPlatformName()));
 		SceneToOpen.clear();
 	}
 
@@ -630,7 +629,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
+		CWindow::Get().SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
 		LK_DEBUG_TAG("RuntimeLayer", "Scene closed");
 	}
 

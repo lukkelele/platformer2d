@@ -8,7 +8,7 @@ namespace platformer2d {
 
 	void CKeyboard::Initialize()
 	{
-		ActiveWindow = CWindow::Get()->GetGlfwWindow();
+		ActiveWindow = CWindow::Get().GetGlfwWindow();
 		LK_VERIFY(ActiveWindow);
 	}
 

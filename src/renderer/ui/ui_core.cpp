@@ -70,7 +70,7 @@ namespace platformer2d::UI {
 		UI::PopID();
 	}
 
-	void BeginCoreViewport(CWindow* Window)
+	void BeginCoreViewport()
 	{
 		LK_PROFILE_FUNC();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
@@ -96,8 +96,8 @@ namespace platformer2d::UI {
 			LK_DEBUG("Removing existing docking layout (ID: {})", DockspaceID);
 			ImGui::DockBuilderRemoveNode(DockspaceID);
 
-			const uint32_t WindowWidth = Window->GetWidth();
-			const uint32_t WindowHeight = Window->GetHeight();
+			const std::uint32_t WindowWidth = CWindow::Get().GetWidth();
+			const std::uint32_t WindowHeight = CWindow::Get().GetHeight();
 
 			float LeftSidebarFraction = 0.25f;
 			float RightSidebarFraction = 0.25f;

@@ -74,7 +74,7 @@ namespace platformer2d::UI {
 	bool Begin(const char* WindowTitle, bool* Open = nullptr, ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None);
 	void End();
 
-	void BeginCoreViewport(CWindow* Window);
+	void BeginCoreViewport();
 	bool BeginViewport();
 	void EndViewport();
 

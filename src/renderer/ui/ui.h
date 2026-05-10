@@ -109,6 +109,7 @@ namespace platformer2d::UI {
 		float AngularDamping = 0.0f;
 		float DirForce = 5.630f;
 		float JumpImpulse = 0.530f;
+		bool bSensor = false;
 
 		struct
 		{

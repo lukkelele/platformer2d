@@ -4,13 +4,11 @@
 
 namespace platformer2d {
 
-	namespace {
-		GLFWwindow* ActiveWindow = nullptr;
-	}
+	static GLFWwindow* ActiveWindow = nullptr;
 
 	void CMouse::Initialize()
 	{
-		ActiveWindow = CWindow::Get()->GetGlfwWindow();
+		ActiveWindow = CWindow::Get().GetGlfwWindow();
 		LK_VERIFY(ActiveWindow);
 
 		for (std::size_t Idx = 0; Idx < std::to_underlying(EMouseButton::COUNT); Idx++) {

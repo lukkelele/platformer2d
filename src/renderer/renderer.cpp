@@ -111,7 +111,7 @@ namespace platformer2d {
 		QuadShader->Bind();
 		BindTextures();
 
-		Data.RefreshRate = CWindow::Get()->GetRefreshRate();
+		Data.RefreshRate = CWindow::Get().GetRefreshRate();
 		LK_VERIFY(Data.RefreshRate > 0, "Failed to get window refresh rate");
 
 		CDebugRenderer::Initialize();
@@ -171,8 +171,8 @@ namespace platformer2d {
 		Spec.ClearColorOnLoad = false;
 		Spec.ClearColor = FColor::Convert(RGBA32::DarkerGray);
 		Spec.Name = "fb-viewport";
-		Spec.Width = CWindow::Get()->GetWidth();
-		Spec.Height = CWindow::Get()->GetHeight();
+		Spec.Width = CWindow::Get().GetWidth();
+		Spec.Height = CWindow::Get().GetHeight();
 		Data.ViewportFramebuffer = std::make_shared<CFramebuffer>(Spec);
 
 		CWindow::OnFramebufferResized.Add([&](const uint32_t NewWidth, const uint32_t NewHeight)

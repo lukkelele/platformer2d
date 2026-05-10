@@ -48,7 +48,7 @@ namespace platformer2d {
 
 	void CUILayer::Initialize()
 	{
-		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get()->GetGlfwWindow());
+		ImGuiLayer = std::make_unique<CImGuiLayer>(CWindow::Get().GetGlfwWindow());
 
 		auto& Settings = FSettings::Get();
 		switch (Settings.QuickLoad) {
@@ -96,9 +96,9 @@ namespace platformer2d {
 
 		/* Draw dark overlay whenever the pause menu is open. */
 		if (GameInstance) {
-			CWindow* Window = CWindow::Get();
-			if (Window && GameInstance->HasScene() && UI::IsPauseMenuOpen()) {
-				const glm::vec2 WindowSize = Window->GetSize();
+			const CWindow& Window = CWindow::Get();
+			if (GameInstance->HasScene() && UI::IsPauseMenuOpen()) {
+				const glm::vec2 WindowSize = Window.GetSize();
 				constexpr glm::vec4 OverlayColor = {0.10f, 0.10f, 0.10f, 0.90f};
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
 			}
@@ -211,7 +211,6 @@ namespace platformer2d {
 	{
 		UI::FPauseMenu::FSettings& Settings = UI::PauseMenu.Settings;
 		ImGuiStyle& Style = ImGui::GetStyle();
-		CWindow* Window = CWindow::Get();
 
 		const ImVec2 StartCursorPos = ImGui::GetCursorPos();
 		const ImVec2 MenuSize = ImGui::GetContentRegionAvail();
@@ -242,7 +241,7 @@ namespace platformer2d {
 
 			ImGui::TableNextRow();
 			if (UI::Checkbox("VSync", Settings.Window.bVSync, IndentX)) {
-				Window->SetVSync(Settings.Window.bVSync);
+				CWindow::Get().SetVSync(Settings.Window.bVSync);
 			}
 
 			ImGui::TableNextRow();
