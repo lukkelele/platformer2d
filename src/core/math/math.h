@@ -31,7 +31,17 @@ namespace platformer2d::Math {
 		concept IsVec = IsGlmVec<T> || IsBox2dVec<T>;
 	}
 
-	inline glm::vec2 Perp(const glm::vec2& V)
+	template<typename T, typename R = T>
+	constexpr R Round(const T Value, const std::size_t Precision = 4)
+	{
+		if constexpr (std::is_same_v<T, float>) {
+			return std::roundf(Value * (Precision * 10.0f)) / (Precision * 10.0f);
+		} else {
+			return std::round(Value * (Precision * T(10))) / (Precision * T(10));
+		}
+	};
+
+	[[nodiscard]] inline glm::vec2 Perp(const glm::vec2& V)
 	{
 		return glm::vec2(-V.y, V.x);
 	}
@@ -39,23 +49,23 @@ namespace platformer2d::Math {
 	/**
 	 * @brief Scale a vector.
 	 */
-	inline glm::vec3 Scale(glm::vec3& Vector, const float Factor)
+	[[nodiscard]] inline glm::vec3 Scale(glm::vec3& Vector, const float Factor)
 	{
 		return (Vector * Factor) / glm::length(Vector);
 	}
 
-	float Randomize(float Min, float Max);
+	[[nodiscard]] float Randomize(float Min, float Max);
 	bool DecomposeTransform(const glm::mat4& Transform, glm::vec3& Translation, glm::quat& Rotation, glm::vec3& Scale);
 
-	glm::vec2 RotatePoint(const glm::vec2& V, float AngleRad);
-	bool IsPointInPolygon(const glm::vec2& PointWorld, const glm::vec2& Center, const glm::vec2& Size, float RotationRad);
+	[[nodiscard]] glm::vec2 RotatePoint(const glm::vec2& V, float AngleRad);
+	[[nodiscard]] bool IsPointInPolygon(const glm::vec2& PointWorld, const glm::vec2& Center, const glm::vec2& Size, float RotationRad);
 
-	glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
+	[[nodiscard]] glm::vec3 ConvertScreenToWorld(const glm::vec3& Point, const glm::vec3& Center,
 		float Width, float Height, float Zoom);
-	glm::vec3 ConvertWorldToScreen(const glm::vec3& Point, const glm::vec3& Center,
+	[[nodiscard]] glm::vec3 ConvertWorldToScreen(const glm::vec3& Point, const glm::vec3& Center,
 		float Width, float Height, float Zoom);
 
-	inline float Normalize(const float Value, const float RangeMin, const float RangeMax)
+	[[nodiscard]] inline float Normalize(const float Value, const float RangeMin, const float RangeMax)
 	{
 		return (Value - RangeMin) / (RangeMax - RangeMin);
 	}
@@ -91,7 +101,7 @@ namespace platformer2d::Math {
 
 	template<typename TVector>
 		requires _Internal::IsGlmVec<TVector>
-	TVector Convert(const b2Vec2& V)
+	[[nodiscard]] TVector Convert(const b2Vec2& V)
 	{
 		if constexpr (std::is_same_v<TVector, glm::vec2>) {
 			return glm::vec2(V.x, V.y);
@@ -104,7 +114,7 @@ namespace platformer2d::Math {
 
 	template<typename TVector>
 		requires _Internal::IsGlmVec<TVector>
-	b2Vec2 Convert(const TVector& V)
+	[[nodiscard]] b2Vec2 Convert(const TVector& V)
 	{
 		if constexpr (std::is_same_v<TVector, glm::vec2>) {
 			return b2Vec2(V.x, V.y);
@@ -137,7 +147,7 @@ namespace platformer2d::Math {
 		Dst.y = Src.y;
 	}
 
-	inline glm::mat4 ToMat4(const b2Transform& T)
+	[[nodiscard]] inline glm::mat4 ToMat4(const b2Transform& T)
 	{
 		const float C = T.q.c;
 		const float S = T.q.s;
@@ -155,12 +165,12 @@ namespace platformer2d::Math {
 	}
 
 	template<_Internal::IsGlmVec TVector>
-	inline bool IsValid(const TVector& V)
+	[[nodiscard]] inline bool IsValid(const TVector& V)
 	{
 		return !glm::all(glm::isnan(V));
 	}
 
-	inline bool IsValid(const b2Vec2& V)
+	[[nodiscard]] inline bool IsValid(const b2Vec2& V)
 	{
 		return !std::isnan(V.x) && !std::isnan(V.y);
 	}
