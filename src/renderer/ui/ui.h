@@ -174,28 +174,5 @@ namespace platformer2d::UI {
 	void PrepareTopBar();
 	void PrepareMenuBar();
 	void PrepareBottomBar();
-
-	namespace Array {
-		inline constexpr std::array<EDirection, std::to_underlying(EDirection::COUNT)> Direction = {
-			EDirection::Up,
-			EDirection::Down,
-			EDirection::Left,
-			EDirection::Right};
-
-		inline constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
-			EPickupKind::Item,
-			EPickupKind::Weapon,
-		};
-
-		inline constexpr std::array<EEnemyState, std::to_underlying(EEnemyState::COUNT)> EnemyStates = {
-			EEnemyState::Idle,
-			EEnemyState::Patrolling,
-		};
-		inline constexpr std::array<const char*, std::to_underlying(EEnemyState::COUNT)> EnemyStateStrings = {
-			Enum::ToString(EEnemyState::Idle),
-			Enum::ToString(EEnemyState::Patrolling),
-		};
-		static_assert(EnemyStateStrings.at(std::to_underlying(EEnemyState::COUNT) - 1) != nullptr);
-	}
-
 }
+

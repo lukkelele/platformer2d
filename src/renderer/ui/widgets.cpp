@@ -1,5 +1,8 @@
 #include "widgets.h"
 
+#include <array>
+#include <cstring>
+
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "game/instance.h"
@@ -132,6 +135,7 @@ namespace platformer2d::UI::Widget {
 		}
 	}
 
+	/* @fixme: Refactor these awful functions :) */
 	void ActorNode::Data(std::shared_ptr<CActor> Actor)
 	{
 		const LUUID Handle = Actor->GetHandle();
@@ -220,7 +224,7 @@ namespace platformer2d::UI::Widget {
 			{
 				Table::Label("Body Type");
 				Table::NextColumn();
-				ImGui::Text("%s", Enum::ToString(Body->GetType()));
+				ImGui::Text("%s", Enum::ToString<const char*>(Body->GetType()));
 			}
 
 			/* Body Size. */
@@ -453,63 +457,77 @@ namespace platformer2d::UI::Widget {
 		UI::Widget::DrawComponent<FInteractionComponent>("Interaction", Actor, [Actor](FInteractionComponent& IC)
 		{
 			EInteraction InteractionType = IC.GetType();
-			std::size_t SelectedIdx = std::to_underlying(InteractionType);
-			static constexpr std::array<EInteraction, std::to_underlying(EInteraction::COUNT)> Types = {
-				EInteraction::None,
-				EInteraction::Damage,
-				EInteraction::Pickup,
-			};
-
-			static const auto Names = Enum::View<EInteraction, const char*>();
-
-			bool Updated = false;
+			EInteraction Selected = InteractionType;
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+
 			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
 			ImGui::SetNextItemWidth(ComboItemWidth);
-			if (ImGui::BeginCombo("##EffectType", Names[SelectedIdx])) {
-				for (std::size_t Idx = 0; Idx < Names.size(); Idx++) {
-					const bool IsSelected = (SelectedIdx == Idx);
-					if (ImGui::Selectable(Names[Idx], IsSelected)) {
-						if (SelectedIdx != Idx) {
-							Updated = true;
-							SelectedIdx = Idx;
-						}
+			const bool Updated = UI::Combo("##InteractionType", Enum::View<EInteraction>(), Selected);
+			if (Updated) {
+				InteractionType = Selected;
+				IC.Type = InteractionType;
+				LK_DEBUG_TAG("UI", "Set IC type: {}", Enum::ToString(IC.Type));
+
+				/* Convert to new variant. */
+				switch (IC.Type) {
+					case EInteraction::None:
+					{
+						IC.Data = std::monostate{};
+						break;
 					}
-				}
 
-				ImGui::EndCombo();
-				if (Updated) {
-					InteractionType = static_cast<EInteraction>(SelectedIdx);
-					IC.Type = InteractionType;
-					LK_DEBUG_TAG("UI", "Set IC type: {}", Enum::ToString(IC.Type));
-
-					/* Convert to new variant. */
-					switch (IC.Type) {
-						case EInteraction::None:
-						{
-							IC.Data = std::monostate{};
-							break;
-						}
-
-						case EInteraction::Damage:
-						{
-							FDamageInteraction Data;
-							IC.Data = Data;
-							break;
-						}
-
-						case EInteraction::Pickup:
-						{
-							FPickupInteraction Data;
-							IC.Data = Data;
-							break;
-						}
-
-						default:
-							LK_ERROR_TAG("UI", "Unsupported interaction type: {}", Enum::ToString(IC.Type));
-							break;
+					case EInteraction::Damage:
+					{
+						FDamageInteraction Data;
+						IC.Data = Data;
+						break;
 					}
+
+					case EInteraction::Pickup:
+					{
+						FPickupInteraction Data;
+						IC.Data = Data;
+						break;
+					}
+
+					case EInteraction::Heal:
+					{
+						FHealInteraction Data;
+						IC.Data = Data;
+						break;
+					}
+
+					case EInteraction::Killzone:
+					{
+						IC.Data = FKillzoneInteraction{};
+						break;
+					}
+
+					case EInteraction::Jumppad:
+					{
+						FJumppadInteraction Data;
+						IC.Data = Data;
+						break;
+					}
+
+					case EInteraction::Climbable:
+					{
+						FClimbableInteraction Data;
+						IC.Data = Data;
+						break;
+					}
+
+					case EInteraction::Checkpoint:
+					{
+						FCheckpointInteraction Data;
+						IC.Data = Data;
+						break;
+					}
+
+					default:
+						LK_ERROR_TAG("UI", "Unsupported interaction type: {}", Enum::ToString(IC.Type));
+						break;
 				}
 			}
 			ImGui::PopStyleVar(2);
@@ -552,11 +570,59 @@ namespace platformer2d::UI::Widget {
 					ImGui::Text("Kind");
 
 					ImGui::TableSetColumnIndex(1);
-					if (UI::Combo("##PickupKind", Array::PickupKind, SelectedKind)) {
+					if (UI::Combo("##PickupKind", Enum::View<EPickupKind>(), SelectedKind)) {
 						LK_DEBUG("Set pickup kind: {}", Enum::ToString(SelectedKind));
 						Data.Kind = SelectedKind;
 					}
 
+					break;
+				}
+
+				case EInteraction::Heal:
+				{
+					ImGui::TableNextRow();
+					auto& Data = std::get<FHealInteraction>(IC.GetData());
+					UI::Widget::DragFloat("Amount", Data.Amount, 1.0f, 0.0f, 1000.0f, "%.1f");
+					CheckboxInTable("Consume On Use", Data.bConsumeOnUse);
+					break;
+				}
+
+				case EInteraction::Killzone:
+				{
+					break;
+				}
+
+				case EInteraction::Jumppad:
+				{
+					auto& Data = std::get<FJumppadInteraction>(IC.GetData());
+					ImGui::TableNextRow();
+					UI::Widget::DragFloat2("Impulse", Data.Impulse, 0.10f, -100.0f, 100.0f);
+					CheckboxInTable("Preserve Horizontal Velocity", Data.bPreserveHorizontalVelocity);
+					break;
+				}
+
+				case EInteraction::Climbable:
+				{
+					ImGui::TableNextRow();
+					auto& Data = std::get<FClimbableInteraction>(IC.GetData());
+					UI::Widget::DragFloat("Climb Speed", Data.ClimbSpeed, 0.10f, 0.0f, 20.0f, "%.2f");
+					break;
+				}
+
+				case EInteraction::Checkpoint:
+				{
+					auto& Data = std::get<FCheckpointInteraction>(IC.GetData());
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					ImGui::Text("Checkpoint ID");
+					ImGui::TableSetColumnIndex(1);
+
+					std::array<char, 64> Buf{};
+					const std::size_t CopyLen = std::min(Data.CheckpointID.size(), Buf.size() - 1);
+					std::memcpy(Buf.data(), Data.CheckpointID.data(), CopyLen);
+					if (ImGui::InputText("##CheckpointID", Buf.data(), Buf.size())) {
+						Data.CheckpointID = Buf.data();
+					}
 					break;
 				}
 
@@ -743,7 +809,7 @@ namespace platformer2d::UI::Widget {
 
 			ImGui::TableNextRow();
 			EDirection PatrolDir = C->GetPatrolDirection();
-			if (UI::Combo("Patrol Direction", UI::Array::Direction, PatrolDir)) {
+			if (UI::Combo("Patrol Direction", Enum::View<EDirection>(), PatrolDir)) {
 				C->SetPatrolDirection(PatrolDir);
 			}
 
@@ -795,7 +861,7 @@ namespace platformer2d::UI::Widget {
 		UI::Table::NextColumn();
 		EEnemyState EnemyState = Enemy->GetState();
 		ImGui::SetNextItemWidth(200);
-		if (UI::Combo("##EnemyState", UI::Array::EnemyStates, EnemyState)) {
+		if (UI::Combo("##EnemyState", Enum::View<EEnemyState>(), EnemyState)) {
 			Enemy->SetState(EnemyState);
 		}
 

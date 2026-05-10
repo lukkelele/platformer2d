@@ -9,6 +9,7 @@
 #include "renderer/debugrenderer.h"
 #include "renderer/font.h"
 #include "renderer/renderer.h"
+#include "combo.h"
 #include "ui_core.h"
 #include "widgets.h"
 #include "game/spawner.h"
@@ -54,9 +55,7 @@ namespace platformer2d::UI {
 
 	bool ColorDropdown(EColor& Selected)
 	{
-		bool Updated = false;
-		std::size_t SelectedIdx = std::to_underlying(Selected);
-
+		/* @todo: Use UI::Table */
 		static const std::string Label = "Color";
 		if (ImGui::GetCurrentTable() != nullptr) {
 			ImGui::TableSetColumnIndex(0);
@@ -70,29 +69,7 @@ namespace platformer2d::UI {
 			ImGui::SameLine();
 		}
 
-		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
-		ImGui::SetNextItemWidth(ComboItemWidth);
-		if (ImGui::BeginCombo("##Color", Enum::ToString(Selected))) {
-			for (int Idx = 0; Idx < ColorArray.size(); Idx++) {
-				const char* Option = Enum::ToString(ColorArray[Idx]);
-				if (Option == nullptr) {
-					continue;
-				}
-
-				const bool IsSelected = (SelectedIdx == Idx);
-				if (ImGui::Selectable(Option, IsSelected)) {
-					SelectedIdx = Idx;
-				}
-			}
-			ImGui::EndCombo();
-
-			if (SelectedIdx != std::to_underlying(Selected)) {
-				Selected = static_cast<EColor>(SelectedIdx);
-				Updated = true;
-			}
-		}
-
-		return Updated;
+		return UI::Combo("##Color", Enum::View<EColor>(), Selected);
 	}
 
 	bool ActorAttributes(FActorAttributes& Attr)
@@ -224,6 +201,7 @@ namespace platformer2d::UI {
 						ActorAttr.NameBuf.data(),
 						ActorAttr.Position,
 						ActorAttr.Size,
+						NewBodySpec,
 						FColor::Get(ActorAttr.Color));
 
 					auto Player = CGameInstance::Get()->GetPlayer(0);
