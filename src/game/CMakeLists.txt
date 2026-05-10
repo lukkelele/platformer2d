@@ -5,6 +5,8 @@ project_library_sources(
 	editor.cpp
 	enemy.h
 	enemy.cpp
+	enemyarchetype.h
+	enemyarchetype.cpp
 	instance.h
 	instance.cpp
 	inventory.h
@@ -13,6 +15,10 @@ project_library_sources(
 	itemtype.h
 	gameplaysystem.h
 	gameplaysystem.cpp
+	healthsystem.h
+	healthsystem.cpp
+	checkpointsystem.h
+	checkpointsystem.cpp
 	runtimelayer.h
 	runtimelayer.cpp
 	rifle.h
