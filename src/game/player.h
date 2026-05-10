@@ -33,6 +33,7 @@ namespace platformer2d {
 	public:
 		LK_DECLARE_EVENT(FOnJumped, CPlayer, const FPlayerData&);
 		LK_DECLARE_EVENT(FOnLanded, CPlayer, const FPlayerData&);
+		LK_DECLARE_EVENT(FOnDied, CPlayer, const FPlayerData&);
 
 	public:
 		CPlayer(const FActorSpecification&, const FBodySpecification& BodySpec);
@@ -41,6 +42,7 @@ namespace platformer2d {
 		~CPlayer();
 
 		void Tick(float DeltaTime) override;
+		void OnDeath() override;
 		EActorType GetActorType() const override { return EActorType::Player; }
 		void Jump();
 
@@ -70,7 +72,16 @@ namespace platformer2d {
 		[[nodiscard]] bool HasRifle();
 		std::shared_ptr<CRifle> GetRifle();
 
+		[[nodiscard]] bool IsInClimbZone() const { return bInClimbZone; }
+		[[nodiscard]] float GetClimbSpeed() const { return ClimbSpeed; }
+		void SetClimbZone(bool InZone, float InClimbSpeed = 0.0f);
+
 		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::Yes) const override;
+
+		void OnWindowResized(std::uint16_t Width, std::uint16_t Height);
+		void OnKeyPressed(const FKeyData& Data);
+		void OnMouseButtonPressed(const FMouseButtonData& Data);
+		void OnMouseScrolled(EMouseScrollDirection Direction);
 
 	private:
 		void HandleInput();
@@ -89,14 +100,10 @@ namespace platformer2d {
 		void ForceUpdateSprite();
 		void SetSpriteTilePos(const FSpriteCoord& InCoord, bool ForceUpdate = false);
 
-		void OnWindowResized(uint16_t Width, uint16_t Height);
-		void OnKeyPressed(const FKeyData& Data);
-		void OnMouseButtonPressed(const FMouseButtonData& Data);
-		void OnMouseScrolled(EMouseScrollDirection Direction);
-
 	public:
 		FOnJumped OnJumped;
 		FOnLanded OnLanded;
+		FOnDied OnDied;
 
 	private:
 		FPlayerData Data{};
@@ -113,6 +120,8 @@ namespace platformer2d {
 		bool bMovementInputLastTick = false;
 		std::chrono::steady_clock::time_point LastInputTime;
 		bool bWantToClimb = false;
+		bool bInClimbZone = false;
+		float ClimbSpeed = 0.0f;
 
 		bool bShouldUpdateSprite = false;
 
@@ -120,10 +129,10 @@ namespace platformer2d {
 		FSpriteSheet SpriteSheet;
 		FSpriteFrame SpriteFrame;
 
+		/* @todo: Remove delegate handles and let the game instance notify event instead. */
 		Core::FDelegateHandle OnWindowResizedHandle;
 		Core::FDelegateHandle OnKeyPressedHandle;
 		Core::FDelegateHandle OnMouseButtonPressedHandle;
-		Core::FDelegateHandle OnMouseScrolledHandle;
 	};
 }
 

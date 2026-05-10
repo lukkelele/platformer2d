@@ -31,6 +31,7 @@ namespace platformer2d {
 
 		FCameraComponent& CamComp = AddComponent<FCameraComponent>();
 		CamComp.Camera = std::make_shared<CCamera>(SCREEN_WIDTH, SCREEN_HEIGHT);
+		AddComponent<FHealthComponent>();
 		SetDeletable(false);
 
 		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
@@ -62,7 +63,6 @@ namespace platformer2d {
 		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
 		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
 		OnMouseButtonPressedHandle = CMouse::OnButtonPressed.Add(this, &CPlayer::OnMouseButtonPressed);
-		OnMouseScrolledHandle = CMouse::OnScrolled.Add(this, &CPlayer::OnMouseScrolled);
 	}
 
 	CPlayer::~CPlayer()
@@ -71,7 +71,6 @@ namespace platformer2d {
 		CWindow::OnResized.Remove(OnWindowResizedHandle);
 		CKeyboard::OnKeyPressed.Remove(OnKeyPressedHandle);
 		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
-		CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
 
 		LK_TRACE_TAG("Player", "Release inventory");
 		Inventory.Destroy();
@@ -123,6 +122,17 @@ namespace platformer2d {
 		}
 	}
 
+	void CPlayer::OnDeath()
+	{
+		LK_INFO_TAG("Player", "[{}] OnDeath", GetName());
+		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
+		if (Body) {
+			Body->SetLinearVelocity({0.0f, 0.0f});
+			Body->SetEnabled(false);
+		}
+		OnDied.Broadcast(Data);
+	}
+
 	void CPlayer::SetJumpImpulse(const float Impulse)
 	{
 		JumpImpulse = Impulse;
@@ -159,6 +169,12 @@ namespace platformer2d {
 	std::shared_ptr<CRifle> CPlayer::GetRifle()
 	{
 		return Inventory.FindFirstOf<CRifle>();
+	}
+
+	void CPlayer::SetClimbZone(const bool InZone, const float InClimbSpeed)
+	{
+		bInClimbZone = InZone;
+		ClimbSpeed = InZone ? InClimbSpeed : 0.0f;
 	}
 
 	bool CPlayer::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
@@ -353,7 +369,7 @@ namespace platformer2d {
 		}
 	}
 
-	void CPlayer::OnWindowResized(const uint16_t Width, const uint16_t Height)
+	void CPlayer::OnWindowResized(const std::uint16_t Width, const std::uint16_t Height)
 	{
 		if (auto* CamComp = TryGetComponent<FCameraComponent>(); CamComp && CamComp->Camera) {
 			LK_TRACE_TAG("Player", "Window resized: ({}, {})", Width, Height);
