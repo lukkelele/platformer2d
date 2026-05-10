@@ -181,21 +181,6 @@ namespace platformer2d::UI {
 			EDirection::Left,
 			EDirection::Right};
 
-		inline constexpr std::array<const char*, std::to_underlying(ETexture::COUNT)> TextureNames = {
-			Enum::ToString(ETexture::White).data(),
-			Enum::ToString(ETexture::Background).data(),
-			Enum::ToString(ETexture::Player).data(),
-			Enum::ToString(ETexture::Metal).data(),
-			Enum::ToString(ETexture::Bricks).data(),
-			Enum::ToString(ETexture::Wood).data(),
-			Enum::ToString(ETexture::Swoosh).data(),
-			Enum::ToString(ETexture::Cloud).data(),
-			Enum::ToString(ETexture::Rifle).data(),
-			Enum::ToString(ETexture::Enemy1).data(),
-			Enum::ToString(ETexture::Enemy2).data(),
-		};
-		static_assert(TextureNames.at(std::to_underlying(ETexture::COUNT) - 1) != nullptr);
-
 		inline constexpr std::array<EPickupKind, std::to_underlying(EPickupKind::COUNT)> PickupKind = {
 			EPickupKind::Item,
 			EPickupKind::Weapon,

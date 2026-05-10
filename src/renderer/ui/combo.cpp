@@ -14,9 +14,9 @@ namespace platformer2d::UI::Widget::Combo {
 
 	void TextureModifier()
 	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
+		constexpr float ButtonPaddingY = 7.0f;
+		constexpr ImVec2 ButtonSize(84, 42);
+		constexpr float ItemWidth = 2.0f * ButtonSize.x;
 
 		ImGui::Dummy(ImVec2(0, 12));
 		static ETexture SelectedTexture = ETexture::White;
@@ -33,7 +33,7 @@ namespace platformer2d::UI::Widget::Combo {
 				static_cast<ImU64>(TextureRef->GetID()),
 				ImVec2(32.0f, 32.0f),
 				ImVec2(0.0f, 1.0f), /* Uv0. */
-				ImVec2(1.0f, 0.0f)  /* Uv1. */
+				ImVec2(1.0f, 0.0f) /* Uv1. */
 			);
 
 			static constexpr std::string_view Marker = "assets/textures/";
@@ -104,14 +104,14 @@ namespace platformer2d::UI::Widget::Combo {
 
 	bool TextureDropdown(ETexture& Selected)
 	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
+		constexpr float ButtonPaddingY = 7.0f;
+		constexpr ImVec2 ButtonSize(84, 42);
+		constexpr float ItemWidth = 2.0f * ButtonSize.x;
 
 		bool Updated = false;
 		std::size_t SelectedIdx = std::to_underlying(Selected);
-		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < UI::Array::TextureNames.size()));
-		static const char* SelectedTexture = UI::Array::TextureNames[SelectedIdx];
+		static const auto Names = Enum::View<ETexture, const char*>();
+		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < Names.size()));
 
 		static const std::string Label = "Texture";
 		if (ImGui::GetCurrentTable() != nullptr) {
@@ -128,15 +128,10 @@ namespace platformer2d::UI::Widget::Combo {
 
 		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
 		ImGui::SetNextItemWidth(ComboItemWidth);
-		if (ImGui::BeginCombo("##Texture", Array::TextureNames[SelectedIdx])) {
-			for (int Idx = 0; Idx < UI::Array::TextureNames.size(); Idx++) {
-				const char* Option = UI::Array::TextureNames[Idx];
-				if (Option == nullptr) {
-					continue;
-				}
-
+		if (ImGui::BeginCombo("##Texture", Names[SelectedIdx])) {
+			for (std::size_t Idx = 0; Idx < Names.size(); Idx++) {
 				const bool IsSelected = (SelectedIdx == Idx);
-				if (ImGui::Selectable(Option, IsSelected)) {
+				if (ImGui::Selectable(Names[Idx], IsSelected)) {
 					SelectedIdx = Idx;
 				}
 			}
@@ -154,7 +149,10 @@ namespace platformer2d::UI::Widget::Combo {
 
 	bool BlendFunction(const float IndentX)
 	{
-		#define UI_COMBO_OPTION(Value) { Value, #Value }
+#define UI_COMBO_OPTION(Value) \
+	{                          \
+		Value, #Value          \
+	}
 		static constexpr std::pair<GLenum, const char*> SourceBlendFuncs[] = {
 			UI_COMBO_OPTION(GL_SRC_ALPHA),
 			UI_COMBO_OPTION(GL_DST_ALPHA),
@@ -170,7 +168,7 @@ namespace platformer2d::UI::Widget::Combo {
 			UI_COMBO_OPTION(GL_ONE_MINUS_DST_ALPHA),
 			UI_COMBO_OPTION(GL_ONE_MINUS_CONSTANT_ALPHA),
 		};
-		#undef UI_COMBO_OPTION
+#undef UI_COMBO_OPTION
 
 		bool ShouldUpdate = false;
 
@@ -275,8 +273,7 @@ namespace platformer2d::UI::Widget::Combo {
 		if (ShouldUpdate) {
 			LK_OpenGL_Verify(glBlendFunc(
 				SourceBlendFuncs[SelectedSourceBlendFunc].first,
-				DestBlendFuncs[SelectedDestBlendFunc].first
-			));
+				DestBlendFuncs[SelectedDestBlendFunc].first));
 		}
 
 		return ShouldUpdate;
@@ -284,7 +281,10 @@ namespace platformer2d::UI::Widget::Combo {
 
 	bool DepthFunction(const float IndentX)
 	{
-		#define UI_COMBO_OPTION(Value) { Value, #Value }
+#define UI_COMBO_OPTION(Value) \
+	{                          \
+		Value, #Value          \
+	}
 		static constexpr std::pair<GLenum, const char*> Functions[] = {
 			UI_COMBO_OPTION(GL_LESS),
 			UI_COMBO_OPTION(GL_EQUAL),
@@ -294,7 +294,7 @@ namespace platformer2d::UI::Widget::Combo {
 			UI_COMBO_OPTION(GL_GEQUAL),
 			UI_COMBO_OPTION(GL_ALWAYS),
 		};
-		#undef UI_COMBO_OPTION
+#undef UI_COMBO_OPTION
 
 		static constexpr float ItemWidth = 380.0f;
 		bool ShouldUpdate = false;
