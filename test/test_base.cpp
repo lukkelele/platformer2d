@@ -93,8 +93,7 @@ namespace platformer2d::test {
 				.Title = LK_TEST_NAME,
 				.bStartMaximized = true,
 				.bVSync = true};
-			Window = std::make_unique<CWindow>(WindowSpec);
-			Window->Initialize();
+			CWindow::Get().Initialize(WindowSpec);
 			CImGuiLayer::AddViewportFlags(ImGuiWindowFlags_MenuBar);
 		}
 	}

@@ -43,10 +43,9 @@ namespace platformer2d::test {
 		virtual void Stop();
 		virtual void Destroy() = 0;
 
-		bool IsRunning() const { return bRunning; }
-		CWindow& GetWindow() const { return *Window; }
-		const std::filesystem::path& GetBinaryDirectory() const { return BinaryDir; }
-		static const std::filesystem::path& GetAssetsDirectory() { return AssetsDir; }
+		[[nodiscard]] bool IsRunning() const { return bRunning; }
+		[[nodiscard]] const std::filesystem::path& GetBinaryDirectory() const { return BinaryDir; }
+		[[nodiscard]] static const std::filesystem::path& GetAssetsDirectory() { return AssetsDir; }
 
 		static void InitRenderContext(GLFWwindow* GlfwWindow);
 		static void ImGui_NewFrame();
@@ -64,7 +63,6 @@ namespace platformer2d::test {
 
 		FBackendInfo BackendInfo;
 
-		std::unique_ptr<CWindow> Window;
 		std::filesystem::path BinaryDir;
 		static inline std::filesystem::path AssetsDir = ASSETS_DIR;
 	};
