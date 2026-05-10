@@ -15,21 +15,21 @@ namespace platformer2d {
 		void OnPossess(CEnemy& Enemy) override;
 		void Tick(CEnemy& Enemy, float DeltaTime) override;
 
-		EControllerType GetControllerType() const override { return EControllerType::Patrol; }
+		[[nodiscard]] EControllerType GetControllerType() const override { return EControllerType::Patrol; }
 
 		void SetTarget(std::shared_ptr<CActor> InTarget);
-		bool HasTarget() const { return !TargetRef.expired(); }
+		[[nodiscard]] bool HasTarget() const { return !TargetRef.expired(); }
 
 		void SetPatrolDirection(EDirection InDirection);
-		EDirection GetPatrolDirection() const { return PatrolDirection; }
+		[[nodiscard]] EDirection GetPatrolDirection() const { return PatrolDirection; }
 
-		bool IsChasing() const { return bChasing; }
-		float GetHalfDistance() const { return PatrolHalfDistance; }
-		float GetStartDelayInSeconds() const { return StartDelaySeconds; }
+		[[nodiscard]] bool IsChasing() const { return bChasing; }
+		[[nodiscard]] float GetHalfDistance() const { return PatrolHalfDistance; }
+		[[nodiscard]] float GetStartDelayInSeconds() const { return StartDelaySeconds; }
 		void SetDetectRadius(float InRadius);
-		float GetDetectRadius() const { return DetectRadius; }
+		[[nodiscard]] float GetDetectRadius() const { return DetectRadius; }
 		void SetStopRadius(float InRadius);
-		float GetStopRadius() const { return StopRadius; }
+		[[nodiscard]] float GetStopRadius() const { return StopRadius; }
 
 	private:
 		enum class ETargetResponse
@@ -37,9 +37,11 @@ namespace platformer2d {
 			None,
 			StopMovement,
 			MoveLeft,
-			MoveRight
+			MoveRight,
+			COUNT
 		};
-		ETargetResponse HandleTarget(const glm::vec3& CurrentPos, const std::shared_ptr<CActor>& Target);
+		LK_ENUM(ETargetResponse);
+		[[nodiscard]] ETargetResponse HandleTarget(CEnemy& Enemy, const std::shared_ptr<CActor>& Target);
 
 	private:
 		float StartX = 0.0f;
@@ -54,6 +56,10 @@ namespace platformer2d {
 		float DetectRadius = 4.0f;
 		float StopRadius = 0.60f;
 		float GiveUpRadius = 6.0f;
-	};
 
+		bool bHasLastKnownPos = false;
+		glm::vec2 LastKnownPos = {0.0f, 0.0f};
+		float StuckTimer = 0.0f;
+	};
 }
+

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/enum.h"
 #include "game/controller.h"
 
 namespace platformer2d {
@@ -12,6 +13,7 @@ namespace platformer2d {
 		Patrolling,
 		COUNT
 	};
+	LK_ENUM(EEnemyState);
 
 	struct FEnemyData
 	{
@@ -26,27 +28,9 @@ namespace platformer2d {
 	public:
 		virtual ~IEnemyController() = default;
 
-		virtual void OnPossess(CEnemy& Enemy) {}
+		virtual void OnPossess(CEnemy& Enemy) = 0;
 		virtual void Tick(CEnemy& Enemy, float DeltaTime) = 0;
 	};
 
-	namespace Enum {
-		inline constexpr const char* ToString(const EEnemyState State)
-		{
-			const char* S = "";
-#define _(EnumValue)                                   \
-	case EEnemyState::EnumValue: S = #EnumValue; break
-			switch (State) {
-				_(Idle);
-				_(Patrolling);
-				_(COUNT);
-				default:
-					S = nullptr;
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+
