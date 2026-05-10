@@ -244,6 +244,16 @@ namespace platformer2d::Enum::Internal {
 		}
 		static constexpr auto Names = MakeNames();
 
+		static consteval auto MakeValues()
+		{
+			std::array<E, Count> Arr{};
+			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
+				Arr[Idx] = Data.Entries[Idx].Value;
+			}
+			return Arr;
+		}
+		static constexpr auto Values = MakeValues();
+
 		/** @brief Calculate largest name of all enum entries, used for the null-terminated array. */
 		static consteval std::size_t CalcMaxNameLen() noexcept
 		{
@@ -361,12 +371,14 @@ namespace platformer2d::Enum {
 		return Internal::Table<E>::Find(Name);
 	}
 
-	template<typename E, typename T = std::string_view>
+	template<typename E, typename T = E>
 		requires(Internal::Range<E>::Defined)
 	[[nodiscard]] constexpr auto View() noexcept
 	{
 		using namespace Internal;
-		if constexpr (std::is_same_v<T, std::string_view>) {
+		if constexpr (std::is_same_v<T, E>) {
+			return std::span<const E>(Table<E>::Values.data(), Table<E>::Data.Size);
+		} else if constexpr (std::is_same_v<T, std::string_view>) {
 			return std::span<const std::string_view>(Table<E>::Names.data(), Table<E>::Data.Size);
 		} else if constexpr (std::is_same_v<T, const char*>) {
 			/**
@@ -385,8 +397,10 @@ namespace platformer2d::Enum {
 				return Arr;
 			}();
 			return std::span<const char*>(EnumNames.data(), Table<E>::Data.Size);
-		} else {
+		} else if constexpr (std::is_same_v<T, Entry<E>>) {
 			return std::span<const Entry<E>>(Table<E>::Data.Entries.data(), Table<E>::Data.Size);
+		} else {
+			static_assert(false, "Unsupported type T");
 		}
 	}
 
