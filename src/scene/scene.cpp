@@ -321,6 +321,8 @@ namespace platformer2d {
 				auto& Spec = EnemySpec.emplace();
 				Serialization::DeserializeProperty("ControllerType", Spec.ControllerType, EControllerType::None, ControllerNode);
 				Serialization::DeserializeProperty("SpawnPoint", Spec.SpawnPoint, glm::vec2(0.0f, 0.0f), Node);
+				/* @fixme: Temporarily optional */
+				Serialization::DeserializeProperty<Serialization::EProperty::Optional>("Archetype", Spec.Archetype, EEnemyArchetype::Grunt, Node);
 			}
 
 			LK_VERIFY(!DoesActorExist(ActorSpec.Handle), "Duplicate actors found with handle {}", ActorSpec.Handle);

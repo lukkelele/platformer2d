@@ -116,6 +116,27 @@ namespace platformer2d::Serialization {
 				if (const FPickupItem* Object = std::get_if<FPickupItem>(&Data.Object)) {
 					ObjectType = static_cast<int>(Object->Type);
 					LK_FATAL_TAG("Serializer", "PickupItem ObjectType={}", ObjectType);
+
+					EItemPayload PayloadKind = EItemPayload::None;
+					if (std::holds_alternative<FConsumablePayload>(Object->Payload)) {
+						PayloadKind = EItemPayload::Consumable;
+					} else if (std::holds_alternative<FAmmoPayload>(Object->Payload)) {
+						PayloadKind = EItemPayload::Ammo;
+					}
+					Out << YAML::Key << "PayloadKind" << YAML::Value << std::to_underlying(PayloadKind);
+					if (const FConsumablePayload* P = std::get_if<FConsumablePayload>(&Object->Payload)) {
+						Out << YAML::Key << "Consumable";
+						Out << YAML::BeginMap;
+						Out << YAML::Key << "Kind" << YAML::Value << std::to_underlying(P->Kind);
+						Out << YAML::Key << "Amount" << YAML::Value << P->Amount;
+						Out << YAML::EndMap;
+					} else if (const FAmmoPayload* P = std::get_if<FAmmoPayload>(&Object->Payload)) {
+						Out << YAML::Key << "Ammo";
+						Out << YAML::BeginMap;
+						Out << YAML::Key << "Weapon" << YAML::Value << std::to_underlying(P->Weapon);
+						Out << YAML::Key << "Count" << YAML::Value << P->Count;
+						Out << YAML::EndMap;
+					}
 				} else if (const FPickupWeapon* Object = std::get_if<FPickupWeapon>(&Data.Object)) {
 					ObjectType = static_cast<int>(Object->Type);
 					LK_DEBUG_TAG("Serializer", "PickupWeapon ObjectType={}", ObjectType);
@@ -133,6 +154,36 @@ namespace platformer2d::Serialization {
 				Out << YAML::Key << "ObjectType" << YAML::Value << ObjectType;
 
 				Out << YAML::Key << "ExpireWhenPickedUp" << YAML::Value << Data.bExpireWhenPickedUp;
+				break;
+			}
+			case EInteraction::Heal:
+			{
+				const auto& Data = std::get<FHealInteraction>(IC.Data);
+				Out << YAML::Key << "Amount" << YAML::Value << Data.Amount;
+				Out << YAML::Key << "ConsumeOnUse" << YAML::Value << Data.bConsumeOnUse;
+				break;
+			}
+			case EInteraction::Killzone:
+			{
+				break;
+			}
+			case EInteraction::Jumppad:
+			{
+				const auto& Data = std::get<FJumppadInteraction>(IC.Data);
+				Out << YAML::Key << "Impulse" << YAML::Value << Data.Impulse;
+				Out << YAML::Key << "PreserveHorizontalVelocity" << YAML::Value << Data.bPreserveHorizontalVelocity;
+				break;
+			}
+			case EInteraction::Climbable:
+			{
+				const auto& Data = std::get<FClimbableInteraction>(IC.Data);
+				Out << YAML::Key << "ClimbSpeed" << YAML::Value << Data.ClimbSpeed;
+				break;
+			}
+			case EInteraction::Checkpoint:
+			{
+				const auto& Data = std::get<FCheckpointInteraction>(IC.Data);
+				Out << YAML::Key << "CheckpointID" << YAML::Value << Data.CheckpointID;
 				break;
 			}
 			default:
@@ -232,8 +283,28 @@ namespace platformer2d::Serialization {
 
 				if (ObjectTypeValue >= 0) {
 					if (Data.Kind == EPickupKind::Item) {
-						FPickupItem Object = {
-							.Type = static_cast<EItemType>(ObjectTypeValue)};
+						FPickupItem Object = {.Type = static_cast<EItemType>(ObjectTypeValue)};
+
+						const YAML::Node& ObjectNode = Node["Object"];
+						if (ObjectNode.IsDefined() && ObjectNode["PayloadKind"]) {
+							const auto PayloadKind = static_cast<EItemPayload>(ObjectNode["PayloadKind"].as<std::underlying_type_t<EItemPayload>>());
+							if ((PayloadKind == EItemPayload::Consumable) && ObjectNode["Consumable"]) {
+								const YAML::Node& Pn = ObjectNode["Consumable"];
+								FConsumablePayload P;
+								DeserializeProperty("Kind", P.Kind, EConsumableKind::Health, Pn);
+								DeserializeProperty("Amount", P.Amount, 25.0f, Pn);
+								Object.Payload = P;
+							} else if ((PayloadKind == EItemPayload::Ammo) && ObjectNode["Ammo"]) {
+								const YAML::Node& Pn = ObjectNode["Ammo"];
+								FAmmoPayload P;
+								DeserializeProperty("Weapon", P.Weapon, EWeaponType::Rifle, Pn);
+								std::uint16_t Count = 30;
+								DeserializeProperty("Count", Count, std::uint16_t(30), Pn);
+								P.Count = Count;
+								Object.Payload = P;
+							}
+						}
+
 						Data.Object = Object;
 					} else if (Data.Kind == EPickupKind::Weapon) {
 						FPickupWeapon Object = {
@@ -255,6 +326,41 @@ namespace platformer2d::Serialization {
 
 				IC.Data = Data;
 				LK_DEBUG_TAG("Deserializer", "FPickupInteraction: Kind={} bExpireWhenPickedUp={} ObjectTypeValue={}", Enum::ToString(Data.Kind), Data.bExpireWhenPickedUp, ObjectTypeValue);
+				break;
+			}
+			case EInteraction::Heal:
+			{
+				FHealInteraction Data;
+				DeserializeProperty("Amount", Data.Amount, 25.0f, Node);
+				DeserializeProperty("ConsumeOnUse", Data.bConsumeOnUse, true, Node);
+				IC.Data = Data;
+				break;
+			}
+			case EInteraction::Killzone:
+			{
+				IC.Data = FKillzoneInteraction{};
+				break;
+			}
+			case EInteraction::Jumppad:
+			{
+				FJumppadInteraction Data;
+				DeserializeProperty("Impulse", Data.Impulse, glm::vec2(0.0f, 6.0f), Node);
+				DeserializeProperty("PreserveHorizontalVelocity", Data.bPreserveHorizontalVelocity, true, Node);
+				IC.Data = Data;
+				break;
+			}
+			case EInteraction::Climbable:
+			{
+				FClimbableInteraction Data;
+				DeserializeProperty("ClimbSpeed", Data.ClimbSpeed, 1.0f, Node);
+				IC.Data = Data;
+				break;
+			}
+			case EInteraction::Checkpoint:
+			{
+				FCheckpointInteraction Data;
+				DeserializeProperty("CheckpointID", Data.CheckpointID, std::string{}, Node);
+				IC.Data = Data;
 				break;
 			}
 			default:

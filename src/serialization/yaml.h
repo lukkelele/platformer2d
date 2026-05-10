@@ -7,6 +7,7 @@
 
 #include "core/core.h"
 #include "game/controller.h"
+#include "game/enemyarchetype.h"
 #include "scene/components.h"
 
 namespace YAML {
@@ -88,6 +89,72 @@ namespace YAML {
 		static bool decode(const Node& YamlNode, platformer2d::EPickupKind& Rhs)
 		{
 			using T = platformer2d::EPickupKind;
+			if (!YamlNode.IsScalar()) {
+				return false;
+			}
+
+			Rhs = static_cast<T>(YamlNode.as<std::underlying_type_t<T>>());
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<platformer2d::EConsumableKind>
+	{
+		static Node encode(const platformer2d::EConsumableKind Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(std::to_underlying(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, platformer2d::EConsumableKind& Rhs)
+		{
+			using T = platformer2d::EConsumableKind;
+			if (!YamlNode.IsScalar()) {
+				return false;
+			}
+
+			Rhs = static_cast<T>(YamlNode.as<std::underlying_type_t<T>>());
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<platformer2d::EEnemyArchetype>
+	{
+		static Node encode(const platformer2d::EEnemyArchetype Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(std::to_underlying(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, platformer2d::EEnemyArchetype& Rhs)
+		{
+			using T = platformer2d::EEnemyArchetype;
+			if (!YamlNode.IsScalar()) {
+				return false;
+			}
+
+			Rhs = static_cast<T>(YamlNode.as<std::underlying_type_t<T>>());
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<platformer2d::EWeaponType>
+	{
+		static Node encode(const platformer2d::EWeaponType Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(std::to_underlying(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, platformer2d::EWeaponType& Rhs)
+		{
+			using T = platformer2d::EWeaponType;
 			if (!YamlNode.IsScalar()) {
 				return false;
 			}
