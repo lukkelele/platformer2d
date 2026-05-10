@@ -295,11 +295,21 @@ namespace platformer2d::Enum::Internal {
 }
 
 namespace platformer2d::Enum {
-	template<typename E>
+	template<typename T = std::string_view, typename E>
 		requires(Internal::Range<E>::Defined)
-	[[nodiscard]] constexpr std::string_view ToString(const E Value) noexcept
+	[[nodiscard]] constexpr auto ToString(const E Value) noexcept
 	{
-		return Internal::Table<E>::Find(Value);
+		static_assert(std::is_same_v<T, std::string_view> || std::is_same_v<T, const char*>, "Enum::ToString only supports std::string_view and const char*");
+		if constexpr (std::is_same_v<T, std::string_view>) {
+			return Internal::Table<E>::Find(Value);
+		} else if constexpr (std::is_same_v<T, const char*>) {
+			for (std::size_t Idx = 0; Idx < Internal::Table<E>::Data.Size; Idx++) {
+				if (Internal::Table<E>::Data.Entries[Idx].Value == Value) {
+					return static_cast<const char*>(Internal::Table<E>::NamesNT[Idx].data());
+				}
+			}
+			return static_cast<const char*>(nullptr);
+		}
 	}
 
 	template<typename E>
