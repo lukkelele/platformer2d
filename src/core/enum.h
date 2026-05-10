@@ -235,6 +235,43 @@ namespace platformer2d::Enum::Internal {
 
 		static constexpr auto Data = Make();
 
+		static consteval auto MakeNames()
+		{
+			std::array<std::string_view, Count> Arr{};
+			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
+				Arr[Idx] = Data.Entries[Idx].Name;
+			}
+			return Arr;
+		}
+		static constexpr auto Names = MakeNames();
+
+		/** @brief Calculate largest name of all enum entries, used for the null-terminated array. */
+		static consteval std::size_t CalcMaxNameLen() noexcept
+		{
+			std::size_t Max = 0;
+			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
+				if (Data.Entries[Idx].Name.size() > Max) {
+					Max = Data.Entries[Idx].Name.size();
+				}
+			}
+			return Max;
+		}
+		static constexpr std::size_t MaxNameLen = CalcMaxNameLen();
+
+		/** @brief Null-terminated enum names. */
+		static consteval auto MakeNamesNT() noexcept
+		{
+			std::array<std::array<char, MaxNameLen + 1>, Count> Arr{};
+			for (std::size_t I = 0; I < Data.Size; I++) {
+				std::string_view Name = Data.Entries[I].Name;
+				for (std::size_t J = 0; J < Name.size(); J++) {
+					Arr[I][J] = Name[J];
+				}
+			}
+			return Arr;
+		}
+		static constexpr auto NamesNT = MakeNamesNT();
+
 		static constexpr std::string_view Find(const E Value) noexcept
 		{
 			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
@@ -272,12 +309,33 @@ namespace platformer2d::Enum {
 		return Internal::Table<E>::Find(Name);
 	}
 
-	template<typename E>
+	template<typename E, typename T = std::string_view>
 		requires(Internal::Range<E>::Defined)
-	[[nodiscard]] constexpr std::span<const Internal::Entry<E>> View() noexcept
+	[[nodiscard]] constexpr auto View() noexcept
 	{
 		using namespace Internal;
-		return std::span<const Entry<E>>(Table<E>::Data.Entries.data(), Table<E>::Data.Size);
+		if constexpr (std::is_same_v<T, std::string_view>) {
+			return std::span<const std::string_view>(Table<E>::Names.data(), Table<E>::Data.Size);
+		} else if constexpr (std::is_same_v<T, const char*>) {
+			/**
+			 * @todo: The static storage for EnumNames breaks constexpr evaluation.
+			 * It is possible to store this array similar to how NamesNT is stored but I
+			 * fear the return type would require a const cast due to std::span element
+			 * becoming 'const char* const'. And yeah, I don't like that.
+			 * Might test it out sometime in the future, or just drop this constexpr dream of mine :)
+			 */
+			static std::array<const char*, Table<E>::Count> EnumNames = []() noexcept
+			{
+				std::array<const char*, Table<E>::Count> Arr{};
+				for (std::size_t Idx = 0; Idx < Table<E>::Data.Size; Idx++) {
+					Arr[Idx] = Table<E>::NamesNT[Idx].data();
+				}
+				return Arr;
+			}();
+			return std::span<const char*>(EnumNames.data(), Table<E>::Data.Size);
+		} else {
+			return std::span<const Entry<E>>(Table<E>::Data.Entries.data(), Table<E>::Data.Size);
+		}
 	}
 
 	template<typename E>
