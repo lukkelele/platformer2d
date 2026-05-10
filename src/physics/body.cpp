@@ -420,7 +420,7 @@ namespace platformer2d {
 			{
 				const auto& ShapeRef = std::get<FPolygon>(Shape);
 				Out << YAML::Key << "Size" << YAML::Value << ShapeRef.Size;
-				Out << YAML::Key << "Rotation" << YAML::Value << GetRotation();
+				Out << YAML::Key << "Rotation" << YAML::Value << Math::Round(GetRotation());
 				Out << YAML::Key << "Radius" << YAML::Value << ShapeRef.Radius;
 				LK_TRACE_TAG("Body", "Polygon: Size={} Rotation={} Radius={}", ShapeRef.Size, ShapeRef.Rotation, ShapeRef.Radius);
 				break;
@@ -462,7 +462,8 @@ namespace platformer2d {
 		Out << YAML::EndMap;
 		/* ~Shape */
 
-		Out << YAML::Key << "Position" << YAML::Value << GetPosition();
+		const glm::vec2 RawPos = GetPosition();
+		Out << YAML::Key << "Position" << YAML::Value << glm::vec2(Math::Round(RawPos.x), Math::Round(RawPos.y));
 		Out << YAML::Key << "Flags" << YAML::Value << static_cast<uint32_t>(BodySpec.Flags);
 		Out << YAML::Key << "Mass" << YAML::Value << GetMass();
 		Out << YAML::Key << "MotionLock" << YAML::Value << static_cast<uint32_t>(BodySpec.MotionLock);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.h"
+#include "core/math/math.h"
 #include "physics/body.h"
 #include "scene/components.h"
 #include "yaml.h"
@@ -51,8 +52,8 @@ namespace platformer2d::Serialization {
 	{
 		Out << YAML::Key << "TransformComponent";
 		Out << YAML::BeginMap;
-		Out << YAML::Key << "Position" << YAML::Value << TC.Translation;
-		Out << YAML::Key << "Rotation" << YAML::Value << TC.GetRotation2D();
+		Out << YAML::Key << "Position" << YAML::Value << glm::vec3(Math::Round(TC.Translation.x), Math::Round(TC.Translation.y), Math::Round(TC.Translation.z));
+		Out << YAML::Key << "Rotation" << YAML::Value << Math::Round(TC.GetRotation2D());
 		Out << YAML::Key << "Scale" << YAML::Value << TC.Scale;
 		Out << YAML::EndMap;
 	}
