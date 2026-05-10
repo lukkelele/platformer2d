@@ -20,29 +20,7 @@ namespace platformer2d {
 		Magenta,
 		COUNT
 	};
-
-	namespace Enum {
-		inline constexpr const char* ToString(const EColor Color)
-		{
-			const char* S = "";
-#define _(EnumValue)                              \
-	case EColor::EnumValue: S = #EnumValue; break
-			switch (Color) {
-				_(White);
-				_(Black);
-				_(Transparent);
-				_(Red);
-				_(Green);
-				_(Blue);
-				_(Magenta);
-				default:
-					S = "Unknown";
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
+	LK_ENUM(EColor);
 }
 
 namespace std {
