@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -8,8 +10,8 @@
 
 namespace platformer2d::UI {
 
-	template<std::size_t N, typename TEnum>
-	inline bool Combo(std::string_view Label, const std::array<TEnum, N>& Options, TEnum& Selected)
+	template<typename TEnum>
+	inline bool Combo(std::string_view Label, std::span<const TEnum> Options, TEnum& Selected)
 	{
 		static const auto EnumNames = Enum::View<TEnum, const char*>();
 		const auto SelectedIdx = std::to_underlying(Selected);
@@ -35,6 +37,7 @@ namespace platformer2d::UI {
 		return Updated;
 	}
 
+	/* @fixme: Remove */
 	template<typename TEnum>
 	inline bool Combo(std::string_view Label, const char*& Options, const std::size_t N, TEnum& Selected)
 	{
