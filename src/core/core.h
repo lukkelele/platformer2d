@@ -20,6 +20,7 @@
 #include <glm/glm.hpp>
 
 #include "assert.h"
+#include "enum.h"
 #include "log.h"
 #include "macros.h"
 #include "uuid.h"
@@ -47,6 +48,7 @@ namespace platformer2d {
 			Editor,
 			COUNT
 		};
+		LK_ENUM(ELayer);
 
 		struct FGlobal
 		{
@@ -111,92 +113,14 @@ namespace platformer2d {
 		Right,
 		COUNT
 	};
+	LK_ENUM(EDirection);
 
 	enum class EQuickLoad : std::uint8_t
 	{
 		None,
 		Editor,
+		COUNT
 	};
-
-	namespace Enum {
-		namespace Internal {
-			template<typename T>
-			concept CountedEnum = std::is_enum_v<T> && requires {
-				T::COUNT;
-			};
-
-			/* Unused for now. The goal is to be able evaluate existance of Enum::ToString for enum T and that it is constexpr. */
-			template<typename T>
-			concept HasToString = std::is_enum_v<T> && requires(T Value) {
-				{ ToString(Value) } -> std::convertible_to<std::string_view>;
-				{ std::bool_constant<(ToString(T{}), true)>{} };
-			};
-
-			template<typename T>
-			concept StringConvertable = CountedEnum<T>;
-
-			template<CountedEnum T, std::predicate<T> Predicate>
-			constexpr T FindIf(Predicate Pred)
-			{
-				for (std::underlying_type_t<T> Idx = 0; Idx < std::to_underlying(T::COUNT); Idx++) {
-					const T Value = static_cast<T>(Idx);
-					if (Pred(Value)) {
-						return Value;
-					}
-				}
-				return T::COUNT;
-			}
-		}
-
-		constexpr const char* ToString(const Core::ELayer Layer)
-		{
-			const char* S = nullptr;
-#define _(EnumValue)                                    \
-	case Core::ELayer::EnumValue: S = #EnumValue; break
-			switch (Layer) {
-				_(Runtime);
-				_(Editor);
-				_(COUNT);
-				default:
-					break;
-			}
-#undef _
-			return S;
-		}
-
-		constexpr const char* ToString(const EQuickLoad QuickLoad)
-		{
-			switch (QuickLoad) {
-				case EQuickLoad::None:   return "None";
-				case EQuickLoad::Editor: return "Editor";
-			}
-			return nullptr;
-		}
-
-		constexpr const char* ToString(const EDirection Direction)
-		{
-			const char* S = nullptr;
-#define _(EnumValue)                                  \
-	case EDirection::EnumValue: S = #EnumValue; break
-			switch (Direction) {
-				_(Up);
-				_(Down);
-				_(Left);
-				_(Right);
-				default:
-					break;
-			}
-#undef _
-			return S;
-		}
-
-		template<Internal::StringConvertable T>
-		constexpr T FromString(const std::string_view S)
-		{
-			return Internal::FindIf<T>([S](const T Value) {
-				return S == std::string_view{ Enum::ToString(Value) };
-			});
-		}
-	}
+	LK_ENUM(EQuickLoad);
 
 }

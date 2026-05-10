@@ -9,7 +9,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "core.h"
 #include "macros.h"
 #include "platform.h"
 
@@ -309,6 +308,35 @@ namespace platformer2d::Enum::Internal {
 }
 
 namespace platformer2d::Enum {
+	namespace Internal {
+		template<typename T>
+		concept CountedEnum = std::is_enum_v<T> && requires {
+			T::COUNT;
+		};
+
+		/* Unused for now. The goal is to be able evaluate existance of Enum::ToString for enum T and that it is constexpr. */
+		template<typename T>
+		concept HasToString = std::is_enum_v<T> && requires(T Value) {
+			{ ToString(Value) } -> std::convertible_to<std::string_view>;
+			{ std::bool_constant<(ToString(T{}), true)>{} };
+		};
+
+		template<typename T>
+		concept StringConvertable = CountedEnum<T>;
+
+		template<CountedEnum T, std::predicate<T> Predicate>
+		constexpr T FindIf(Predicate Pred)
+		{
+			for (std::underlying_type_t<T> Idx = 0; Idx < std::to_underlying(T::COUNT); Idx++) {
+				const T Value = static_cast<T>(Idx);
+				if (Pred(Value)) {
+					return Value;
+				}
+			}
+			return T::COUNT;
+		}
+	}
+
 	template<typename T = std::string_view, typename E>
 		requires(Internal::Range<E>::Defined)
 	[[nodiscard]] constexpr auto ToString(const E Value) noexcept
