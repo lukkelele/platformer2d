@@ -413,6 +413,7 @@ namespace platformer2d {
 		if (!EC || !Player) {
 			return;
 		}
+
 		const CCamera& PlayerCam = Player->GetCamera();
 		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
 		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
@@ -420,6 +421,7 @@ namespace platformer2d {
 		} else {
 			EC->CancelSwitchLerp();
 		}
+
 		EC->SetActive(true);
 		bUseEditorCamera = true;
 	}
@@ -430,6 +432,7 @@ namespace platformer2d {
 		if (!EC || !Player) {
 			return;
 		}
+
 		CCamera& PlayerCam = Player->GetCamera();
 		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
 		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
@@ -437,6 +440,7 @@ namespace platformer2d {
 		} else {
 			PlayerCam.CancelSwitchLerp();
 		}
+
 		EC->SetActive(false);
 		bUseEditorCamera = false;
 	}
@@ -1415,6 +1419,16 @@ namespace platformer2d {
 		}
 	}
 
+	static void LogHitResults(const std::vector<FHitResult>& HitResults)
+	{
+		LK_DEBUG_TAG("Editor", "Picked={}", HitResults.size());
+		for (const auto& P : HitResults) {
+			if (std::shared_ptr<CActor> Ref = P.Ref.lock(); Ref != nullptr) {
+				LK_DEBUG(R"(Name: "{}" Handle={})", Ref->GetName(), P.Handle);
+			}
+		}
+	}
+
 	void CEditor::MousePickScene()
 	{
 		CCamera* Camera = GetActiveCamera();
@@ -1423,7 +1437,7 @@ namespace platformer2d {
 		}
 
 		static std::vector<FHitResult> HitResults;
-		const uint16_t Picked = PickSceneAtMouse(Scene, HitResults);
+		const std::uint16_t Picked = PickSceneAtMouse(Scene, HitResults);
 		if (Picked > 0) {
 			const FHitResult& Hit = HitResults.at(0);
 			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
@@ -1441,7 +1455,7 @@ namespace platformer2d {
 		}
 
 		static std::vector<FHitResult> HitResults;
-		const uint16_t Hits = RaycastScene(Scene, HitResults);
+		const std::uint16_t Hits = RaycastScene(Scene, HitResults);
 #if 0 /* Disable for now since selection is overkill for raycasts */
 		if (Hits > 0) {
 			const FHitResult& Hit = HitResults.at(0);
