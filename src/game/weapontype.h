@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.h"
+#include "core/enum.h"
 
 namespace platformer2d {
 
@@ -9,28 +10,11 @@ namespace platformer2d {
 		Rifle,
 		COUNT
 	};
+	LK_ENUM(EWeaponType);
 
 	struct FRifleSpecification
 	{
-		uint16_t MagazineSize = 30;
+		std::uint16_t MagazineSize = 30;
 	};
-
-	namespace Enum {
-		inline const char* ToString(const EWeaponType Type)
-		{
-			const char* S = "";
-#define _(EnumValue)                                   \
-	case EWeaponType::EnumValue: S = #EnumValue; break
-			switch (Type) {
-				_(Rifle);
-				_(COUNT);
-				default:
-					LK_THROW_ENUM_ERR(Type);
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+
