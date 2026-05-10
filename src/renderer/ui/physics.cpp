@@ -7,6 +7,7 @@
 #include "renderer/font.h"
 #include "renderer/renderer.h"
 #include "ui_core.h"
+#include "combo.h"
 #include "widgets.h"
 #include "scene/scene.h"
 
@@ -14,6 +15,7 @@ namespace platformer2d::UI {
 
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec)
 	{
+		BodySpec.Type = Data.BodyType;
 		BodySpec.Position = {Data.Position.x, Data.Position.y};
 		BodySpec.Friction = Data.Friction;
 		BodySpec.Density = Data.Density;
@@ -24,7 +26,7 @@ namespace platformer2d::UI {
 		BodySpec.AngularDamping = Data.AngularDamping;
 		BodySpec.DirForce = Data.DirForce;
 		BodySpec.JumpImpulse = Data.JumpImpulse;
-		BodySpec.bSensor = Data.BodyFlag.bSensorEvents;
+		BodySpec.bSensor = Data.bSensor;
 
 		/* Body flags. */
 		int BodyFlags = EBodyFlag::EBodyFlag_None;
@@ -62,20 +64,13 @@ namespace platformer2d::UI {
 
 	void PhysicsBodyMenu(FPhysicsBodyData& Data)
 	{
-		static constexpr float ButtonPaddingY = 7.0f;
-		static constexpr ImVec2 ButtonSize(84, 42);
-		static constexpr float ItemWidth = 2.0f * ButtonSize.x;
-		static constexpr float ColWidth = 180.0f;
-
-		static constexpr std::array<EBodyType, std::to_underlying(EBodyType::COUNT)> BodyTypes = {
-			EBodyType::Static,
-			EBodyType::Dynamic,
-			EBodyType::Kinematic,
-		};
+		constexpr float ButtonPaddingY = 7.0f;
+		constexpr ImVec2 ButtonSize(84, 42);
+		constexpr float ItemWidth = 2.0f * ButtonSize.x;
+		constexpr float ColWidth = 180.0f;
 
 		ImGui::PushID("PhysicsBodyMenu");
-		static std::size_t SelectedIdx = 0;
-		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < BodyTypes.size()));
+		static EBodyType Selected = EBodyType::Static;
 
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
 
@@ -83,6 +78,7 @@ namespace platformer2d::UI {
 		 * Body Type.
 		 ************************/
 		{
+			/* @todo: Use UI::Table here instead. */
 			ImGui::BeginTable("##BodyTypeTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 			ImGui::TableSetupColumn("L", 0, ColWidth);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
@@ -94,25 +90,10 @@ namespace platformer2d::UI {
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursor(7.0f, 0.0f);
-			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
-			ImGui::SetNextItemWidth(ComboItemWidth);
-			const char* Selected = Enum::ToString(BodyTypes[SelectedIdx]);
-			if (ImGui::BeginCombo("##BodyType", Selected)) {
-				for (int Idx = 0; Idx < BodyTypes.size(); Idx++) {
-					const char* Option = Enum::ToString(BodyTypes[Idx]);
-					if (Option == nullptr) {
-						continue;
-					}
-
-					const bool IsSelected = (Option == Selected);
-					if (ImGui::Selectable(Option, IsSelected)) {
-						SelectedIdx = Idx;
-					}
-				}
-
-				ImGui::EndCombo();
+			if (UI::Combo("##BodyType", Enum::View<EBodyType>(), Selected)) {
+				LK_TRACE_TAG("UI", "Combo -> BodyType: {}", Enum::ToString(Selected));
+				Data.BodyType = Selected;
 			}
-
 			ImGui::EndTable();
 		}
 
@@ -125,45 +106,31 @@ namespace platformer2d::UI {
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
 
 			ImGui::TableNextRow();
-			static float GravityScale = 1.0f;
-			UI::Widget::DragFloat("Gravity Scale", GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");
+			UI::Widget::DragFloat("Gravity Scale", Data.GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static float Friction = 1.0f;
-			UI::Widget::DragFloat("Friction", Friction, 0.01f, 0.0f, 2.0f, "%.2f");
+			UI::Widget::DragFloat("Friction", Data.Friction, 0.01f, 0.0f, 2.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static float Density = 1.0f;
-			UI::Widget::DragFloat("Density", Density, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::Widget::DragFloat("Density", Data.Density, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static glm::vec2 LinearVelocity = {0.0f, 0.0f};
-			UI::Widget::DragFloat2("Linear Velocity", LinearVelocity, 0.10f, 0.010f, 0.010f);
+			UI::Widget::DragFloat2("Linear Velocity", Data.LinearVelocity, 0.10f, 0.010f, 0.010f);
 
 			ImGui::TableNextRow();
-			static float AngularVelocity = 0.0f;
-			UI::Widget::DragFloat("Angular Velocity", AngularVelocity, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::Widget::DragFloat("Angular Velocity", Data.AngularVelocity, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static float LinearDamping = 0.0f;
-			UI::Widget::DragFloat("Linear Damping", LinearDamping, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::Widget::DragFloat("Linear Damping", Data.LinearDamping, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static float DirForce = 0.0f;
-			UI::Widget::DragFloat("Directional Force", DirForce, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::Widget::DragFloat("Directional Force", Data.DirForce, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			static float JumpImpulse = 0.0f;
-			UI::Widget::DragFloat("Jump Impulse", JumpImpulse, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::Widget::DragFloat("Jump Impulse", Data.JumpImpulse, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text("Sensor");
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursorX(6);
-			static bool bSensor = false;
-			ImGui::Checkbox("##Sensor", &bSensor);
+			UI::Checkbox("Sensor", Data.bSensor);
 
 			ImGui::EndTable();
 		}
@@ -288,8 +255,6 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::PopID();
-
-		Data.BodyType = static_cast<EBodyType>(SelectedIdx);
 	}
 
 }
