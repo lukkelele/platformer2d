@@ -272,6 +272,13 @@ namespace platformer2d::Enum::Internal {
 		}
 		static constexpr auto NamesNT = MakeNamesNT();
 
+		/**
+		 * @todo: The for-loop should be replaced with a O(1) lookup.
+		 * Not a problem right now as the enum entries rarely exceed a count
+		 * of 5 but still, I'd like this to perform as good as possible.
+		 * Should be possible to use arrays to store indices based on the range type
+		 * and then map the indices with the enum values.
+		 */
 		static constexpr std::string_view Find(const E Value) noexcept
 		{
 			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
@@ -282,6 +289,13 @@ namespace platformer2d::Enum::Internal {
 			return {};
 		}
 
+		/**
+		 * @todo: The for-loop should be replaced with a O(1) lookup.
+		 * Not a problem right now as the enum entries rarely exceed a count
+		 * of 5 but still, I'd like this to perform as good as possible.
+		 * Should be possible to use arrays to store indices based on the range type
+		 * and then map the indices with the enum values.
+		 */
 		static constexpr E Find(const std::string_view Name) noexcept
 		{
 			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
