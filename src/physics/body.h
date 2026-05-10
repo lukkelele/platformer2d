@@ -48,9 +48,9 @@ namespace platformer2d {
 		float AngularDamping = 0.0f;
 		float DirForce = 5.630f;
 		float JumpImpulse = 0.530f;
-		bool bSensor = false;
 		std::underlying_type_t<EBodyFlag> Flags = EBodyFlag_None;
 		std::underlying_type_t<EMotionLock> MotionLock = EMotionLock_None;
+		bool bSensor = false;
 
 		void* UserData = nullptr;
 	};

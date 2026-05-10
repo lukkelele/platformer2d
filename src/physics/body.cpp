@@ -492,7 +492,7 @@ namespace platformer2d {
 				BodyDef.type = b2_kinematicBody;
 				break;
 			default:
-				LK_VERIFY(false);
+				LK_VERIFY(false, "Invalid body type");
 		}
 
 		BodyDef.position = Math::Convert(Spec.Position);
