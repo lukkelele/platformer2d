@@ -156,6 +156,11 @@ namespace platformer2d {
 		None,
 		Damage,
 		Pickup,
+		Heal,
+		Killzone,
+		Jumppad,
+		Climbable,
+		Checkpoint,
 		COUNT
 	};
 	LK_ENUM(EInteraction);
@@ -163,6 +168,32 @@ namespace platformer2d {
 	struct FDamageInteraction
 	{
 		float Damage = 0.0f;
+	};
+
+	struct FHealInteraction
+	{
+		float Amount = 25.0f;
+		bool bConsumeOnUse = true;
+	};
+
+	struct FKillzoneInteraction
+	{
+	};
+
+	struct FJumppadInteraction
+	{
+		glm::vec2 Impulse = {0.0f, 6.0f};
+		bool bPreserveHorizontalVelocity = true;
+	};
+
+	struct FClimbableInteraction
+	{
+		float ClimbSpeed = 1.0f;
+	};
+
+	struct FCheckpointInteraction
+	{
+		std::string CheckpointID;
 	};
 
 	enum class EPickupKind : std::uint16_t
@@ -173,9 +204,41 @@ namespace platformer2d {
 	};
 	LK_ENUM(EPickupKind);
 
+	enum class EConsumableKind : std::uint16_t
+	{
+		None,
+		Health,
+		COUNT
+	};
+	LK_ENUM(EConsumableKind);
+
+	enum class EItemPayload : std::uint16_t
+	{
+		None,
+		Consumable,
+		Ammo,
+		COUNT
+	};
+	LK_ENUM(EItemPayload);
+
+	struct FConsumablePayload
+	{
+		EConsumableKind Kind = EConsumableKind::Health;
+		float Amount = 25.0f;
+	};
+
+	struct FAmmoPayload
+	{
+		EWeaponType Weapon = EWeaponType::Rifle;
+		std::uint16_t Count = 30;
+	};
+
+	using TPickupItemPayload = std::variant<std::monostate, FConsumablePayload, FAmmoPayload>;
+
 	struct FPickupItem
 	{
-		EItemType Type;
+		EItemType Type = EItemType::None;
+		TPickupItemPayload Payload;
 	};
 
 	using TWeaponSpecification = std::variant<std::monostate, FRifleSpecification>;
@@ -194,7 +257,15 @@ namespace platformer2d {
 		bool bExpireWhenPickedUp = false;
 	};
 
-	using TInteractionData = std::variant<std::monostate, FDamageInteraction, FPickupInteraction>;
+	using TInteractionData = std::variant<
+		std::monostate,
+		FDamageInteraction,
+		FPickupInteraction,
+		FHealInteraction,
+		FKillzoneInteraction,
+		FJumppadInteraction,
+		FClimbableInteraction,
+		FCheckpointInteraction>;
 
 	struct FInteractionComponent
 	{
