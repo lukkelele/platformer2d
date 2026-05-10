@@ -29,6 +29,7 @@ namespace platformer2d {
 		void CastRay(FRayCast& RayCast, const glm::vec2& Pos, const glm::mat4& ViewMat,
 			const glm::mat4& ProjMat, float MousePosX, float MousePosY);
 		bool RaycastAABB(const FRayCast& RayCast, const glm::vec2& BoxMin, const glm::vec2& BoxMax, float& OutT);
+		[[nodiscard]] bool HasLineOfSight(const glm::vec2& From, const glm::vec2& To, const CActor* Target);
 	}
 
 }

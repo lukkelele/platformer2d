@@ -1,5 +1,9 @@
 #include "ray.h"
 
+#include <box2d/box2d.h>
+
+#include "physicsworld.h"
+
 namespace platformer2d::Physics {
 
 	void CastRay(FRayCast& RayCast, const glm::vec2& Pos, const glm::mat4& ViewMat,
@@ -40,4 +44,26 @@ namespace platformer2d::Physics {
 		return true;
 	}
 
+	bool HasLineOfSight(const glm::vec2& From, const glm::vec2& To, const CActor* const Target)
+	{
+		if (!Target || !CPhysicsWorld::IsValid()) {
+			return false;
+		}
+
+		const b2Vec2 Origin = {From.x, From.y};
+		const b2Vec2 Translation = {To.x - From.x, To.y - From.y};
+		if ((Translation.x == 0.0f) && (Translation.y == 0.0f)) {
+			return true;
+		}
+
+		const b2QueryFilter Filter = b2DefaultQueryFilter();
+		const b2RayResult Result = b2World_CastRayClosest(CPhysicsWorld::GetID(), Origin, Translation, Filter);
+		if (!Result.hit) {
+			return true;
+		}
+
+		const CActor* HitActor = static_cast<const CActor*>(b2Shape_GetUserData(Result.shapeId));
+		return (HitActor == Target);
+	}
 }
+
