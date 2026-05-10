@@ -24,7 +24,7 @@ namespace Test::Enum {
 		Hex = 24,
 		COUNT = 3,
 	};
-	LK_ENUM_RANGE(EShape, 0, 24 + 1);
+	LK_ENUM_RANGE(EShape, 4, 24);
 
 	enum class EPermission : std::uint32_t
 	{
@@ -134,7 +134,7 @@ TEST_CASE("LK_ENUM builds a contiguous table from 0..COUNT-1", "[enum][contiguou
 	/* clang-format on */
 
 	LK_INFO_TAG("Enum", "--- EColor Table ---");
-	for (const auto& [V, N] : Enum::View<EColor>()) {
+	for (const auto& [V, N] : Enum::View<EColor, Enum::Internal::Entry<EColor>>()) {
 		LK_INFO_TAG("Enum", "  {:<6} = {}", N, std::to_underlying(V));
 	}
 
@@ -160,14 +160,14 @@ TEST_CASE("LK_ENUM_RANGE only finds values within [Min, Max)", "[enum][range]")
 	/* clang-format on */
 
 	LK_INFO_TAG("Enum", "--- EShape Table (scanned over [0, 32)) ---");
-	for (const auto& [V, N] : Enum::View<EShape>()) {
+	for (const auto& [V, N] : Enum::View<EShape, Enum::Internal::Entry<EShape>>()) {
 		LK_INFO_TAG("Enum", "  {:<10} = {}", N, std::to_underlying(V));
 	}
 
 	const auto Span = Enum::View<EShape>();
 	REQUIRE(Span.size() == 3);
 	for (const auto& Entry : Span) {
-		REQUIRE(Entry.Name != "COUNT");
+		REQUIRE(Entry != "COUNT");
 	}
 }
 
@@ -188,7 +188,7 @@ TEST_CASE("LK_ENUM_FLAGS finds named power-of-two values", "[enum][flags]")
 	/* clang-format on */
 
 	LK_INFO_TAG("Enum", "--- EPermission Table (over bits 0..31) ---");
-	for (const auto& [V, N] : Enum::View<EPermission>()) {
+	for (const auto& [V, N] : Enum::View<EPermission, Enum::Internal::Entry<EPermission>>()) {
 		const auto U = std::to_underlying(V);
 		LK_INFO_TAG("Enum", "  {:<8} = bit {:<2} (value {:#x})", N, std::countr_zero(U), U);
 	}
@@ -197,7 +197,7 @@ TEST_CASE("LK_ENUM_FLAGS finds named power-of-two values", "[enum][flags]")
 TEST_CASE("ToString and FromString round-trip", "[enum][roundtrip]")
 {
 	LKLOG_PRINTLN("");
-	for (const auto& [V, N] : Enum::View<EColor>()) {
+	for (const auto& [V, N] : Enum::View<EColor, Enum::Internal::Entry<EColor>>()) {
 		const auto S = Enum::ToString(V);
 		const auto Back = Enum::FromString<EColor>(S);
 		LK_INFO_TAG("Enum", "EColor:      {:<5} -> '{}' -> {}", std::to_underlying(V), S, std::to_underlying(Back));
@@ -205,7 +205,7 @@ TEST_CASE("ToString and FromString round-trip", "[enum][roundtrip]")
 	}
 
 	LKLOG_PRINTLN("");
-	for (const auto& [V, N] : Enum::View<EShape>()) {
+	for (const auto& [V, N] : Enum::View<EShape, Enum::Internal::Entry<EShape>>()) {
 		const auto S = Enum::ToString(V);
 		const auto Back = Enum::FromString<EShape>(S);
 		LK_INFO_TAG("Enum", "EShape:      {:<5} -> '{}' -> {}", std::to_underlying(V), S, std::to_underlying(Back));
@@ -213,7 +213,7 @@ TEST_CASE("ToString and FromString round-trip", "[enum][roundtrip]")
 	}
 
 	LKLOG_PRINTLN("");
-	for (const auto& [V, N] : Enum::View<EPermission>()) {
+	for (const auto& [V, N] : Enum::View<EPermission, Enum::Internal::Entry<EPermission>>()) {
 		const auto S = Enum::ToString(V);
 		const auto Back = Enum::FromString<EPermission>(S);
 		LK_INFO_TAG("Enum", "EPermission: {:<5} -> '{}' -> {}", std::to_underlying(V), S, std::to_underlying(Back));
