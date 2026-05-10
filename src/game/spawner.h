@@ -19,8 +19,13 @@ namespace platformer2d {
 		CSpawner(const CSpawner&) = delete;
 		CSpawner(CSpawner&&) = delete;
 
+		CSpawner& operator=(const CSpawner&) = delete;
+		CSpawner& operator=(CSpawner&&) = delete;
+
 		static std::shared_ptr<CActor> CreateStaticPolygon(std::string_view Name, const glm::vec2& Pos,
 			const glm::vec2& Size, const glm::vec4& Color = FColor::White, ETexture Texture = ETexture::White);
+		static std::shared_ptr<CActor> CreateStaticPolygon(std::string_view Name, const glm::vec2& Pos,
+			const glm::vec2& Size, const FBodySpecification& BodySpec, const glm::vec4& Color = FColor::White, ETexture Texture = ETexture::White);
 		static std::shared_ptr<CActor> CreatePolygon(std::string_view Name, const FBodySpecification& BodySpec,
 			const glm::vec2& Size, const glm::vec4& Color = FColor::White, ETexture Texture = ETexture::White);
 		static std::shared_ptr<CActor> CreateChain(std::string_view Name, std::span<const glm::vec2> Points,

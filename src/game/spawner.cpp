@@ -37,6 +37,34 @@ namespace platformer2d {
 		return Actor;
 	}
 
+	std::shared_ptr<CActor> CSpawner::CreateStaticPolygon(std::string_view Name, const glm::vec2& Pos,
+		const glm::vec2& Size, const FBodySpecification& BodySpec, const glm::vec4& Color, const ETexture Texture)
+	{
+		std::string ActorName(Name);
+		if (ActorName.empty()) {
+			ActorName = Format("StaticPolygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+		}
+		CGameInstance* GameInstance = CGameInstance::Get();
+		LK_VERIFY(GameInstance);
+		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+
+		FActorSpecification ActorSpec;
+		ActorSpec.Name = ActorName;
+		ActorSpec.Texture = Texture;
+		ActorSpec.Color = Color;
+
+		FPolygon Polygon = {
+			.Size = Size,
+		};
+		auto& BodySpecRef = *const_cast<FBodySpecification*>(&BodySpec);
+		BodySpecRef.Position = Pos;
+		BodySpecRef.Shape.emplace<FPolygon>(Polygon);
+
+		LK_INFO_TAG("Spawner", "Create: {}", Name);
+		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
+		return Actor;
+	}
+
 	std::shared_ptr<CActor> CSpawner::CreatePolygon(std::string_view Name, const FBodySpecification& InBodySpec,
 		const glm::vec2& Size, const glm::vec4& Color, const ETexture Texture)
 	{
