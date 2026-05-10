@@ -149,10 +149,9 @@ namespace platformer2d::UI::Widget::Combo {
 
 	bool BlendFunction(const float IndentX)
 	{
-#define UI_COMBO_OPTION(Value) \
-	{                          \
-		Value, #Value          \
-	}
+		/* clang-format off */
+#define UI_COMBO_OPTION(Value) { Value, #Value }
+		/* clang-format on */
 		static constexpr std::pair<GLenum, const char*> SourceBlendFuncs[] = {
 			UI_COMBO_OPTION(GL_SRC_ALPHA),
 			UI_COMBO_OPTION(GL_DST_ALPHA),
@@ -281,10 +280,9 @@ namespace platformer2d::UI::Widget::Combo {
 
 	bool DepthFunction(const float IndentX)
 	{
-#define UI_COMBO_OPTION(Value) \
-	{                          \
-		Value, #Value          \
-	}
+		/* clang-format off */
+#define UI_COMBO_OPTION(Value) { Value, #Value }
+		/* clang-format on */
 		static constexpr std::pair<GLenum, const char*> Functions[] = {
 			UI_COMBO_OPTION(GL_LESS),
 			UI_COMBO_OPTION(GL_EQUAL),
