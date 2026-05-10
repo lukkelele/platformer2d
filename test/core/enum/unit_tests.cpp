@@ -164,9 +164,9 @@ TEST_CASE("LK_ENUM_RANGE only finds values within [Min, Max)", "[enum][range]")
 		LK_INFO_TAG("Enum", "  {:<10} = {}", N, std::to_underlying(V));
 	}
 
-	const auto Span = Enum::View<EShape>();
-	REQUIRE(Span.size() == 3);
-	for (const auto& Entry : Span) {
+	const auto View = Enum::View<EShape, std::string_view>();
+	REQUIRE(View.size() == 3);
+	for (const auto& Entry : View) {
 		REQUIRE(Entry != "COUNT");
 	}
 }
