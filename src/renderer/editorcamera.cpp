@@ -12,13 +12,6 @@ namespace platformer2d {
 		LK_TRACE_TAG("EditorCamera", "Created ({}x{})", InWidth, InHeight);
 	}
 
-	CEditorCamera::~CEditorCamera()
-	{
-		if (bActive) {
-			CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
-		}
-	}
-
 	void CEditorCamera::SetActive(const bool InActive)
 	{
 		if (bActive == InActive) {
@@ -26,10 +19,7 @@ namespace platformer2d {
 		}
 
 		bActive = InActive;
-		if (bActive) {
-			OnMouseScrolledHandle = CMouse::OnScrolled.Add(this, &CEditorCamera::OnMouseScrolled);
-		} else {
-			CMouse::OnScrolled.Remove(OnMouseScrolledHandle);
+		if (!bActive) {
 			bPanning = false;
 			bWasMiddleDown = false;
 			CancelSwitchLerp();

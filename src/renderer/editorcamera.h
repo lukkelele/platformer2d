@@ -8,7 +8,7 @@ namespace platformer2d {
 	{
 	public:
 		CEditorCamera(float InWidth, float InHeight);
-		~CEditorCamera();
+		~CEditorCamera() = default;
 
 		void Tick(float RealDeltaTime, bool ViewportHovered);
 
@@ -20,12 +20,11 @@ namespace platformer2d {
 		[[nodiscard]] float GetLerpSnapDistance() const { return LerpSnapDistance; }
 		void SetLerpSnapDistance(float Distance);
 
+		void OnMouseScrolled(EMouseScrollDirection Direction);
+
 	public:
 		static constexpr float DEFAULT_LERP_SNAP_DISTANCE = 4.0f;
 		static constexpr float ZOOM_SCROLL_STEP = CCamera::ZOOM_DIFF * 5.0f;
-
-	private:
-		void OnMouseScrolled(EMouseScrollDirection Direction);
 
 	private:
 		bool bActive = false;
@@ -35,8 +34,6 @@ namespace platformer2d {
 		bool bPanning = false;
 		bool bWasMiddleDown = false;
 		glm::vec2 LastMousePos{0.0f};
-
-		Core::FDelegateHandle OnMouseScrolledHandle;
 	};
 
 }
