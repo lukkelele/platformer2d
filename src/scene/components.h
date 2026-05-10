@@ -16,6 +16,7 @@
 #include <glm/gtx/norm.hpp>
 
 #include "core/core.h"
+#include "core/enum.h"
 #include "core/assert.h"
 #include "core/log_formatters.h"
 #include "game/itemtype.h"
@@ -48,17 +49,17 @@ namespace platformer2d {
 		{}
 		FTransformComponent(const FTransformComponent& Other) = default;
 
-		glm::vec3 GetTranslation() const { return Translation; }
-		glm::vec3 GetScale() const { return Scale; }
+		[[nodiscard]] glm::vec3 GetTranslation() const { return Translation; }
+		[[nodiscard]] glm::vec3 GetScale() const { return Scale; }
 
-		glm::mat4 GetTransform() const
+		[[nodiscard]] glm::mat4 GetTransform() const
 		{
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* glm::toMat4(Rotation)
 				* glm::scale(glm::mat4(1.0f), Scale);
 		}
 
-		glm::mat4 GetInvTransform() const
+		[[nodiscard]] glm::mat4 GetInvTransform() const
 		{
 			const glm::mat4 InvTranslation = glm::translate(glm::mat4(1.0f), -Translation);
 			const glm::quat InvRot = glm::conjugate(Rotation);
@@ -66,13 +67,13 @@ namespace platformer2d {
 			return InvScale * glm::toMat4(InvRot) * InvTranslation;
 		}
 
-		glm::quat GetRotation() const { return Rotation; }
-		glm::vec3 GetRotationEuler() const { return RotationEuler; }
+		[[nodiscard]] glm::quat GetRotation() const { return Rotation; }
+		[[nodiscard]] glm::vec3 GetRotationEuler() const { return RotationEuler; }
 
 		/**
 		 * @brief Get 2D rotation in radians.
 		 */
-		float GetRotation2D() const { return glm::eulerAngles(Rotation).z; }
+		[[nodiscard]] float GetRotation2D() const { return glm::eulerAngles(Rotation).z; }
 
 		void SetTranslation(const glm::vec3& InTranslation) { Translation = InTranslation; }
 		void SetTranslation(const glm::vec2& InTranslation) { Translation = glm::vec3(InTranslation, 0.0f); }
@@ -108,7 +109,7 @@ namespace platformer2d {
 			Rotation = glm::quat(RotationEuler);
 		}
 
-		bool IsStatic() const { return bIsStatic; }
+		[[nodiscard]] bool IsStatic() const { return bIsStatic; }
 
 		std::string ToString() const
 		{
@@ -125,6 +126,7 @@ namespace platformer2d {
 		Rotate,
 		COUNT
 	};
+	LK_ENUM(EEffectType);
 
 	struct FRotateEffect
 	{
@@ -143,34 +145,33 @@ namespace platformer2d {
 	{
 		std::vector<FEffectInstance> Effects;
 
-		bool HasAny() const
-		{
-			return !Effects.empty();
-		}
+		[[nodiscard]] bool HasAny() const { return !Effects.empty(); }
 	};
 
 	/**************************************
 	 * InteractionComponent
 	 **************************************/
-	enum class EInteraction : uint16_t
+	enum class EInteraction : std::uint16_t
 	{
 		None,
 		Damage,
 		Pickup,
 		COUNT
 	};
+	LK_ENUM(EInteraction);
 
 	struct FDamageInteraction
 	{
 		float Damage = 0.0f;
 	};
 
-	enum class EPickupKind : uint16_t
+	enum class EPickupKind : std::uint16_t
 	{
 		Item,
 		Weapon,
 		COUNT
 	};
+	LK_ENUM(EPickupKind);
 
 	struct FPickupItem
 	{
@@ -200,9 +201,9 @@ namespace platformer2d {
 		EInteraction Type = EInteraction::None;
 		TInteractionData Data;
 
-		EInteraction GetType() const { return Type; }
-		TInteractionData& GetData() { return Data; }
-		const TInteractionData& GetData() const { return Data; }
+		[[nodiscard]] EInteraction GetType() const { return Type; }
+		[[nodiscard]] TInteractionData& GetData() { return Data; }
+		[[nodiscard]] const TInteractionData& GetData() const { return Data; }
 	};
 
 	struct FHealthComponent
@@ -211,7 +212,7 @@ namespace platformer2d {
 		float Health = MaxHealth;
 		bool bDamageable = true;
 
-		float GetHealth() const { return Health; }
+		[[nodiscard]] float GetHealth() const { return Health; }
 		void SetHealth(const float InHealth)
 		{
 			Health = InHealth;
@@ -220,63 +221,13 @@ namespace platformer2d {
 			}
 		}
 
-		float GetMaxHealth() const { return MaxHealth; }
+		[[nodiscard]] float GetMaxHealth() const { return MaxHealth; }
 		void SetMaxHealth(const float InMaxHealth) { MaxHealth = InMaxHealth; }
 
-		bool IsDamageable() const { return bDamageable; }
+		[[nodiscard]] bool IsDamageable() const { return bDamageable; }
 		void SetDamageable(const bool Enabled) { bDamageable = Enabled; }
-		bool IsDead() const { return (Health <= 0.0f); }
+		[[nodiscard]] bool IsDead() const { return (Health <= 0.0f); }
 	};
 
-	namespace Enum {
-		constexpr const char* ToString(const EEffectType Type)
-		{
-			const char* S = "";
-#define _(EnumValue)                                   \
-	case EEffectType::EnumValue: S = #EnumValue; break
-			switch (Type) {
-				_(None);
-				_(Rotate);
-				default:
-					break;
-			}
-#undef _
-			return S;
-		}
-
-		constexpr const char* ToString(const EInteraction Interaction)
-		{
-			const char* S = "";
-#define _(EnumValue)                                    \
-	case EInteraction::EnumValue: S = #EnumValue; break
-			switch (Interaction) {
-				_(None);
-				_(Damage);
-				_(Pickup);
-				_(COUNT);
-				default:
-					break;
-			}
-#undef _
-			return S;
-		}
-
-		constexpr const char* ToString(const EPickupKind Kind)
-		{
-			const char* S = "";
-#define _(EnumValue)                                   \
-	case EPickupKind::EnumValue: S = #EnumValue; break
-			switch (Kind) {
-				_(Item);
-				_(Weapon);
-				_(COUNT);
-				default:
-					break;
-			}
-#undef _
-			return S;
-		}
-
-	}
-
 }
+

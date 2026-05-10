@@ -460,20 +460,17 @@ namespace platformer2d::UI::Widget {
 				EInteraction::Pickup,
 			};
 
+			static const auto Names = Enum::View<EInteraction, const char*>();
+
 			bool Updated = false;
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 			const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
 			ImGui::SetNextItemWidth(ComboItemWidth);
-			if (ImGui::BeginCombo("##EffectType", Enum::ToString(InteractionType))) {
-				for (int Idx = 0; Idx < Types.size(); Idx++) {
-					const char* Option = Enum::ToString(Types[Idx]);
-					if (Option == nullptr) {
-						continue;
-					}
-
+			if (ImGui::BeginCombo("##EffectType", Names[SelectedIdx])) {
+				for (std::size_t Idx = 0; Idx < Names.size(); Idx++) {
 					const bool IsSelected = (SelectedIdx == Idx);
-					if (ImGui::Selectable(Option, IsSelected)) {
+					if (ImGui::Selectable(Names[Idx], IsSelected)) {
 						if (SelectedIdx != Idx) {
 							Updated = true;
 							SelectedIdx = Idx;
@@ -630,19 +627,16 @@ namespace platformer2d::UI::Widget {
 					EEffectType::Rotate,
 				};
 
+				static const auto Names = Enum::View<EEffectType, const char*>();
+
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 				const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x) * 0.65f);
 				ImGui::SetNextItemWidth(ComboItemWidth);
-				if (ImGui::BeginCombo("##EffectType", Enum::ToString(EffectType))) {
+				if (ImGui::BeginCombo("##EffectType", Names[SelectedIdx])) {
 					for (int Idx = 0; Idx < EffectTypes.size(); Idx++) {
-						const char* Option = Enum::ToString(EffectTypes[Idx]);
-						if (Option == nullptr) {
-							continue;
-						}
-
 						const bool IsSelected = (SelectedIdx == Idx);
-						if (ImGui::Selectable(Option, IsSelected)) {
+						if (ImGui::Selectable(Names[Idx], IsSelected)) {
 							SelectedIdx = Idx;
 						}
 					}
