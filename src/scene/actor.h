@@ -22,6 +22,7 @@ namespace platformer2d {
 		virtual ~CActor();
 
 		virtual void Tick(float DeltaTime);
+		virtual void OnDeath() {}
 		LUUID GetHandle() const { return Handle; }
 		virtual EActorType GetActorType() const { return EActorType::Object; }
 
