@@ -371,7 +371,7 @@ namespace platformer2d::Enum {
 	{                                                                                            \
 		return ::platformer2d::Enum::Internal::RangeTag{                                         \
 			.Min = static_cast<::std::int64_t>(MinValue),                                        \
-			.Max = static_cast<::std::int64_t>(MaxValue),                                        \
+			.Max = static_cast<::std::int64_t>(MaxValue + 1),                                    \
 		};                                                                                       \
 	}
 
