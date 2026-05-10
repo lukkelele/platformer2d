@@ -1,6 +1,7 @@
 #include "enemy.h"
 
-#include "gameplaysystem.h"
+#include "game/gameplaysystem.h"
+#include "game/healthsystem.h"
 #include "game/controller/patrolcontroller.h"
 #include "scene/effectmanager.h"
 
@@ -8,9 +9,16 @@ namespace platformer2d {
 
 	CEnemy::CEnemy(const FEnemySpecification& InSpec, const FActorSpecification& InActorSpec, const FBodySpecification& InBodySpec)
 		: CActor(InActorSpec, InBodySpec)
+		, ArchetypeKind(InSpec.Archetype)
 	{
 		Data.State = EEnemyState::Idle;
 		Data.LookDirection = EDirection::Right;
+
+		const FEnemyArchetype& Archetype = GetEnemyArchetype(ArchetypeKind);
+		MoveSpeed = Archetype.MoveSpeed;
+		FHealthComponent& HC = AddComponent<FHealthComponent>();
+		HC.SetMaxHealth(Archetype.MaxHealth);
+		HC.SetHealth(Archetype.MaxHealth);
 
 		SetSpawnPoint(InSpec.SpawnPoint);
 		CGameplaySystem::Teleport(this, InSpec.SpawnPoint);
@@ -71,12 +79,24 @@ namespace platformer2d {
 		ApplyMoveVelocityX(0.0f);
 	}
 
+	void CEnemy::Jump()
+	{
+		const FEnemyArchetype& Archetype = GetEnemyArchetype(ArchetypeKind);
+		if (!Archetype.bCanJump || !Body) {
+			return;
+		}
+
+		Body->ApplyImpulse({0.0f, Archetype.JumpImpulse});
+	}
+
 	void CEnemy::Kill()
 	{
-		LK_DEBUG_TAG("Enemy", "[{}] Killed", GetName());
-		auto& HC = GetComponent<FHealthComponent>();
-		HC.Health = 0.0f;
+		CHealthSystem::Kill(this);
+	}
 
+	void CEnemy::OnDeath()
+	{
+		LK_DEBUG_TAG("Enemy", "[{}] OnDeath", GetName());
 		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
 		SetFlag(EActorFlag_Transparent, 1);
 		if (Body) {
@@ -129,6 +149,7 @@ namespace platformer2d {
 		Out << YAML::EndMap; /* ~Controller */
 
 		Out << YAML::Key << "SpawnPoint" << YAML::Value << Data.SpawnPoint;
+		Out << YAML::Key << "Archetype" << YAML::Value << std::to_underlying(ArchetypeKind);
 		Out << YAML::EndMap; /* ~Actor */
 
 		return true;

@@ -1,13 +1,15 @@
 #pragma once
 
-#include "scene/actor.h"
 #include "controller/enemycontroller.h"
+#include "enemyarchetype.h"
+#include "scene/actor.h"
 
 namespace platformer2d {
 
 	struct FEnemySpecification
 	{
 		EControllerType ControllerType = EControllerType::None;
+		EEnemyArchetype Archetype = EEnemyArchetype::Grunt;
 		glm::vec2 SpawnPoint{};
 	};
 
@@ -17,39 +19,46 @@ namespace platformer2d {
 		CEnemy(const FEnemySpecification& InSpec, const FActorSpecification& InActorSpec, const FBodySpecification& InBodySpec);
 		virtual ~CEnemy();
 
-		virtual void Tick(float DeltaTime) override;
-		virtual EActorType GetActorType() const override { return EActorType::Enemy; }
+		void Tick(float DeltaTime) override;
+		void OnDeath() override;
+		[[nodiscard]] EActorType GetActorType() const override { return EActorType::Enemy; }
 
 		void SetController(std::unique_ptr<IEnemyController> InController);
-		IEnemyController* GetController() const { return Controller.get(); }
-		bool HasController() const { return (Controller != nullptr); }
+		[[nodiscard]] IEnemyController* GetController() const { return Controller.get(); }
+		[[nodiscard]] bool HasController() const { return (Controller != nullptr); }
 
-		inline const FEnemyData& GetData() const { return Data; }
-		inline FEnemyData& GetData() { return Data; }
+		[[nodiscard]] const FEnemyData& GetData() const { return Data; }
+		[[nodiscard]] FEnemyData& GetData() { return Data; }
 
-		EEnemyState GetState() const { return Data.State; }
+		[[nodiscard]] EEnemyState GetState() const { return Data.State; }
 		void SetState(EEnemyState InState);
 
 		void SetLookDirection(EDirection InDirection);
 		void SetMoveSpeed(float InSpeed);
-		float GetMoveSpeed() const { return MoveSpeed; }
+		[[nodiscard]] float GetMoveSpeed() const { return MoveSpeed; }
 
 		void MoveLeft();
 		void MoveRight();
 		void StopMovement();
+		void Jump();
 
 		enum class EReviveVariant
 		{
 			AtSpawn,
-			AtLastLocation
+			AtLastLocation,
+			COUNT
 		};
+		LK_ENUM(EReviveVariant);
 
 		void Kill();
 		void Revive(EReviveVariant Variant = EReviveVariant::AtSpawn);
-		bool IsDead() const;
+		[[nodiscard]] bool IsDead() const;
 
 		void SetSpawnPoint(const glm::vec2& InPoint);
-		const glm::vec2& GetSpawnPoint() const { return Data.SpawnPoint; }
+		[[nodiscard]] const glm::vec2& GetSpawnPoint() const { return Data.SpawnPoint; }
+
+		[[nodiscard]] EEnemyArchetype GetArchetype() const { return ArchetypeKind; }
+		[[nodiscard]] const FEnemyArchetype& GetArchetypeData() const { return GetEnemyArchetype(ArchetypeKind); }
 
 		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
@@ -60,26 +69,9 @@ namespace platformer2d {
 	private:
 		FEnemyData Data{};
 		std::unique_ptr<IEnemyController> Controller = nullptr;
+		EEnemyArchetype ArchetypeKind = EEnemyArchetype::Grunt;
 
 		float MoveSpeed = 1.20f;
 	};
-
-	namespace Enum {
-		inline const char* ToString(const CEnemy::EReviveVariant Variant)
-		{
-			const char* S = "";
-#define _(EnumValue)                                              \
-	case CEnemy::EReviveVariant::EnumValue: S = #EnumValue; break
-			switch (Variant) {
-				_(AtSpawn);
-				_(AtLastLocation);
-				default:
-					LK_THROW_ENUM_ERR(Variant);
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+

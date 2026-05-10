@@ -53,7 +53,7 @@ namespace platformer2d {
 		RangedShooter,
 	};
 
-	const FEnemyArchetype& GetArchetype(const EEnemyArchetype Archetype)
+	const FEnemyArchetype& GetEnemyArchetype(const EEnemyArchetype Archetype)
 	{
 		return Registry.at(std::to_underlying(Archetype));
 	}

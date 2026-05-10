@@ -33,6 +33,6 @@ namespace platformer2d {
 		bool bRanged = false;
 	};
 
-	[[nodiscard]] const FEnemyArchetype& GetArchetype(EEnemyArchetype Archetype);
+	[[nodiscard]] const FEnemyArchetype& GetEnemyArchetype(EEnemyArchetype Archetype);
 }
 
