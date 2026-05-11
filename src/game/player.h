@@ -79,9 +79,9 @@ namespace platformer2d {
 		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::Yes) const override;
 
 		void OnWindowResized(std::uint16_t Width, std::uint16_t Height);
-		void OnKeyPressed(const FKeyData& Data);
-		void OnMouseButtonPressed(const FMouseButtonData& Data);
-		void OnMouseScrolled(EMouseScrollDirection Direction);
+		void OnKey(const FKeyData& Data);
+		void OnMouseButton(const FMouseButtonData& Data);
+		void OnMouseScroll(EMouseScrollDirection Direction);
 
 	private:
 		void HandleInput();
@@ -128,11 +128,6 @@ namespace platformer2d {
 		std::unique_ptr<CSprite> Sprite = nullptr;
 		FSpriteSheet SpriteSheet;
 		FSpriteFrame SpriteFrame;
-
-		/* @todo: Remove delegate handles and let the game instance notify event instead. */
-		Core::FDelegateHandle OnWindowResizedHandle;
-		Core::FDelegateHandle OnKeyPressedHandle;
-		Core::FDelegateHandle OnMouseButtonPressedHandle;
 	};
 }
 

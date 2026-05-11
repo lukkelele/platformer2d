@@ -59,20 +59,11 @@ namespace platformer2d {
 		Rifle->Equip(this);
 		Inventory.AddItem(Rifle);
 #endif
-
-		OnWindowResizedHandle = CWindow::OnResized.Add(this, &CPlayer::OnWindowResized);
-		OnKeyPressedHandle = CKeyboard::OnKeyPressed.Add(this, &CPlayer::OnKeyPressed);
-		OnMouseButtonPressedHandle = CMouse::OnButtonPressed.Add(this, &CPlayer::OnMouseButtonPressed);
 	}
 
 	CPlayer::~CPlayer()
 	{
 		LK_DEBUG_TAG("Player", "Release: {}", GetName());
-		CWindow::OnResized.Remove(OnWindowResizedHandle);
-		CKeyboard::OnKeyPressed.Remove(OnKeyPressedHandle);
-		CMouse::OnButtonPressed.Remove(OnMouseButtonPressedHandle);
-
-		LK_TRACE_TAG("Player", "Release inventory");
 		Inventory.Destroy();
 		Inventory.~CInventory();
 	}
@@ -380,7 +371,7 @@ namespace platformer2d {
 		}
 	}
 
-	void CPlayer::OnKeyPressed(const FKeyData& Data)
+	void CPlayer::OnKey(const FKeyData& Data)
 	{
 		switch (Data.Key) {
 			case EKey::Q:
@@ -406,7 +397,7 @@ namespace platformer2d {
 		}
 	}
 
-	void CPlayer::OnMouseButtonPressed(const FMouseButtonData& Data)
+	void CPlayer::OnMouseButton(const FMouseButtonData& Data)
 	{
 		switch (Data.State) {
 			case EMouseButtonState::Pressed:
@@ -424,17 +415,16 @@ namespace platformer2d {
 		}
 	}
 
-	void CPlayer::OnMouseScrolled(const EMouseScrollDirection Direction)
+	void CPlayer::OnMouseScroll(const EMouseScrollDirection Direction)
 	{
 		LK_TRACE_TAG("Player", "Mouse scroll: {}", Enum::ToString(Direction));
-		if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl)) {
-			if (FCameraComponent* CamComp = TryGetComponent<FCameraComponent>(); CamComp && CamComp->Camera) {
-				CCamera& Camera = *CamComp->Camera;
-				const float ZoomDiff = (Direction == EMouseScrollDirection::Up)
-					? -CCamera::ZOOM_DIFF
-					: CCamera::ZOOM_DIFF;
-				Camera.SetZoom(Camera.GetZoom() + ZoomDiff);
-			}
+		if (CKeyboard::IsAnyKeysDown(EKey::LeftControl, EKey::RightControl)) {
+			auto& CamComp = GetComponent<FCameraComponent>();
+			CCamera& Camera = *CamComp.Camera;
+			const float ZoomDiff = (Direction == EMouseScrollDirection::Up)
+				? -CCamera::ZOOM_DIFF
+				: CCamera::ZOOM_DIFF;
+			Camera.SetZoom(Camera.GetZoom() + ZoomDiff);
 		}
 	}
 
