@@ -12,7 +12,9 @@
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
+#include "game/checkpointsystem.h"
 #include "game/gameplaysystem.h"
+#include "game/healthsystem.h"
 #include "game/enemy.h"
 #include "game/player.h"
 #include "game/spawner.h"
@@ -125,13 +127,16 @@ namespace platformer2d {
 		LastSceneFilepath = Scene->GetFilepath();
 		LK_DEBUG_TAG("Editor", "Last scene filepath: {}", LastSceneFilepath);
 
+		CCheckpointSystem::LoadFromDisk(GameSpec.LevelFilepath);
+
 		CWindow::OnResized.Add(this, &CEditor::OnWindowResized);
-		CWindow* Window = CWindow::Get();
-		Window->Maximize();
+		CWindow& Window = CWindow::Get();
+		Window.Maximize();
 		UpdateViewportBounds();
 
 		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
 		DelegateHandles.OnMouseButtonPressed = CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
+		DelegateHandles.OnMouseScrolled = CMouse::OnScrolled.Add(this, &CEditor::OnMouseScrolled);
 
 		LK_DEBUG_TAG("Editor", "Initialize editor resources");
 		EditorResources.Initialize();
@@ -202,6 +207,7 @@ namespace platformer2d {
 		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
 		CKeyboard::OnKeyPressed.Remove(DelegateHandles.OnKeyPressed);
 		CMouse::OnButtonPressed.Remove(DelegateHandles.OnMouseButtonPressed);
+		CMouse::OnScrolled.Remove(DelegateHandles.OnMouseScrolled);
 		CPhysicsWorld::OnSensorBeginEvent.Remove(DelegateHandles.OnSensorBeginEvent);
 		CPhysicsWorld::OnSensorEndEvent.Remove(DelegateHandles.OnSensorEndEvent);
 		CPhysicsWorld::OnContactBeginEvent.Remove(DelegateHandles.OnContactBeginEvent);
@@ -599,10 +605,29 @@ namespace platformer2d {
 				{
 					using T = std::decay_t<decltype(Data)>;
 					if constexpr (std::is_same_v<T, FDamageInteraction>) {
-						LK_WARN("Damage={}", Data.Damage);
+						CHealthSystem::ApplyDamage(Event.Visitor, Data.Damage);
 					} else if constexpr (std::is_same_v<T, FPickupInteraction>) {
 						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 						OnPickupEvent(PlayerRef, *IC);
+					} else if constexpr (std::is_same_v<T, FHealInteraction>) {
+						CHealthSystem::Heal(Event.Visitor, Data.Amount);
+						if (Data.bConsumeOnUse) {
+							LK_DEBUG_TAG("Editor", "[TODO] Despawn heal source {}", Event.Sensor->GetName());
+						}
+					} else if constexpr (std::is_same_v<T, FKillzoneInteraction>) {
+						CHealthSystem::Kill(Event.Visitor);
+					} else if constexpr (std::is_same_v<T, FJumppadInteraction>) {
+						if (CBody* B = Event.Visitor->GetBody()) {
+							const glm::vec2 Vel = B->GetLinearVelocity();
+							const float NewX = Data.bPreserveHorizontalVelocity ? Vel.x : 0.0f;
+							B->SetLinearVelocity({NewX, Data.Impulse.y});
+						}
+					} else if constexpr (std::is_same_v<T, FClimbableInteraction>) {
+						static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
+					} else if constexpr (std::is_same_v<T, FCheckpointInteraction>) {
+						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
+						const std::filesystem::path ScenePath = Scene ? Scene->GetFilepath() : LastSceneFilepath;
+						CCheckpointSystem::TrySave(PlayerRef, Data.CheckpointID, ScenePath);
 					}
 				}, IC->GetData());
 			}
@@ -621,6 +646,10 @@ namespace platformer2d {
 			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
 				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
 				Event.Sensor->SetOutlineEnabled(false);
+
+				if (IC->GetType() == EInteraction::Climbable) {
+					static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(false);
+				}
 			}
 		}
 	}
@@ -638,22 +667,7 @@ namespace platformer2d {
 		LK_ASSERT(HitActor, "Invalid rojectile hit");
 		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
 
-		if (HitActor->HasComponent<FHealthComponent>()) {
-			auto& HC = HitActor->GetComponent<FHealthComponent>();
-			if (HC.IsDamageable()) {
-				if (HitActor->GetActorType() == EActorType::Enemy) {
-					CEnemy& EnemyRef = HitActor->As<CEnemy>();
-					const float Damage = Projectile->GetDamage();
-					HC.SetHealth(HC.GetHealth() - Damage);
-					if (HC.IsDead()) {
-						LK_INFO_TAG("Editor", "Killed {}", HitActor->GetName());
-						EnemyRef.Kill();
-					}
-				}
-			} else {
-				LK_DEBUG_TAG("Editor", "Hit actor {} has health component but is not damageable", HitActor->GetName());
-			}
-		}
+		CHealthSystem::ApplyDamage(HitActor, Projectile->GetDamage());
 
 		if (Projectile->ExplodesOnImpact()) {
 			Projectile->Destroy();
@@ -822,12 +836,7 @@ namespace platformer2d {
 	void CEditor::UpdateViewportBounds()
 	{
 		ViewportBounds[0] = {0.0f, 0.0f};
-		if (CWindow* Window = CWindow::Get(); Window != nullptr) {
-			ViewportBounds[1] = Window->GetSize();
-		} else {
-			LK_WARN_TAG("Editor", "Failed to update viewport bounds");
-			ViewportBounds[1] = {0.0f, 0.0f};
-		}
+		ViewportBounds[1] = CWindow::Get().GetSize();
 	}
 
 	glm::vec2 CEditor::GetMouseInViewportSpace()
@@ -875,6 +884,25 @@ namespace platformer2d {
 		Player->OnLanded.Add([](const FPlayerData& PlayerData)
 		{
 			LK_TRACE("Player {} landed", PlayerData.ID);
+		});
+
+		Player->OnDied.Add([this](const FPlayerData& PlayerData)
+		{
+			LK_UNUSED(PlayerData);
+			if (CCheckpointSystem::HasCheckpoint()) {
+				LK_INFO_TAG("Editor", "Player died, checkpoint exists");
+				CCheckpointSystem::RestoreToPlayer(*Player);
+			} else {
+				LK_INFO_TAG("Editor", "Player died, no checkpoint -> respawn at PLAYER_SPAWN");
+				CGameplaySystem::Teleport(Player, PLAYER_SPAWN);
+				auto& HC = Player->GetComponent<FHealthComponent>();
+				HC.SetMaxHealth();
+
+				CBody* Body = Player->GetBody();
+				LK_ASSERT(Body);
+				Body->SetEnabled(true);
+				Body->SetLinearVelocity({0.0f, 0.0f});
+			}
 		});
 
 		CGameplaySystem::Teleport(Player, PLAYER_SPAWN);
@@ -1362,17 +1390,21 @@ namespace platformer2d {
 #endif
 			case EKey::S:
 				if (Data.State == EKeyState::Pressed) {
-					if (CKeyboard::IsKeyDown(EKey::LeftControl)) {
-						Serialize(GameSpec.LevelFilepath);
+					if (bEditorViewportFocused) {
+						if (CKeyboard::IsKeyDown(EKey::LeftControl)) {
+							Serialize(GameSpec.LevelFilepath);
+						}
 					}
 				}
 				break;
 			case EKey::P:
 				if (Data.State == EKeyState::Pressed) {
-					if (IsGamePaused()) {
-						ResumeGame();
-					} else {
-						PauseGame();
+					if (bEditorViewportFocused) {
+						if (IsGamePaused()) {
+							ResumeGame();
+						} else {
+							PauseGame();
+						}
 					}
 				}
 				break;
@@ -1389,14 +1421,18 @@ namespace platformer2d {
 				break;
 			case EKey::Escape:
 				if (Data.State == EKeyState::Pressed) {
-					UI::TogglePauseMenu();
+					if (bEditorViewportFocused) {
+						UI::TogglePauseMenu();
+					}
 				}
 				break;
 			case EKey::GraveAccent:
 				if (Data.State == EKeyState::Pressed) {
-					SelectedActor.reset();
-					CSelectionContext::Select(LUUID::Null);
-					UI::TerrainCreator.OnDeselect();
+					if (bEditorViewportFocused) {
+						SelectedActor.reset();
+						CSelectionContext::Select(LUUID::Null);
+						UI::TerrainCreator.OnDeselect();
+					}
 				}
 				break;
 		}
@@ -1419,12 +1455,26 @@ namespace platformer2d {
 		}
 	}
 
+	void CEditor::OnMouseScrolled(const EMouseScrollDirection Direction)
+	{
+		LK_TRACE_TAG("Editor", "{} UseEditorCamera={}", Enum::ToString(Direction), bUseEditorCamera);
+		if (bUseEditorCamera) {
+			if (auto* EC = GetEditorCamera(); EC && bEditorViewportHovered) {
+				EC->OnMouseScrolled(Direction);
+			}
+		} else if (Player) {
+			if (bEditorViewportHovered && CKeyboard::IsAnyKeysDown(EKey::LeftControl, EKey::RightControl)) {
+				Player->OnMouseScrolled(Direction);
+			}
+		}
+	}
+
 	static void LogHitResults(const std::vector<FHitResult>& HitResults)
 	{
 		LK_DEBUG_TAG("Editor", "Picked={}", HitResults.size());
-		for (const auto& P : HitResults) {
-			if (std::shared_ptr<CActor> Ref = P.Ref.lock(); Ref != nullptr) {
-				LK_DEBUG(R"(Name: "{}" Handle={})", Ref->GetName(), P.Handle);
+		for (const auto& Hit : HitResults) {
+			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
+				LK_DEBUG(R"(Name: "{}" Handle={})", Ref->GetName(), Hit.Handle);
 			}
 		}
 	}
@@ -1510,7 +1560,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(Format("platformer2d - Editor - {} ({})", Scene->GetName(), Core::GetPlatformName()));
+		CWindow::Get().SetTitle(Format("platformer2d - Editor - {} ({})", Scene->GetName(), Core::GetPlatformName()));
 		SceneToOpen.clear();
 	}
 
@@ -1547,7 +1597,7 @@ namespace platformer2d {
 		Framebuffer->GetImage(0)->Invalidate();
 		Framebuffer->Invalidate();
 
-		CWindow::Get()->SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
+		CWindow::Get().SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
 		LK_DEBUG_TAG("Editor", "Scene closed");
 	}
 

@@ -66,6 +66,7 @@ namespace platformer2d {
 		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
 		void OnKeyPressed(const FKeyData& Data);
 		void OnMouseButtonPressed(const FMouseButtonData& Data);
+		void OnMouseScrolled(EMouseScrollDirection Direction);
 
 		void MousePickScene();
 		void RaycastScene();
