@@ -65,13 +65,13 @@ namespace platformer2d {
 	{
 		LK_VERIFY(ImGuiLayer);
 		LK_DEBUG_TAG("UILayer", "OnAttach");
-		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CUILayer::OnKeyPressed);
+		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CUILayer::OnKey);
 	}
 
 	void CUILayer::OnDetach()
 	{
 		LK_TRACE_TAG("UILayer", "OnDetach");
-		CKeyboard::OnKeyPressed.Remove(DelegateHandles.OnKeyPressed);
+		CKeyboard::OnKeyEvent.Remove(DelegateHandles.OnKey);
 		if (ImGuiLayer) {
 			LK_DEBUG_TAG("UILayer", "Destroy ImGui layer");
 			ImGuiLayer->Destroy();
@@ -431,7 +431,7 @@ namespace platformer2d {
 		UI::Font::Pop();
 	}
 
-	void CUILayer::OnKeyPressed(const FKeyData& KeyData)
+	void CUILayer::OnKey(const FKeyData& KeyData)
 	{
 		LK_UNUSED(KeyData);
 	}

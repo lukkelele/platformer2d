@@ -22,7 +22,7 @@ namespace platformer2d {
 	class CKeyboard
 	{
 	public:
-		LK_DECLARE_EVENT(FOnKeyPressed, CKeyboard, const FKeyData&);
+		LK_DECLARE_EVENT(FOnKeyEvent, CKeyboard, const FKeyData&);
 
 	public:
 		CKeyboard() = delete;
@@ -73,7 +73,7 @@ namespace platformer2d {
 		static bool IsKeyDownUnchecked(EKey Key);
 
 	public:
-		static inline FOnKeyPressed OnKeyPressed;
+		static inline FOnKeyEvent OnKeyEvent;
 
 	private:
 		static inline GLFWwindow* ActiveWindow = nullptr;

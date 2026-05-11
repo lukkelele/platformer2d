@@ -89,8 +89,8 @@ namespace platformer2d {
 		Window.Maximize();
 		UpdateViewportBounds();
 
-		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CRuntimeLayer::OnKeyPressed);
-		DelegateHandles.OnMouseButtonPressed = CMouse::OnButtonPressed.Add(this, &CRuntimeLayer::OnMouseButtonPressed);
+		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CRuntimeLayer::OnKeyPressed);
+		DelegateHandles.OnMouseButton = CMouse::OnButtonEvent.Add(this, &CRuntimeLayer::OnMouseButtonPressed);
 
 		DelegateHandles.OnActorCreated = CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
@@ -144,8 +144,8 @@ namespace platformer2d {
 		LK_TRACE_TAG("RuntimeLayer", "Destroy");
 		/* Release bound delegates. */
 		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
-		CKeyboard::OnKeyPressed.Remove(DelegateHandles.OnKeyPressed);
-		CMouse::OnButtonPressed.Remove(DelegateHandles.OnMouseButtonPressed);
+		CKeyboard::OnKeyEvent.Remove(DelegateHandles.OnKey);
+		CMouse::OnButtonEvent.Remove(DelegateHandles.OnMouseButton);
 		CPhysicsWorld::OnSensorBeginEvent.Remove(DelegateHandles.OnSensorBeginEvent);
 		CPhysicsWorld::OnSensorEndEvent.Remove(DelegateHandles.OnSensorEndEvent);
 		CPhysicsWorld::OnContactBeginEvent.Remove(DelegateHandles.OnContactBeginEvent);

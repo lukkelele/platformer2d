@@ -42,13 +42,13 @@ namespace platformer2d {
 		Data.OldState = Data.State;
 		Data.State = NewState;
 
-		OnButtonPressed.Broadcast(Data);
+		OnButtonEvent.Broadcast(Data);
 		return Data;
 	}
 
 	void CMouse::UpdateScrollState(const EMouseScrollDirection Direction)
 	{
-		OnScrolled.Broadcast(Direction);
+		OnScrollEvent.Broadcast(Direction);
 	}
 
 	float CMouse::GetX()

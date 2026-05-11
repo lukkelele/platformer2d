@@ -37,7 +37,7 @@ namespace platformer2d {
 		void UI_MainMenu();
 		void UI_PauseMenu();
 
-		void OnKeyPressed(const FKeyData& KeyData);
+		void OnKey(const FKeyData& KeyData);
 
 	private:
 		std::unique_ptr<CImGuiLayer> ImGuiLayer = nullptr;
@@ -45,7 +45,7 @@ namespace platformer2d {
 
 		struct
 		{
-			Core::FDelegateHandle OnKeyPressed;
+			Core::FDelegateHandle OnKey;
 		} DelegateHandles;
 	};
 

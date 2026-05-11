@@ -96,9 +96,9 @@ namespace platformer2d {
 		struct
 		{
 			Core::FDelegateHandle OnWindowResized;
-			Core::FDelegateHandle OnKeyPressed;
-			Core::FDelegateHandle OnMouseButtonPressed;
-			Core::FDelegateHandle OnMouseScrolled;
+			Core::FDelegateHandle OnKey;
+			Core::FDelegateHandle OnMouseButton;
+			Core::FDelegateHandle OnMouseScroll;
 			Core::FDelegateHandle OnSensorBeginEvent;
 			Core::FDelegateHandle OnSensorEndEvent;
 			Core::FDelegateHandle OnContactBeginEvent;

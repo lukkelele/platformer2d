@@ -152,7 +152,7 @@ namespace platformer2d {
             });
 		}
 
-		OnKeyPressed.Broadcast(KeyData);
+		OnKeyEvent.Broadcast(KeyData);
 
 		return KeyData;
 	}
