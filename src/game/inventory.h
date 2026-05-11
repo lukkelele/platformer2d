@@ -1,21 +1,18 @@
 #pragma once
 
+#include <vector>
+
 #include "core/core.h"
-#include "serialization/serializable.h"
 #include "item.h"
 #include "rifle.h"
+#include "serialization/serializable.h"
 
 namespace platformer2d {
 
-	/* @todo: Move to its own file */
-	class CConsumable : public IItem
-	{
-	public:
-		CConsumable() = default;
-		~CConsumable() = default;
-
-		virtual EItemType GetItemType() const override { return EItemType::Consumable; }
-	};
+	namespace Internal {
+		template<typename T>
+		concept ImplementsItemInterface = std::is_base_of_v<IItem, T>;
+	}
 
 	class CInventory : public ISerializable<ESerializable::Yaml>
 	{
@@ -30,15 +27,19 @@ namespace platformer2d {
 	public:
 		CInventory(std::string_view InName);
 		CInventory() = delete;
+		CInventory(CInventory&&) = delete;
+		CInventory(const CInventory&) = delete;
 		~CInventory();
+
+		CInventory& operator=(const CInventory&) = delete;
+		CInventory& operator=(CInventory&&) = delete;
 
 		void Tick(float DeltaTime);
 		void Destroy();
 
-		template<typename T>
+		template<Internal::ImplementsItemInterface T>
 		bool AddItem(std::shared_ptr<T> Item)
 		{
-			static_assert(std::is_base_of_v<IItem, T>, "T must implement the IItem interface");
 			if (!Item) {
 				return false;
 			}
@@ -57,10 +58,9 @@ namespace platformer2d {
 			return true;
 		}
 
-		template<typename T>
-		std::shared_ptr<T> GetItem(const std::size_t Idx)
+		template<Internal::ImplementsItemInterface T>
+		[[nodiscard]] std::shared_ptr<T> GetItem(const std::size_t Idx)
 		{
-			static_assert(std::is_base_of_v<IItem, T>, "T must implement the IItem interface");
 			LK_ASSERT(Idx < Items.size());
 			const std::shared_ptr<IItem>& Ref = Items.at(Idx).ItemRef;
 			if (!Ref) {
@@ -70,10 +70,9 @@ namespace platformer2d {
 			return std::static_pointer_cast<T>(Ref);
 		}
 
-		template<typename T>
+		template<Internal::ImplementsItemInterface T>
 		bool RemoveItem(const std::size_t Idx)
 		{
-			static_assert(std::is_base_of_v<IItem, T>, "T must implement the IItem interface");
 			LK_ASSERT(Idx < Items.size());
 			const FInventoryItem& Entry = Items.at(Idx);
 			if (!Entry.bValid || !Entry.ItemRef) {
@@ -88,10 +87,9 @@ namespace platformer2d {
 			return true;
 		}
 
-		template<typename T>
+		template<Internal::ImplementsItemInterface T>
 		bool RemoveItem(const std::shared_ptr<T>& Item)
 		{
-			static_assert(std::is_base_of_v<IItem, T>, "T must implement the IItem interface");
 			if (!Item) {
 				return false;
 			}
@@ -113,41 +111,36 @@ namespace platformer2d {
 		}
 
 		template<typename T>
-		std::shared_ptr<T> FindFirstOf()
+		[[nodiscard]] std::shared_ptr<T> FindFirstOf()
 		{
 			static_assert(sizeof(T) == 0, "Not specialized for this type");
 			return nullptr;
 		}
 
-		bool IsEmpty() const;
-		bool IsFull() const;
-		std::size_t GetFreeSlots() const;
-		std::size_t GetUsedSlots() const;
-		bool GetNextFreeIdx(std::size_t& Idx) const;
+		[[nodiscard]] bool IsEmpty() const;
+		[[nodiscard]] bool IsFull() const;
+		[[nodiscard]] std::size_t GetFreeSlots() const;
+		[[nodiscard]] std::size_t GetUsedSlots() const;
+		[[nodiscard]] bool GetNextFreeIdx(std::size_t& Idx) const;
 		void SetName(std::string_view InName);
 
-		uint8_t GetAssignedPlayerIndex() const { return PlayerIdx; }
-		std::string_view GetName() const { return Name; }
+		[[nodiscard]] std::vector<std::shared_ptr<IItem>> Snapshot() const;
+		void Restore(const std::vector<std::shared_ptr<IItem>>& Items);
 
-		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
+		[[nodiscard]] std::uint8_t GetAssignedPlayerIndex() const { return PlayerIdx; }
+		[[nodiscard]] std::string_view GetName() const { return Name; }
+
+		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
 	private:
 		void ClearSlot(std::size_t Idx);
-		FORCEINLINE static bool IsSlotValid(const FInventoryItem& Entry)
-		{
-			return (Entry.ItemRef && Entry.bValid);
-		}
-
-		CInventory(const CInventory&) = delete;
-		CInventory(CInventory&&) = delete;
-		CInventory& operator=(const CInventory&) = delete;
-		CInventory& operator=(CInventory&&) = delete;
+		[[nodiscard]] static bool IsSlotValid(const FInventoryItem& Entry) { return (Entry.ItemRef && Entry.bValid); }
 
 	public:
 		static constexpr std::size_t MAX_ITEMS = 6;
 
 	private:
-		uint8_t PlayerIdx = 0;
+		std::uint8_t PlayerIdx = 0;
 		std::string Name;
 		std::array<FInventoryItem, MAX_ITEMS> Items;
 	};

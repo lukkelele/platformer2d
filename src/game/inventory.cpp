@@ -100,6 +100,44 @@ namespace platformer2d {
 		Name = InName;
 	}
 
+	std::vector<std::shared_ptr<IItem>> CInventory::Snapshot() const
+	{
+		std::vector<std::shared_ptr<IItem>> Out;
+		Out.reserve(GetUsedSlots());
+		for (const FInventoryItem& Entry : Items) {
+			if (IsSlotValid(Entry)) {
+				Out.push_back(Entry.ItemRef);
+			}
+		}
+
+		return Out;
+	}
+
+	void CInventory::Restore(const std::vector<std::shared_ptr<IItem>>& InItems)
+	{
+		LK_DEBUG_TAG("Inventory", "[{}] Restore {} items", Name, InItems.size());
+		for (std::size_t Idx = 0; Idx < Items.size(); Idx++) {
+			ClearSlot(Idx);
+		}
+
+		for (const std::shared_ptr<IItem>& Item : InItems) {
+			if (!Item) {
+				continue;
+			}
+
+			std::size_t FreeIdx = 0;
+			if (!GetNextFreeIdx(FreeIdx)) {
+				LK_WARN_TAG("Inventory", "[{}] Restore truncated, no free slots", Name);
+				break;
+			}
+
+			FInventoryItem& Entry = Items.at(FreeIdx);
+			Entry.ItemRef = Item;
+			Entry.Type = Item->GetItemType();
+			Entry.bValid = true;
+		}
+	}
+
 	bool CInventory::Serialize(YAML::Emitter& Out, const EExtendableSerializer Extendable) const
 	{
 		LK_UNUSED(Extendable);
@@ -131,5 +169,5 @@ namespace platformer2d {
 		Entry.Type = EItemType::None;
 		Entry.bValid = false;
 	}
-
 }
+
