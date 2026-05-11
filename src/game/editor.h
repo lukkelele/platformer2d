@@ -37,11 +37,6 @@ namespace platformer2d {
 		std::uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 		std::uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
-		void OnSensorBeginEvent(const CSensorBeginEvent& Event) override;
-		void OnSensorEndEvent(const CSensorEndEvent& Event) override;
-		void OnContactBeginEvent(const CContactBeginEvent& Event) override;
-		void OnContactEndEvent(const CContactEndEvent& Event) override;
-
 		bool Serialize(const std::filesystem::path& OutFile) const override;
 		bool Deserialize(const std::filesystem::path& InFile) override;
 
@@ -72,12 +67,9 @@ namespace platformer2d {
 		void RaycastScene();
 		void SaveScene();
 
-		void PossessEditorCamera();
 		void PossessPlayerCamera();
-
-		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
-		void OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer);
-		void OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer);
+		void PossessEditorCamera();
+		[[nodiscard]] CEditorCamera* GetEditorCamera() const;
 
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
@@ -89,9 +81,6 @@ namespace platformer2d {
 		bool bHasSavedEditorCameraState = false;
 		bool PendingEditorCameraLerp = true;
 
-		CEditorCamera* GetEditorCamera() const;
-
-		std::filesystem::path LastSceneFilepath{};
 		std::filesystem::path SceneToOpen{};
 		bool bOpenSceneNextTick = false;
 		bool bCloseSceneNextTick = false;

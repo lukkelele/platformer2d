@@ -23,9 +23,9 @@ namespace platformer2d {
 		void Tick(float InDeltaTime) override;
 		void RenderUI() override;
 
-		CCamera* GetActiveCamera() const override;
-		std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
-		std::shared_ptr<CScene> GetScene() const override { return Scene; }
+		[[nodiscard]] CCamera* GetActiveCamera() const override;
+		[[nodiscard]] std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const override;
+		[[nodiscard]] std::shared_ptr<CScene> GetScene() const override { return Scene; }
 		void OpenScene(const std::filesystem::path& ScenePath) override;
 		void CloseScene() override;
 
@@ -33,22 +33,17 @@ namespace platformer2d {
 		void ResumeGame() override;
 		bool IsGamePaused() override;
 
-		uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
-		uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
-
-		void OnSensorBeginEvent(const CSensorBeginEvent& Event) override;
-		void OnSensorEndEvent(const CSensorEndEvent& Event) override;
-		void OnContactBeginEvent(const CContactBeginEvent& Event) override;
-		void OnContactEndEvent(const CContactEndEvent& Event) override;
+		std::uint16_t RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
+		std::uint16_t PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults) override;
 
 		bool Serialize(const std::filesystem::path& OutFile) const override;
 		bool Deserialize(const std::filesystem::path& InFile) override;
 
-	private:
-		void OnWindowResized(uint16_t InWidth, uint16_t InHeight);
-		void OnKeyPressed(const FKeyData& Data);
-		void OnMouseButtonPressed(const FMouseButtonData& Data);
+		void OnWindowResized(std::uint16_t InWidth, std::uint16_t InHeight);
+		void OnKey(const FKeyData& Data);
+		void OnMouseButton(const FMouseButtonData& Data);
 
+	private:
 		void UI_ViewportTexture();
 
 		void MousePickScene();
@@ -58,15 +53,10 @@ namespace platformer2d {
 
 		void CreatePlayer();
 
-		void OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC);
-		void OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer);
-		void OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer);
-
 	private:
 		std::shared_ptr<CPlayer> Player = nullptr;
 		std::shared_ptr<CScene> Scene = nullptr;
 
-		std::filesystem::path LastSceneFilepath{};
 		std::filesystem::path SceneToOpen{};
 		bool bOpenSceneNextTick = false;
 		bool bCloseSceneNextTick = false;

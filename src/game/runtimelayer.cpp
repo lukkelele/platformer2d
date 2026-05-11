@@ -57,8 +57,6 @@ namespace platformer2d {
 		};
 	}
 
-	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
-
 	CRuntimeLayer::CRuntimeLayer()
 		: CGameInstance(this, GameSpec)
 	{
@@ -72,10 +70,7 @@ namespace platformer2d {
 
 	void CRuntimeLayer::Initialize()
 	{
-		DelegateHandles.OnSensorBeginEvent = CPhysicsWorld::OnSensorBeginEvent.Add(this, &CRuntimeLayer::OnSensorBeginEvent);
-		DelegateHandles.OnSensorEndEvent = CPhysicsWorld::OnSensorEndEvent.Add(this, &CRuntimeLayer::OnSensorEndEvent);
-		DelegateHandles.OnContactBeginEvent = CPhysicsWorld::OnContactBeginEvent.Add(this, &CRuntimeLayer::OnContactBeginEvent);
-		DelegateHandles.OnContactEndEvent = CPhysicsWorld::OnContactEndEvent.Add(this, &CRuntimeLayer::OnContactEndEvent);
+		BindPhysicsEvents();
 
 		Deserialize(GameSpec.LevelFilepath);
 		OpenScene(SceneToOpen);
@@ -89,8 +84,8 @@ namespace platformer2d {
 		Window.Maximize();
 		UpdateViewportBounds();
 
-		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CRuntimeLayer::OnKeyPressed);
-		DelegateHandles.OnMouseButton = CMouse::OnButtonEvent.Add(this, &CRuntimeLayer::OnMouseButtonPressed);
+		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CRuntimeLayer::OnKey);
+		DelegateHandles.OnMouseButton = CMouse::OnButtonEvent.Add(this, &CRuntimeLayer::OnMouseButton);
 
 		DelegateHandles.OnActorCreated = CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 		{
@@ -146,10 +141,7 @@ namespace platformer2d {
 		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
 		CKeyboard::OnKeyEvent.Remove(DelegateHandles.OnKey);
 		CMouse::OnButtonEvent.Remove(DelegateHandles.OnMouseButton);
-		CPhysicsWorld::OnSensorBeginEvent.Remove(DelegateHandles.OnSensorBeginEvent);
-		CPhysicsWorld::OnSensorEndEvent.Remove(DelegateHandles.OnSensorEndEvent);
-		CPhysicsWorld::OnContactBeginEvent.Remove(DelegateHandles.OnContactBeginEvent);
-		CPhysicsWorld::OnContactEndEvent.Remove(DelegateHandles.OnContactEndEvent);
+		UnbindPhysicsEvents();
 		CScene::OnActorCreated.Remove(DelegateHandles.OnActorCreated);
 		CScene::OnActorDeleted.Remove(DelegateHandles.OnActorDeleted);
 		UI::OnPauseMenuOpened.Remove(DelegateHandles.OnPauseMenuOpened);
@@ -331,131 +323,6 @@ namespace platformer2d {
 		return 0;
 	}
 
-	void CRuntimeLayer::OnSensorBeginEvent(const CSensorBeginEvent& Event)
-	{
-		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("RuntimeLayer", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
-			return;
-		}
-
-		/**
-		 * Player is overlapping the sensor.
-		 * Determine the type of sensor.
-		 */
-		if (Event.Visitor == Player.get()) {
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
-				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
-				Event.Sensor->SetOutlineEnabled(true);
-
-				std::visit([&](auto&& Data)
-				{
-					using T = std::decay_t<decltype(Data)>;
-					if constexpr (std::is_same_v<T, FDamageInteraction>) {
-						CHealthSystem::ApplyDamage(Event.Visitor, Data.Damage);
-					} else if constexpr (std::is_same_v<T, FPickupInteraction>) {
-						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
-						OnPickupEvent(PlayerRef, *IC);
-					} else if constexpr (std::is_same_v<T, FHealInteraction>) {
-						CHealthSystem::Heal(Event.Visitor, Data.Amount);
-						if (Data.bConsumeOnUse) {
-							LK_DEBUG_TAG("RuntimeLayer", "[TODO] Despawn heal source {}", Event.Sensor->GetName());
-						}
-					} else if constexpr (std::is_same_v<T, FKillzoneInteraction>) {
-						CHealthSystem::Kill(Event.Visitor);
-					} else if constexpr (std::is_same_v<T, FJumppadInteraction>) {
-						if (CBody* B = Event.Visitor->GetBody()) {
-							const glm::vec2 Vel = B->GetLinearVelocity();
-							const float NewX = Data.bPreserveHorizontalVelocity ? Vel.x : 0.0f;
-							B->SetLinearVelocity({NewX, Data.Impulse.y});
-						}
-					} else if constexpr (std::is_same_v<T, FClimbableInteraction>) {
-						static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
-					} else if constexpr (std::is_same_v<T, FCheckpointInteraction>) {
-						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
-						const std::filesystem::path ScenePath = Scene ? Scene->GetFilepath() : LastSceneFilepath;
-						CCheckpointSystem::TrySave(PlayerRef, Data.CheckpointID, ScenePath);
-					}
-				}, IC->GetData());
-			}
-		}
-	}
-
-	void CRuntimeLayer::OnSensorEndEvent(const CSensorEndEvent& Event)
-	{
-		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("RuntimeLayer", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		if (!Player || (Event.Sensor != Player.get()) && (Event.Visitor != Player.get())) {
-			return;
-		}
-
-		/**
-		 * Player is overlapping the sensor.
-		 * Determine the type of sensor.
-		 */
-		if (Event.Visitor == Player.get()) {
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
-				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
-				Event.Sensor->SetOutlineEnabled(false);
-
-				if (IC->GetType() == EInteraction::Climbable) {
-					static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(false);
-				}
-			}
-		}
-	}
-
-	static void OnProjectileContact(CActor* ProjectileActor, CActor* HitActor)
-	{
-		CProjectile* Projectile = static_cast<CProjectile*>(ProjectileActor);
-		/* Do not destroy if the actor hit is the player who shot the projectile. */
-		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor)) {
-			return;
-		}
-
-		Projectile->BounceCount++;
-
-		LK_ASSERT(HitActor, "Invalid rojectile hit");
-		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
-
-		CHealthSystem::ApplyDamage(HitActor, Projectile->GetDamage());
-
-		if (Projectile->ExplodesOnImpact()) {
-			Projectile->Destroy();
-		} else if (Projectile->BounceCount >= Projectile->MaxBounceCount) {
-			LK_TRACE("{}: Max bounce reached: {}", Projectile->GetName(), Projectile->BounceCount);
-			Projectile->Destroy();
-		}
-	};
-
-	void CRuntimeLayer::OnContactBeginEvent(const CContactBeginEvent& Event)
-	{
-		LK_TRACE_TAG("RuntimeLayer", "OnContactBeginEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
-		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B) {
-			return;
-		}
-
-		const EActorType AType = Event.A->GetActorType();
-		const EActorType BType = Event.B->GetActorType();
-
-		/* Projectile hit. */
-		if (AType == EActorType::Projectile) {
-			OnProjectileContact(Event.A, Event.B);
-		} else if (BType == EActorType::Projectile) {
-			OnProjectileContact(Event.B, Event.A);
-		}
-	}
-
-	void CRuntimeLayer::OnContactEndEvent(const CContactEndEvent& Event)
-	{
-		LK_TRACE_TAG("RuntimeLayer", "OnContactEndEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
-		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B) {
-			return;
-		}
-	}
-
 	bool CRuntimeLayer::Serialize(const std::filesystem::path& OutFile) const
 	{
 		/** @todo: Player-specific data about checkpoints and progress should only be persistent. */
@@ -504,7 +371,7 @@ namespace platformer2d {
 		ViewportHeight = InHeight;
 	}
 
-	void CRuntimeLayer::OnKeyPressed(const FKeyData& Data)
+	void CRuntimeLayer::OnKey(const FKeyData& Data)
 	{
 		switch (Data.Key) {
 			case EKey::Escape:
@@ -513,9 +380,13 @@ namespace platformer2d {
 				}
 				break;
 		}
+		
+		if (Player) {
+			Player->OnKey(Data);
+		}
 	}
 
-	void CRuntimeLayer::OnMouseButtonPressed(const FMouseButtonData& Data)
+	void CRuntimeLayer::OnMouseButton(const FMouseButtonData& Data)
 	{
 		switch (Data.State) {
 			case EMouseButtonState::Pressed:
@@ -528,6 +399,10 @@ namespace platformer2d {
 			case EMouseButtonState::Held:
 				break;
 		}
+
+		if (Player) {
+			Player->OnMouseButton(Data);
+		}
 	}
 
 	void CRuntimeLayer::UI_ViewportTexture()
@@ -539,10 +414,10 @@ namespace platformer2d {
 		ImGui::Image(
 			static_cast<ImTextureID>(ViewportTexture->GetID()),
 			WindowSize,
-			ImVec2(0, 1),       /* UV0 */
-			ImVec2(1, 0),       /* UV1 */
+			ImVec2(0, 1), /* UV0 */
+			ImVec2(1, 0), /* UV1 */
 			ImVec4(1, 1, 1, 1), /* Tint Color   */
-			ImVec4(1, 1, 1, 0)  /* Border Color */
+			ImVec4(1, 1, 1, 0) /* Border Color */
 		);
 	}
 
@@ -593,7 +468,7 @@ namespace platformer2d {
 		Scene->SetState(ESceneState::Play);
 		CreatePlayer();
 		LK_VERIFY(Player);
-		CPhysicsWorld::SetPreSolve(PreSolve, Player.get());
+		CPhysicsWorld::SetPreSolve(&CGameInstance::PreSolve, Player.get());
 
 		CCamera* Camera = GetActiveCamera();
 		LK_VERIFY(Camera);
@@ -701,81 +576,6 @@ namespace platformer2d {
 		});
 
 		CGameplaySystem::Teleport(Player, LevelData.PlayerSpawn);
-	}
-
-	void CRuntimeLayer::OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC)
-	{
-		const auto& Data = std::get<FPickupInteraction>(IC.GetData());
-		switch (Data.Kind) {
-			case EPickupKind::Item:
-				OnPickupEvent_Item(Data, InPlayer);
-				break;
-			case EPickupKind::Weapon:
-				OnPickupEvent_Rifle(Data, InPlayer);
-				break;
-		}
-	}
-
-	void CRuntimeLayer::OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer)
-	{
-		const auto& Object = std::get<FPickupItem>(Interaction.Object);
-		LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Interaction.bExpireWhenPickedUp);
-	}
-
-	void CRuntimeLayer::OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer)
-	{
-		const auto& Object = std::get<FPickupWeapon>(Interaction.Object);
-		const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
-		LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Interaction.bExpireWhenPickedUp);
-		CInventory& Inventory = InPlayer.GetInventory();
-		if (Inventory.IsEmpty()) {
-			std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &InPlayer);
-			Inventory.AddItem(Rifle);
-		} else {
-			LK_WARN_TAG("RuntimeLayer", "Inventory not empty");
-		}
-	}
-
-	bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
-	{
-		LK_ASSERT(b2Shape_IsValid(ShapeA) && b2Shape_IsValid(ShapeB));
-		if (!Ctx) {
-			return false;
-		}
-
-		CPlayer& Player = *static_cast<CPlayer*>(Ctx);
-		const b2ShapeId PlayerShapeID = Player.GetBody()->GetShapeID();
-
-		const bool InvolvesPlayer = B2_ID_EQUALS(ShapeA, PlayerShapeID) || B2_ID_EQUALS(ShapeB, PlayerShapeID);
-		if (!InvolvesPlayer) {
-			return true; /* Enable normal contacts. */
-		}
-
-		const CActor* ActorA = static_cast<CActor*>(b2Shape_GetUserData(ShapeA));
-		const CActor* ActorB = static_cast<CActor*>(b2Shape_GetUserData(ShapeB));
-
-		/* Make normal point from platform to player. */
-		if (B2_ID_EQUALS(ShapeA, PlayerShapeID)) {
-			Normal.x = -Normal.x;
-			Normal.y = -Normal.y;
-		}
-
-		const b2Vec2 Up = {0.0f, 1.0f};
-		const float UpDot = Normal.x * Up.x + Normal.y * Up.y;
-		if (UpDot <= 0.0f) {
-			/* Side/ceiling/backface -> behave as a solid. */
-			return true;
-		}
-
-		const b2BodyId PlayerBody = Player.GetBody()->GetID();
-		const b2Vec2 V = b2Body_GetLinearVelocity(PlayerBody);
-		const float Vn = V.x * Normal.x + V.y * Normal.y;
-		if (Vn > 0.0f) {
-			/* Moving along the normal (from below toward the platform) -> ignore contact. */
-			return false;
-		}
-
-		return true;
 	}
 
 }
