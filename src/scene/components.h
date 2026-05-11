@@ -292,6 +292,8 @@ namespace platformer2d {
 			}
 		}
 
+		void SetMaxHealth() { Health = MaxHealth; }
+
 		[[nodiscard]] float GetMaxHealth() const { return MaxHealth; }
 		void SetMaxHealth(const float InMaxHealth) { MaxHealth = InMaxHealth; }
 
