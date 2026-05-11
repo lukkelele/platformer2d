@@ -12,9 +12,10 @@
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
+#include "game/checkpointsystem.h"
+#include "game/enemy.h"
 #include "game/gameplaysystem.h"
 #include "game/healthsystem.h"
-#include "game/enemy.h"
 #include "game/player.h"
 #include "game/spawner.h"
 #include "game/controller/patrolcontroller.h"
@@ -80,6 +81,8 @@ namespace platformer2d {
 		OpenScene(SceneToOpen);
 		LastSceneFilepath = Scene->GetFilepath();
 		LK_TRACE_TAG("RuntimeLayer", "Last scene filepath: {}", LastSceneFilepath);
+
+		CCheckpointSystem::LoadFromDisk(GameSpec.LevelFilepath);
 
 		CWindow::OnResized.Add(this, &CRuntimeLayer::OnWindowResized);
 		CWindow& Window = CWindow::Get();
@@ -368,6 +371,10 @@ namespace platformer2d {
 						}
 					} else if constexpr (std::is_same_v<T, FClimbableInteraction>) {
 						static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
+					} else if constexpr (std::is_same_v<T, FCheckpointInteraction>) {
+						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
+						const std::filesystem::path ScenePath = Scene ? Scene->GetFilepath() : LastSceneFilepath;
+						CCheckpointSystem::TrySave(PlayerRef, Data.CheckpointID, ScenePath);
 					}
 				}, IC->GetData());
 			}
@@ -674,6 +681,23 @@ namespace platformer2d {
 		Player->OnLanded.Add([](const FPlayerData& PlayerData)
 		{
 			LK_TRACE("Player {} landed", PlayerData.ID);
+		});
+
+		Player->OnDied.Add([this](const FPlayerData&)
+		{
+			if (CCheckpointSystem::HasCheckpoint()) {
+				CCheckpointSystem::RestoreToPlayer(*Player);
+			} else {
+				LK_DEBUG_TAG("RuntimeLayer", "Player died, no checkpoint -> respawn at PlayerSpawn");
+				CGameplaySystem::Teleport(Player, LevelData.PlayerSpawn);
+				if (FHealthComponent* HC = Player->TryGetComponent<FHealthComponent>()) {
+					HC->SetHealth(HC->GetMaxHealth());
+				}
+				if (CBody* B = Player->GetBody()) {
+					B->SetEnabled(true);
+					B->SetLinearVelocity({0.0f, 0.0f});
+				}
+			}
 		});
 
 		CGameplaySystem::Teleport(Player, LevelData.PlayerSpawn);
