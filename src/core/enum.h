@@ -234,16 +234,6 @@ namespace platformer2d::Enum::Internal {
 
 		static constexpr auto Data = Make();
 
-		static consteval auto MakeNames()
-		{
-			std::array<std::string_view, Count> Arr{};
-			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
-				Arr[Idx] = Data.Entries[Idx].Name;
-			}
-			return Arr;
-		}
-		static constexpr auto Names = MakeNames();
-
 		static consteval auto MakeValues()
 		{
 			std::array<E, Count> Arr{};
@@ -253,6 +243,16 @@ namespace platformer2d::Enum::Internal {
 			return Arr;
 		}
 		static constexpr auto Values = MakeValues();
+
+		static consteval auto MakeNames()
+		{
+			std::array<std::string_view, Count> Arr{};
+			for (std::size_t Idx = 0; Idx < Data.Size; Idx++) {
+				Arr[Idx] = Data.Entries[Idx].Name;
+			}
+			return Arr;
+		}
+		static constexpr auto Names = MakeNames();
 
 		/** @brief Calculate largest name of all enum entries, used for the null-terminated array. */
 		static consteval std::size_t CalcMaxNameLen() noexcept
