@@ -19,10 +19,6 @@ namespace platformer2d {
 	{
 		UpdateView();
 		UpdateProjection();
-
-		CKeyboard::OnKeyPressed.Add(this, &CCamera::OnKeyPressed);
-		CMouse::OnButtonPressed.Add(this, &CCamera::OnMouseButtonPressed);
-		CMouse::OnScrolled.Add(this, &CCamera::OnMouseScrolled);
 	}
 
 	void CCamera::Update()
@@ -87,22 +83,6 @@ namespace platformer2d {
 
 		UpdateView();
 		UpdateProjection();
-	}
-
-	void CCamera::OnKeyPressed(const FKeyData& KeyData)
-	{
-		LK_TRACE_TAG("Camera", "OnKeyPressed: {} (Count: {})", Enum::ToString(KeyData.Key), KeyData.RepeatCount);
-		if (KeyData.Key == EKey::Minus) {
-			SetZoom(GetZoom() - ZOOM_DIFF);
-		}
-
-		/* Modifiers */
-		/* @fixme: This should take the user keyboard layout into account... */
-		if (CKeyboard::IsKeyDown(EKey::LeftShift) || CKeyboard::IsKeyDown(EKey::RightShift)) {
-			if (KeyData.Key == EKey::Equal) {
-				SetZoom(GetZoom() + ZOOM_DIFF);
-			}
-		}
 	}
 
 	void CCamera::Target(const glm::vec2& TargetPos, const float DeltaTime)
@@ -177,15 +157,5 @@ namespace platformer2d {
 			glm::vec2(-HalfWidth, -HalfHeight),
 			glm::vec2(HalfWidth, HalfHeight));
 	}
-
-	void CCamera::OnMouseButtonPressed(const FMouseButtonData& ButtonData)
-	{
-		LK_TRACE_TAG("Camera", "Mouse button: {}", Enum::ToString(ButtonData.Button));
-	}
-
-	void CCamera::OnMouseScrolled(const EMouseScrollDirection Direction)
-	{
-		LK_TRACE_TAG("Camera", "Mouse scroll direction: {}", Enum::ToString(Direction));
-	}
-
 }
+

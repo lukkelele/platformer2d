@@ -76,11 +76,6 @@ namespace platformer2d {
 			ViewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-Center.x, -Center.y, 0.0f));
 		}
 
-	private:
-		void OnKeyPressed(const FKeyData& KeyData);
-		void OnMouseButtonPressed(const FMouseButtonData& ButtonData);
-		void OnMouseScrolled(const EMouseScrollDirection Direction);
-
 	public:
 		static constexpr float ZOOM_MIN = 0.010f;
 		static constexpr float ZOOM_MAX = 1.0f;
