@@ -134,9 +134,9 @@ namespace platformer2d {
 		Window.Maximize();
 		UpdateViewportBounds();
 
-		DelegateHandles.OnKeyPressed = CKeyboard::OnKeyPressed.Add(this, &CEditor::OnKeyPressed);
-		DelegateHandles.OnMouseButtonPressed = CMouse::OnButtonPressed.Add(this, &CEditor::OnMouseButtonPressed);
-		DelegateHandles.OnMouseScrolled = CMouse::OnScrolled.Add(this, &CEditor::OnMouseScrolled);
+		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CEditor::OnKey);
+		DelegateHandles.OnMouseButton = CMouse::OnButtonEvent.Add(this, &CEditor::OnMouseButton);
+		DelegateHandles.OnMouseScroll = CMouse::OnScrollEvent.Add(this, &CEditor::OnMouseScroll);
 
 		LK_DEBUG_TAG("Editor", "Initialize editor resources");
 		EditorResources.Initialize();
@@ -205,9 +205,9 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Editor", "Destroy");
 		/* Release bound delegates. */
 		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
-		CKeyboard::OnKeyPressed.Remove(DelegateHandles.OnKeyPressed);
-		CMouse::OnButtonPressed.Remove(DelegateHandles.OnMouseButtonPressed);
-		CMouse::OnScrolled.Remove(DelegateHandles.OnMouseScrolled);
+		CKeyboard::OnKeyEvent.Remove(DelegateHandles.OnKey);
+		CMouse::OnButtonEvent.Remove(DelegateHandles.OnMouseButton);
+		CMouse::OnScrollEvent.Remove(DelegateHandles.OnMouseScroll);
 		CPhysicsWorld::OnSensorBeginEvent.Remove(DelegateHandles.OnSensorBeginEvent);
 		CPhysicsWorld::OnSensorEndEvent.Remove(DelegateHandles.OnSensorEndEvent);
 		CPhysicsWorld::OnContactBeginEvent.Remove(DelegateHandles.OnContactBeginEvent);
@@ -1364,14 +1364,18 @@ namespace platformer2d {
 		}
 	}
 
-	void CEditor::OnWindowResized(const uint16_t InWidth, const uint16_t InHeight)
+	void CEditor::OnWindowResized(const std::uint16_t InWidth, const std::uint16_t InHeight)
 	{
 		LK_TRACE_TAG("Editor", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
 		ViewportWidth = InWidth;
 		ViewportHeight = InHeight;
+
+		if (Player) {
+			Player->OnWindowResized(InWidth, InHeight);
+		}
 	}
 
-	void CEditor::OnKeyPressed(const FKeyData& Data)
+	void CEditor::OnKey(const FKeyData& Data)
 	{
 		switch (Data.Key) {
 			case EKey::Q:
@@ -1436,9 +1440,13 @@ namespace platformer2d {
 				}
 				break;
 		}
+
+		if (Player) {
+			Player->OnKey(Data);
+		}
 	}
 
-	void CEditor::OnMouseButtonPressed(const FMouseButtonData& Data)
+	void CEditor::OnMouseButton(const FMouseButtonData& Data)
 	{
 		switch (Data.State) {
 			case EMouseButtonState::Pressed:
@@ -1455,17 +1463,18 @@ namespace platformer2d {
 		}
 	}
 
-	void CEditor::OnMouseScrolled(const EMouseScrollDirection Direction)
+	void CEditor::OnMouseScroll(const EMouseScrollDirection Direction)
 	{
 		LK_TRACE_TAG("Editor", "{} UseEditorCamera={}", Enum::ToString(Direction), bUseEditorCamera);
 		if (bUseEditorCamera) {
 			if (auto* EC = GetEditorCamera(); EC && bEditorViewportHovered) {
 				EC->OnMouseScrolled(Direction);
 			}
-		} else if (Player) {
-			if (bEditorViewportHovered && CKeyboard::IsAnyKeysDown(EKey::LeftControl, EKey::RightControl)) {
-				Player->OnMouseScrolled(Direction);
-			}
+		}
+
+		if (Player) {
+			// if (bEditorViewportHovered && CKeyboard::IsAnyKeysDown(EKey::LeftControl, EKey::RightControl)) {
+			Player->OnMouseScroll(Direction);
 		}
 	}
 
