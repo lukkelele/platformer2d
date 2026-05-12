@@ -14,6 +14,7 @@ namespace platformer2d {
 
 		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
 		if (!HC) {
+			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target->GetName());
 			return false;
 		}
 
@@ -42,6 +43,7 @@ namespace platformer2d {
 
 		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
 		if (!HC) {
+			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target->GetName());
 			return false;
 		}
 
@@ -60,6 +62,7 @@ namespace platformer2d {
 
 		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
 		if (!HC) {
+			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target->GetName());
 			return false;
 		}
 
