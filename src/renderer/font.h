@@ -11,7 +11,7 @@
 
 namespace platformer2d {
 
-	enum class EFontSize
+	enum class EFontSize : std::int8_t
 	{
 		None = -1,
 		Regular,
@@ -24,15 +24,18 @@ namespace platformer2d {
 		Banner,
 		COUNT
 	};
+	LK_ENUM_RANGE(EFontSize, EFontSize::None, EFontSize::COUNT);
 
-	enum class EFontModifier
+	enum class EFontModifier : std::uint8_t
 	{
 		Normal,
 		Bold,
 		Italic,
 		BoldItalic,
 		SemiMedium,
+		COUNT
 	};
+	LK_ENUM(EFontModifier);
 
 	enum class EFont
 	{
@@ -42,6 +45,7 @@ namespace platformer2d {
 		FontAwesome,
 		COUNT
 	};
+	LK_ENUM(EFont);
 
 	struct FFontConfiguration
 	{
@@ -65,52 +69,6 @@ namespace platformer2d {
 		constexpr EFont GetDefault()
 		{
 			return EFont::SourceSansPro;
-		}
-	}
-
-	namespace Enum {
-		static const char* ToString(const EFont Font)
-		{
-			switch (Font) {
-				case EFont::None:          return "None";
-				case EFont::SourceSansPro: return "SourceSansPro";
-				case EFont::Roboto:        return "Roboto";
-				case EFont::FontAwesome:   return "FontAwesome";
-			}
-
-			LK_VERIFY(false);
-			return nullptr;
-		}
-
-		static const char* ToString(const EFontSize FontSize)
-		{
-			switch (FontSize) {
-				case EFontSize::None:    return "None";
-				case EFontSize::Smaller: return "Smaller";
-				case EFontSize::Small:   return "Small";
-				case EFontSize::Regular: return "Regular";
-				case EFontSize::Large:   return "Large";
-				case EFontSize::Larger:  return "Larger";
-				case EFontSize::Header:  return "Header";
-				case EFontSize::Title:   return "Title";
-			}
-
-			LK_VERIFY(false);
-			return nullptr;
-		}
-
-		static const char* ToString(const EFontModifier FontModifier)
-		{
-			switch (FontModifier) {
-				case EFontModifier::Normal:     return "Normal";
-				case EFontModifier::Bold:       return "Bold";
-				case EFontModifier::Italic:     return "Italic";
-				case EFontModifier::BoldItalic: return "BoldItalic";
-				case EFontModifier::SemiMedium: return "SemiMedium";
-			}
-
-			LK_VERIFY(false);
-			return nullptr;
 		}
 	}
 }
