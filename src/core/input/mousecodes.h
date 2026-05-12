@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "core/enum.h"
 
 namespace platformer2d {
 
@@ -20,62 +21,34 @@ namespace platformer2d {
 		Right = Button1,
 		Middle = Button2,
 	};
+	LK_ENUM(EMouseButton);
 
-	enum class EMouseButtonState
+	enum class EMouseButtonState : std::int8_t
 	{
 		None = -1,
 		Pressed,
 		Held,
-		Released
+		Released,
+		COUNT
 	};
+	LK_ENUM_RANGE(EMouseButtonState, EMouseButtonState::None, EMouseButtonState::COUNT);
 
 	enum class ECursorMode
 	{
-		Normal = 0,
-		Hidden = 1,
-		Locked = 2
+		Normal,
+		Hidden,
+		Locked,
+		COUNT
 	};
+	LK_ENUM(ECursorMode);
 
-	enum class EMouseScrollDirection
+	enum class EMouseScrollDirection : std::uint8_t
 	{
 		Up,
-		Down
+		Down,
+		COUNT
 	};
-
-	namespace Enum {
-		constexpr const char* ToString(const EMouseButton MouseButton)
-		{
-			switch (MouseButton) {
-				case EMouseButton::Button0: return "Button0";
-				case EMouseButton::Button1: return "Button1";
-				case EMouseButton::Button2: return "Button2";
-				case EMouseButton::Button3: return "Button3";
-				case EMouseButton::Button4: return "Button4";
-				case EMouseButton::Button5: return "Button5";
-				case EMouseButton::None:    return "None";
-				case EMouseButton::COUNT:   return "COUNT";
-			}
-			return nullptr;
-		}
-
-		constexpr const char* ToString(const ECursorMode CursorMode)
-		{
-			switch (CursorMode) {
-				case ECursorMode::Normal: return "Normal";
-				case ECursorMode::Hidden: return "Hidden";
-				case ECursorMode::Locked: return "Locked";
-			}
-			return nullptr;
-		}
-
-		constexpr const char* ToString(const EMouseScrollDirection ScrollDirection)
-		{
-			switch (ScrollDirection) {
-				case EMouseScrollDirection::Up:   return "Up";
-				case EMouseScrollDirection::Down: return "Down";
-			}
-			return nullptr;
-		}
-	}
+	LK_ENUM(EMouseScrollDirection);
 
 }
+
