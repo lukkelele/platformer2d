@@ -11,36 +11,43 @@
 
 #include "core/core.h"
 #include "core/delegate.h"
+#include "gamesystem.h"
 
 namespace platformer2d {
 
 	class CPlayer;
 	class IItem;
 
-	class CCheckpointSystem
+	class CCheckpointSystem : public IGameSystem
 	{
 	public:
 		LK_DECLARE_MULTICAST_DELEGATE(FOnSaved, std::string_view);
-		static inline FOnSaved OnSaved;
+		FOnSaved OnSaved;
 
 	public:
-		CCheckpointSystem() = delete;
-		~CCheckpointSystem() = delete;
+		CCheckpointSystem() = default;
 		CCheckpointSystem(CCheckpointSystem&&) = delete;
 		CCheckpointSystem(const CCheckpointSystem&) = delete;
+		~CCheckpointSystem() = default;
 
 		CCheckpointSystem& operator=(CCheckpointSystem&&) = delete;
 		CCheckpointSystem& operator=(const CCheckpointSystem&) = delete;
 
-		static bool TrySave(CPlayer& Player, std::string_view CheckpointID, const std::filesystem::path& ScenePath);
-		static bool RestoreToPlayer(CPlayer& Player);
-		static bool HasCheckpoint();
+		void Initialize(CGameInstance& Owner) override;
+		void Shutdown() override;
 
-		static bool LoadFromDisk(const std::filesystem::path& LevelFilepath);
-		static bool SaveToDisk();
-		static void Clear();
+		bool TrySave(CPlayer& Player, std::string_view CheckpointID, const std::filesystem::path& ScenePath);
+		bool RestoreToPlayer(CPlayer& Player);
+		[[nodiscard]] bool HasCheckpoint() const;
 
-		static std::string_view GetCurrentID();
+		bool LoadFromDisk(const std::filesystem::path& LevelFilepath);
+		bool SaveToDisk();
+		void Clear();
+
+		std::string_view GetCurrentID() const;
+
+	private:
+		static std::filesystem::path DeriveCheckpointPath(const std::filesystem::path& LevelFilepath);
 
 	private:
 		struct FState
@@ -54,11 +61,9 @@ namespace platformer2d {
 			std::unordered_set<std::string> TriggeredIDs;
 			bool bHasCheckpoint = false;
 		};
+		FState State;
 
-		static std::filesystem::path DeriveCheckpointPath(const std::filesystem::path& LevelFilepath);
-
-		static inline FState State;
-		static inline std::vector<std::shared_ptr<IItem>> InventorySnapshot;
+		std::vector<std::shared_ptr<IItem>> InventorySnapshot;
 	};
 
 }

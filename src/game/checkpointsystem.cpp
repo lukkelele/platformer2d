@@ -5,18 +5,23 @@
 
 #include "core/log.h"
 #include "gameplaysystem.h"
+#include "instance.h"
 #include "player.h"
 #include "scene/actor.h"
 #include "serialization/serialization.h"
 
 namespace platformer2d {
 
-	std::filesystem::path CCheckpointSystem::DeriveCheckpointPath(const std::filesystem::path& LevelFilepath)
+	void CCheckpointSystem::Initialize(CGameInstance& Owner)
 	{
-		std::string Out = LevelFilepath.string();
-		Out = Out.substr(0, Out.find(".yaml"));
-		Out += "_checkpoint.yaml";
-		return Out;
+		LK_DEBUG_TAG("CheckpointSystem", "Initialize");
+		OwnerRef = &Owner;
+	}
+
+	void CCheckpointSystem::Shutdown()
+	{
+		LK_DEBUG_TAG("CheckpointSystem", "Shutdown");
+		OwnerRef = nullptr;
 	}
 
 	bool CCheckpointSystem::TrySave(CPlayer& Player, std::string_view CheckpointID, const std::filesystem::path& ScenePath)
@@ -34,7 +39,6 @@ namespace platformer2d {
 
 		const FHealthComponent* HC = Player.TryGetComponent<FHealthComponent>();
 		const glm::vec3 Pos = Player.GetPosition();
-
 		State.ScenePath = ScenePath;
 		State.CurrentID = IDStr;
 		State.Position = glm::vec2(Pos.x, Pos.y);
@@ -60,7 +64,8 @@ namespace platformer2d {
 		}
 
 		LK_INFO_TAG("Checkpoint", R"(Restoring "{}" -> {} HP={}/{})", State.CurrentID, State.Position, State.Health, State.MaxHealth);
-		CGameplaySystem::Teleport(&Player, State.Position);
+		LK_ASSERT(OwnerRef);
+		OwnerRef->GetSystem<CGameplaySystem>().Teleport(&Player, State.Position);
 
 		if (FHealthComponent* HC = Player.TryGetComponent<FHealthComponent>()) {
 			HC->SetMaxHealth(State.MaxHealth);
@@ -80,21 +85,46 @@ namespace platformer2d {
 		return true;
 	}
 
-	bool CCheckpointSystem::HasCheckpoint()
+	bool CCheckpointSystem::HasCheckpoint() const
 	{
 		return State.bHasCheckpoint;
 	}
 
-	std::string_view CCheckpointSystem::GetCurrentID()
+	bool CCheckpointSystem::LoadFromDisk(const std::filesystem::path& LevelFilepath)
 	{
-		return State.CurrentID;
-	}
+		State.LevelFilepath = LevelFilepath;
+		const std::filesystem::path Path = DeriveCheckpointPath(LevelFilepath);
+		if (!std::filesystem::exists(Path)) {
+			LK_WARN_TAG("Checkpoint", R"(Checkpoint file does not exist: "{}")", Path);
+			return false;
+		}
 
-	void CCheckpointSystem::Clear()
-	{
-		LK_DEBUG_TAG("Checkpoint", "Clear");
-		State = FState{};
-		InventorySnapshot.clear();
+		std::ifstream File(Path);
+		if (!File.is_open()) {
+			LK_ERROR_TAG("Checkpoint", R"(Failed to open: "{}")", Path);
+			return false;
+		}
+
+		std::stringstream Buf;
+		Buf << File.rdbuf();
+		const YAML::Node Node = YAML::Load(Buf.str());
+		Serialization::DeserializeProperty("Scene", State.ScenePath, State.ScenePath, Node);
+		Serialization::DeserializeProperty("CurrentID", State.CurrentID, State.CurrentID, Node);
+		Serialization::DeserializeProperty("Position", State.Position, State.Position, Node);
+		Serialization::DeserializeProperty("Health", State.Health, State.Health, Node);
+		Serialization::DeserializeProperty("MaxHealth", State.MaxHealth, State.MaxHealth, Node);
+
+		State.TriggeredIDs.clear();
+		if (const YAML::Node IDs = Node["TriggeredIDs"]; IDs && IDs.IsSequence()) {
+			for (std::size_t Idx = 0; Idx < IDs.size(); Idx++) {
+				State.TriggeredIDs.insert(IDs[Idx].as<std::string>());
+			}
+		}
+
+		State.bHasCheckpoint = !State.CurrentID.empty();
+		LK_INFO_TAG("Checkpoint", R"(Loaded "{}" from {} ({} triggered IDs))", State.CurrentID, Path, State.TriggeredIDs.size());
+
+		return State.bHasCheckpoint;
 	}
 
 	bool CCheckpointSystem::SaveToDisk()
@@ -134,42 +164,25 @@ namespace platformer2d {
 		return true;
 	}
 
-	bool CCheckpointSystem::LoadFromDisk(const std::filesystem::path& LevelFilepath)
+	void CCheckpointSystem::Clear()
 	{
-		State.LevelFilepath = LevelFilepath;
+		LK_DEBUG_TAG("Checkpoint", "Clear");
+		State = FState{};
+		InventorySnapshot.clear();
+	}
 
-		const std::filesystem::path Path = DeriveCheckpointPath(LevelFilepath);
-		if (!std::filesystem::exists(Path)) {
-			LK_WARN_TAG("Checkpoint", R"(Checkpoint file does not exist: "{}")", Path);
-			return false;
-		}
+	std::string_view CCheckpointSystem::GetCurrentID() const
+	{
+		return State.CurrentID;
+	}
 
-		std::ifstream File(Path);
-		if (!File.is_open()) {
-			LK_ERROR_TAG("Checkpoint", R"(Failed to open: "{}")", Path);
-			return false;
-		}
-
-		std::stringstream Buf;
-		Buf << File.rdbuf();
-		const YAML::Node Node = YAML::Load(Buf.str());
-		Serialization::DeserializeProperty("Scene", State.ScenePath, State.ScenePath, Node);
-		Serialization::DeserializeProperty("CurrentID", State.CurrentID, State.CurrentID, Node);
-		Serialization::DeserializeProperty("Position", State.Position, State.Position, Node);
-		Serialization::DeserializeProperty("Health", State.Health, State.Health, Node);
-		Serialization::DeserializeProperty("MaxHealth", State.MaxHealth, State.MaxHealth, Node);
-
-		State.TriggeredIDs.clear();
-		if (const YAML::Node IDs = Node["TriggeredIDs"]; IDs && IDs.IsSequence()) {
-			for (std::size_t Idx = 0; Idx < IDs.size(); Idx++) {
-				State.TriggeredIDs.insert(IDs[Idx].as<std::string>());
-			}
-		}
-
-		State.bHasCheckpoint = !State.CurrentID.empty();
-		LK_INFO_TAG("Checkpoint", R"(Loaded "{}" from {} ({} triggered IDs))", State.CurrentID, Path, State.TriggeredIDs.size());
-
-		return State.bHasCheckpoint;
+	std::filesystem::path CCheckpointSystem::DeriveCheckpointPath(const std::filesystem::path& LevelFilepath)
+	{
+		std::string Out = LevelFilepath.string();
+		Out = Out.substr(0, Out.find(".yaml"));
+		Out += "_checkpoint.yaml";
+		return Out;
 	}
 
 }
+
