@@ -83,7 +83,7 @@ namespace platformer2d {
 			}
 		});
 
-		glfwSetMouseButtonCallback(GlfwWindow, [](GLFWwindow* Window, int Button, int Action, int Modifiers)
+		glfwSetMouseButtonCallback(GlfwWindow, [](GLFWwindow* Window, const int Button, const int Action, const int Modifiers)
 		{
 			switch (Action) {
 				case GLFW_PRESS:
@@ -91,6 +91,9 @@ namespace platformer2d {
 					break;
 				case GLFW_RELEASE:
 					CMouse::UpdateButtonState(static_cast<EMouseButton>(Button), EMouseButtonState::Released);
+					break;
+				default:
+					LK_WARN_TAG("Window", "Unhandled GLFW action: {} (Button={} Modifiers={})", Action, Button, Action);
 					break;
 			}
 		});
