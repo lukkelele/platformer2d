@@ -42,6 +42,7 @@ namespace platformer2d {
 		Data.OldState = Data.State;
 		Data.State = NewState;
 
+		LK_TRACE_TAG("Mouse", "Button={} NewState={} OnButtonEvent={}", Enum::ToString(Button), Enum::ToString(NewState), OnButtonEvent.GetSize());
 		OnButtonEvent.Broadcast(Data);
 		return Data;
 	}
@@ -65,11 +66,11 @@ namespace platformer2d {
 		return static_cast<float>(Y);
 	}
 
-	std::pair<float, float> CMouse::GetPos()
+	glm::vec2 CMouse::GetPos()
 	{
 		double X, Y;
 		glfwGetCursorPos(ActiveWindow, &X, &Y);
-		return std::make_pair<float, float>(X, Y);
+		return {X, Y};
 	}
 
 }

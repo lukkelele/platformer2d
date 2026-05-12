@@ -40,7 +40,7 @@ namespace platformer2d {
 
 		[[nodiscard]] static float GetX();
 		[[nodiscard]] static float GetY();
-		[[nodiscard]] static std::pair<float, float> GetPos(); /* @todo: Change to glm::vec2 */
+		[[nodiscard]] static glm::vec2 GetPos();
 
 	public:
 		static inline FOnButtonEvent OnButtonEvent;
