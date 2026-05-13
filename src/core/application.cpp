@@ -19,9 +19,7 @@
 
 namespace platformer2d {
 
-	namespace {
-		const std::filesystem::path SettingsFile(CONFIG_DIR "/settings.yaml");
-	}
+	static const std::filesystem::path SettingsFile(CONFIG_DIR "/settings.yaml");
 
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
