@@ -26,15 +26,14 @@ namespace platformer2d {
 		}
 	}
 
-	void CEditorCamera::Tick(const float RealDeltaTime, const bool ViewportHovered)
+	void CEditorCamera::Tick(const float DeltaTime, const bool ViewportHovered)
 	{
 		if (!bActive) {
 			return;
 		}
 
 		const bool MiddleDown = CMouse::IsDown(EMouseButton::Middle);
-		const auto [MX, MY] = CMouse::GetPos();
-		const glm::vec2 Mouse{MX, MY};
+		const glm::vec2 Mouse = CMouse::GetPos();
 
 		if (MiddleDown && !bWasMiddleDown) {
 			if (ViewportHovered) {
@@ -63,7 +62,7 @@ namespace platformer2d {
 			LastMousePos = Mouse;
 		}
 
-		TickSwitchLerp(RealDeltaTime);
+		TickSwitchLerp(DeltaTime);
 
 		bWasMiddleDown = MiddleDown;
 		Update();

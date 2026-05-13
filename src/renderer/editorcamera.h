@@ -10,7 +10,7 @@ namespace platformer2d {
 		CEditorCamera(float InWidth, float InHeight);
 		~CEditorCamera() = default;
 
-		void Tick(float RealDeltaTime, bool ViewportHovered);
+		void Tick(float DeltaTime, bool ViewportHovered);
 
 		void SetActive(bool InActive);
 		[[nodiscard]] bool IsActive() const { return bActive; }
