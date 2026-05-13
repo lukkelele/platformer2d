@@ -11,9 +11,9 @@
 #include <memory>
 #include <optional>
 #include <string_view>
-#include <type_traits>
 #include <source_location>
 #include <span>
+#include <type_traits>
 #include <queue>
 #include <utility>
 

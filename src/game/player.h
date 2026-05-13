@@ -23,7 +23,7 @@ namespace platformer2d {
 
 	struct FPlayerData
 	{
-		uint64_t ID = 0;
+		std::uint64_t ID = 0;
 		EMovementState MovementState = EMovementState::Idle;
 		bool bJumping = false;
 	};

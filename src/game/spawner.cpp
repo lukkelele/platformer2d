@@ -11,7 +11,7 @@ namespace platformer2d {
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
-			ActorName = Format("StaticPolygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+			ActorName = Format("StaticPolygon{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
 		CGameInstance* GameInstance = CGameInstance::Get();
 		LK_VERIFY(GameInstance);
@@ -42,7 +42,7 @@ namespace platformer2d {
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
-			ActorName = Format("StaticPolygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+			ActorName = Format("StaticPolygon{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
 		CGameInstance* GameInstance = CGameInstance::Get();
 		LK_VERIFY(GameInstance);
@@ -70,7 +70,7 @@ namespace platformer2d {
 	{
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
-			ActorName = Format("Polygon{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+			ActorName = Format("Polygon{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
 		CGameInstance* GameInstance = CGameInstance::Get();
 		LK_VERIFY(GameInstance);
@@ -98,7 +98,7 @@ namespace platformer2d {
 		LK_ASSERT(Points.size() >= 4, "Chain requires at least 4 points");
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
-			ActorName = Format("Chain{}", static_cast<uint16_t>(Math::Randomize(0, std::numeric_limits<uint16_t>::max())));
+			ActorName = Format("Chain{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
 		CGameInstance* GameInstance = CGameInstance::Get();
 		LK_VERIFY(GameInstance);

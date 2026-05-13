@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #include "core/core.h"
 #include "core/math/math.h"
 #include "physics/body.h"
