@@ -1,11 +1,25 @@
 #include "instance.h"
 
+#include <algorithm>
+
+#include "core/profiler.h"
+#include "core/selectioncontext.h"
+#include "core/string.h"
 #include "core/window.h"
-#include "game/checkpointsystem.h"
-#include "game/healthsystem.h"
-#include "game/projectile.h"
-#include "game/rifle.h"
+#include "core/input/keyboard.h"
+#include "core/input/mouse.h"
+#include "checkpointsystem.h"
+#include "enemy.h"
+#include "gameplaysystem.h"
+#include "healthsystem.h"
+#include "interactionsystem.h"
+#include "projectilesystem.h"
+#include "controller/patrolcontroller.h"
+#include "renderer/renderer.h"
+#include "renderer/debugrenderer.h"
+#include "renderer/ui/ui.h"
 #include "physics/body.h"
+#include "physics/ray.h"
 #include "scene/scene.h"
 
 namespace platformer2d {
@@ -18,6 +32,12 @@ namespace platformer2d {
 		LK_VERIFY(Instance, "Invalid game instance reference");
 
 		UpdateViewportBounds();
+
+		RegisterSystem<CHealthSystem>();
+		RegisterSystem<CGameplaySystem>();
+		RegisterSystem<CCheckpointSystem>();
+		RegisterSystem<CInteractionSystem>();
+		RegisterSystem<CProjectileSystem>();
 	}
 
 	CGameInstance::~CGameInstance()
@@ -25,17 +45,429 @@ namespace platformer2d {
 		Instance = nullptr;
 	}
 
+	void CGameInstance::OnAttach()
+	{
+		LK_TRACE_TAG("GameInstance", "OnAttach: {}", Spec.InstanceName);
+		Initialize();
+	}
+
+	void CGameInstance::OnDetach()
+	{
+		LK_TRACE_TAG("GameInstance", "OnDetach: {}", Spec.InstanceName);
+		Destroy();
+	}
+
+	void CGameInstance::Initialize()
+	{
+		InitializeSystems();
+
+		Deserialize(Spec.LevelFilepath);
+		OpenScene(SceneToOpen);
+		LK_VERIFY(Scene);
+		LastSceneFilepath = Scene->GetFilepath();
+		LK_TRACE_TAG("GameInstance", "Last scene filepath: {}", LastSceneFilepath);
+
+		GetSystem<CCheckpointSystem>().LoadFromDisk(Spec.LevelFilepath);
+
+		DelegateHandles.OnWindowResized = CWindow::OnResized.Add(this, &CGameInstance::OnWindowResized);
+		CWindow::Get().Maximize();
+		UpdateViewportBounds();
+
+		LK_DEBUG_TAG("GameInstance", "Register delegates");
+		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CGameInstance::OnKey);
+		DelegateHandles.OnMouseButton = CMouse::OnButtonEvent.Add(this, &CGameInstance::OnMouseButton);
+		DelegateHandles.OnActorCreated = CScene::OnActorCreated.Add(this, &CGameInstance::OnActorCreated);
+		DelegateHandles.OnActorDeleted = CScene::OnActorDeleted.Add(this, &CGameInstance::OnActorDeleted);
+		DelegateHandles.OnPauseMenuOpened = UI::OnPauseMenuOpened.Add(this, &CGameInstance::OnPauseMenuToggled);
+
+		const auto EnemyActors = Scene->GetAllOfType<CEnemy>();
+		for (const auto& EnemyActor : EnemyActors) {
+			IEnemyController* Controller = EnemyActor->GetController();
+			if (!Controller) {
+				continue;
+			}
+			if (Controller->GetControllerType() == EControllerType::Patrol) {
+				static_cast<CPatrolController*>(Controller)->SetTarget(GetPlayer(0));
+			}
+		}
+
+		OnInitialize();
+	}
+
+	void CGameInstance::Destroy()
+	{
+		LK_TRACE_TAG("GameInstance", "Destroy: {}", Spec.InstanceName);
+
+		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
+		CKeyboard::OnKeyEvent.Remove(DelegateHandles.OnKey);
+		CMouse::OnButtonEvent.Remove(DelegateHandles.OnMouseButton);
+		CScene::OnActorCreated.Remove(DelegateHandles.OnActorCreated);
+		CScene::OnActorDeleted.Remove(DelegateHandles.OnActorDeleted);
+		UI::OnPauseMenuOpened.Remove(DelegateHandles.OnPauseMenuOpened);
+		ShutdownSystems();
+
+		Serialize(Spec.LevelFilepath);
+		CloseScene();
+
+		Player.reset();
+		Scene.reset();
+
+		OnShutdown();
+
+		LK_VERIFY(!CPhysicsWorld::IsValid(), "Physics world still active");
+	}
+
+	void CGameInstance::Tick(const float InDeltaTime)
+	{
+		LK_PROFILE_FUNC();
+		OnPreTick(InDeltaTime);
+
+		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
+		DeltaTime = (SceneState == ESceneState::Play) ? InDeltaTime : 0.0f;
+
+		if (!Scene) {
+			if (bOpenSceneNextTick) {
+				OpenScene(SceneToOpen);
+				bOpenSceneNextTick = false;
+			}
+			return;
+		}
+		if (bCloseSceneNextTick) {
+			CloseScene();
+			bCloseSceneNextTick = false;
+			return;
+		}
+
+		CCamera* ActiveCamera = GetActiveCamera();
+		LK_VERIFY(ActiveCamera);
+		const auto [VpWidth, VpHeight] = GetActiveViewportSize();
+		ActiveCamera->SetViewportSize(VpWidth, VpHeight);
+		CRenderer::BeginScene(*ActiveCamera);
+
+		Player->Tick(DeltaTime);
+		Scene->Tick(DeltaTime);
+
+		if (bRaycastScene) {
+			RaycastSceneAtMouse();
+		}
+
+		CRenderer::DrawQuad(
+			Player->GetPosition(),
+			Player->GetSize(),
+			*CRenderer::GetTexture(Player->GetTexture()),
+			Player->GetSprite().GetUV(),
+			FColor::White,
+			glm::degrees(Player->GetRotation()),
+			Player->GetOutlineThickness(),
+			Player->GetOutlineColor());
+
+		OnPostTick(InDeltaTime);
+
+		Scene->Render();
+	}
+
+	CCamera* CGameInstance::GetActiveCamera() const
+	{
+		return (Player ? &Player->GetCamera() : nullptr);
+	}
+
+	std::shared_ptr<CPlayer> CGameInstance::GetPlayer(const std::size_t Idx) const
+	{
+		LK_ASSERT(Idx == 0, "Only 1 player supported (for now)");
+		return Player;
+	}
+
+	void CGameInstance::PauseGame()
+	{
+		LK_DEBUG_TAG("GameInstance", "Game paused");
+		CPhysicsWorld::Pause();
+		if (Scene) {
+			Scene->SetState(ESceneState::Pause);
+		}
+	}
+
+	void CGameInstance::ResumeGame()
+	{
+		LK_DEBUG_TAG("GameInstance", "Game resumed");
+		CPhysicsWorld::Unpause();
+		if (Scene) {
+			Scene->SetState(ESceneState::Play);
+		}
+	}
+
+	bool CGameInstance::IsGamePaused()
+	{
+		return (Scene ? (Scene->GetState() == ESceneState::Pause) : true);
+	}
+
+	std::uint16_t CGameInstance::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
+	{
+		static FRayCast RayData;
+		HitResults.clear();
+
+		const glm::vec2 MousePos = GetMouseInViewportSpace();
+		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f)) {
+			return 0;
+		}
+
+		const CCamera& Camera = *GetActiveCamera();
+		Physics::CastRay(
+			RayData,
+			Camera.GetPosition(),
+			Camera.GetViewMatrix(),
+			Camera.GetProjectionMatrix(),
+			MousePos.x,
+			MousePos.y);
+
+		for (const auto& Actor : TargetScene->GetActors()) {
+			const glm::vec2 Pos = Actor->GetPosition();
+			const glm::vec2 Size = Actor->GetSize();
+			const glm::vec2 HalfSize = Size * 0.50f;
+			const glm::vec2 BoxMin = Pos - HalfSize;
+			const glm::vec2 BoxMax = Pos + HalfSize;
+
+			float T = 0.0f;
+			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T)) {
+				HitResults.push_back(FHitResult{Actor->GetHandle(), Actor, T});
+
+				if (Config.Debug.bDrawRayHits) {
+					CDebugRenderer::DrawRayHit(RayData, T);
+				}
+			}
+		}
+
+		if (HitResults.empty()) {
+			return 0;
+		}
+
+		std::sort(HitResults.begin(), HitResults.end(), [](const auto& Lhs, const auto& Rhs)
+		{
+			return Lhs.Distance < Rhs.Distance;
+		});
+		return static_cast<std::uint16_t>(HitResults.size());
+	}
+
+	std::uint16_t CGameInstance::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
+	{
+		LK_UNUSED(TargetScene, HitResults);
+		return 0;
+	}
+
+	void CGameInstance::OpenScene(const std::filesystem::path& ScenePath)
+	{
+		if (ScenePath.empty()) {
+			LK_ERROR_TAG("GameInstance", "No scene to open");
+			return;
+		}
+		if (Scene) {
+			LK_ERROR_TAG("GameInstance", "A scene is already open");
+			return;
+		}
+
+		CPhysicsWorld::Initialize(LevelData.Gravity);
+
+		Scene = std::make_shared<CScene>(Spec.InstanceName);
+		Scene->Deserialize(ScenePath);
+		Scene->SetState(ESceneState::Play);
+		CreatePlayer();
+		LK_VERIFY(Player);
+		CPhysicsWorld::SetPreSolve(&CGameInstance::PreSolve, Player.get());
+
+		OnSceneOpened();
+
+		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
+		Framebuffer->GetImage(0)->Invalidate();
+		Framebuffer->Invalidate();
+
+		CWindow::Get().SetTitle(Format("platformer2d - {} - {} ({})", Spec.InstanceName, Scene->GetName(), Core::GetPlatformName()));
+		SceneToOpen.clear();
+	}
+
+	void CGameInstance::CloseScene()
+	{
+		if (!Scene) {
+			LK_WARN_TAG("GameInstance", "Cannot close scene, none is active");
+			return;
+		}
+
+		OnSceneClosing();
+
+		UI::ClosePauseMenu();
+
+		LK_TRACE_TAG("GameInstance", "Release current scene and player");
+		Scene.reset();
+		Player.reset();
+
+		LevelData.CachedGravity = CPhysicsWorld::GetGravity();
+		CPhysicsWorld::Destroy();
+
+		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
+		Framebuffer->GetImage(0)->Invalidate();
+		Framebuffer->Invalidate();
+
+		CWindow::Get().SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
+		LK_DEBUG_TAG("GameInstance", "Scene closed");
+	}
+
+	void CGameInstance::CreatePlayer()
+	{
+		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec, Spec.Player.BodySpec);
+
+		Player->OnJumped.Add([](const FPlayerData& PlayerData)
+		{
+			LK_TRACE("Player {} jumped", PlayerData.ID);
+		});
+
+		Player->OnLanded.Add([](const FPlayerData& PlayerData)
+		{
+			LK_TRACE("Player {} landed", PlayerData.ID);
+		});
+
+		Player->OnDied.Add([this](const FPlayerData&)
+		{
+			CCheckpointSystem& Checkpoint = GetSystem<CCheckpointSystem>();
+			if (Checkpoint.HasCheckpoint()) {
+				Checkpoint.RestoreToPlayer(*Player);
+			} else {
+				LK_DEBUG_TAG("GameInstance", "Player died, no checkpoint -> respawn at PlayerSpawn");
+				GetSystem<CGameplaySystem>().Teleport(Player, LevelData.PlayerSpawn);
+				auto& HC = Player->GetComponent<FHealthComponent>();
+				HC.SetMaxHealth();
+
+				CBody* Body = Player->GetBody();
+				LK_ASSERT(Body);
+				Body->SetEnabled(true);
+				Body->SetLinearVelocity({0.0f, 0.0f});
+			}
+		});
+
+		GetSystem<CGameplaySystem>().Teleport(Player, LevelData.PlayerSpawn);
+		Player->GetCamera().SetZoom(LevelData.SceneLoadCameraZoom);
+
+		OnPlayerCreated();
+	}
+
+	void CGameInstance::SaveScene()
+	{
+		if (!Scene) {
+			LK_WARN_TAG("GameInstance", "Cannot save scene, none is active");
+			return;
+		}
+
+		const std::filesystem::path ScenePath = Scene->GetFilepath();
+		LK_INFO_TAG("GameInstance", "Save scene: {}", ScenePath);
+		LastSceneFilepath = ScenePath;
+		if (SceneToOpen.empty()) {
+			SceneToOpen = LastSceneFilepath;
+		}
+		Scene->Serialize(ScenePath);
+	}
+
+	void CGameInstance::MousePickScene()
+	{
+		CCamera* Camera = GetActiveCamera();
+		if (!Scene || !Camera) {
+			return;
+		}
+
+		static std::vector<FHitResult> HitResults;
+		const std::uint16_t Picked = PickSceneAtMouse(Scene, HitResults);
+		if (Picked > 0) {
+			const FHitResult& Hit = HitResults.at(0);
+			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
+				CSelectionContext::Select(Ref->GetHandle());
+			}
+		}
+	}
+
+	void CGameInstance::RaycastSceneAtMouse()
+	{
+		CCamera* Camera = GetActiveCamera();
+		if (!Scene || !Camera) {
+			return;
+		}
+
+		static std::vector<FHitResult> HitResults;
+		const std::uint16_t Hits = RaycastScene(Scene, HitResults);
+		LK_UNUSED(Hits);
+	}
+
+	void CGameInstance::OnKey(const FKeyData& Data)
+	{
+		switch (Data.Key) {
+			case EKey::Escape:
+				if (Data.State == EKeyState::Pressed) {
+					UI::TogglePauseMenu();
+				}
+				break;
+			default:
+				break;
+		}
+
+		if (Player) {
+			Player->OnKey(Data);
+		}
+	}
+
+	void CGameInstance::OnMouseButton(const FMouseButtonData& Data)
+	{
+		LK_TRACE_TAG("GameInstance", "Button={} State={}", Enum::ToString(Data.Button), Enum::ToString(Data.State));
+		switch (Data.Button) {
+			case EMouseButton::Button0:
+				if (Data.State == EMouseButtonState::Pressed) {
+					MousePickScene();
+				}
+				break;
+			default:
+				break;
+		}
+
+		if (Player) {
+			Player->OnMouseButton(Data);
+		}
+	}
+
+	void CGameInstance::OnMouseScroll(const EMouseScrollDirection Direction)
+	{
+		if (Player) {
+			Player->OnMouseScroll(Direction);
+		}
+	}
+
+	void CGameInstance::OnWindowResized(const std::uint16_t InWidth, const std::uint16_t InHeight)
+	{
+		LK_TRACE_TAG("GameInstance", "Window resized: ({}, {})", InWidth, InHeight);
+		ViewportWidth = InWidth;
+		ViewportHeight = InHeight;
+
+		if (Player) {
+			Player->OnWindowResized(InWidth, InHeight);
+		}
+	}
+
+	void CGameInstance::OnPauseMenuToggled(const bool Opened)
+	{
+		LK_TRACE_TAG("GameInstance", "Pause menu toggled, opened={}", Opened);
+		if (!Scene) {
+			return;
+		}
+		if (Opened) {
+			PauseGame();
+		} else {
+			ResumeGame();
+		}
+	}
+
 	glm::vec2 CGameInstance::GetMouseInViewportSpace()
 	{
-		auto [MouseX, MouseY] = CMouse::GetPos();
-		MouseX -= ViewportBounds[0].x;
-		MouseY -= ViewportBounds[0].y;
-		const float ViewportWidth = ViewportBounds[1].x - ViewportBounds[0].x;
-		const float ViewportHeight = ViewportBounds[1].y - ViewportBounds[0].y;
-
+		glm::vec2 MousePos = CMouse::GetPos();
+		MousePos.x -= ViewportBounds[0].x;
+		MousePos.y -= ViewportBounds[0].y;
+		const float VpWidth = ViewportBounds[1].x - ViewportBounds[0].x;
+		const float VpHeight = ViewportBounds[1].y - ViewportBounds[0].y;
 		return glm::vec2(
-			(MouseX / static_cast<float>(ViewportWidth)) * 2.0f - 1.0f,
-			((MouseY / static_cast<float>(ViewportHeight)) * 2.0f - 1.0f) * -1.0f);
+			(MousePos.x / static_cast<float>(VpWidth)) * 2.0f - 1.0f,
+			((MousePos.y / static_cast<float>(VpHeight)) * 2.0f - 1.0f) * -1.0f);
 	}
 
 	glm::vec2 CGameInstance::GetMouseInWorldSpace(const CCamera& Camera)
@@ -51,8 +483,25 @@ namespace platformer2d {
 		if (WorldPos.w != 0.0f) {
 			WorldPos /= WorldPos.w;
 		}
-
 		return WorldPos;
+	}
+
+	void CGameInstance::InitializeSystems()
+	{
+		for (std::unique_ptr<IGameSystem>& System : Systems) {
+			if (System) {
+				System->Initialize(*this);
+			}
+		}
+	}
+
+	void CGameInstance::ShutdownSystems()
+	{
+		for (std::size_t Idx = Systems.size(); Idx > 0; Idx--) {
+			if (Systems[Idx - 1]) {
+				Systems[Idx - 1]->Shutdown();
+			}
+		}
 	}
 
 	void CGameInstance::UpdateViewportBounds()
@@ -61,20 +510,9 @@ namespace platformer2d {
 		ViewportBounds[1] = CWindow::Get().GetSize();
 	}
 
-	void CGameInstance::BindPhysicsEvents()
+	std::pair<std::uint16_t, std::uint16_t> CGameInstance::GetActiveViewportSize() const
 	{
-		DelegateHandles.OnSensorBeginEvent = CPhysicsWorld::OnSensorBeginEvent.Add(this, &CGameInstance::OnSensorBeginEvent);
-		DelegateHandles.OnSensorEndEvent = CPhysicsWorld::OnSensorEndEvent.Add(this, &CGameInstance::OnSensorEndEvent);
-		DelegateHandles.OnContactBeginEvent = CPhysicsWorld::OnContactBeginEvent.Add(this, &CGameInstance::OnContactBeginEvent);
-		DelegateHandles.OnContactEndEvent = CPhysicsWorld::OnContactEndEvent.Add(this, &CGameInstance::OnContactEndEvent);
-	}
-
-	void CGameInstance::UnbindPhysicsEvents()
-	{
-		CPhysicsWorld::OnSensorBeginEvent.Remove(DelegateHandles.OnSensorBeginEvent);
-		CPhysicsWorld::OnSensorEndEvent.Remove(DelegateHandles.OnSensorEndEvent);
-		CPhysicsWorld::OnContactBeginEvent.Remove(DelegateHandles.OnContactBeginEvent);
-		CPhysicsWorld::OnContactEndEvent.Remove(DelegateHandles.OnContactEndEvent);
+		return {ViewportWidth, ViewportHeight};
 	}
 
 	bool CGameInstance::PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
@@ -111,156 +549,6 @@ namespace platformer2d {
 		}
 
 		return true;
-	}
-
-	void CGameInstance::OnSensorBeginEvent(const CSensorBeginEvent& Event)
-	{
-		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("GameInstance", "OnSensorBeginEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		const std::shared_ptr<CPlayer> P = GetPlayer(0);
-		if (!P || (Event.Sensor != P.get()) && (Event.Visitor != P.get())) {
-			return;
-		}
-
-		if (Event.Visitor == P.get()) {
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
-				LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
-				Event.Sensor->SetOutlineEnabled(true);
-
-				std::visit([&](auto&& Data)
-				{
-					using T = std::decay_t<decltype(Data)>;
-					if constexpr (std::is_same_v<T, FDamageInteraction>) {
-						CHealthSystem::ApplyDamage(Event.Visitor, Data.Damage);
-					} else if constexpr (std::is_same_v<T, FPickupInteraction>) {
-						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
-						OnPickupEvent(PlayerRef, *IC);
-					} else if constexpr (std::is_same_v<T, FHealInteraction>) {
-						CHealthSystem::Heal(Event.Visitor, Data.Amount);
-						if (Data.bConsumeOnUse) {
-							LK_DEBUG_TAG("GameInstance", "[TODO] Despawn heal source {}", Event.Sensor->GetName());
-						}
-					} else if constexpr (std::is_same_v<T, FKillzoneInteraction>) {
-						CHealthSystem::Kill(Event.Visitor);
-					} else if constexpr (std::is_same_v<T, FJumppadInteraction>) {
-						if (CBody* B = Event.Visitor->GetBody()) {
-							const glm::vec2 Vel = B->GetLinearVelocity();
-							const float NewX = Data.bPreserveHorizontalVelocity ? Vel.x : 0.0f;
-							B->SetLinearVelocity({NewX, Data.Impulse.y});
-						}
-					} else if constexpr (std::is_same_v<T, FClimbableInteraction>) {
-						static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
-					} else if constexpr (std::is_same_v<T, FCheckpointInteraction>) {
-						CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
-						const std::shared_ptr<CScene> S = GetScene();
-						const std::filesystem::path ScenePath = S ? S->GetFilepath() : LastSceneFilepath;
-						CCheckpointSystem::TrySave(PlayerRef, Data.CheckpointID, ScenePath);
-					}
-				}, IC->GetData());
-			}
-		}
-	}
-
-	void CGameInstance::OnSensorEndEvent(const CSensorEndEvent& Event)
-	{
-		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("GameInstance", "OnSensorEndEvent: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
-		const std::shared_ptr<CPlayer> P = GetPlayer(0);
-		if (!P || (Event.Sensor != P.get()) && (Event.Visitor != P.get())) {
-			return;
-		}
-
-		if (Event.Visitor == P.get()) {
-			if (auto* IC = Event.Sensor->TryGetComponent<FInteractionComponent>()) {
-				LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
-				Event.Sensor->SetOutlineEnabled(false);
-
-				if (IC->GetType() == EInteraction::Climbable) {
-					static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(false);
-				}
-			}
-		}
-	}
-
-	static void OnProjectileContact(CActor* ProjectileActor, CActor* HitActor)
-	{
-		CProjectile* Projectile = static_cast<CProjectile*>(ProjectileActor);
-		if (Projectile->GetOwner() && Projectile->GetOwner()->IsHeldBy(HitActor)) {
-			return;
-		}
-
-		Projectile->BounceCount++;
-
-		LK_ASSERT(HitActor, "Invalid projectile hit");
-		LK_TRACE("{}: Hit: {} ({})", ProjectileActor->GetName(), HitActor->GetName(), Enum::ToString(HitActor->GetActorType()));
-		CHealthSystem::ApplyDamage(HitActor, Projectile->GetDamage());
-
-		if (Projectile->ExplodesOnImpact()) {
-			Projectile->Destroy();
-		} else if (Projectile->BounceCount >= Projectile->MaxBounceCount) {
-			LK_TRACE("{}: Max bounce reached: {}", Projectile->GetName(), Projectile->BounceCount);
-			Projectile->Destroy();
-		}
-	}
-
-	void CGameInstance::OnContactBeginEvent(const CContactBeginEvent& Event)
-	{
-		LK_TRACE_TAG("GameInstance", "OnContactBeginEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
-		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B) {
-			return;
-		}
-
-		const EActorType AType = Event.A->GetActorType();
-		const EActorType BType = Event.B->GetActorType();
-
-		if (AType == EActorType::Projectile) {
-			OnProjectileContact(Event.A, Event.B);
-		} else if (BType == EActorType::Projectile) {
-			OnProjectileContact(Event.B, Event.A);
-		}
-	}
-
-	void CGameInstance::OnContactEndEvent(const CContactEndEvent& Event)
-	{
-		LK_TRACE_TAG("GameInstance", "OnContactEndEvent: A={} B={}", (Event.A ? Event.A->GetName() : "NULL"), (Event.B ? Event.B->GetName() : "NULL"));
-		LK_ASSERT(Event.A && Event.B, "Invalid event references");
-		if (!Event.A || !Event.B) {
-			return;
-		}
-	}
-
-	void CGameInstance::OnPickupEvent(CPlayer& InPlayer, const FInteractionComponent& IC)
-	{
-		const auto& Data = std::get<FPickupInteraction>(IC.GetData());
-		switch (Data.Kind) {
-			case EPickupKind::Item:
-				OnPickupEvent_Item(Data, InPlayer);
-				break;
-			case EPickupKind::Weapon:
-				OnPickupEvent_Rifle(Data, InPlayer);
-				break;
-		}
-	}
-
-	void CGameInstance::OnPickupEvent_Item(const FPickupInteraction& Interaction, CPlayer& InPlayer)
-	{
-		const auto& Object = std::get<FPickupItem>(Interaction.Object);
-		LK_WARN("Item={} ExpireOnPickup={}", Enum::ToString(Object.Type), Interaction.bExpireWhenPickedUp);
-	}
-
-	void CGameInstance::OnPickupEvent_Rifle(const FPickupInteraction& Interaction, CPlayer& InPlayer)
-	{
-		const auto& Object = std::get<FPickupWeapon>(Interaction.Object);
-		const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
-		LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Interaction.bExpireWhenPickedUp);
-		CInventory& Inventory = InPlayer.GetInventory();
-		if (Inventory.IsEmpty()) {
-			std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &InPlayer);
-			Inventory.AddItem(Rifle);
-		} else {
-			LK_WARN_TAG("GameInstance", "Inventory not empty");
-		}
 	}
 
 }

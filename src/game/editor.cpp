@@ -1,20 +1,16 @@
 #include "editor.h"
 
 #include <fstream>
-#include <istream>
 #include <numeric>
+#include <sstream>
 
 #include "core/profiler.h"
-#include "core/timer.h"
 #include "core/window.h"
 #include "core/selectioncontext.h"
 #include "core/string.h"
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "core/math/math.h"
-#include "game/checkpointsystem.h"
-#include "game/gameplaysystem.h"
-#include "game/healthsystem.h"
 #include "game/enemy.h"
 #include "game/player.h"
 #include "game/spawner.h"
@@ -34,10 +30,12 @@
 
 namespace platformer2d {
 
+	static constexpr float UI_BG_ALPHA = 0.70f;
+	static constexpr const char* UI_ID_LEVEL = "Level";
+	static constexpr const char* UI_ID_PLAYER = "Player";
+	static int GizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+
 	namespace {
-		/*************************************
-		 *        GAME SPECIFICATION
-		 *************************************/
 		const FGameSpecification GameSpec = {
 			/* clang-format off */
 			.InstanceName = "Editor",
@@ -62,36 +60,8 @@ namespace platformer2d {
 			/* clang-format on */
 		};
 
-		constexpr float UI_BG_ALPHA = 0.70f;
-		constexpr const char* UI_ID_LEVEL = "Level";
-		constexpr const char* UI_ID_PLAYER = "Player";
-
 		std::weak_ptr<CActor> SelectedActor;
 		std::weak_ptr<CActor> RotatingPlatform;
-
-		const std::array<std::string_view, CRenderer::MaxTextures> TextureNames = {
-			Enum::ToString(ETexture::White),
-			Enum::ToString(ETexture::Background),
-			Enum::ToString(ETexture::Player),
-			Enum::ToString(ETexture::Metal),
-			Enum::ToString(ETexture::Bricks),
-			Enum::ToString(ETexture::Wood),
-		};
-
-		int Gizmo = ImGuizmo::OPERATION::TRANSLATE;
-		bool bRaycastScene = false;
-		glm::vec2 PLAYER_SPAWN = {0.0f, 0.0f};
-		glm::vec2 GRAVITY = {0.0f, -5.0f};
-		glm::vec2 GRAVITY_CACHED = GRAVITY; /* Updated during scene termination. */
-		float SCENE_LOAD_CAMERA_ZOOM = 0.30f;
-
-		/* @todo Remove from here. Just temporary */
-		bool bDrawCircle = false;
-		bool bDrawCircleFilled = false;
-		bool bDrawLine = false;
-		glm::vec3 P1 = {0.30f, -0.40, 0.50f};
-		glm::vec3 DebugRot = {0.0f, 0.0f, 0.0f};
-		float DebugRadius = 0.05f;
 	}
 
 	static void UpdateInputBuffer(const std::size_t Count)
@@ -111,299 +81,96 @@ namespace platformer2d {
 		LK_TRACE_TAG("Editor", "Destructor");
 	}
 
-	void CEditor::Initialize()
+	void CEditor::OnInitialize()
 	{
-		LK_DEBUG_TAG("Editor", "Initialize");
-		LK_VERIFY(Player == nullptr);
-
-		BindPhysicsEvents();
-
-		Deserialize(GameSpec.LevelFilepath);
-		OpenScene(SceneToOpen);
-		LastSceneFilepath = Scene->GetFilepath();
-		LK_DEBUG_TAG("Editor", "Last scene filepath: {}", LastSceneFilepath);
-
-		CCheckpointSystem::LoadFromDisk(GameSpec.LevelFilepath);
-
-		CWindow::OnResized.Add(this, &CEditor::OnWindowResized);
-		CWindow& Window = CWindow::Get();
-		Window.Maximize();
-		UpdateViewportBounds();
-
-		DelegateHandles.OnKey = CKeyboard::OnKeyEvent.Add(this, &CEditor::OnKey);
-		DelegateHandles.OnMouseButton = CMouse::OnButtonEvent.Add(this, &CEditor::OnMouseButton);
+		LK_DEBUG_TAG("Editor", "OnInitialize");
 		DelegateHandles.OnMouseScroll = CMouse::OnScrollEvent.Add(this, &CEditor::OnMouseScroll);
-
-		LK_DEBUG_TAG("Editor", "Initialize editor resources");
 		EditorResources.Initialize();
-
-		DelegateHandles.OnActorCreated = CScene::OnActorCreated.Add([&](const LUUID Handle, std::weak_ptr<CActor> ActorRef)
-		{
-			if (!Scene) {
-				return;
-			}
-			if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr) {
-				LK_TRACE_TAG("Editor", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
-				LK_ASSERT(Scene);
-				UpdateInputBuffer(Scene->GetActors().size());
-			}
-		});
-
-		DelegateHandles.OnActorDeleted = CScene::OnActorDeleted.Add([&](const LUUID Handle)
-		{
-			if (!Scene) {
-				return;
-			}
-			LK_DEBUG_TAG("Editor", "OnActorDeleted: {}", Handle);
-			UpdateInputBuffer(Scene->GetActors().size());
-			UI::Widget::OnActorDeleted(Handle);
-		});
-
-		DelegateHandles.OnPauseMenuOpened = UI::OnPauseMenuOpened.Add([&](const bool Opened)
-		{
-			if (!Scene) {
-				LK_TRACE_TAG("Editor", "Pause menu toggled, no scene active");
-				return;
-			}
-
-			if (Opened) {
-				PauseGame();
-			} else {
-				ResumeGame();
-			}
-		});
-
-		/**
-		 * Target player 0 by default.
-		 * Has to be done here because the scene serialization does not
-		 * guarantee the player instance is valid by the time the controller instance
-		 * is constructed and OnPossess is invoked.
-		 *
-		 * In the future a better approach would be to ensure player instances are
-		 * created first.
-		 */
-		const auto EnemyActors = Scene->GetAllOfType<CEnemy>();
-		for (const auto& EnemyActor : EnemyActors) {
-			IEnemyController* Controller = EnemyActor->GetController();
-			if (!Controller) {
-				continue;
-			}
-
-			const EControllerType ControllerType = Controller->GetControllerType();
-			if (ControllerType == EControllerType::Patrol) {
-				static_cast<CPatrolController*>(Controller)->SetTarget(GetPlayer(0));
-			}
-		}
 	}
 
-	void CEditor::Destroy()
+	void CEditor::OnShutdown()
 	{
-		LK_DEBUG_TAG("Editor", "Destroy");
-		/* Release bound delegates. */
-		CWindow::OnResized.Remove(DelegateHandles.OnWindowResized);
-		CKeyboard::OnKeyEvent.Remove(DelegateHandles.OnKey);
-		CMouse::OnButtonEvent.Remove(DelegateHandles.OnMouseButton);
+		LK_DEBUG_TAG("Editor", "OnShutdown");
 		CMouse::OnScrollEvent.Remove(DelegateHandles.OnMouseScroll);
-		UnbindPhysicsEvents();
-		CScene::OnActorCreated.Remove(DelegateHandles.OnActorCreated);
-		CScene::OnActorDeleted.Remove(DelegateHandles.OnActorDeleted);
-		UI::OnPauseMenuOpened.Remove(DelegateHandles.OnPauseMenuOpened);
-
-		Serialize(GameSpec.LevelFilepath);
-		CloseScene();
-
-		LK_DEBUG_TAG("Editor", "Release level resources");
-		Player.reset();
-		Player = nullptr;
-		Scene.reset();
-		Scene = nullptr;
-
 		EditorResources.Destroy();
-		LK_VERIFY(!CPhysicsWorld::IsValid(), "Physics world still active");
 	}
 
-	void CEditor::OnAttach()
+	void CEditor::OnSceneOpened()
 	{
-		LK_DEBUG_TAG("Editor", "OnAttach");
-		Initialize();
+		const float InitWidth = (EditorViewportWidth > 0) ? static_cast<float>(EditorViewportWidth) : SCREEN_WIDTH;
+		const float InitHeight = (EditorViewportHeight > 0) ? static_cast<float>(EditorViewportHeight) : SCREEN_HEIGHT;
+
+		FActorSpecification CameraSpec;
+		CameraSpec.Name = "EditorCamera";
+		EditorCamera = std::make_shared<CActor>(CameraSpec);
+		auto& CamComp = EditorCamera->AddComponent<FCameraComponent>();
+		std::shared_ptr<CEditorCamera> Camera = std::make_shared<CEditorCamera>(InitWidth, InitHeight);
+		CamComp.Camera = Camera;
+
+		const glm::vec2 InitPos = (bHasSavedEditorCameraState ? EditorCameraSavedPos : LevelData.PlayerSpawn);
+		const float InitZoom = (bHasSavedEditorCameraState ? EditorCameraSavedZoom : LevelData.SceneLoadCameraZoom);
+		Camera->SetPosition(InitPos);
+		Camera->SetZoom(InitZoom);
+		Camera->SetLerpEnabled(PendingEditorCameraLerp);
+		Camera->SetActive(true);
+		bUseEditorCamera = true;
 	}
 
-	void CEditor::OnDetach()
+	void CEditor::OnSceneClosing()
 	{
-		LK_DEBUG_TAG("Editor", "OnDetach");
-		Destroy();
+		if (CEditorCamera* EC = GetEditorCamera()) {
+			EditorCameraSavedPos = EC->GetPosition();
+			EditorCameraSavedZoom = EC->GetZoom();
+			bHasSavedEditorCameraState = true;
+			EC->SetActive(false);
+		}
+
+		SaveScene();
+		EditorCamera.reset();
+		bUseEditorCamera = true;
 	}
 
-	void CEditor::Tick(const float InDeltaTime)
+	void CEditor::OnPreTick(const float InDeltaTime)
 	{
-		LK_PROFILE_FUNC();
 		if (bPendingViewportResize) {
 			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
 			bPendingViewportResize = false;
 		}
 
-		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
-		if (SceneState == ESceneState::Play) {
-			DeltaTime = InDeltaTime;
-		} else {
-			/* Freeze the scene. */
-			DeltaTime = 0.0f;
-		}
-
 		if (!Scene) {
-			if (bOpenSceneNextTick) {
-				OpenScene(SceneToOpen);
-				bOpenSceneNextTick = false;
-			}
-			return;
-		} else if (bCloseSceneNextTick) {
-			CloseScene();
-			bCloseSceneNextTick = false;
 			return;
 		}
-
-		CCamera* ActiveCamera = GetActiveCamera();
-		LK_VERIFY(ActiveCamera);
-		ActiveCamera->SetViewportSize(EditorViewportWidth, EditorViewportHeight);
 
 		if (CEditorCamera* EC = GetEditorCamera(); EC && bUseEditorCamera) {
 			EC->Tick(InDeltaTime, bEditorViewportHovered);
 		}
 
-		CRenderer::BeginScene(*ActiveCamera);
-
 		if (std::shared_ptr<CActor> Selected = Scene->GetActor(CSelectionContext::GetSelected())) {
 			SelectedActor = Selected;
 		}
-
-		Player->Tick(DeltaTime);
-		Scene->Tick(DeltaTime);
-
-		if (bRaycastScene) {
-			RaycastScene();
-		}
-
-		/* Render player. */
-		CRenderer::DrawQuad(
-			Player->GetPosition(),
-			Player->GetSize(),
-			*CRenderer::GetTexture(Player->GetTexture()),
-			Player->GetSprite().GetUV(),
-			FColor::White,
-			glm::degrees(Player->GetRotation()),
-			Player->GetOutlineThickness(),
-			Player->GetOutlineColor());
-
-		/* @fixme Just temporarily here */
-		if (bDrawCircle) {
-			CRenderer::DrawCircle(P1, DebugRot, DebugRadius, FColor::Red);
-		}
-		if (bDrawCircleFilled) {
-			CRenderer::DrawCircleFilled(P1, DebugRadius, FColor::Red, 5.0f);
-		}
-		if (bDrawLine) {
-			CRenderer::DrawLine(glm::vec3(0.0f, 0.0f, 1.0f), P1, FColor::Black, 6);
-		}
-
-		UI::RenderChainPreview(Scene);
-
-		Scene->Render();
 	}
 
-	void CEditor::RenderUI()
+	void CEditor::OnPostTick(const float InDeltaTime)
 	{
-		LK_PROFILE_FUNC();
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags)) {
-			ImGui::PopStyleVar(2);
-			return;
-		}
-
-		UI::PrepareViewport();
-		const bool EditorViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
-		ImGui::PopStyleVar(2);
-		if (EditorViewportOpen) {
-			UpdateEditorViewportState();
-			if (Scene) {
-				UI_ViewportTexture();
-			} else {
-				UI::LevelLauncher();
-			}
-
-			UI_Level();
-
-			if (Scene) {
-				UI::Statistics();
-				UI::PlayerHud(Player);
-				UI::SelectionPanel();
-				UI_DrawGizmo();
-			}
-
-			UI::End(); /* ~Viewport */
-		}
-
-		UI::PrepareMenuBar();
-		if (UI::Begin(UI::PanelID::Menubar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
-			UI_MainMenubar();
-			UI::End();
-		}
-
-		UI::PrepareTopBar();
-		if (UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
-			UI_Topbar();
-			UI::End();
-		}
-
-		UI_LeftSidebar();
-
-		UI::End(); /* ~CoreViewport */
+		UI::RenderChainPreview(Scene);
 	}
 
 	CCamera* CEditor::GetActiveCamera() const
 	{
 		if (bUseEditorCamera) {
-			if (CEditorCamera* EC = GetEditorCamera()) {
-				return EC;
-			}
+			return GetEditorCamera();
 		}
 		return (Player ? &Player->GetCamera() : nullptr);
 	}
 
 	CEditorCamera* CEditor::GetEditorCamera() const
 	{
-		if (!EditorCameraActor) {
+		if (!EditorCamera) {
 			return nullptr;
 		}
-		FCameraComponent* CamComp = EditorCameraActor->TryGetComponent<FCameraComponent>();
-		if (!CamComp || !CamComp->Camera) {
-			return nullptr;
-		}
-		return static_cast<CEditorCamera*>(CamComp->Camera.get());
-	}
-
-	std::shared_ptr<CPlayer> CEditor::GetPlayer(const std::size_t Idx) const
-	{
-		LK_ASSERT(Idx == 0, "Only 1 player supported");
-		return Player;
-	}
-
-	void CEditor::PauseGame()
-	{
-		LK_DEBUG_TAG("Editor", "Game paused");
-		CPhysicsWorld::Pause();
-		if (Scene) {
-			Scene->SetState(ESceneState::Pause);
-		}
-	}
-
-	void CEditor::ResumeGame()
-	{
-		LK_DEBUG_TAG("Editor", "Game resumed");
-		CPhysicsWorld::Unpause();
-		if (Scene) {
-			Scene->SetState(ESceneState::Play);
-		}
+		auto& CamComp = EditorCamera->GetComponent<FCameraComponent>();
+		LK_ASSERT(CamComp.Camera);
+		return static_cast<CEditorCamera*>(CamComp.Camera.get());
 	}
 
 	void CEditor::PossessEditorCamera()
@@ -444,58 +211,6 @@ namespace platformer2d {
 		bUseEditorCamera = false;
 	}
 
-	bool CEditor::IsGamePaused()
-	{
-		return (Scene ? (Scene->GetState() == ESceneState::Pause) : true);
-	}
-
-	uint16_t CEditor::RaycastScene(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
-	{
-		static FRayCast RayData;
-		HitResults.clear();
-
-		const glm::vec2 MousePos = GetMouseInViewportSpace();
-		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f)) {
-			return 0;
-		}
-
-		const CCamera& Camera = *GetActiveCamera();
-		Physics::CastRay(
-			RayData,
-			Camera.GetPosition(),
-			Camera.GetViewMatrix(),
-			Camera.GetProjectionMatrix(),
-			MousePos.x,
-			MousePos.y);
-
-		for (const auto& Actor : TargetScene->GetActors()) {
-			const glm::vec2 Pos = Actor->GetPosition();
-			const glm::vec2 Size = Actor->GetSize();
-			const glm::vec2 HalfSize = Size * 0.50f;
-			const glm::vec2 BoxMin = Pos - HalfSize;
-			const glm::vec2 BoxMax = Pos + HalfSize;
-
-			float T = 0.0f;
-			if (Physics::RaycastAABB(RayData, BoxMin, BoxMax, T)) {
-				HitResults.push_back(FHitResult{Actor->GetHandle(), Actor, T});
-
-				if (Config.Debug.bDrawRayHits) {
-					CDebugRenderer::DrawRayHit(RayData, T);
-				}
-			}
-		}
-
-		if (HitResults.empty()) {
-			return 0;
-		}
-
-		std::sort(HitResults.begin(), HitResults.end(), [](auto& Lhs, auto& Rhs)
-		{
-			return Lhs.Distance < Rhs.Distance;
-		});
-		return static_cast<uint16_t>(HitResults.size());
-	}
-
 	static bool PickAABB(const glm::vec2& MouseWorld, const CActor& Actor, float& OutDistance)
 	{
 		const glm::vec2 Pos = Actor.GetPosition();
@@ -504,7 +219,7 @@ namespace platformer2d {
 			return true;
 		}
 		return false;
-	};
+	}
 
 	static bool PickChain(const FChain& Chain, const glm::vec2& Origin, const glm::vec2& Point, const float Threshold)
 	{
@@ -586,7 +301,7 @@ namespace platformer2d {
 		LK_INFO_TAG("Editor", "Serialize: {}", OutFile);
 		YAML::Emitter Out;
 
-		Out << YAML::BeginMap; /* Level */
+		Out << YAML::BeginMap;
 		Out << YAML::Key << "Level" << YAML::Value << LayerName;
 
 		LK_TRACE("LastSceneFilepath: {}", LastSceneFilepath);
@@ -594,8 +309,8 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Editor", "Scene path: {}", ScenePath);
 		Out << YAML::Key << "Scene" << YAML::Value << Core::GetRelativeFromProject(ScenePath);
 
-		Out << YAML::Key << "PlayerSpawn" << YAML::Value << PLAYER_SPAWN;
-		Out << YAML::Key << "CameraZoom" << YAML::Value << SCENE_LOAD_CAMERA_ZOOM;
+		Out << YAML::Key << "PlayerSpawn" << YAML::Value << LevelData.PlayerSpawn;
+		Out << YAML::Key << "CameraZoom" << YAML::Value << LevelData.SceneLoadCameraZoom;
 
 		const CEditorCamera* EC = GetEditorCamera();
 		const glm::vec2 EditorCamPos = EC ? EC->GetPosition() : EditorCameraSavedPos;
@@ -605,16 +320,13 @@ namespace platformer2d {
 		Out << YAML::Key << "EditorCameraZoom" << YAML::Value << EditorCamZoom;
 		Out << YAML::Key << "EditorCameraLerp" << YAML::Value << EditorCamLerp;
 
-		/* Physics */
 		Out << YAML::Key << "Physics";
 		Out << YAML::BeginMap;
-		Out << YAML::Key << "Gravity" << YAML::Value << (Scene ? CPhysicsWorld::GetGravity() : GRAVITY_CACHED);
+		Out << YAML::Key << "Gravity" << YAML::Value << (Scene ? CPhysicsWorld::GetGravity() : LevelData.CachedGravity);
 		Out << YAML::EndMap;
-		/* ~ Physics */
 
-		Out << YAML::EndMap; /* ~Level */
+		Out << YAML::EndMap;
 
-		/* Save scene to its own file. */
 		if (Scene) {
 			Scene->Serialize(ScenePath);
 		}
@@ -641,13 +353,14 @@ namespace platformer2d {
 
 		const YAML::Node Data = YAML::Load(YamlString);
 
-		Serialization::DeserializeProperty("Gravity", GRAVITY, glm::vec2(0.0f, -5.0f), Data);
-		Serialization::DeserializeProperty("PlayerSpawn", PLAYER_SPAWN, glm::vec2(0.0f, 0.0f), Data);
-		Serialization::DeserializeProperty("CameraZoom", SCENE_LOAD_CAMERA_ZOOM, 0.40f, Data);
+		Serialization::DeserializeProperty("Gravity", LevelData.Gravity, glm::vec2(0.0f, -5.0f), Data);
+		Serialization::DeserializeProperty("PlayerSpawn", LevelData.PlayerSpawn, glm::vec2(0.0f, 0.0f), Data);
+		Serialization::DeserializeProperty("CameraZoom", LevelData.SceneLoadCameraZoom, 0.40f, Data);
+		LevelData.CachedGravity = LevelData.Gravity;
 
 		if (Data["EditorCameraPos"]) {
-			Serialization::DeserializeProperty("EditorCameraPos", EditorCameraSavedPos, PLAYER_SPAWN, Data);
-			Serialization::DeserializeProperty("EditorCameraZoom", EditorCameraSavedZoom, SCENE_LOAD_CAMERA_ZOOM, Data);
+			Serialization::DeserializeProperty("EditorCameraPos", EditorCameraSavedPos, LevelData.PlayerSpawn, Data);
+			Serialization::DeserializeProperty("EditorCameraZoom", EditorCameraSavedZoom, LevelData.SceneLoadCameraZoom, Data);
 			bHasSavedEditorCameraState = true;
 		}
 		bool LerpEnabledInit = true;
@@ -657,7 +370,6 @@ namespace platformer2d {
 		}
 		PendingEditorCameraLerp = LerpEnabledInit;
 
-		/* Load the scene. */
 		const YAML::Node& SceneNode = Data["Scene"];
 		LK_ASSERT(!SceneNode.IsNull());
 		if (SceneNode.IsNull()) {
@@ -675,22 +387,20 @@ namespace platformer2d {
 	void CEditor::UpdateEditorViewportState()
 	{
 		UpdateEditorViewportBounds();
-
 		bEditorViewportFocused = ImGui::IsWindowFocused();
 		bEditorViewportHovered = ImGui::IsWindowHovered();
 
-		const auto [PosX, PosY] = CMouse::GetPos();
-		bEditorViewportHovered = (PosX >= EditorViewportBounds[0].x) && (PosY >= EditorViewportBounds[0].y) && (PosX <= EditorViewportBounds[1].x) && (PosY <= EditorViewportBounds[1].y);
+		const glm::vec2 MousePos = CMouse::GetPos();
+		bEditorViewportHovered = (MousePos.x >= EditorViewportBounds[0].x) && (MousePos.y >= EditorViewportBounds[0].y)
+			&& (MousePos.x <= EditorViewportBounds[1].x) && (MousePos.y <= EditorViewportBounds[1].y);
 	}
 
 	void CEditor::UpdateEditorViewportBounds()
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
 		const ImVec2 WindowPos = Window->Pos;
-
 		const ImVec2 RegionMin = ImGui::GetWindowContentRegionMin();
 		const ImVec2 RegionMax = ImGui::GetWindowContentRegionMax();
-
 		EditorViewportBounds[0] = {
 			WindowPos.x + RegionMin.x,
 			WindowPos.y + RegionMin.y};
@@ -701,10 +411,9 @@ namespace platformer2d {
 
 		const float VpWidth = EditorViewportBounds[1].x - EditorViewportBounds[0].x;
 		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
-
-		if ((EditorViewportWidth != static_cast<uint16_t>(VpWidth)) || (EditorViewportHeight != static_cast<uint16_t>(VpHeight))) {
-			EditorViewportWidth = static_cast<uint16_t>(VpWidth);
-			EditorViewportHeight = static_cast<uint16_t>(VpHeight);
+		if ((EditorViewportWidth != static_cast<std::uint16_t>(VpWidth)) || (EditorViewportHeight != static_cast<std::uint16_t>(VpHeight))) {
+			EditorViewportWidth = static_cast<std::uint16_t>(VpWidth);
+			EditorViewportHeight = static_cast<std::uint16_t>(VpHeight);
 			bPendingViewportResize = true;
 		}
 	}
@@ -717,71 +426,196 @@ namespace platformer2d {
 
 	glm::vec2 CEditor::GetMouseInViewportSpace()
 	{
-		auto [MouseX, MouseY] = CMouse::GetPos();
-		MouseX -= EditorViewportBounds[0].x;
-		MouseY -= EditorViewportBounds[0].y;
+		glm::vec2 MousePos = CMouse::GetPos();
+		MousePos.x -= EditorViewportBounds[0].x;
+		MousePos.y -= EditorViewportBounds[0].y;
 		const float VpWidth = EditorViewportBounds[1].x - EditorViewportBounds[0].x;
 		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
 
 		return glm::vec2(
-			(MouseX / static_cast<float>(VpWidth)) * 2.0f - 1.0f,
-			((MouseY / static_cast<float>(VpHeight)) * 2.0f - 1.0f) * -1.0f);
+			(MousePos.x / static_cast<float>(VpWidth)) * 2.0f - 1.0f,
+			((MousePos.y / static_cast<float>(VpHeight)) * 2.0f - 1.0f) * -1.0f);
 	}
 
-	glm::vec2 CEditor::GetMouseInWorldSpace(const CCamera& Camera)
+	void CEditor::OnActorCreated(const LUUID Handle, std::weak_ptr<CActor> ActorRef)
 	{
-		const glm::vec2 MousePos = GetMouseInViewportSpace();
-		if ((MousePos.x < -1.0f) || (MousePos.x > 1.0f) || (MousePos.y < -1.0f) || (MousePos.y > 1.0f)) {
-			return glm::vec2(std::numeric_limits<float>::quiet_NaN());
+		if (!Scene) {
+			return;
 		}
-
-		const glm::vec4 ClipPos = glm::vec4(MousePos.x, MousePos.y, 0.0f, 1.0f);
-		const glm::mat4 InvViewProj = glm::inverse(Camera.GetProjectionMatrix() * Camera.GetViewMatrix());
-		glm::vec4 WorldPos = InvViewProj * ClipPos;
-		if (WorldPos.w != 0.0f) {
-			WorldPos /= WorldPos.w;
+		if (std::shared_ptr<CActor> Actor = ActorRef.lock(); Actor != nullptr) {
+			LK_TRACE_TAG("Editor", "OnActorCreated: {} ({})", Actor->GetName(), Handle);
+			LK_ASSERT(Scene);
+			UpdateInputBuffer(Scene->GetActors().size());
 		}
-
-		return WorldPos;
 	}
 
-	void CEditor::CreatePlayer()
+	void CEditor::OnActorDeleted(const LUUID Handle)
 	{
-		const FGameSpecification& Spec = GetSpecification();
-		FActorSpecification ActorSpec;
-		ActorSpec.Texture = ETexture::Player;
-		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec, Spec.Player.BodySpec);
+		if (!Scene) {
+			return;
+		}
+		LK_DEBUG_TAG("Editor", "OnActorDeleted: {}", Handle);
+		UpdateInputBuffer(Scene->GetActors().size());
+		UI::Widget::OnActorDeleted(Handle);
+	}
 
-		Player->OnJumped.Add([](const FPlayerData& PlayerData)
-		{
-			LK_TRACE("Player {} jumped", PlayerData.ID);
-		});
+	void CEditor::OnKey(const FKeyData& Data)
+	{
+		switch (Data.Key) {
+			case EKey::Q:
+				GizmoOp = -1;
+				break;
+			case EKey::W:
+				GizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+				break;
+			case EKey::E:
+				GizmoOp = ImGuizmo::OPERATION::ROTATE;
+				break;
+#if 0
+			case EKey::R:
+				GizmoOp = ImGuizmo::OPERATION::SCALE;
+				break;
+#endif
+			case EKey::S:
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						if (CKeyboard::IsKeyDown(EKey::LeftControl)) {
+							Serialize(GetSpecification().LevelFilepath);
+						}
+					}
+				}
+				break;
+			case EKey::P:
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						if (IsGamePaused()) {
+							ResumeGame();
+						} else {
+							PauseGame();
+						}
+					}
+				}
+				break;
+			case EKey::Space:
+				if (Data.State == EKeyState::Pressed) {
+					if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl)) {
+						if (IsGamePaused()) {
+							ResumeGame();
+						} else {
+							PauseGame();
+						}
+					}
+				}
+				break;
+			case EKey::Escape:
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						UI::TogglePauseMenu();
+					}
+				}
+				break;
+			case EKey::GraveAccent:
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						SelectedActor.reset();
+						CSelectionContext::Select(LUUID::Null);
+						UI::TerrainCreator.OnDeselect();
+					}
+				}
+				break;
+		}
 
-		Player->OnLanded.Add([](const FPlayerData& PlayerData)
-		{
-			LK_TRACE("Player {} landed", PlayerData.ID);
-		});
+		if (Player) {
+			Player->OnKey(Data);
+		}
+	}
 
-		Player->OnDied.Add([this](const FPlayerData& PlayerData)
-		{
-			LK_UNUSED(PlayerData);
-			if (CCheckpointSystem::HasCheckpoint()) {
-				LK_INFO_TAG("Editor", "Player died, checkpoint exists");
-				CCheckpointSystem::RestoreToPlayer(*Player);
-			} else {
-				LK_INFO_TAG("Editor", "Player died, no checkpoint -> respawn at PLAYER_SPAWN");
-				CGameplaySystem::Teleport(Player, PLAYER_SPAWN);
-				auto& HC = Player->GetComponent<FHealthComponent>();
-				HC.SetMaxHealth();
+	void CEditor::OnMouseButton(const FMouseButtonData& Data)
+	{
+		LK_TRACE_TAG("Editor", "Button={} NewState={}", Enum::ToString(Data.Button), Enum::ToString(Data.State));
 
-				CBody* Body = Player->GetBody();
-				LK_ASSERT(Body);
-				Body->SetEnabled(true);
-				Body->SetLinearVelocity({0.0f, 0.0f});
+		switch (Data.Button) {
+			case EMouseButton::Button0:
+				if (Data.State == EMouseButtonState::Pressed) {
+					if (bEditorViewportFocused) {
+						MousePickScene();
+						if (Scene) {
+							SelectedActor = Scene->GetActor(CSelectionContext::GetSelected());
+						}
+					}
+				}
+				break;
+			default:
+				break;
+		}
+
+		if (Player) {
+			Player->OnMouseButton(Data);
+		}
+	}
+
+	void CEditor::OnMouseScroll(const EMouseScrollDirection Direction)
+	{
+		LK_TRACE_TAG("Editor", "{} UseEditorCamera={}", Enum::ToString(Direction), bUseEditorCamera);
+		if (bUseEditorCamera) {
+			if (auto* EC = GetEditorCamera(); EC && bEditorViewportHovered) {
+				EC->OnMouseScrolled(Direction);
 			}
-		});
+		}
 
-		CGameplaySystem::Teleport(Player, PLAYER_SPAWN);
+		if (Player) {
+			Player->OnMouseScroll(Direction);
+		}
+	}
+
+	void CEditor::RenderUI()
+	{
+		LK_PROFILE_FUNC();
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+		if (!UI::Begin(UI::PanelID::CoreViewport, nullptr, UI::CoreViewportFlags)) {
+			ImGui::PopStyleVar(2);
+			return;
+		}
+
+		UI::PrepareViewport();
+		const bool EditorViewportOpen = UI::Begin(UI::PanelID::Viewport, nullptr, UI::ViewportFlags);
+		ImGui::PopStyleVar(2);
+		if (EditorViewportOpen) {
+			UpdateEditorViewportState();
+			if (Scene) {
+				UI_ViewportTexture();
+			} else {
+				UI::LevelLauncher();
+			}
+
+			UI_Level();
+
+			if (Scene) {
+				UI::Statistics();
+				UI::PlayerHud(Player);
+				UI::SelectionPanel();
+				UI_DrawGizmo();
+			}
+
+			UI::End();
+		}
+
+		UI::PrepareMenuBar();
+		if (UI::Begin(UI::PanelID::Menubar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
+			UI_MainMenubar();
+			UI::End();
+		}
+
+		UI::PrepareTopBar();
+		if (UI::Begin(UI::PanelID::Topbar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar)) {
+			UI_Topbar();
+			UI::End();
+		}
+
+		UI_LeftSidebar();
+
+		UI::End();
 	}
 
 	void CEditor::UI_Level()
@@ -895,11 +729,11 @@ namespace platformer2d {
 			{
 				UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
 				if (ImGui::Button("Serialize")) {
-					Serialize(GameSpec.LevelFilepath);
+					Serialize(GetSpecification().LevelFilepath);
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Deserialize")) {
-					Deserialize(GameSpec.LevelFilepath);
+					Deserialize(GetSpecification().LevelFilepath);
 				}
 			}
 
@@ -923,13 +757,13 @@ namespace platformer2d {
 			UI::BeginPropertyGrid();
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Gravity", GRAVITY, 0.0f, 0.010f);
+			UI::Widget::DragFloat2("Gravity", LevelData.Gravity, 0.0f, 0.010f);
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Player Spawn", PLAYER_SPAWN, 0.0f, 0.010f);
+			UI::Widget::DragFloat2("Player Spawn", LevelData.PlayerSpawn, 0.0f, 0.010f);
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Initial Camera Zoom", SCENE_LOAD_CAMERA_ZOOM, 0.01f, 0.0f, 1.0f);
+			UI::Widget::DragFloat("Initial Camera Zoom", LevelData.SceneLoadCameraZoom, 0.01f, 0.0f, 1.0f);
 
 			if (CEditorCamera* EC = GetEditorCamera()) {
 				ImGui::TableNextRow();
@@ -945,26 +779,6 @@ namespace platformer2d {
 					EC->SetLerpSnapDistance(LerpSnap);
 				}
 			}
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Checkbox("Draw Circle", bDrawCircle);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Checkbox("Draw Circle Filled", bDrawCircleFilled);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Checkbox("Draw Line", bDrawLine);
-
-			ImGui::TableNextRow();
-			ImGui::Spacing();
-			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Radius", DebugRadius, 0.010f, 0.0f, 10.0f);
-
 			UI::EndPropertyGrid();
 			ImGui::TreePop();
 		}
@@ -973,9 +787,8 @@ namespace platformer2d {
 		}
 
 		UI::Font::Pop();
-		UI::End(); /* Sidebar2 */
+		UI::End();
 
-		/* BottomBar */
 		UI::PrepareBottomBar();
 		if (UI::Begin(UI::PanelID::BottomBar)) {
 			UI::End();
@@ -999,11 +812,10 @@ namespace platformer2d {
 		ImGui::Image(
 			static_cast<ImTextureID>(ViewportTexture->GetID()),
 			WindowSize,
-			ImVec2(0, 1), /* UV0 */
-			ImVec2(1, 0), /* UV1 */
-			ImVec4(1, 1, 1, 1), /* Tint Color   */
-			ImVec4(1, 1, 1, 0) /* Border Color */
-		);
+			ImVec2(0, 1),
+			ImVec2(1, 0),
+			ImVec4(1, 1, 1, 1),
+			ImVec4(1, 1, 1, 0));
 	}
 
 	void CEditor::UI_DrawGizmo()
@@ -1017,8 +829,10 @@ namespace platformer2d {
 			ImGui::Begin(Window->Name, nullptr, UI::CoreViewportFlags | ImGuiWindowFlags_NoScrollbar);
 
 			CCamera* Camera = GetActiveCamera();
-			if (Camera && UI::DrawGizmo(Gizmo, *SelectedRef, Camera->GetViewMatrix(), Camera->GetProjectionMatrix())) {
-				Player->SetAwake(true);
+			if (Camera) {
+				if (UI::DrawGizmo(GizmoOp, *SelectedRef, Camera->GetViewMatrix(), Camera->GetProjectionMatrix())) {
+					Player->SetAwake(true);
+				}
 			}
 
 			ImGui::End();
@@ -1027,7 +841,7 @@ namespace platformer2d {
 
 	void CEditor::UI_Topbar()
 	{
-		constexpr float WindowHeight = 32.0f; /* ImGui pixel limitation. */
+		constexpr float WindowHeight = 32.0f;
 		constexpr float EdgeOffset = 4.0f;
 		static constexpr float ButtonSize = 42.0f + 5.0f;
 
@@ -1041,10 +855,9 @@ namespace platformer2d {
 			return Clicked;
 		};
 
-		/* Play Icon */
 		{
 			std::shared_ptr<CTexture> Image;
-			uint32_t Color = 0;
+			std::uint32_t Color = 0;
 
 			ESceneState SceneState = ESceneState::None;
 			if (Scene) {
@@ -1066,7 +879,7 @@ namespace platformer2d {
 				ImGui::BeginDisabled();
 			}
 			if (ToolbarButton(Image, Color)) {
-				LK_ASSERT(Scene); /* Button should only be active if a scene is active. */
+				LK_ASSERT(Scene);
 				if (SceneState == ESceneState::Play) {
 					PauseGame();
 				} else if (SceneState == ESceneState::Pause) {
@@ -1078,7 +891,6 @@ namespace platformer2d {
 			}
 		}
 
-		/* Camera switch buttons. */
 		{
 			const bool SceneExists = HasScene();
 			const bool PlayerActive = !bUseEditorCamera;
@@ -1147,7 +959,7 @@ namespace platformer2d {
 
 		if (ImGui::BeginMenu("Editor")) {
 			if (ImGui::MenuItem("Save", "Ctrl+S")) {
-				Serialize(GameSpec.LevelFilepath);
+				Serialize(GetSpecification().LevelFilepath);
 			}
 
 			if (ImGui::MenuItem("Close")) {
@@ -1185,7 +997,7 @@ namespace platformer2d {
 				ImGui::EndDisabled();
 			}
 
-			ImGui::EndMenu(); /* ~Scene */
+			ImGui::EndMenu();
 		}
 
 		ImGui::EndMenuBar();
@@ -1219,7 +1031,6 @@ namespace platformer2d {
 		UI::BannerTextCentralized("Levels", EFont::SourceSansPro, EFontModifier::Bold);
 		UI::ShiftCursorY(Avail.y * 0.15f);
 
-		/* Button: Test Level */
 		{
 			UI::ShiftCursorX((Avail.x * 0.50f) - (ButtonSize.x * 0.50f));
 			UI::FScopedColor ButtonColor(ImGuiCol_Button, RGBA32::DarkCyan);
@@ -1229,7 +1040,6 @@ namespace platformer2d {
 			}
 		}
 
-		/* Button: Lukkelele's World */
 		{
 			UI::ShiftCursorX((Avail.x * 0.50f) - (ButtonSize.x * 0.50f));
 			UI::FScopedColor ButtonColor(ImGuiCol_Button, RGBA32::DarkCyan);
@@ -1239,267 +1049,4 @@ namespace platformer2d {
 			}
 		}
 	}
-
-	void CEditor::OnWindowResized(const std::uint16_t InWidth, const std::uint16_t InHeight)
-	{
-		LK_TRACE_TAG("Editor", "Window resized: ({}, {})", ViewportWidth, ViewportHeight);
-		ViewportWidth = InWidth;
-		ViewportHeight = InHeight;
-
-		if (Player) {
-			Player->OnWindowResized(InWidth, InHeight);
-		}
-	}
-
-	void CEditor::OnKey(const FKeyData& Data)
-	{
-		switch (Data.Key) {
-			case EKey::Q:
-				Gizmo = -1;
-				break;
-			case EKey::W:
-				Gizmo = ImGuizmo::OPERATION::TRANSLATE;
-				break;
-			case EKey::E:
-				Gizmo = ImGuizmo::OPERATION::ROTATE;
-				break;
-#if 0 /* SCALING NEEDS TO BE SUPPORTED */
-			case EKey::R:
-				Gizmo = ImGuizmo::OPERATION::SCALE;
-				break;
-#endif
-			case EKey::S:
-				if (Data.State == EKeyState::Pressed) {
-					if (bEditorViewportFocused) {
-						if (CKeyboard::IsKeyDown(EKey::LeftControl)) {
-							Serialize(GameSpec.LevelFilepath);
-						}
-					}
-				}
-				break;
-			case EKey::P:
-				if (Data.State == EKeyState::Pressed) {
-					if (bEditorViewportFocused) {
-						if (IsGamePaused()) {
-							ResumeGame();
-						} else {
-							PauseGame();
-						}
-					}
-				}
-				break;
-			case EKey::Space:
-				if (Data.State == EKeyState::Pressed) {
-					if (CKeyboard::IsKeyDown(EKey::LeftControl) || CKeyboard::IsKeyDown(EKey::RightControl)) {
-						if (IsGamePaused()) {
-							ResumeGame();
-						} else {
-							PauseGame();
-						}
-					}
-				}
-				break;
-			case EKey::Escape:
-				if (Data.State == EKeyState::Pressed) {
-					if (bEditorViewportFocused) {
-						UI::TogglePauseMenu();
-					}
-				}
-				break;
-			case EKey::GraveAccent:
-				if (Data.State == EKeyState::Pressed) {
-					if (bEditorViewportFocused) {
-						SelectedActor.reset();
-						CSelectionContext::Select(LUUID::Null);
-						UI::TerrainCreator.OnDeselect();
-					}
-				}
-				break;
-		}
-
-		if (Player) {
-			Player->OnKey(Data);
-		}
-	}
-
-	void CEditor::OnMouseButton(const FMouseButtonData& Data)
-	{
-		switch (Data.State) {
-			case EMouseButtonState::Pressed:
-				if (Data.Button == EMouseButton::Button0) {
-					if (bEditorViewportFocused) {
-						MousePickScene();
-					}
-				}
-				break;
-			case EMouseButtonState::Released:
-				break;
-			case EMouseButtonState::Held:
-				break;
-		}
-	}
-
-	void CEditor::OnMouseScroll(const EMouseScrollDirection Direction)
-	{
-		LK_TRACE_TAG("Editor", "{} UseEditorCamera={}", Enum::ToString(Direction), bUseEditorCamera);
-		if (bUseEditorCamera) {
-			if (auto* EC = GetEditorCamera(); EC && bEditorViewportHovered) {
-				EC->OnMouseScrolled(Direction);
-			}
-		}
-
-		if (Player) {
-			// if (bEditorViewportHovered && CKeyboard::IsAnyKeysDown(EKey::LeftControl, EKey::RightControl)) {
-			Player->OnMouseScroll(Direction);
-		}
-	}
-
-	static void LogHitResults(const std::vector<FHitResult>& HitResults)
-	{
-		LK_DEBUG_TAG("Editor", "Picked={}", HitResults.size());
-		for (const auto& Hit : HitResults) {
-			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
-				LK_DEBUG(R"(Name: "{}" Handle={})", Ref->GetName(), Hit.Handle);
-			}
-		}
-	}
-
-	void CEditor::MousePickScene()
-	{
-		CCamera* Camera = GetActiveCamera();
-		if (!Scene || !Camera) {
-			return;
-		}
-
-		static std::vector<FHitResult> HitResults;
-		const std::uint16_t Picked = PickSceneAtMouse(Scene, HitResults);
-		if (Picked > 0) {
-			const FHitResult& Hit = HitResults.at(0);
-			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
-				CSelectionContext::Select(Ref->GetHandle());
-				SelectedActor = Ref;
-			}
-		}
-	}
-
-	void CEditor::RaycastScene()
-	{
-		CCamera* Camera = GetActiveCamera();
-		if (!Scene || !Camera) {
-			return;
-		}
-
-		static std::vector<FHitResult> HitResults;
-		const std::uint16_t Hits = RaycastScene(Scene, HitResults);
-#if 0 /* Disable for now since selection is overkill for raycasts */
-		if (Hits > 0) {
-			const FHitResult& Hit = HitResults.at(0);
-			if (std::shared_ptr<CActor> Ref = Hit.Ref.lock(); Ref != nullptr) {
-				SelectedActor = Ref;
-			}
-		}
-#endif
-	}
-
-	void CEditor::OpenScene(const std::filesystem::path& ScenePath)
-	{
-		if (ScenePath.empty()) {
-			LK_ERROR_TAG("Editor", "No scene to open");
-			return;
-		}
-		if (Scene) {
-			LK_ERROR_TAG("Editor", "A scene is already open");
-			return;
-		}
-
-		CPhysicsWorld::Initialize(GRAVITY);
-
-		Scene = std::make_shared<CScene>("Editor");
-		Scene->Deserialize(ScenePath);
-		Scene->SetState(ESceneState::Play);
-		CreatePlayer();
-		LK_VERIFY(Player);
-		CPhysicsWorld::SetPreSolve(&CGameInstance::PreSolve, Player.get());
-
-		Player->GetCamera().SetZoom(SCENE_LOAD_CAMERA_ZOOM);
-
-		const float InitWidth = (EditorViewportWidth > 0) ? static_cast<float>(EditorViewportWidth) : SCREEN_WIDTH;
-		const float InitHeight = (EditorViewportHeight > 0) ? static_cast<float>(EditorViewportHeight) : SCREEN_HEIGHT;
-
-		FActorSpecification EditorCamSpec;
-		EditorCamSpec.Name = "EditorCamera";
-		EditorCameraActor = std::make_shared<CActor>(EditorCamSpec);
-		FCameraComponent& EditorCamComp = EditorCameraActor->AddComponent<FCameraComponent>();
-		std::shared_ptr<CEditorCamera> EditorCamera = std::make_shared<CEditorCamera>(InitWidth, InitHeight);
-		EditorCamComp.Camera = EditorCamera;
-
-		const glm::vec2 InitPos = bHasSavedEditorCameraState ? EditorCameraSavedPos : PLAYER_SPAWN;
-		const float InitZoom = bHasSavedEditorCameraState ? EditorCameraSavedZoom : SCENE_LOAD_CAMERA_ZOOM;
-		EditorCamera->SetPosition(InitPos);
-		EditorCamera->SetZoom(InitZoom);
-		EditorCamera->SetLerpEnabled(PendingEditorCameraLerp);
-		EditorCamera->SetActive(true);
-		bUseEditorCamera = true;
-
-		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
-		Framebuffer->GetImage(0)->Invalidate();
-		Framebuffer->Invalidate();
-
-		CWindow::Get().SetTitle(Format("platformer2d - Editor - {} ({})", Scene->GetName(), Core::GetPlatformName()));
-		SceneToOpen.clear();
-	}
-
-	void CEditor::CloseScene()
-	{
-		if (!Scene) {
-			LK_WARN_TAG("Editor", "Cannot close scene, none is active");
-			return;
-		}
-
-		if (CEditorCamera* EC = GetEditorCamera()) {
-			EditorCameraSavedPos = EC->GetPosition();
-			EditorCameraSavedZoom = EC->GetZoom();
-			bHasSavedEditorCameraState = true;
-			EC->SetActive(false);
-		}
-
-		UI::ClosePauseMenu();
-		SaveScene();
-
-		LK_TRACE_TAG("Editor", "Release current scene and player");
-		Scene.reset();
-		Scene = nullptr;
-		Player.reset();
-		Player = nullptr;
-		EditorCameraActor.reset();
-		EditorCameraActor = nullptr;
-		bUseEditorCamera = true;
-
-		GRAVITY_CACHED = CPhysicsWorld::GetGravity();
-		CPhysicsWorld::Destroy();
-
-		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
-		Framebuffer->GetImage(0)->Invalidate();
-		Framebuffer->Invalidate();
-
-		CWindow::Get().SetTitle(Format("platformer2d ({})", Core::GetPlatformName()));
-		LK_DEBUG_TAG("Editor", "Scene closed");
-	}
-
-	void CEditor::SaveScene()
-	{
-		if (!Scene) {
-			LK_WARN_TAG("Editor", "Cannot save scene, none is active");
-			return;
-		}
-
-		std::filesystem::path ScenePath = Scene->GetFilepath();
-		LK_INFO_TAG("Editor", "Save scene: {}", ScenePath);
-		LastSceneFilepath = ScenePath;
-		if (SceneToOpen.empty()) {
-			SceneToOpen = LastSceneFilepath;
-		}
-		Scene->Serialize(ScenePath);
-	}
-
 }
