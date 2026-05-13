@@ -132,8 +132,8 @@ namespace platformer2d::UI {
 
 			ImGui::SameLine();
 			if (ImGui::Button("Teleport Player", ButtonSize)) {
-				auto Player = CGameInstance::Get()->GetPlayer(0);
-				CGameplaySystem::Teleport(Player, {0.0f, 0.0f});
+				CGameInstance* Instance = CGameInstance::Get();
+				Instance->GetSystem<CGameplaySystem>().Teleport(Instance->GetPlayer(0), {0.0f, 0.0f});
 			}
 		}
 
@@ -196,6 +196,8 @@ namespace platformer2d::UI {
 				Aggregate(PhysicsBodyData, NewBodySpec);
 				LK_INFO("{}", CBody::ToString(NewBodySpec));
 
+				CGameInstance* Instance = CGameInstance::Get();
+				CGameplaySystem& Gameplay = Instance->GetSystem<CGameplaySystem>();
 				if (NewBodySpec.Type == EBodyType::Static) {
 					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreateStaticPolygon(
 						ActorAttr.NameBuf.data(),
@@ -204,9 +206,8 @@ namespace platformer2d::UI {
 						NewBodySpec,
 						FColor::Get(ActorAttr.Color));
 
-					auto Player = CGameInstance::Get()->GetPlayer(0);
-					const glm::vec3 PlayerPos = Player->GetPosition();
-					CGameplaySystem::Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
+					const glm::vec3 PlayerPos = Instance->GetPlayer(0)->GetPosition();
+					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
 				} else if (NewBodySpec.Type == EBodyType::Dynamic) {
 					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreatePolygon(
 						ActorAttr.NameBuf.data(),
@@ -215,9 +216,8 @@ namespace platformer2d::UI {
 						FColor::Get(ActorAttr.Color),
 						ActorAttr.Texture);
 
-					auto Player = CGameInstance::Get()->GetPlayer(0);
-					const glm::vec3 PlayerPos = Player->GetPosition();
-					CGameplaySystem::Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
+					const glm::vec3 PlayerPos = Instance->GetPlayer(0)->GetPosition();
+					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
 				}
 			}
 

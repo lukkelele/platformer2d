@@ -24,12 +24,14 @@ namespace platformer2d {
 		void BeginFrame();
 		void EndFrame();
 
-		enum class EMenu
+		enum class EMenu : std::uint8_t
 		{
 			None,
 			MainMenu,
 			LevelLauncher,
+			COUNT
 		};
+		LK_ENUM(EMenu);
 
 		void SetActiveMenu(EMenu InMenu);
 
@@ -48,24 +50,5 @@ namespace platformer2d {
 			Core::FDelegateHandle OnKey;
 		} DelegateHandles;
 	};
-
-	namespace Enum {
-		inline const char* ToString(const CUILayer::EMenu Menu)
-		{
-			const char* S = "";
-#define _(EnumValue)                                       \
-	case CUILayer::EMenu::EnumValue: S = #EnumValue; break
-			switch (Menu) {
-				_(None);
-				_(MainMenu);
-				_(LevelLauncher);
-				default:
-					LK_THROW_ENUM_ERR(Menu);
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+
