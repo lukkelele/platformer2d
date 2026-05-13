@@ -13,12 +13,17 @@ project_library_sources(
 	inventory.cpp
 	item.h
 	itemtype.h
+	gamesystem.h
 	gameplaysystem.h
 	gameplaysystem.cpp
 	healthsystem.h
 	healthsystem.cpp
 	checkpointsystem.h
 	checkpointsystem.cpp
+	interactionsystem.h
+	interactionsystem.cpp
+	projectilesystem.h
+	projectilesystem.cpp
 	runtimelayer.h
 	runtimelayer.cpp
 	rifle.h
