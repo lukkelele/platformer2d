@@ -123,8 +123,9 @@ namespace platformer2d {
 		const std::filesystem::path IconPath = TEXTURES_DIR "/test/test_player.png";
 		SetIcon(IconPath);
 
+		Centralize();
 		if (Spec.bStartMaximized) {
-			Centralize();
+			glfwMaximizeWindow(GlfwWindow);
 		}
 	}
 
@@ -149,12 +150,28 @@ namespace platformer2d {
 
 	void CWindow::SetSize(const uint16_t InWidth, const uint16_t InHeight)
 	{
-		if ((Data.Width != InWidth) || (Data.Height != InHeight)) {
-			LK_TRACE_TAG("Window", "Resize: ({}, {})", InWidth, InHeight);
-			Data.Width = InWidth;
-			Data.Height = InHeight;
-			OnResized.Broadcast(InWidth, InHeight);
+		if ((Data.Width == InWidth) && (Data.Height == InHeight)) {
+			return;
 		}
+
+		LK_TRACE_TAG("Window", "Resize: ({}, {})", InWidth, InHeight);
+		Data.Width = InWidth;
+		Data.Height = InHeight;
+
+		if (GlfwWindow) {
+			int CurrentW = 0;
+			int CurrentH = 0;
+			glfwGetWindowSize(GlfwWindow, &CurrentW, &CurrentH);
+			if ((CurrentW != static_cast<int>(InWidth)) || (CurrentH != static_cast<int>(InHeight))) {
+				if (IsMaximized()) {
+					glfwRestoreWindow(GlfwWindow);
+				}
+				glfwSetWindowSize(GlfwWindow, InWidth, InHeight);
+				Centralize();
+			}
+		}
+
+		OnResized.Broadcast(InWidth, InHeight);
 	}
 
 	void CWindow::SetTitle(std::string_view NewTitle)
@@ -183,6 +200,13 @@ namespace platformer2d {
 	{
 		if (GlfwWindow && !IsMaximized()) {
 			glfwMaximizeWindow(GlfwWindow);
+		}
+	}
+
+	void CWindow::Restore()
+	{
+		if (GlfwWindow && IsMaximized()) {
+			glfwRestoreWindow(GlfwWindow);
 		}
 	}
 

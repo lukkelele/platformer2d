@@ -9,8 +9,9 @@
 #include "core/selectioncontext.h"
 #include "game/spawner.h"
 #include "game/controller/patrolcontroller.h"
-#include "renderer/ui/editor_resources.h"
-#include "renderer/ui/imgui.h"
+#include "editor_resources.h"
+#include "enemytools.h"
+#include "imgui.h"
 #include "ui.h"
 #include "scene/scene.h"
 
@@ -936,8 +937,8 @@ namespace platformer2d::UI {
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large);
 		if (UI::BeginPropertyGrid(80)) {
 			Table::NextRow();
-			UI::Table::Label("Actors");
-			UI::Table::NextColumn();
+			Table::Label("Actors");
+			Table::NextColumn();
 			ImGui::Text("%d", Actors.size() + 1); /* +1 for player */
 			UI::EndPropertyGrid();
 		}

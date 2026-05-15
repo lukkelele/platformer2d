@@ -4,6 +4,7 @@
 #include "game/healthsystem.h"
 #include "game/instance.h"
 #include "game/controller/patrolcontroller.h"
+#include "renderer/renderer.h"
 #include "scene/effectmanager.h"
 
 namespace platformer2d {
@@ -21,6 +22,23 @@ namespace platformer2d {
 		HC.SetMaxHealth(Archetype.MaxHealth);
 		HC.SetHealth(Archetype.MaxHealth);
 
+		std::string_view SpritePath;
+		if (Texture == ETexture::Goblin) {
+			SpritePath = TEXTURES_DIR "/sprites/Goblin.lsprite";
+		}
+		FSpriteReader Reader;
+		std::optional<FSpriteSheet> LoadedSheet = Reader.Read(SpritePath);
+		LK_ASSERT(LoadedSheet, "Failed to read: {}", SpritePath);
+		SpriteSheet = std::move(*LoadedSheet);
+
+		const FSpriteCoord InitialFrame = SpriteSheet.Get(ESpriteFrame::Idle).First();
+		SpriteFrame.Current = InitialFrame;
+		SpriteFrame.Next = InitialFrame;
+
+		const glm::vec2 TilePos{InitialFrame.X, InitialFrame.Y};
+		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet.TileSize);
+		LK_DEBUG_TAG("Enemy", R"([{}] {} Texture="{}" TilePos={})", Name, Enum::ToString(ArchetypeKind), Enum::ToString(Texture), TilePos);
+
 		SetSpawnPoint(InSpec.SpawnPoint);
 		CGameInstance::Get().GetSystem<CGameplaySystem>().Teleport(this, InSpec.SpawnPoint);
 	}
@@ -36,6 +54,14 @@ namespace platformer2d {
 
 		if (Controller) {
 			Controller->Tick(*this, DeltaTime);
+		}
+
+		if (DeltaTime > 0.0f) {
+			CheckCollisions();
+			UpdateMovementState();
+			if (bShouldUpdateSprite) {
+				UpdateSprite();
+			}
 		}
 	}
 
@@ -55,7 +81,11 @@ namespace platformer2d {
 
 	void CEnemy::SetLookDirection(const EDirection InDirection)
 	{
+		if (Data.LookDirection == InDirection) {
+			return;
+		}
 		Data.LookDirection = InDirection;
+		SetSpriteTilePos(SpriteFrame.Current, true);
 	}
 
 	void CEnemy::SetMoveSpeed(const float InSpeed)
@@ -83,10 +113,12 @@ namespace platformer2d {
 	void CEnemy::Jump()
 	{
 		const FEnemyArchetype& Archetype = GetEnemyArchetype(ArchetypeKind);
-		if (!Archetype.bCanJump || !Body) {
+		if (!Archetype.bCanJump || !Body || bJumping) {
 			return;
 		}
 
+		bJumping = true;
+		SetMovementState(EMovementState::Airborne);
 		Body->ApplyImpulse({0.0f, Archetype.JumpImpulse});
 	}
 
@@ -150,10 +182,140 @@ namespace platformer2d {
 		Out << YAML::EndMap; /* ~Controller */
 
 		Out << YAML::Key << "SpawnPoint" << YAML::Value << Data.SpawnPoint;
-		Out << YAML::Key << "Archetype" << YAML::Value << std::to_underlying(ArchetypeKind);
+		Out << YAML::Key << "Archetype" << YAML::Value << static_cast<std::size_t>(ArchetypeKind);
 		Out << YAML::EndMap; /* ~Actor */
 
 		return true;
+	}
+
+	void CEnemy::SetMovementState(const EMovementState State)
+	{
+		if (MovementState == State) {
+			return;
+		}
+
+		MovementState = State;
+	}
+
+	void CEnemy::UpdateMovementState()
+	{
+		if (bJustLanded) {
+			LK_TRACE_TAG("Enemy", "Just landed");
+			/* The idle state will get evaluated to idle/running later. */
+			SetMovementState(EMovementState::Idle);
+			bJustLanded = false;
+		}
+
+		switch (MovementState) {
+			case EMovementState::Idle:
+				OnMovementState_Idle();
+				break;
+
+			case EMovementState::Running:
+				OnMovementState_Running();
+				break;
+
+			case EMovementState::Airborne:
+				OnMovementState_Airborne();
+				break;
+		}
+
+		bShouldUpdateSprite = (SpriteFrame.Current != SpriteFrame.Next);
+	}
+
+	void CEnemy::OnMovementState_Idle()
+	{
+		LK_ASSERT(Body);
+		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
+		if (std::abs(LinearVelocity.x) > CBody::LINEAR_VELOCITY_X_EPSILON) {
+			SetMovementState(EMovementState::Running);
+			return;
+		}
+
+		const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle);
+		LK_ASSERT(IdleAnim, "{}: Missing idle", GetName());
+		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
+		SpriteFrame.Next = IdleAnim->GetFrame(FrameIndex);
+	}
+
+	void CEnemy::OnMovementState_Running()
+	{
+		LK_ASSERT(Body);
+		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
+		if (std::abs(LinearVelocity.x) < CBody::LINEAR_VELOCITY_X_EPSILON) {
+			SetMovementState(EMovementState::Idle);
+			if (const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle); IdleAnim != nullptr) {
+				SpriteFrame.Next = IdleAnim->First();
+			}
+			return;
+		}
+
+		const FSpriteAnimation* WalkAnim = SpriteSheet.Find(ESpriteFrame::Walk);
+		if (WalkAnim == nullptr) {
+			return;
+		}
+		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
+		SpriteFrame.Next = WalkAnim->GetFrame(FrameIndex);
+	}
+
+	void CEnemy::OnMovementState_Airborne()
+	{
+		LK_ASSERT(Body);
+		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
+		if (LinearVelocity.y > CBody::LINEAR_VELOCITY_Y_EPSILON) {
+			if (const FSpriteAnimation* Anim = SpriteSheet.Find(ESpriteFrame::JumpAscend); Anim != nullptr) {
+				SpriteFrame.Next = Anim->First();
+			}
+		} else if (LinearVelocity.y < -CBody::LINEAR_VELOCITY_Y_EPSILON) {
+			if (const FSpriteAnimation* Anim = SpriteSheet.Find(ESpriteFrame::JumpDescend); Anim != nullptr) {
+				SpriteFrame.Next = Anim->First();
+			}
+		}
+	}
+
+	void CEnemy::CheckCollisions()
+	{
+		if (!Body) {
+			return;
+		}
+
+		constexpr int MAX_CONTACTS = 4;
+		const b2BodyId BodyID = Body->GetID();
+		const int Capacity = std::min(b2Body_GetContactCapacity(BodyID), MAX_CONTACTS);
+
+		bool bGrounded = false;
+		std::array<b2ContactData, MAX_CONTACTS> ContactData = { 0 };
+		const int Count = b2Body_GetContactData(BodyID, ContactData.data(), Capacity);
+		for (int Idx = 0; Idx < Count; Idx++) {
+			const b2BodyId BodyA = b2Shape_GetBody(ContactData.at(Idx).shapeIdA);
+			const float Sign = (B2_ID_EQUALS(BodyA, BodyID)) ? -1.0f : 1.0f;
+			if (Sign * ContactData.at(Idx).manifold.normal.y > 0.90f) {
+				bGrounded = true;
+				break;
+			}
+		}
+
+		if (bGrounded && bJumping) {
+			bJumping = false;
+			bJustLanded = true;
+		}
+	}
+
+	void CEnemy::UpdateSprite()
+	{
+		//LK_WARN_TAG("Enemy", "Current={}  Next={}", SpriteFrame.Current, SpriteFrame.Next);
+		SetSpriteTilePos(SpriteFrame.Next);
+		LK_ASSERT(SpriteFrame.Current == SpriteFrame.Next);
+	}
+
+	void CEnemy::SetSpriteTilePos(const FSpriteCoord& InCoord, const bool ForceUpdate)
+	{
+		//LK_TRACE_TAG("Enemy", "SetSpriteTilePos: Forced={} Current={} Next={}", ForceUpdate, SpriteFrame.Current, SpriteFrame.Next); /* @todo: Remove once tested */
+		if (ForceUpdate || (SpriteFrame.Current != InCoord)) {
+			const bool FlipHorizontal = (Data.LookDirection == EDirection::Left);
+			Sprite->SetTilePos(InCoord.X, InCoord.Y, FlipHorizontal);
+			SpriteFrame.Current = InCoord;
+		}
 	}
 
 	void CEnemy::ApplyMoveVelocity(const glm::vec2& InVelocity)
@@ -161,7 +323,6 @@ namespace platformer2d {
 		if (!Body) {
 			return;
 		}
-
 		Body->SetLinearVelocity(InVelocity);
 	}
 
@@ -170,7 +331,6 @@ namespace platformer2d {
 		if (!Body) {
 			return;
 		}
-
 		const glm::vec2 CurrentVel = Body->GetLinearVelocity();
 		Body->SetLinearVelocity(glm::vec2(InVelocity, CurrentVel.y));
 	}

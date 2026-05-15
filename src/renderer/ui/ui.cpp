@@ -1,10 +1,10 @@
 #include "ui.h"
 
+#include "core/settings.h"
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "core/selectioncontext.h"
 #include "game/instance.h"
-#include "game/gameplaysystem.h"
 #include "renderer/color.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/font.h"
@@ -12,14 +12,10 @@
 #include "combo.h"
 #include "ui_core.h"
 #include "widgets.h"
-#include "game/spawner.h"
 #include "game/rifle.h"
 #include "scene/scene.h"
 
 namespace platformer2d::UI {
-	FActorAttributes ActorAttr;
-	FPhysicsBodyData PhysicsBodyData;
-
 	namespace {
 		constexpr auto& ColorArray = FColor::GetArray();
 	}
@@ -33,7 +29,6 @@ namespace platformer2d::UI {
 		if (InTable()) {
 			Table::Label(Str);
 			Table::NextColumn();
-			ShiftCursorX(IndentX);
 			if (ImGui::Checkbox(LabelBuf.data(), &Value)) {
 				Active = true;
 			}
@@ -48,7 +43,7 @@ namespace platformer2d::UI {
 		return Active;
 	}
 
-	bool BeginPropertyGrid(const std::size_t LabelColumnWidth)
+	bool BeginPropertyGrid(const float LabelColumnWidth)
 	{
 		UI::PushID();
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 0));
@@ -89,163 +84,6 @@ namespace platformer2d::UI {
 		return UI::Combo("##Color", Enum::View<EColor>(), Selected);
 	}
 
-	bool ActorAttributes(FActorAttributes& Attr)
-	{
-		bool Updated = false;
-		static constexpr float ColWidth = 180.0f;
-
-		ImGui::BeginTable("##ActorAttributes", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("L", 0, ColWidth);
-		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
-
-		/* Actor Name. */
-		ImGui::TableNextRow();
-		{
-			UI::Table::Label("Name");
-			UI::Table::NextColumn();
-			ImGui::SetNextItemWidth((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
-			ImGui::InputText("##ActorName", Attr.NameBuf.data(), Attr.NameBuf.size());
-		}
-
-		ImGui::TableNextRow();
-		Updated |= UI::DragFloat2("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
-
-		ImGui::TableNextRow();
-		Updated |= UI::DragFloat2("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
-
-		ImGui::TableNextRow();
-		Updated |= UI::TextureDropdown(Attr.Texture);
-
-		ImGui::TableNextRow();
-		Updated |= ColorDropdown(Attr.Color);
-
-		ImGui::EndTable();
-
-		return Updated;
-	}
-
-	void CreatorMenu(std::shared_ptr<CScene> Scene)
-	{
-		const bool WindowOpened = UI::Begin(PanelID::CreatorMenu, nullptr);
-		if (!WindowOpened) {
-			return;
-		}
-		if (!Scene) {
-			UI::End();
-			return;
-		}
-
-		static const std::string FuncID = LK_FUNCSIG;
-		ImGui::PushID(FuncID.c_str());
-
-		{
-			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
-			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
-			static constexpr ImVec2 ButtonSize = ImVec2(142, 50);
-			if (ImGui::Button("Add Spawnpoint", ButtonSize)) {
-				LK_WARN("Add spawnpoint");
-				CSpawner::CreateSpawnpoint("PlayerSpawn", {0.0f, 0.0f});
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("Teleport Player", ButtonSize)) {
-				auto& GameInstance = CGameInstance::Get();
-				GameInstance.GetSystem<CGameplaySystem>().Teleport(GameInstance.GetPlayer(0), {0.0f, 0.0f});
-			}
-		}
-
-		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-		UI::Font::Push(EFont::SourceSansPro, EFontSize::Header, EFontModifier::Bold);
-		const bool CreateMenuOpened = ImGui::TreeNodeEx("Creator", ImGuiTreeNodeFlags_SpanAvailWidth);
-		UI::Font::Pop();
-		if (CreateMenuOpened) {
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
-			UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
-
-			ActorAttributes(ActorAttr);
-
-			/* Menu: Physics body */
-			UI::ShiftCursorY(20);
-			PhysicsBodyMenu(PhysicsBodyData);
-			UI::ShiftCursorY(20);
-
-			ActorCreateButtons(Scene);
-
-			ImGui::TreePop();
-		}
-
-		ImGui::PopID();
-		UI::End();
-	}
-
-	void ActorCreateButtons(std::shared_ptr<CScene> Scene)
-	{
-		LK_ASSERT(Scene);
-		static const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
-
-		ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
-		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, Avail.x * 0.60);
-
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(1);
-
-		/* Button: Create */
-		UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
-		UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
-		UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
-		{
-			UI::FScopedColorStack ButtonColours(
-				ImGuiCol_Button, RGBA32::LightGreen,
-				ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
-				ImGuiCol_ButtonActive, RGBA32::NiceGreen);
-
-			const bool ActorExists = Scene->DoesActorExist(ActorAttr.NameBuf.data());
-			if (ActorExists) {
-				ImGui::BeginDisabled();
-			}
-
-			UI::ShiftCursorX((0.50f * ImGui::GetContentRegionAvail().x) - (0.50f * ButtonSize.x));
-			if (ImGui::Button("Create", ButtonSize)) {
-				FBodySpecification NewBodySpec;
-				Aggregate(PhysicsBodyData, NewBodySpec);
-				LK_INFO("{}", CBody::ToString(NewBodySpec));
-
-				auto& GameInstance = CGameInstance::Get();
-				CGameplaySystem& Gameplay = GameInstance.GetSystem<CGameplaySystem>();
-				if (NewBodySpec.Type == EBodyType::Static) {
-					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreateStaticPolygon(
-						ActorAttr.NameBuf.data(),
-						ActorAttr.Position,
-						ActorAttr.Size,
-						NewBodySpec,
-						FColor::Get(ActorAttr.Color));
-
-					const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
-					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
-				} else if (NewBodySpec.Type == EBodyType::Dynamic) {
-					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreatePolygon(
-						ActorAttr.NameBuf.data(),
-						NewBodySpec,
-						ActorAttr.Size,
-						FColor::Get(ActorAttr.Color),
-						ActorAttr.Texture);
-
-					const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
-					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
-				}
-			}
-
-			if (ActorExists) {
-				ImGui::EndDisabled();
-			}
-		}
-
-		ImGui::EndTable();
-	}
-
 	bool DrawGizmo(const uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos)
 	{
 		ImGuizmo::SetOrthographic(true);
@@ -257,7 +95,7 @@ namespace platformer2d::UI {
 		if (Operation == ImGuizmo::OPERATION::ROTATE) {
 			SnapValue = 1.0f;
 		}
-		const float SnapValues[3] = {SnapValue, SnapValue, SnapValue};
+		const std::array<float, 3> SnapValues = {SnapValue, SnapValue, SnapValue};
 
 		FTransformComponent& TC = Actor.GetTransformComponent();
 		glm::mat4 TransformMatrix = TC.GetTransform();
@@ -269,7 +107,7 @@ namespace platformer2d::UI {
 			ImGuizmo::WORLD,
 			glm::value_ptr(TransformMatrix),
 			nullptr,
-			ShouldNotSnapValues ? nullptr : SnapValues);
+			ShouldNotSnapValues ? nullptr : SnapValues.data());
 
 		const bool IsUsing = ImGuizmo::IsUsing();
 		if (IsUsing) {
@@ -304,6 +142,46 @@ namespace platformer2d::UI {
 		return Manipulated;
 	}
 
+	bool DrawTranslateGizmo(glm::vec2& Position, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix)
+	{
+		ImGuizmo::SetOrthographic(true);
+		ImGuizmo::SetDrawlist();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+
+		const bool ShouldNotSnapValues = CKeyboard::IsKeyDown(EKey::LeftControl);
+		constexpr float SnapValue = 0.010f;
+		const std::array<float, 3> SnapValues = {SnapValue, SnapValue, SnapValue};
+
+		glm::mat4 TransformMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(Position.x, Position.y, 0.0f));
+
+		const bool Manipulated = ImGuizmo::Manipulate(
+			glm::value_ptr(ViewMatrix),
+			glm::value_ptr(ProjectionMatrix),
+			ImGuizmo::OPERATION::TRANSLATE,
+			ImGuizmo::WORLD,
+			glm::value_ptr(TransformMatrix),
+			nullptr,
+			ShouldNotSnapValues ? nullptr : SnapValues.data());
+
+		if (ImGuizmo::IsUsing()) {
+			glm::vec3 Translation;
+			glm::vec3 Scale;
+			glm::quat Rotation;
+			Math::DecomposeTransform(TransformMatrix, Translation, Rotation, Scale);
+			Position.x = Translation.x;
+			Position.y = Translation.y;
+		}
+
+		return Manipulated;
+	}
+
+	void DrawDivider(const float Width, const std::uint32_t Color)
+	{
+		const ImVec2 Cursor = ImGui::GetCursorScreenPos();
+		ImDrawList* DrawList = ImGui::GetWindowDrawList();
+		DrawList->AddLine(ImVec2(Cursor.x, Cursor.y + 2.0f), ImVec2(Cursor.x + Width, Cursor.y + 2.0f), Color, 2.0f);
+	}
+
 	void PlayerData(std::shared_ptr<CPlayer> Player)
 	{
 		LK_ASSERT(Player);
@@ -312,13 +190,14 @@ namespace platformer2d::UI {
 		const FPlayerData& Data = Player->GetData();
 		FTransformComponent& TC = Player->GetTransformComponent();
 
-		static constexpr float LabelColumnWidth = 200.0f;
+		constexpr float LabelColumnWidth = 200.0f;
 		ImGui::BeginTable("##PlayerDataTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
 		bool Changed = false;
 
+		/* @todo: Replace with UI::Table */
 		auto Label = [](std::string_view Str) -> void
 		{
 			ImGui::TableSetColumnIndex(0);
@@ -326,6 +205,7 @@ namespace platformer2d::UI {
 			ImGui::Text(Str.data());
 		};
 
+		/* @todo: Replace with UI::Table */
 		auto NextColumn = []() -> void
 		{
 			ImGui::TableSetColumnIndex(1);
@@ -559,10 +439,14 @@ namespace platformer2d::UI {
 			WindowPos = ImGui::GetWindowPos();
 		}
 
+		constexpr float LabelColumnWidth = 120.0f;
+
 		ImGui::SetNextWindowBgAlpha(0.25f);
 		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
-		ImGui::SetNextWindowPos({WindowPos.x + Padding, Padding + TopBarOffsetY}, ImGuiCond_Always);
-		constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration
+		ImGui::SetNextWindowPos(ImVec2(WindowPos.x + Padding, Padding + TopBarOffsetY), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(LabelColumnWidth * 2.0f, 0), ImGuiCond_Always);
+		constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoSavedSettings
+			| ImGuiWindowFlags_NoDecoration
 			| ImGuiWindowFlags_NoDocking;
 		if (!UI::Begin("##Statistics", nullptr, WindowFlags)) {
 			return;
@@ -571,29 +455,47 @@ namespace platformer2d::UI {
 		std::shared_ptr<CPlayer> Player = GameInstance.GetPlayer();
 		CCamera& Camera = Player->GetCamera();
 
-		constexpr float LabelColumnWidth = 150.0f;
-		UI::BeginPropertyGrid();
-
-		/* FPS */
+		const auto& GraphicsSettings = FSettings::Get().Graphics;
 		const float DeltaTime = GameInstance.GetDeltaTime();
-		const float FPS = 1.0f / DeltaTime;
-		Table::NextRow();
-		Table::Label("FPS");
-		Table::NextColumn();
-		ImGui::Text("%1.f", FPS);
+		const float FPS = (DeltaTime > 0.0f) ? (1.0f / DeltaTime) : 0.0f;
+		struct
+		{
+			float Value = 0.0f;
+			bool Cached = false;
+		} static CachedFPS = {.Value = FPS};
 
-		/* Camera zoom */
-		Table::NextRow();
-		Table::Label("Camera Zoom");
-		Table::NextColumn();
-		ImGui::Text("%.2f", GameInstance.GetActiveCamera()->GetZoom());
+		UI::BeginPropertyGrid(LabelColumnWidth);
 
-		/* Camera lock */
-		Table::NextRow();
-		Table::Label("Camera Lock");
-		Table::NextColumn();
-		const bool CameraLocked = Player->IsCameraLocked();
-		ImGui::Text("%s", CameraLocked ? "Active" : "Not active");
+		if (GraphicsSettings.bShowFPS) {
+			Table::NextRow();
+			Table::Label("FPS");
+			Table::NextColumn();
+			if (!UI::IsPauseMenuOpen()) {
+				ImGui::Text("%1.f", FPS);
+			} else {
+				ImGui::Text("%1.f", CachedFPS.Value);
+			}
+		}
+
+		if (GraphicsSettings.bShowFrametime) {
+			Table::NextRow();
+			Table::Label("Frametime");
+			Table::NextColumn();
+			ImGui::Text("%.2f ms", DeltaTime * 1000.0f);
+		}
+
+		if (GraphicsSettings.bShowDebugStats) {
+			const FDrawStatistics& Stats = CRenderer::GetDrawStatistics();
+			Table::NextRow();
+			Table::Label("Quads");
+			Table::NextColumn();
+			ImGui::Text("%llu", Stats.QuadCount);
+
+			Table::NextRow();
+			Table::Label("Lines");
+			Table::NextColumn();
+			ImGui::Text("%llu", Stats.LineCount);
+		}
 
 		UI::EndPropertyGrid();
 
@@ -606,6 +508,16 @@ namespace platformer2d::UI {
 				ImGui::Text("Size: (%.1f, %.1f)", Size.x, Size.y);
 				ImGui::EndTooltip();
 			}
+		}
+
+		/* @todo: Caching is broken */
+		if (UI::IsPauseMenuOpen()) {
+			if (!CachedFPS.Cached) {
+				CachedFPS.Value = FPS;
+				CachedFPS.Cached = true;
+			}
+		} else {
+			CachedFPS.Cached = false;
 		}
 
 		UI::End();

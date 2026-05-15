@@ -18,6 +18,13 @@ namespace platformer2d {
 	class CPlayer;
 	class IItem;
 
+	struct FCheckpointPreview
+	{
+		bool bExists = false;
+		std::string CurrentID;
+		std::size_t TriggeredCount = 0;
+	};
+
 	class CCheckpointSystem : public IGameSystem
 	{
 	public:
@@ -46,8 +53,10 @@ namespace platformer2d {
 
 		std::string_view GetCurrentID() const;
 
+		[[nodiscard]] static FCheckpointPreview PeekFromDisk(const std::filesystem::path& LevelFilepath);
+		[[nodiscard]] static std::filesystem::path DeriveCheckpointPath(const std::filesystem::path& LevelFilepath);
+
 	private:
-		static std::filesystem::path DeriveCheckpointPath(const std::filesystem::path& LevelFilepath);
 
 	private:
 		struct FState

@@ -132,12 +132,12 @@ namespace platformer2d::UI {
 			ImGuiID DockID_Main = DockspaceID;
 			ImGuiID DockID_Menubar = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, MenubarFraction, nullptr, &DockID_Main);
 			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, LeftSidebarFraction, nullptr, &DockID_Main);
-			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.50f, nullptr, &DockID_Left);
-			ImGuiID DockID_Left_Bottom = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Down, 0.80f, nullptr, &DockID_Left);
+			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.75f, nullptr, nullptr);
+			ImGuiID DockID_Left_Bottom = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Down, 0.25f, nullptr, nullptr);
 
 			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, RightSidebarFraction, nullptr, &DockID_Main);
-			ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.50f, nullptr, &DockID_Right);
-			ImGuiID DockID_Right_Bottom = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Down, 0.80f, nullptr, &DockID_Right);
+			ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.65f, nullptr, nullptr);
+			ImGuiID DockID_Right_Bottom = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Down, 0.35f, nullptr, nullptr);
 
 			ImGuiID DockID_Bottom = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Down, 0.32f, nullptr, &DockID_Main);
 			ImGuiID DockID_Bottom_Right = ImGui::DockBuilderSplitNode(DockID_Bottom, ImGuiDir_Right, 0.42f, nullptr, &DockID_Bottom);
@@ -151,7 +151,7 @@ namespace platformer2d::UI {
 			ImGui::DockBuilderDockWindow(PanelID::Menubar, DockID_Menubar);
 
 			ImGui::DockBuilderDockWindow(PanelID::BottomBar, DockID_Bottom);
-			ImGui::DockBuilderDockWindow(PanelID::CreatorMenu, DockID_Left_Top);
+			ImGui::DockBuilderDockWindow(PanelID::Creator, DockID_Left_Top);
 			ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left_Bottom);
 			ImGui::DockBuilderDockWindow(PanelID::SceneManager, DockID_Right_Top);
 			ImGui::DockBuilderDockWindow(PanelID::TerrainCreator, DockID_Right_Bottom);
@@ -236,7 +236,6 @@ namespace platformer2d::UI {
 		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
 		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
 		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
-		//DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
 		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking;
 	}
 

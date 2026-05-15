@@ -20,8 +20,6 @@
 
 namespace platformer2d {
 
-	static const std::filesystem::path SettingsFile(CONFIG_DIR "/settings.yaml");
-
 	CApplication::CApplication(int Argc, char* Argv[])
 	{
 		lklog::init(lklog::level::debug, "platformer2d");
@@ -37,7 +35,7 @@ namespace platformer2d {
 	{
 		LK_DEBUG_TAG("Application", "Initializing");
 		FSettings& Settings = FSettings::Get();
-		Settings.Deserialize(SettingsFile);
+		Settings.Deserialize(FSettings::GetFilePath());
 
 		FWindowSpecification WindowSpec = {
 			.Title = "platformer2d",
@@ -64,8 +62,7 @@ namespace platformer2d {
 			LK_INFO_TAG("Application", "Shutting down");
 			bRunning = false;
 
-			const FSettings& Settings = FSettings::Get();
-			Settings.Serialize(SettingsFile);
+			FSettings::Save();
 
 			UILayer.reset();
 			LK_DEBUG_TAG("Application", "Release layerstack");

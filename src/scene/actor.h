@@ -13,6 +13,16 @@
 namespace platformer2d {
 
 	class CScene;
+	class CSprite;
+
+	enum class EMovementState
+	{
+		Idle,
+		Running,
+		Airborne,
+		COUNT
+	};
+	LK_ENUM(EMovementState);
 
 	class CActor : public ISerializable<ESerializable::Yaml>
 	{
@@ -95,6 +105,8 @@ namespace platformer2d {
 		ETexture GetTexture() const { return Texture; }
 		const glm::vec4& GetColor() const { return Color; }
 		void SetColor(const glm::vec4& InColor);
+
+		[[nodiscard]] virtual const CSprite* GetSprite() const { return nullptr; }
 
 		std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);

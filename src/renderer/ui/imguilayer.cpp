@@ -10,6 +10,7 @@
 #include "core/core.h"
 #include "core/log.h"
 #include "core/profiler.h"
+#include "core/settings.h"
 #include "core/window.h"
 #include "renderer/font.h"
 #include "scoped.h"
@@ -62,6 +63,9 @@ namespace platformer2d {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
+
+		const float UIScale = std::clamp(FSettings::Get().Graphics.UIScale, 0.50f, 3.0f);
+		ImGui::GetStyle().FontScaleMain = UIScale;
 
 		UI::BeginCoreViewport();
 	}

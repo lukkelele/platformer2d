@@ -199,7 +199,7 @@ namespace platformer2d {
 		Out << YAML::Key << "ID" << YAML::Value << Handle;
 		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(GetActorType());
 		Out << YAML::Key << "Name" << YAML::Value << Name;
-		Out << YAML::Key << "Texture" << YAML::Value << std::to_underlying(Texture);
+		Out << YAML::Key << "Texture" << YAML::Value << static_cast<std::size_t>(Texture);
 		Out << YAML::Key << "Color" << YAML::Value << Color;
 		Out << YAML::Key << "Deletable" << YAML::Value << bDeletable;
 

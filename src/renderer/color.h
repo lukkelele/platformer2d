@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <unordered_map>
 
 #include <glm/glm.hpp>
@@ -75,12 +76,42 @@ namespace platformer2d {
 		using B = TColorInternal<Range>;
 
 	public:
-		static constexpr glm::vec3 White = {B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec3 Black = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec3 Red = {B::Scale(1.0f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec3 Green = {B::Scale(0.0f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec3 Blue = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f)};
+		/* clang-format off */
+		static constexpr glm::vec3 White       = {B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f)};
+		static constexpr glm::vec3 Black       = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f)};
+		static constexpr glm::vec3 Red         = {B::Scale(1.0f), B::Scale(0.0f), B::Scale(0.0f)};
+		static constexpr glm::vec3 Green       = {B::Scale(0.0f), B::Scale(1.0f), B::Scale(0.0f)};
+		static constexpr glm::vec3 Blue        = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f)};
+		static constexpr glm::vec3 Magenta     = {B::Scale(0.96f), B::Scale(0.105f), B::Scale(0.83f)};
 		static constexpr glm::vec3 Transparent = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f)};
+		/* clang-format on */
+
+		template<typename To = VecType, typename From>
+		static constexpr To Convert(const From& InColor);
+
+		static constexpr const glm::vec3& Lookup(const EColor Color)
+		{
+			switch (Color) {
+				case EColor::White:       return White;
+				case EColor::Black:       return Black;
+				case EColor::Transparent: return Transparent;
+				case EColor::Red:         return Red;
+				case EColor::Green:       return Green;
+				case EColor::Blue:        return Blue;
+				case EColor::Magenta:     return Magenta;
+				default:                  return White;
+			}
+		}
+
+		template<typename T = VecType>
+		static constexpr decltype(auto) Get(const EColor Color)
+		{
+			if constexpr (std::is_same_v<T, glm::vec3>) {
+				return Lookup(Color);
+			} else {
+				return Convert<T>(Lookup(Color));
+			}
+		}
 
 		static constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& GetArray();
 	};
@@ -88,6 +119,7 @@ namespace platformer2d {
 	/**
 	 * @class TColor4
 	 */
+
 	template<EColorRange Range>
 	struct TColor<glm::vec4, Range> : TColorInternal<Range>
 	{
@@ -96,26 +128,49 @@ namespace platformer2d {
 		using B = TColorInternal<Range>;
 
 	public:
-		static constexpr glm::vec4 White = {B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Black = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Transparent = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f)};
-		static constexpr glm::vec4 Red = {B::Scale(1.0f), B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Green = {B::Scale(0.0f), B::Scale(1.0f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 LightGreen = {B::Scale(0.0f), B::Scale(0.75f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Blue = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 LightBlue = {B::Scale(0.60f), B::Scale(0.80f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 NiceBlue = {B::Scale(0.325f), B::Scale(0.91f), B::Scale(0.99f), B::Scale(1.0f)};
-		static constexpr glm::vec4 SkyBlue = {B::Scale(0.0f), B::Scale(0.540f), B::Scale(0.87f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Gray = {B::Scale(0.45f), B::Scale(0.45f), B::Scale(0.45f), B::Scale(1.0f)};
-		static constexpr glm::vec4 LightGray = {B::Scale(0.70f), B::Scale(0.70f), B::Scale(0.70f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Cyan = {B::Scale(0.0f), B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Magenta = {B::Scale(0.96f), B::Scale(0.105f), B::Scale(0.83f), B::Scale(1.0f)};
+		/* clang-format off */
+		static constexpr glm::vec4 White       = {B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 Black       = {B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 Transparent = {B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),  B::Scale(0.0f)};
+		static constexpr glm::vec4 Red         = {B::Scale(1.0f),   B::Scale(0.0f),   B::Scale(0.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 Green       = {B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(0.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 LightGreen  = {B::Scale(0.0f),   B::Scale(0.75f),  B::Scale(0.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 Blue        = {B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 LightBlue   = {B::Scale(0.60f),  B::Scale(0.80f),  B::Scale(1.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 NiceBlue    = {B::Scale(0.325f), B::Scale(0.91f),  B::Scale(0.99f), B::Scale(1.0f)};
+		static constexpr glm::vec4 SkyBlue     = {B::Scale(0.0f),   B::Scale(0.540f), B::Scale(0.87f), B::Scale(1.0f)};
+		static constexpr glm::vec4 Gray        = {B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(0.45f), B::Scale(1.0f)};
+		static constexpr glm::vec4 LightGray   = {B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(0.70f), B::Scale(1.0f)};
+		static constexpr glm::vec4 Cyan        = {B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f),  B::Scale(1.0f)};
+		static constexpr glm::vec4 Magenta     = {B::Scale(0.96f),  B::Scale(0.105f), B::Scale(0.83f), B::Scale(1.0f)};
+		/* clang-format on */
 
 		template<typename To = VecType, typename From>
 		static constexpr To Convert(const From& InColor);
 
+		static constexpr const glm::vec4& Lookup(const EColor Color)
+		{
+			switch (Color) {
+				case EColor::White:       return White;
+				case EColor::Black:       return Black;
+				case EColor::Transparent: return Transparent;
+				case EColor::Red:         return Red;
+				case EColor::Green:       return Green;
+				case EColor::Blue:        return Blue;
+				case EColor::Magenta:     return Magenta;
+				default:                  return White;
+			}
+		}
+
 		template<typename T = VecType>
-		static const T& Get(const EColor Color);
+		static constexpr decltype(auto) Get(const EColor Color)
+		{
+			if constexpr (std::is_same_v<T, glm::vec4>) {
+				return Lookup(Color);
+			} else {
+				return Convert<T>(Lookup(Color));
+			}
+		}
 
 		static constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& GetArray();
 		static const std::unordered_map<EColor, glm::vec4>& GetMap();
@@ -134,6 +189,13 @@ namespace platformer2d {
 
 	template<>
 	template<>
+	inline constexpr glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
+	{
+		return InColor;
+	}
+
+	template<>
+	template<>
 	inline constexpr glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
 	{
 		const float R = static_cast<float>((InColor >> 0) & 0xFF) / 255.0f;
@@ -147,10 +209,14 @@ namespace platformer2d {
 	template<>
 	inline constexpr uint32_t TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
 	{
-		const uint32_t R = static_cast<uint32_t>(InColor.r * 255.0f);
-		const uint32_t G = static_cast<uint32_t>(InColor.g * 255.0f);
-		const uint32_t B = static_cast<uint32_t>(InColor.b * 255.0f);
-		const uint32_t A = static_cast<uint32_t>(InColor.a * 255.0f);
+		const float Rf = (InColor.r < 0.0f) ? 0.0f : ((InColor.r > 1.0f) ? 1.0f : InColor.r);
+		const float Gf = (InColor.g < 0.0f) ? 0.0f : ((InColor.g > 1.0f) ? 1.0f : InColor.g);
+		const float Bf = (InColor.b < 0.0f) ? 0.0f : ((InColor.b > 1.0f) ? 1.0f : InColor.b);
+		const float Af = (InColor.a < 0.0f) ? 0.0f : ((InColor.a > 1.0f) ? 1.0f : InColor.a);
+		const std::uint32_t R = static_cast<std::uint32_t>(Rf * 255.0f);
+		const std::uint32_t G = static_cast<std::uint32_t>(Gf * 255.0f);
+		const std::uint32_t B = static_cast<std::uint32_t>(Bf * 255.0f);
+		const std::uint32_t A = static_cast<std::uint32_t>(Af * 255.0f);
 		return (A << 24) | (B << 16) | (G << 8) | R;
 	}
 
@@ -163,7 +229,7 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline constexpr ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const uint32_t& InColor)
+	inline constexpr ImVec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const std::uint32_t& InColor)
 	{
 		const float R = static_cast<float>((InColor >> 0) & 0xFF) / 255.0f;
 		const float G = static_cast<float>((InColor >> 8) & 0xFF) / 255.0f;
@@ -172,63 +238,98 @@ namespace platformer2d {
 		return ImVec4(R, G, B, A);
 	}
 
+	template<>
+	template<>
+	inline constexpr glm::vec3 TColor<glm::vec3, EColorRange::Normalized>::Convert(const glm::vec3& InColor)
+	{
+		return InColor;
+	}
+
+	template<>
+	template<>
+	inline constexpr glm::vec4 TColor<glm::vec3, EColorRange::Normalized>::Convert(const glm::vec3& InColor)
+	{
+		return glm::vec4(InColor.r, InColor.g, InColor.b, 1.0f);
+	}
+
+	template<>
+	template<>
+	inline constexpr ImVec4 TColor<glm::vec3, EColorRange::Normalized>::Convert(const glm::vec3& InColor)
+	{
+		return ImVec4(InColor.r, InColor.g, InColor.b, 1.0f);
+	}
+
+	template<>
+	template<>
+	inline constexpr std::uint32_t TColor<glm::vec3, EColorRange::Normalized>::Convert(const glm::vec3& InColor)
+	{
+		const float Rf = (InColor.r < 0.0f) ? 0.0f : ((InColor.r > 1.0f) ? 1.0f : InColor.r);
+		const float Gf = (InColor.g < 0.0f) ? 0.0f : ((InColor.g > 1.0f) ? 1.0f : InColor.g);
+		const float Bf = (InColor.b < 0.0f) ? 0.0f : ((InColor.b > 1.0f) ? 1.0f : InColor.b);
+		const std::uint32_t R = static_cast<std::uint32_t>(Rf * 255.0f);
+		const std::uint32_t G = static_cast<std::uint32_t>(Gf * 255.0f);
+		const std::uint32_t B = static_cast<std::uint32_t>(Bf * 255.0f);
+		constexpr std::uint32_t A = 255;
+		return (A << 24) | (B << 16) | (G << 8) | R;
+	}
+
 	namespace RGBA32 {
-		inline constexpr uint32_t White = IM_COL32(255, 255, 255, 255);
-		inline constexpr uint32_t Black = IM_COL32(0, 0, 0, 255);
-		inline constexpr uint32_t DarkGray = IM_COL32(42, 42, 42, 255);
-		inline constexpr uint32_t DarkerGray = IM_COL32(29, 29, 29, 255);
-		inline constexpr uint32_t Gray = IM_COL32(128, 128, 128, 255);
-		inline constexpr uint32_t LightGray = IM_COL32(165, 165, 165, 255);
-		inline constexpr uint32_t LighterGray = IM_COL32(190, 190, 190, 255);
-		inline constexpr uint32_t Red = IM_COL32(255, 0, 0, 255);
-		inline constexpr uint32_t Green = IM_COL32(0, 255, 0, 255);
-		inline constexpr uint32_t Blue = IM_COL32(0, 0, 255, 255);
-		inline constexpr uint32_t Cyan = IM_COL32(0, 255, 255, 255);
-		inline constexpr uint32_t Magenta = IM_COL32(255, 0, 255, 255);
-		inline constexpr uint32_t Yellow = IM_COL32(255, 255, 0, 255);
-		inline constexpr uint32_t Orange = IM_COL32(255, 165, 0, 255);
-		inline constexpr uint32_t Purple = IM_COL32(128, 0, 128, 255);
-		inline constexpr uint32_t Pink = IM_COL32(255, 192, 203, 255);
-		inline constexpr uint32_t Brown = IM_COL32(165, 42, 42, 255);
-		inline constexpr uint32_t DarkRed = IM_COL32(139, 0, 0, 255);
-		inline constexpr uint32_t DarkGreen = IM_COL32(0, 100, 0, 255);
-		inline constexpr uint32_t DarkBlue = IM_COL32(0, 0, 139, 255);
-		inline constexpr uint32_t DarkCyan = IM_COL32(0, 139, 139, 255);
-		inline constexpr uint32_t DarkMagenta = IM_COL32(139, 0, 139, 255);
-		inline constexpr uint32_t DarkYellow = IM_COL32(204, 204, 0, 255);
-		inline constexpr uint32_t BrightGreen = IM_COL32(18, 140, 40, 255);
-		inline constexpr uint32_t NiceBlue = IM_COL32(83, 232, 254, 255);
-		inline constexpr uint32_t NiceGreen = IM_COL32(0, 205, 15, 192);
-		inline constexpr uint32_t LightGreen = IM_COL32(14, 156, 54, 255);
-		inline constexpr uint32_t SmoothGreen = IM_COL32(51, 125, 52, 255);
-		inline constexpr uint32_t WineRed = IM_COL32(166, 13, 23, 255);
+		inline constexpr std::uint32_t White = IM_COL32(255, 255, 255, 255);
+		inline constexpr std::uint32_t Black = IM_COL32(0, 0, 0, 255);
+		inline constexpr std::uint32_t DarkGray = IM_COL32(42, 42, 42, 255);
+		inline constexpr std::uint32_t DarkerGray = IM_COL32(29, 29, 29, 255);
+		inline constexpr std::uint32_t Gray = IM_COL32(128, 128, 128, 255);
+		inline constexpr std::uint32_t LightGray = IM_COL32(165, 165, 165, 255);
+		inline constexpr std::uint32_t LighterGray = IM_COL32(190, 190, 190, 255);
+		inline constexpr std::uint32_t Red = IM_COL32(255, 0, 0, 255);
+		inline constexpr std::uint32_t Green = IM_COL32(0, 255, 0, 255);
+		inline constexpr std::uint32_t Blue = IM_COL32(0, 0, 255, 255);
+		inline constexpr std::uint32_t Cyan = IM_COL32(0, 255, 255, 255);
+		inline constexpr std::uint32_t Magenta = IM_COL32(255, 0, 255, 255);
+		inline constexpr std::uint32_t Yellow = IM_COL32(255, 255, 0, 255);
+		inline constexpr std::uint32_t Orange = IM_COL32(255, 165, 0, 255);
+		inline constexpr std::uint32_t Purple = IM_COL32(128, 0, 128, 255);
+		inline constexpr std::uint32_t Pink = IM_COL32(255, 192, 203, 255);
+		inline constexpr std::uint32_t Brown = IM_COL32(165, 42, 42, 255);
+		inline constexpr std::uint32_t DarkRed = IM_COL32(139, 0, 0, 255);
+		inline constexpr std::uint32_t DarkGreen = IM_COL32(0, 100, 0, 255);
+		inline constexpr std::uint32_t DarkBlue = IM_COL32(0, 0, 139, 255);
+		inline constexpr std::uint32_t DarkCyan = IM_COL32(0, 139, 139, 255);
+		inline constexpr std::uint32_t DarkMagenta = IM_COL32(139, 0, 139, 255);
+		inline constexpr std::uint32_t DarkYellow = IM_COL32(204, 204, 0, 255);
+		inline constexpr std::uint32_t BrightGreen = IM_COL32(18, 140, 40, 255);
+		inline constexpr std::uint32_t NiceBlue = IM_COL32(83, 232, 254, 255);
+		inline constexpr std::uint32_t NiceGreen = IM_COL32(0, 205, 15, 192);
+		inline constexpr std::uint32_t LightGreen = IM_COL32(14, 156, 54, 255);
+		inline constexpr std::uint32_t SmoothGreen = IM_COL32(51, 125, 52, 255);
+		inline constexpr std::uint32_t WineRed = IM_COL32(166, 13, 23, 255);
 
-		inline constexpr uint32_t Accent = IM_COL32(236, 158, 36, 255);
-		inline constexpr uint32_t Highlight = IM_COL32(39, 185, 242, 255);
-		inline constexpr uint32_t Compliment = IM_COL32(78, 151, 166, 255);
-		inline constexpr uint32_t PropertyField = IM_COL32(15, 15, 15, 255);
-		inline constexpr uint32_t Muted = IM_COL32(77, 77, 77, 255);
+		inline constexpr std::uint32_t Accent = IM_COL32(236, 158, 36, 255);
+		inline constexpr std::uint32_t Highlight = IM_COL32(39, 185, 242, 255);
+		inline constexpr std::uint32_t Compliment = IM_COL32(78, 151, 166, 255);
+		inline constexpr std::uint32_t PropertyField = IM_COL32(15, 15, 15, 255);
+		inline constexpr std::uint32_t Muted = IM_COL32(77, 77, 77, 255);
 
-		inline constexpr uint32_t GroupHeader = IM_COL32(43, 43, 43, 255);
-		inline constexpr uint32_t Selection = IM_COL32(190, 205, 119, 255);
-		inline constexpr uint32_t SelectionMuted = IM_COL32(237, 201, 142, 23);
-		inline constexpr uint32_t Background = IM_COL32(36, 36, 36, 255);
-		inline constexpr uint32_t BackgroundDark = IM_COL32(26, 26, 26, 255);
-		inline constexpr uint32_t BackgroundDarker = IM_COL32(16, 16, 16, 255);
+		inline constexpr std::uint32_t GroupHeader = IM_COL32(43, 43, 43, 255);
+		inline constexpr std::uint32_t Selection = IM_COL32(190, 205, 119, 255);
+		inline constexpr std::uint32_t SelectionMuted = IM_COL32(237, 201, 142, 23);
+		inline constexpr std::uint32_t Background = IM_COL32(36, 36, 36, 255);
+		inline constexpr std::uint32_t BackgroundDark = IM_COL32(26, 26, 26, 255);
+		inline constexpr std::uint32_t BackgroundDarker = IM_COL32(16, 16, 16, 255);
 
 		namespace Text {
-			inline constexpr uint32_t Normal = IM_COL32(190, 190, 190, 255);
-			inline constexpr uint32_t Brighter = IM_COL32(204, 204, 204, 255);
-			inline constexpr uint32_t Darker = IM_COL32(128, 128, 128, 255);
-			inline constexpr uint32_t Error = IM_COL32(232, 55, 55, 255);
-			inline constexpr uint32_t Disabled = IM_COL32(237, 201, 142, 95);
+			inline constexpr std::uint32_t Normal = IM_COL32(190, 190, 190, 255);
+			inline constexpr std::uint32_t Brighter = IM_COL32(204, 204, 204, 255);
+			inline constexpr std::uint32_t Darker = IM_COL32(128, 128, 128, 255);
+			inline constexpr std::uint32_t Error = IM_COL32(232, 55, 55, 255);
+			inline constexpr std::uint32_t Disabled = IM_COL32(237, 201, 142, 95);
 		}
 
 		namespace Titlebar {
-			inline constexpr uint32_t Default = IM_COL32(30, 30, 30, 255);
-			inline constexpr uint32_t Orange = IM_COL32(186, 66, 30, 255);
-			inline constexpr uint32_t Green = IM_COL32(22, 84, 29, 255);
-			inline constexpr uint32_t Red = IM_COL32(190, 32, 30, 255);
+			inline constexpr std::uint32_t Default = IM_COL32(30, 30, 30, 255);
+			inline constexpr std::uint32_t Orange = IM_COL32(186, 66, 30, 255);
+			inline constexpr std::uint32_t Green = IM_COL32(22, 84, 29, 255);
+			inline constexpr std::uint32_t Red = IM_COL32(190, 32, 30, 255);
 		}
 	}
 
@@ -285,15 +386,5 @@ namespace platformer2d {
 		return _Internal::TColor4Map;
 	}
 
-	/*************************************
-	 * TColor::Get(EColor)
-	 *************************************/
-	template<EColorRange Range>
-	template<typename T>
-	inline const T& TColor<glm::vec4, Range>::Get(const EColor Color)
-	{
-		LK_ASSERT(_Internal::TColor4Map.contains(Color), "Color not in map: {}", Enum::ToString(Color));
-		return _Internal::TColor4Map.at(Color);
-	}
-
 }
+

@@ -184,5 +184,30 @@ namespace platformer2d {
 		return Out;
 	}
 
+	FCheckpointPreview CCheckpointSystem::PeekFromDisk(const std::filesystem::path& LevelFilepath)
+	{
+		FCheckpointPreview Preview;
+		const std::filesystem::path Path = DeriveCheckpointPath(LevelFilepath);
+		if (!std::filesystem::exists(Path)) {
+			return Preview;
+		}
+
+		std::ifstream File(Path);
+		if (!File.is_open()) {
+			return Preview;
+		}
+
+		std::stringstream Buf;
+		Buf << File.rdbuf();
+		const YAML::Node Node = YAML::Load(Buf.str());
+
+		Serialization::DeserializeProperty("CurrentID", Preview.CurrentID, std::string{}, Node);
+		if (const YAML::Node IDs = Node["TriggeredIDs"]; IDs && IDs.IsSequence()) {
+			Preview.TriggeredCount = IDs.size();
+		}
+		Preview.bExists = !Preview.CurrentID.empty();
+		return Preview;
+	}
+
 }
 

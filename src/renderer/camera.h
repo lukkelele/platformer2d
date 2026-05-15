@@ -85,13 +85,6 @@ namespace platformer2d {
 		static constexpr float SWITCH_LERP_EPSILON_ZOOM = 0.0005f;
 
 	protected:
-		bool bSwitchLerping = false;
-		glm::vec2 SwitchTargetPos{0.0f};
-		float SwitchTargetZoom = 0.30f;
-
-	private:
-		glm::vec2 Center = {0.0f, 0.0f};
-
 		float ViewportWidth;
 		float ViewportHeight;
 		float AspectRatio;
@@ -99,6 +92,13 @@ namespace platformer2d {
 		float OrthographicSize = 10.0f;
 		float OrthographicNear = -1.0f;
 		float OrthographicFar = 1.0f;
+
+		bool bSwitchLerping = false;
+		glm::vec2 SwitchTargetPos{0.0f};
+		float SwitchTargetZoom = 0.30f;
+
+	private:
+		glm::vec2 Center = {0.0f, 0.0f};
 
 		float Zoom = 0.25f;
 

@@ -11,7 +11,7 @@
 
 namespace platformer2d {
 
-	enum class ETexture
+	enum class ETexture : std::uint8_t
 	{
 		White,
 		Background,
@@ -22,8 +22,7 @@ namespace platformer2d {
 		Swoosh,
 		Cloud,
 		Rifle,
-		Enemy1,
-		Enemy2,
+		Goblin,
 		COUNT
 	};
 	LK_ENUM(ETexture);
@@ -37,22 +36,22 @@ namespace platformer2d {
 		CTexture() = delete;
 		~CTexture();
 
-		void Bind(uint32_t Slot = 0) const;
-		void Unbind(uint32_t Slot = 0) const;
+		void Bind(std::uint32_t Slot = 0) const;
+		void Unbind(std::uint32_t Slot = 0) const;
 
 		void Invalidate();
 
-		LRendererID GetID() const { return ID; }
-		uint32_t GetWidth() const { return Width; }
-		uint32_t GetHeight() const { return Height; }
-		uint8_t GetChannels() const { return Channels; }
-		uint8_t GetMips() const { return Mips; }
-		const std::filesystem::path& GetFilePath() const { return Path; }
+		[[nodiscard]] LRendererID GetID() const { return ID; }
+		[[nodiscard]] std::uint32_t GetWidth() const { return Width; }
+		[[nodiscard]] std::uint32_t GetHeight() const { return Height; }
+		[[nodiscard]] std::uint8_t GetChannels() const { return Channels; }
+		[[nodiscard]] std::uint8_t GetMips() const { return Mips; }
+		[[nodiscard]] const std::filesystem::path& GetFilePath() const { return Path; }
 
 		void SetWrap(ETextureWrap InWrap) const;
 		void SetFilter(ETextureFilter InFilter) const;
 
-		std::size_t GetSlot() const { return Slot; }
+		[[nodiscard]] std::size_t GetSlot() const { return Slot; }
 		void SetSlot(std::size_t InSlot);
 
 		[[nodiscard]] const FBuffer& GetImageBuffer() const { return ImageBuffer; }

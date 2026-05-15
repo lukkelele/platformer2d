@@ -1,4 +1,4 @@
-#include "ui.h"
+#include "physics.h"
 
 #include "core/window.h"
 #include "core/input/keyboard.h"
@@ -6,12 +6,15 @@
 #include "renderer/color.h"
 #include "renderer/font.h"
 #include "renderer/renderer.h"
+#include "ui.h"
 #include "ui_core.h"
 #include "combo.h"
 #include "widgets.h"
 #include "scene/scene.h"
 
 namespace platformer2d::UI {
+
+	FPhysicsBodyData PhysicsBodyData;
 
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec)
 	{
@@ -77,63 +80,58 @@ namespace platformer2d::UI {
 		/************************
 		 * Body Type.
 		 ************************/
+		BeginPropertyGrid();
 		{
-			/* @todo: Use UI::Table here instead. */
-			ImGui::BeginTable("##BodyTypeTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("L", 0, ColWidth);
-			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 7.0f);
+			Table::NextRow();
 			ImGui::Text("Body Type");
 
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(7.0f, 0.0f);
+			Table::NextColumn();
 			if (UI::Combo("##BodyType", Enum::View<EBodyType>(), Selected)) {
-				LK_TRACE_TAG("UI", "Combo -> BodyType: {}", Enum::ToString(Selected));
+				LK_TRACE_TAG("UI", "BodyType: {}", Enum::ToString(Selected));
 				Data.BodyType = Selected;
 			}
-			ImGui::EndTable();
 		}
+		EndPropertyGrid();
 
 		/************************
 		 * Attributes.
 		 ************************/
-		{
-			ImGui::BeginTable("##AttributesTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("L", 0, ColWidth);
-			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
-
-			ImGui::TableNextRow();
+		if (ImGui::TreeNodeEx("Physics", ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed)) {
+			BeginPropertyGrid();
+			Table::NextRow();
 			UI::DragFloat("Gravity Scale", Data.GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat("Friction", Data.Friction, 0.01f, 0.0f, 2.0f, "%.2f");
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat("Density", Data.Density, 0.01f, 0.0f, 1.0f, "%.2f");
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat2("Linear Velocity", Data.LinearVelocity, 0.10f, 0.010f, 0.010f);
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat("Angular Velocity", Data.AngularVelocity, 0.01f, 0.0f, 1.0f, "%.2f");
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat("Linear Damping", Data.LinearDamping, 0.01f, 0.0f, 1.0f, "%.2f");
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat("Directional Force", Data.DirForce, 0.01f, 0.0f, 1.0f, "%.2f");
 
-			ImGui::TableNextRow();
+			Table::NextRow();
 			UI::DragFloat("Jump Impulse", Data.JumpImpulse, 0.01f, 0.0f, 1.0f, "%.2f");
 
-			ImGui::TableNextRow();
-			UI::Checkbox("Sensor", Data.bSensor);
-
-			ImGui::EndTable();
+			EndPropertyGrid();
+			ImGui::TreePop();
 		}
+
+		BeginPropertyGrid();
+		{
+			Table::NextRow();
+			UI::Checkbox("Sensor", Data.bSensor);
+		}
+		EndPropertyGrid();
 
 		/************************
 		 * Body Flags.
@@ -142,74 +140,43 @@ namespace platformer2d::UI {
 		ImGui::PushFont(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		const bool BodyFlagsOpened = ImGui::TreeNodeEx("Body Flags", ImGuiTreeNodeFlags_SpanAvailWidth);
+		ImGui::PopFont();
 		if (BodyFlagsOpened) {
-			ImGui::PopFont();
 			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
+			BeginPropertyGrid();
 
-			ImGui::BeginTable("##BodyFlagsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-			ImGui::TableSetupColumn("L", 0, ColWidth);
-			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
+			Table::NextRow();
+			Table::Label("Pre Solve Events");
+			Table::NextColumn();
+			ImGui::Checkbox("##PreSolveEvents", &Data.BodyFlag.bPreSolveEvents);
 
-			auto Label = [](std::string_view Str) -> void
-			{
-				ImGui::TableSetColumnIndex(0);
-				UI::ShiftCursor(GAME_MENU_LABEL_INDENT_WIDTH, 4.0f);
-				ImGui::Text(Str.data());
-			};
+			Table::NextRow();
+			Table::Label("Contact Events");
+			Table::NextColumn();
+			ImGui::Checkbox("##ContactEvents", &Data.BodyFlag.bContactEvents);
 
-			auto NextColumn = []() -> void
-			{
-				ImGui::TableSetColumnIndex(1);
-				UI::ShiftCursorY(-2.0f);
-			};
+			Table::NextRow();
+			Table::Label("Sensor Events");
+			Table::NextColumn();
+			ImGui::Checkbox("##SensorEvents", &Data.BodyFlag.bSensorEvents);
 
-			/* PreSolveEvents. */
-			ImGui::TableNextRow();
-			{
-				Label("Pre Solve Events");
-				NextColumn();
-				ImGui::Checkbox("##PreSolveEvents", &Data.BodyFlag.bPreSolveEvents);
-			}
+			Table::NextRow();
+			Table::Label("Bullet");
+			Table::NextColumn();
+			ImGui::Checkbox("##Bullet", &Data.BodyFlag.bBullet);
 
-			/* Contact Events. */
-			ImGui::TableNextRow();
-			{
-				Label("Contact Events");
-				NextColumn();
-				ImGui::Checkbox("##ContactEvents", &Data.BodyFlag.bContactEvents);
-			}
-
-			/* Sensor Events. */
-			ImGui::TableNextRow();
-			{
-				Label("Sensor Events");
-				NextColumn();
-				ImGui::Checkbox("##SensorEvents", &Data.BodyFlag.bSensorEvents);
-			}
-
-			/* Bullet. */
-			ImGui::TableNextRow();
-			{
-				Label("Bullet");
-				NextColumn();
-				ImGui::Checkbox("##Bullet", &Data.BodyFlag.bBullet);
-			}
-
-			ImGui::EndTable();
+			EndPropertyGrid();
 			ImGui::TreePop();
-		} else {
-			ImGui::PopFont();
-		}
+		} 
 
 		/************************
 		 * Motion Lock.
 		 ************************/
-		ImGui::PushFont(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		const bool MotionLockOpened = ImGui::TreeNodeEx("Motion Lock", ImGuiTreeNodeFlags_SpanAvailWidth);
+		UI::Font::Pop();
 		if (MotionLockOpened) {
-			ImGui::PopFont();
-			UI::ShiftCursorY(4.0f);
 			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
 
 			/* Axis: X */
@@ -250,9 +217,7 @@ namespace platformer2d::UI {
 			}
 
 			ImGui::TreePop();
-		} else {
-			ImGui::PopFont();
-		}
+		} 
 
 		ImGui::PopID();
 	}

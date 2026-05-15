@@ -16,6 +16,17 @@ namespace platformer2d {
 		return Instance;
 	}
 
+	const std::filesystem::path& FSettings::GetFilePath()
+	{
+		static const std::filesystem::path Path(CONFIG_DIR "/settings.yaml");
+		return Path;
+	}
+
+	bool FSettings::Save()
+	{
+		return Get().Serialize(GetFilePath());
+	}
+
 	bool FSettings::Serialize(const std::filesystem::path& OutFile) const
 	{
 		const FSettings& Settings = Get();
@@ -32,6 +43,32 @@ namespace platformer2d {
 		Out << YAML::Key << "StartMaximized" << YAML::Value << Settings.Window.bStartMaximized;
 		Out << YAML::Key << "VSync" << YAML::Value << Settings.Window.bVSync;
 		Out << YAML::EndMap; /* Window */
+
+		Out << YAML::Key << "Graphics";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "ShowFPS" << YAML::Value << Settings.Graphics.bShowFPS;
+		Out << YAML::Key << "ShowFrametime" << YAML::Value << Settings.Graphics.bShowFrametime;
+		Out << YAML::Key << "ShowDebugStats" << YAML::Value << Settings.Graphics.bShowDebugStats;
+		Out << YAML::Key << "Brightness" << YAML::Value << Settings.Graphics.Brightness;
+		Out << YAML::Key << "UIScale" << YAML::Value << Settings.Graphics.UIScale;
+		Out << YAML::EndMap; /* Graphics */
+
+		Out << YAML::Key << "Input";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "MouseSensitivity" << YAML::Value << Settings.Input.MouseSensitivity;
+		Out << YAML::Key << "ZoomSpeed" << YAML::Value << Settings.Input.ZoomSpeed;
+		Out << YAML::Key << "EdgePan" << YAML::Value << Settings.Input.bEdgePan;
+		Out << YAML::Key << "EdgePanSpeed" << YAML::Value << Settings.Input.EdgePanSpeed;
+		Out << YAML::Key << "InvertCameraDrag" << YAML::Value << Settings.Input.bInvertCameraDrag;
+		Out << YAML::EndMap; /* Input */
+
+		Out << YAML::Key << "Gameplay";
+		Out << YAML::BeginMap;
+		Out << YAML::Key << "Difficulty" << YAML::Value << static_cast<std::size_t>(Settings.Gameplay.Difficulty);
+		Out << YAML::Key << "ShowTutorialHints" << YAML::Value << Settings.Gameplay.bShowTutorialHints;
+		Out << YAML::Key << "ScreenShake" << YAML::Value << Settings.Gameplay.bScreenShake;
+		Out << YAML::Key << "MasterScale" << YAML::Value << Settings.Gameplay.MasterScale;
+		Out << YAML::EndMap; /* Gameplay */
 
 		Out << YAML::EndMap; /* Settings */
 
@@ -91,8 +128,34 @@ namespace platformer2d {
 			LK_ERROR_TAG("Settings", "Missing 'Window' node in YAML data");
 		}
 
+		/* @todo: Remove these as optional */
+		const YAML::Node& GraphicsNode = Node["Graphics"];
+		if (GraphicsNode.IsDefined()) {
+			Serialization::DeserializeProperty<Serialization::Optional>("ShowFPS", Settings.Graphics.bShowFPS, true, GraphicsNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("ShowFrametime", Settings.Graphics.bShowFrametime, false, GraphicsNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("ShowDebugStats", Settings.Graphics.bShowDebugStats, false, GraphicsNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("Brightness", Settings.Graphics.Brightness, 1.0f, GraphicsNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("UIScale", Settings.Graphics.UIScale, 1.0f, GraphicsNode);
+		}
+
+		const YAML::Node& InputNode = Node["Input"];
+		if (InputNode.IsDefined()) {
+			Serialization::DeserializeProperty<Serialization::Optional>("MouseSensitivity", Settings.Input.MouseSensitivity, 1.0f, InputNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("ZoomSpeed", Settings.Input.ZoomSpeed, 1.0f, InputNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("EdgePan", Settings.Input.bEdgePan, false, InputNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("EdgePanSpeed", Settings.Input.EdgePanSpeed, 8.0f, InputNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("InvertCameraDrag", Settings.Input.bInvertCameraDrag, false, InputNode);
+		}
+
+		const YAML::Node& GameplayNode = Node["Gameplay"];
+		if (GameplayNode.IsDefined()) {
+			Serialization::DeserializeProperty<Serialization::Optional>("Difficulty", Settings.Gameplay.Difficulty, EDifficulty::Normal, GameplayNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("ShowTutorialHints", Settings.Gameplay.bShowTutorialHints, true, GameplayNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("ScreenShake", Settings.Gameplay.bScreenShake, true, GameplayNode);
+			Serialization::DeserializeProperty<Serialization::Optional>("MasterScale", Settings.Gameplay.MasterScale, 1.0f, GameplayNode);
+		}
+
 		return true;
 	}
 
 }
-

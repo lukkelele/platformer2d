@@ -12,15 +12,6 @@
 
 namespace platformer2d {
 
-	enum class EMovementState
-	{
-		Idle,
-		Running,
-		Airborne,
-		COUNT
-	};
-	LK_ENUM(EMovementState);
-
 	struct FPlayerData
 	{
 		std::uint64_t ID = 0;
@@ -49,7 +40,7 @@ namespace platformer2d {
 		[[nodiscard]] const FPlayerData& GetData() const { return Data; }
 		[[nodiscard]] CInventory& GetInventory() { return Inventory; }
 		[[nodiscard]] const CInventory& GetInventory() const { return Inventory; }
-		[[nodiscard]] const CSprite& GetSprite() const { return *Sprite; }
+		[[nodiscard]] const CSprite* GetSprite() const override { return Sprite.get(); }
 
 		[[nodiscard]] float GetJumpImpulse() const { return JumpImpulse; }
 		void SetJumpImpulse(float Impulse);

@@ -41,6 +41,13 @@ namespace platformer2d::Math {
 		}
 	};
 
+	template<typename T>
+		requires std::is_integral_v<T>
+	[[nodiscard]] constexpr T Clamp(const T Value, const T Min, const T Max)
+	{
+		return std::min(Max, std::max(Min, Value));
+	};
+
 	[[nodiscard]] inline glm::vec2 Perp(const glm::vec2& V)
 	{
 		return glm::vec2(-V.y, V.x);

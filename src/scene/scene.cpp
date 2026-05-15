@@ -10,51 +10,10 @@
 #include "game/instance.h"
 #include "game/controller/patrolcontroller.h"
 #include "renderer/renderer.h"
+#include "renderer/sprite.h"
 #include "serialization/serialization.h"
 
 namespace platformer2d {
-
-	static void RenderQuad(const CActor& Actor)
-	{
-		const FTransformComponent& TC = Actor.GetTransformComponent();
-		CRenderer::DrawQuad(
-			Actor.GetPosition(),
-			TC.Scale,
-			Actor.GetTexture(),
-			Actor.GetColor(),
-			glm::degrees(TC.GetRotation2D()),
-			Actor.IsOutlineEnabled() ? Actor.GetOutlineThickness() : 0.0f,
-			Actor.GetOutlineColor());
-	}
-
-	static void RenderChain(const CActor& Actor, const CBody& Body, const FChain& Chain)
-	{
-		const std::size_t Count = Chain.Points.size();
-		if (Count < 2) {
-			return;
-		}
-
-		const glm::vec2 Origin = Body.GetPosition();
-		const glm::vec4& Color = Actor.GetColor();
-		const ETexture Texture = Actor.GetTexture();
-		const std::size_t Last = Chain.bLoop ? Count : (Count - 1);
-		const bool Textured = (Texture != ETexture::White) && (Chain.TextureHeight > 0.0f);
-		if (Textured) {
-			for (std::size_t Idx = 0; Idx < Last; Idx++) {
-				const glm::vec2 P0 = Origin + Chain.Points[Idx];
-				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
-				const glm::vec2 Center = (P0 + P1) * 0.50f;
-				const float AngleDeg = glm::degrees(std::atan2(P1.y - P0.y, P1.x - P0.x));
-				CRenderer::DrawQuad(Center, glm::vec2(glm::length(P1 - P0), Chain.TextureHeight), Texture, Color, AngleDeg);
-			}
-		} else {
-			for (std::size_t Idx = 0; Idx < Last; Idx++) {
-				const glm::vec2 P0 = Origin + Chain.Points[Idx];
-				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
-				CRenderer::DrawLine(P0, P1, Color, 4);
-			}
-		}
-	}
 
 	CScene::CScene(std::string_view InName)
 		: Name(InName)
@@ -87,6 +46,35 @@ namespace platformer2d {
 		}
 	}
 
+	static void RenderChain(const CActor& Actor, const CBody& Body, const FChain& Chain)
+	{
+		const std::size_t Count = Chain.Points.size();
+		if (Count < 2) {
+			return;
+		}
+
+		const glm::vec2 Origin = Body.GetPosition();
+		const glm::vec4& Color = Actor.GetColor();
+		const ETexture Texture = Actor.GetTexture();
+		const std::size_t Last = Chain.bLoop ? Count : (Count - 1);
+		const bool Textured = (Texture != ETexture::White) && (Chain.TextureHeight > 0.0f);
+		if (Textured) {
+			for (std::size_t Idx = 0; Idx < Last; Idx++) {
+				const glm::vec2 P0 = Origin + Chain.Points[Idx];
+				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
+				const glm::vec2 Center = (P0 + P1) * 0.50f;
+				const float AngleDeg = glm::degrees(std::atan2(P1.y - P0.y, P1.x - P0.x));
+				CRenderer::DrawQuad(Center, glm::vec2(glm::length(P1 - P0), Chain.TextureHeight), Texture, Color, AngleDeg);
+			}
+		} else {
+			for (std::size_t Idx = 0; Idx < Last; Idx++) {
+				const glm::vec2 P0 = Origin + Chain.Points[Idx];
+				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
+				CRenderer::DrawLine(P0, P1, Color, 4);
+			}
+		}
+	}
+
 	void CScene::Render()
 	{
 		LK_PROFILE_FUNC();
@@ -97,7 +85,7 @@ namespace platformer2d {
 
 			const CBody* Body = Actor->GetBody();
 			if (Body == nullptr) {
-				RenderQuad(*Actor);
+				RenderActor(*Actor);
 				continue;
 			}
 
@@ -106,9 +94,37 @@ namespace platformer2d {
 				if constexpr (std::is_same_v<T, FChain>) {
 					RenderChain(*Actor, *Body, ShapeRef);
 				} else {
-					RenderQuad(*Actor);
+					RenderActor(*Actor);
 				}
 			}, Body->GetShape());
+		}
+	}
+
+	void CScene::RenderActor(const CActor& Actor)
+	{
+		const FTransformComponent& TC = Actor.GetTransformComponent();
+		const float RotationDeg = glm::degrees(TC.GetRotation2D());
+		const float OutlineThickness = Actor.IsOutlineEnabled() ? Actor.GetOutlineThickness() : 0.0f;
+
+		if (const CSprite* SpritePtr = Actor.GetSprite()) {
+			CRenderer::DrawQuad(
+				Actor.GetPosition(),
+				TC.Scale,
+				*CRenderer::GetTexture(Actor.GetTexture()),
+				SpritePtr->GetUV(),
+				Actor.GetColor(),
+				RotationDeg,
+				OutlineThickness,
+				Actor.GetOutlineColor());
+		} else {
+			CRenderer::DrawQuad(
+				Actor.GetPosition(),
+				TC.Scale,
+				Actor.GetTexture(),
+				Actor.GetColor(),
+				RotationDeg,
+				OutlineThickness,
+				Actor.GetOutlineColor());
 		}
 	}
 
@@ -267,7 +283,7 @@ namespace platformer2d {
 			ActorSpec.Type = ActorType;
 			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorSpec.Name, ActorSpec.Handle);
 
-			ActorSpec.Texture = static_cast<ETexture>(Node["Texture"].as<int>());
+			ActorSpec.Texture = static_cast<ETexture>(Node["Texture"].as<std::underlying_type_t<ETexture>>());
 			ActorSpec.Color = Node["Color"].as<glm::vec4>();
 
 			const YAML::Node& OutlineNode = Node["Outline"];
@@ -321,8 +337,7 @@ namespace platformer2d {
 				auto& Spec = EnemySpec.emplace();
 				Serialization::DeserializeProperty("ControllerType", Spec.ControllerType, EControllerType::None, ControllerNode);
 				Serialization::DeserializeProperty("SpawnPoint", Spec.SpawnPoint, glm::vec2(0.0f, 0.0f), Node);
-				/* @fixme: Temporarily optional */
-				Serialization::DeserializeProperty<Serialization::EProperty::Optional>("Archetype", Spec.Archetype, EEnemyArchetype::Grunt, Node);
+				Serialization::DeserializeProperty("Archetype", Spec.Archetype, EEnemyArchetype::Grunt, Node);
 			}
 
 			LK_VERIFY(!DoesActorExist(ActorSpec.Handle), "Duplicate actors found with handle {}", ActorSpec.Handle);

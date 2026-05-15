@@ -3,6 +3,7 @@
 #include "lk_config.h"
 #include "core/log.h"
 #include "core/profiler.h"
+#include "core/settings.h"
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "renderer/renderer.h"
@@ -14,7 +15,7 @@ namespace platformer2d {
 	constexpr float VELOCITY_THRESHOLD_X = CBody::LINEAR_VELOCITY_X_EPSILON;
 	constexpr float VELOCITY_THRESHOLD_Y = CBody::LINEAR_VELOCITY_Y_EPSILON;
 
-	constexpr std::array<EKey, 5> MovementKeys = {
+	static constexpr std::array<EKey, 5> MovementKeys = {
 		EKey::W,
 		EKey::A,
 		EKey::S,
@@ -424,9 +425,9 @@ namespace platformer2d {
 		if (CKeyboard::IsAnyKeysDown(EKey::LeftControl, EKey::RightControl)) {
 			auto& CamComp = GetComponent<FCameraComponent>();
 			CCamera& Camera = *CamComp.Camera;
-			const float ZoomDiff = (Direction == EMouseScrollDirection::Up)
-				? -CCamera::ZOOM_DIFF
-				: CCamera::ZOOM_DIFF;
+			const float ZoomSpeed = std::clamp(FSettings::Get().Input.ZoomSpeed, 0.050f, 8.0f);
+			const float Step = CCamera::ZOOM_DIFF * ZoomSpeed;
+			const float ZoomDiff = (Direction == EMouseScrollDirection::Up) ? -Step : Step;
 			Camera.SetZoom(Camera.GetZoom() + ZoomDiff);
 		}
 	}

@@ -1,7 +1,10 @@
 #pragma once
 
 #include <filesystem>
+#include <span>
 #include <string>
+
+#include "lk_config.h"
 
 namespace platformer2d::StringUtils {
 
@@ -31,6 +34,32 @@ namespace platformer2d::StringUtils {
 	inline std::string GetPathRelativeToProject(const std::filesystem::path& Path)
 	{
 		return RemovePreceding(PROJECT_NAME, Path.generic_string());
+	};
+
+	inline std::size_t GetLongestLen(std::span<const std::string_view> Strings)
+	{
+		std::size_t Longest = 0;
+		for (const auto& S : Strings) {
+			if (S.size() > Longest) {
+				Longest = S.size();
+			}
+		}
+		return Longest;
+	};
+
+	inline std::size_t GetIndexOfLongest(std::span<const std::string_view> Strings)
+	{
+		std::size_t Idx = 0;
+		std::size_t CurrentIdx = 0;
+		std::size_t Longest = 0;
+		for (const auto& S : Strings) {
+			if (S.size() > Longest) {
+				Longest = S.size();
+				Idx = CurrentIdx;
+			}
+			CurrentIdx++;
+		}
+		return Idx;
 	};
 
 }

@@ -41,7 +41,9 @@ namespace platformer2d {
 			COUNT
 		};
 		LK_ENUM(ETargetResponse);
+
 		[[nodiscard]] ETargetResponse HandleTarget(CEnemy& Enemy, const std::shared_ptr<CActor>& Target);
+		void Patrol(CEnemy& Enemy);
 
 	private:
 		float StartX = 0.0f;
@@ -56,6 +58,7 @@ namespace platformer2d {
 		float DetectRadius = 4.0f;
 		float StopRadius = 0.60f;
 		float GiveUpRadius = 6.0f;
+		bool bPlayerLOS = false;
 
 		bool bHasLastKnownPos = false;
 		glm::vec2 LastKnownPos = {0.0f, 0.0f};

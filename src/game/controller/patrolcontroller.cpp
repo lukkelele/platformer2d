@@ -74,23 +74,12 @@ namespace platformer2d {
 			} else {
 				StuckTimer = 0.0f;
 			}
+
+			if ((Response == ETargetResponse::None) && !bPlayerLOS) {
+				Patrol(Enemy);
+			}
 		} else {
-			const float X = Enemy.GetPosition().x;
-			const float MinX = StartX - PatrolHalfDistance;
-			const float MaxX = StartX + PatrolHalfDistance;
-
-			if ((PatrolDirection == EDirection::Right) && (X >= MaxX)) {
-				PatrolDirection = EDirection::Left;
-			}
-			if ((PatrolDirection == EDirection::Left) && (X <= MinX)) {
-				PatrolDirection = EDirection::Right;
-			}
-
-			if (PatrolDirection == EDirection::Left) {
-				Enemy.MoveLeft();
-			} else if (PatrolDirection == EDirection::Right) {
-				Enemy.MoveRight();
-			}
+			Patrol(Enemy);
 		}
 	}
 
@@ -134,17 +123,18 @@ namespace platformer2d {
 		const float StopRadiusSq = Archetype.StopRadius * Archetype.StopRadius;
 		const float GiveUpRadiusSq = Archetype.GiveUpRadius * Archetype.GiveUpRadius;
 
-		const bool bHasLOS = Physics::HasLineOfSight(Pos, TargetPos, Target.get());
+		bPlayerLOS = Physics::HasLineOfSight(Pos, TargetPos, Target.get());
+		// LK_DEBUG_TAG("PatrolController", "PatrolDirection={}  LOS={}", Enum::ToString(PatrolDirection), bPlayerLOS);
 
 		if (!bChasing) {
-			if ((DistSq <= DetectRadiusSq) && bHasLOS) {
+			if ((DistSq <= DetectRadiusSq) && bPlayerLOS) {
 				bChasing = true;
 				bHasLastKnownPos = false;
 			}
 		} else {
 			if (DistSq > GiveUpRadiusSq) {
 				bChasing = false;
-			} else if (!bHasLOS) {
+			} else if (!bPlayerLOS) {
 				bChasing = false;
 				LastKnownPos = TargetPos;
 				bHasLastKnownPos = true;
@@ -179,6 +169,26 @@ namespace platformer2d {
 		}
 
 		return ETargetResponse::None;
+	}
+
+	void CPatrolController::Patrol(CEnemy& Enemy)
+	{
+		const float X = Enemy.GetPosition().x;
+		const float MinX = StartX - PatrolHalfDistance;
+		const float MaxX = StartX + PatrolHalfDistance;
+
+		if ((PatrolDirection == EDirection::Right) && (X >= MaxX)) {
+			PatrolDirection = EDirection::Left;
+		}
+		if ((PatrolDirection == EDirection::Left) && (X <= MinX)) {
+			PatrolDirection = EDirection::Right;
+		}
+
+		if (PatrolDirection == EDirection::Left) {
+			Enemy.MoveLeft();
+		} else if (PatrolDirection == EDirection::Right) {
+			Enemy.MoveRight();
+		}
 	}
 
 }

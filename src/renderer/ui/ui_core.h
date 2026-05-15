@@ -20,13 +20,13 @@ namespace platformer2d::UI {
 		inline constexpr const char* const HostWindow = "HostWindow";
 		inline constexpr const char* const Dockspace = "##Dockspace";
 		inline constexpr const char* const Topbar = "##Topbar";
-		inline constexpr const char* const Sidebar1 = "Sidebar1";
-		inline constexpr const char* const Sidebar2 = "Sidebar2";
+		inline constexpr const char* const Sidebar1 = "Sidebar##1";
+		inline constexpr const char* const Sidebar2 = "Sidebar##2";
 		inline constexpr const char* const Menubar = "##Menubar";
 		inline constexpr const char* const BottomBar = "##BottomBar";
 		inline constexpr const char* const Selection = "Selection";
-		inline constexpr const char* const SceneManager = "Scene##Manager";
-		inline constexpr const char* const CreatorMenu = "Creator Menu";
+		inline constexpr const char* const SceneManager = "Scene Manager";
+		inline constexpr const char* const Creator = "Creator";
 		inline constexpr const char* const TerrainCreator = "Terrain Creator";
 	}
 
@@ -217,11 +217,15 @@ namespace platformer2d::UI {
 		ImGui::Image(static_cast<ImU64>(Texture->GetID()), Size, UV0, UV1);
 	}
 
-	inline void SeparatorPadded(const float YPadding)
+	inline void Separator(const float YPadding = 0.0f)
 	{
-		ImGui::Dummy(ImVec2(0, YPadding));
+		if (YPadding > 0.0f) {
+			ImGui::Dummy(ImVec2(0, YPadding));
+		}
 		ImGui::Separator();
-		ImGui::Dummy(ImVec2(0, YPadding));
+		if (YPadding > 0.0f) {
+			ImGui::Dummy(ImVec2(0, YPadding));
+		}
 	}
 
 	/**
@@ -235,9 +239,9 @@ namespace platformer2d::UI {
 	inline void DrawButtonImage(const std::shared_ptr<CTexture>& ImageNormal,
 		const std::shared_ptr<CTexture>& ImageHovered,
 		const std::shared_ptr<CTexture>& ImagePressed,
-		const ImU32 TintNormal,
-		const ImU32 TintHovered,
-		const ImU32 TintPressed,
+		const std::uint32_t TintNormal,
+		const std::uint32_t TintHovered,
+		const std::uint32_t TintPressed,
 		const ImVec2& RectMin,
 		const ImVec2& RectMax)
 	{
@@ -254,9 +258,9 @@ namespace platformer2d::UI {
 	}
 
 	inline void DrawButtonImage(const std::shared_ptr<CTexture>& Image,
-		const ImU32 TintNormal,
-		const ImU32 TintHovered,
-		const ImU32 TintPressed,
+		const std::uint32_t TintNormal,
+		const std::uint32_t TintHovered,
+		const std::uint32_t TintPressed,
 		const ImRect& Rectangle)
 	{
 		DrawButtonImage(Image, Image, Image, TintNormal, TintHovered, TintPressed, Rectangle.Min, Rectangle.Max);

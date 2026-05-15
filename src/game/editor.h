@@ -51,7 +51,12 @@ namespace platformer2d {
 		void UI_MainMenubar();
 		void UI_LeftSidebar();
 		void UI_LevelLauncher();
+		void UI_SceneBrowser();
 		void UI_BottomBar();
+
+		void SwitchToScene(const std::filesystem::path& NewPath);
+
+		void HandleViewportLeftClick();
 
 		void PossessPlayerCamera();
 		void PossessEditorCamera();
@@ -72,6 +77,7 @@ namespace platformer2d {
 		bool bEditorViewportFocused = true;
 
 		bool bPendingViewportResize = false;
+		bool bSerializeOnNextSceneOpened = false;
 	};
 
 }

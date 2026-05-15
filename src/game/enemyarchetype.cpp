@@ -14,7 +14,7 @@ namespace platformer2d {
 		.GiveUpRadius = 6.0f,
 		.AttackDamage = 8.0f,
 		.AttackRange = 0.50f,
-		.Size = {0.40f, 0.60f},
+		.Size = {0.38f, 0.46f},
 		.bCanJump = false,
 		.bRanged = false,
 	};
@@ -28,7 +28,7 @@ namespace platformer2d {
 		.GiveUpRadius = 8.0f,
 		.AttackDamage = 10.0f,
 		.AttackRange = 0.50f,
-		.Size = {0.40f, 0.60f},
+		.Size = {0.38f, 0.46f},
 		.bCanJump = true,
 		.bRanged = false,
 	};
@@ -42,7 +42,7 @@ namespace platformer2d {
 		.GiveUpRadius = 12.0f,
 		.AttackDamage = 12.0f,
 		.AttackRange = 6.0f,
-		.Size = {0.40f, 0.60f},
+		.Size = {0.32f, 0.45f},
 		.bCanJump = false,
 		.bRanged = true,
 	};

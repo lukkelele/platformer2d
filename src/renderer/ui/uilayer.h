@@ -29,6 +29,8 @@ namespace platformer2d {
 			None,
 			MainMenu,
 			LevelLauncher,
+			Settings,
+			Credits,
 			COUNT
 		};
 		LK_ENUM(EMenu);
@@ -40,6 +42,8 @@ namespace platformer2d {
 
 	private:
 		void UI_MainMenu();
+		void UI_Settings();
+		void UI_Credits();
 
 		void OnKey(const FKeyData& KeyData);
 

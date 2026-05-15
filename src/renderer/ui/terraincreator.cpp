@@ -179,35 +179,31 @@ namespace platformer2d::UI {
 		const bool NewChain = (EditActor == nullptr);
 		BeginPropertyGrid();
 		{
+			Table::NextRow();
+			UI::Checkbox("Preview", State.bPreviewVisible);
+
 			/* Row: Chain to edit */
 			Table::NextRow();
-			{
-				Table::Label("Editing");
-				Table::NextColumn();
-				if (NewChain) {
-					UI::FScopedFont Font(EFontModifier::Bold);
-					ImGui::Text("<New chain>");
-				} else {
-					ImGui::Text("%s", std::string(EditActor->GetName()).c_str());
-				}
+			Table::Label("Editing");
+			Table::NextColumn();
+			if (NewChain) {
+				UI::FScopedFont Font(EFontModifier::Bold);
+				ImGui::Text("<New chain>");
+			} else {
+				ImGui::Text("%s", std::string(EditActor->GetName()).c_str());
+			}
 
-				if (EditActor) {
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Clear##ChainEdit")) {
-						State.bHasEditTarget = false;
-					}
+			if (EditActor) {
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Clear##ChainEdit")) {
+					State.bHasEditTarget = false;
 				}
 			}
 
 			Table::NextRow();
-			{
-				Table::Label("Name");
-				Table::NextColumn();
-				ImGui::InputText("##NameBuf", State.NameBuf.data(), State.NameBuf.size());
-			}
-
-			Table::NextRow();
-			UI::Checkbox("Show Preview", State.bPreviewVisible);
+			Table::Label("Name");
+			Table::NextColumn();
+			ImGui::InputText("##NameBuf", State.NameBuf.data(), State.NameBuf.size());
 
 			Table::NextRow();
 			UI::Checkbox("Loop", State.bLoop);
@@ -228,20 +224,16 @@ namespace platformer2d::UI {
 			}
 
 			Table::NextRow();
-			{
-				if (UI::TextureDropdown(State.Texture)) {
-					if (EditActor) {
-						ApplyChainToActor(EditActor, State);
-					}
+			if (UI::TextureDropdown(State.Texture)) {
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
 				}
 			}
 
 			Table::NextRow();
-			{
-				if (UI::DragFloat("Texture Height", State.TextureHeight, 0.01f, 0.0f, 10.0f, "%.3f")) {
-					if (EditActor) {
-						ApplyChainToActor(EditActor, State);
-					}
+			if (UI::DragFloat("Texture Height", State.TextureHeight, 0.01f, 0.0f, 10.0f, "%.3f")) {
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
 				}
 			}
 		}

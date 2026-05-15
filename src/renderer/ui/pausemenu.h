@@ -4,6 +4,7 @@
 
 #include "core/core.h"
 #include "core/delegate.h"
+#include "settingsmenu.h"
 
 namespace platformer2d::UI {
 
@@ -20,12 +21,7 @@ namespace platformer2d::UI {
 		EPauseMenuView View = EPauseMenuView::Default;
 		EPauseMenuView LastView = EPauseMenuView::Default;
 
-		struct FSettings
-		{
-			bool bDebug = false;
-			bool bStyleEditor = false;
-			bool bIDStackTool = false;
-		} Settings;
+		FSettingsMenuState Settings;
 	};
 	extern FPauseMenu PauseMenu;
 

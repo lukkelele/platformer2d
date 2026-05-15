@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 
@@ -12,6 +13,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
+#include "core/settings.h"
 #include "core/window.h"
 #include "core/profiler.h"
 #include "core/timer.h"
@@ -24,13 +26,13 @@
 #include "scene/effectmanager.h"
 
 namespace platformer2d {
-	constexpr int CIRCLE_SEGMENTS = 32;
-	constexpr std::uint32_t MAX_QUADS = 10000;
-	constexpr std::uint32_t MAX_LINES = 1000;
-	constexpr std::uint32_t MAX_VERTICES = MAX_QUADS * 4;
-	constexpr std::uint32_t MAX_INDICES = MAX_QUADS * 6;
-	constexpr std::uint32_t MAX_LINE_VERTICES = MAX_LINES * 2;
-	constexpr std::uint32_t MAX_LINE_INDICES = MAX_LINES * 2;
+	static constexpr int CIRCLE_SEGMENTS = 32;
+	static constexpr std::uint32_t MAX_QUADS = 10000;
+	static constexpr std::uint32_t MAX_LINES = 1000;
+	static constexpr std::uint32_t MAX_VERTICES = MAX_QUADS * 4;
+	static constexpr std::uint32_t MAX_INDICES = MAX_QUADS * 6;
+	static constexpr std::uint32_t MAX_LINE_VERTICES = MAX_LINES * 2;
+	static constexpr std::uint32_t MAX_LINE_INDICES = MAX_LINES * 2;
 
 	CRenderer::FLineConfig CRenderer::LineConfig;
 	CRenderer::FCameraData CRenderer::CameraData;
@@ -74,7 +76,7 @@ namespace platformer2d {
 	{
 		for (auto& [Texture, TextureRef] : Data.Textures) {
 			if (TextureRef != nullptr) {
-				TextureRef->Bind(static_cast<uint32_t>(Texture));
+				TextureRef->Bind(static_cast<std::uint32_t>(Texture));
 			}
 		}
 	}
@@ -328,8 +330,7 @@ namespace platformer2d {
 		LoadTexture(TEXTURES_DIR "/swoosh.png", ETexture::Swoosh, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/cloud-1.png", ETexture::Cloud, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/ar15.png", ETexture::Rifle, EImageFormat::RGBA8);
-		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Enemy1, EImageFormat::RGBA8);
-		LoadTexture(TEXTURES_DIR "/test/test_player.png", ETexture::Enemy2, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/goblin.png", ETexture::Goblin, EImageFormat::RGBA8);
 		Data.WhiteTexture = Data.Textures[ETexture::White];
 	}
 
@@ -427,12 +428,15 @@ namespace platformer2d {
 		LK_PROFILE_FUNC();
 		Data.ViewportFramebuffer->Bind();
 
+		const float Brightness = std::clamp(FSettings::Get().Graphics.Brightness, 0.0f, 4.0f);
+
 		if (QuadIndexCount > 0) {
 			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)QuadVertexBufferPtr - (std::uint8_t*)QuadVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
 
 			QuadShader->Bind();
+			QuadShader->Set("u_brightness", Brightness);
 			CameraUniformBuffer->Bind();
 			LK_OpenGL_Verify(glBindVertexArray(QuadVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, QuadIndexCount, GL_UNSIGNED_INT, nullptr));
@@ -446,6 +450,7 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, LineVertexBufferBase));
 
 			LineShader->Bind();
+			LineShader->Set("u_brightness", Brightness);
 			CameraUniformBuffer->Bind();
 			LK_OpenGL_Verify(glBindVertexArray(LineVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_LINES, LineIndexCount, GL_UNSIGNED_INT, nullptr));
@@ -459,6 +464,7 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, CircleVertexBufferBase));
 
 			CircleShader->Bind();
+			CircleShader->Set("u_brightness", Brightness);
 			CameraUniformBuffer->Bind();
 			LK_OpenGL_Verify(glBindVertexArray(CircleVAO));
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, CircleIndexCount, GL_UNSIGNED_INT, nullptr));

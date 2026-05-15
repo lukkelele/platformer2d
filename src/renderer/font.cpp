@@ -27,8 +27,8 @@ namespace platformer2d::UI {
 		{ EFontSize::Large,   26.0f },
 		{ EFontSize::Larger,  30.0f },
 		{ EFontSize::Header,  38.0f },
-		{ EFontSize::Title,   54.0f },
-		{ EFontSize::Banner,  72.0f },
+		{ EFontSize::Title,   58.0f },
+		{ EFontSize::Banner,  82.0f },
 		/* clang-format on */
 	};
 

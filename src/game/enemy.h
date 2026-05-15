@@ -1,7 +1,9 @@
 #pragma once
 
 #include "controller/enemycontroller.h"
-#include "enemyarchetype.h"
+#include "game/enemyarchetype.h"
+#include "game/spritereader.h"
+#include "renderer/sprite.h"
 #include "scene/actor.h"
 
 namespace platformer2d {
@@ -17,6 +19,8 @@ namespace platformer2d {
 	{
 	public:
 		CEnemy(const FEnemySpecification& InSpec, const FActorSpecification& InActorSpec, const FBodySpecification& InBodySpec);
+		CEnemy(CEnemy&&) = default;
+		CEnemy(const CEnemy&) = delete;
 		virtual ~CEnemy();
 
 		void Tick(float DeltaTime) override;
@@ -60,9 +64,21 @@ namespace platformer2d {
 		[[nodiscard]] EEnemyArchetype GetArchetype() const { return ArchetypeKind; }
 		[[nodiscard]] const FEnemyArchetype& GetArchetypeData() const { return GetEnemyArchetype(ArchetypeKind); }
 
-		virtual bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
+		[[nodiscard]] const CSprite* GetSprite() const override { return Sprite.get(); }
+
+		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
 	private:
+		void SetMovementState(EMovementState State);
+		void UpdateMovementState();
+		void OnMovementState_Idle();
+		void OnMovementState_Running();
+		void OnMovementState_Airborne();
+
+		void CheckCollisions();
+		void UpdateSprite();
+		void SetSpriteTilePos(const FSpriteCoord& InCoord, bool ForceUpdate = false);
+
 		void ApplyMoveVelocity(const glm::vec2& InVelocity);
 		void ApplyMoveVelocityX(float InVelocity);
 
@@ -72,6 +88,14 @@ namespace platformer2d {
 		EEnemyArchetype ArchetypeKind = EEnemyArchetype::Grunt;
 
 		float MoveSpeed = 1.20f;
+		EMovementState MovementState = EMovementState::Idle;
+		bool bJumping = false;
+		bool bJustLanded = false;
+
+		std::unique_ptr<CSprite> Sprite = nullptr;
+		FSpriteSheet SpriteSheet;
+		FSpriteFrame SpriteFrame;
+		bool bShouldUpdateSprite = false;
 	};
 }
 

@@ -1,6 +1,10 @@
 project_library_sources(
 	combo.h
 	combo.cpp
+	creatorpanel.h
+	creatorpanel.cpp
+	enemytools.h
+	enemytools.cpp
 	imgui.h
 	imguilayer.h
 	imguilayer.cpp
@@ -9,11 +13,18 @@ project_library_sources(
 	hudlayer.cpp
 	levellauncher.h
 	levellauncher.cpp
+	mainmenustyle.h
+	mainmenustyle.cpp
 	pausemenu.h
 	pausemenu.cpp
+	physics.h
 	physics.cpp
+	quickcreator.h
+	quickcreator.cpp
 	selectionpanel.h
 	selectionpanel.cpp
+	settingsmenu.h
+	settingsmenu.cpp
 	scoped.h
 	terraincreator.cpp
 	text.cpp

@@ -151,15 +151,7 @@ namespace platformer2d {
 			RaycastSceneAtMouse();
 		}
 
-		CRenderer::DrawQuad(
-			Player->GetPosition(),
-			Player->GetSize(),
-			*CRenderer::GetTexture(Player->GetTexture()),
-			Player->GetSprite().GetUV(),
-			FColor::White,
-			glm::degrees(Player->GetRotation()),
-			Player->GetOutlineThickness(),
-			Player->GetOutlineColor());
+		CScene::RenderActor(*Player);
 
 		OnPostTick(InDeltaTime);
 

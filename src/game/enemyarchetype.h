@@ -28,7 +28,7 @@ namespace platformer2d {
 		float GiveUpRadius = 6.0f;
 		float AttackDamage = 10.0f;
 		float AttackRange = 0.50f;
-		glm::vec2 Size = {0.40f, 0.60f};
+		glm::vec2 Size = {0.30f, 0.45f};
 		bool bCanJump = false;
 		bool bRanged = false;
 	};

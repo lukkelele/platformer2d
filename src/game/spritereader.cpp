@@ -114,7 +114,7 @@ namespace platformer2d {
 		Serialization::DeserializeProperty("TileSize", Sheet.TileSize, glm::vec2{0.0f, 0.0f}, Root);
 
 		std::uint16_t DefaultRow = 0;
-		Serialization::DeserializeProperty("Row", DefaultRow, std::uint16_t{0}, Root);
+		Serialization::DeserializeProperty<Serialization::Optional>("Row", DefaultRow, std::uint16_t{0}, Root);
 
 		const YAML::Node AnimsNode = Root["Animations"];
 		if (!AnimsNode || !AnimsNode.IsMap()) {

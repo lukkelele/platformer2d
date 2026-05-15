@@ -63,6 +63,7 @@ namespace platformer2d {
 		[[nodiscard]] bool GetVSync() const { return Data.bVSync; }
 		[[nodiscard]] std::uint16_t GetRefreshRate() const;
 		void Maximize();
+		void Restore();
 		bool IsMaximized() const;
 
 		const FWindowData& GetData() const { return Data; }

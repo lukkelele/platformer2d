@@ -77,6 +77,28 @@ namespace YAML {
 	};
 
 	template<>
+	struct convert<platformer2d::EDifficulty>
+	{
+		using Type = platformer2d::EDifficulty;
+		static Node encode(const Type Rhs)
+		{
+			Node YamlNode;
+			YamlNode.push_back(std::to_underlying(Rhs));
+			return YamlNode;
+		}
+
+		static bool decode(const Node& YamlNode, Type& Rhs)
+		{
+			if (!YamlNode.IsScalar()) {
+				return false;
+			}
+
+			Rhs = static_cast<Type>(YamlNode.as<std::underlying_type_t<Type>>());
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<platformer2d::EPickupKind>
 	{
 		static Node encode(const platformer2d::EPickupKind Rhs)

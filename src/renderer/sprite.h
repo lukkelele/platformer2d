@@ -112,3 +112,20 @@ namespace platformer2d {
 	};
 
 }
+
+template<>
+struct lklog::fmt::formatter<platformer2d::FSpriteCoord>
+{
+	template<typename ParseContext>
+	constexpr auto parse(ParseContext& Context)
+	{
+		return Context.begin();
+	}
+
+	template<typename FormatContext>
+	auto format(const ::platformer2d::FSpriteCoord& Input, FormatContext& Context) const
+	{
+		return lklog::fmt::format_to(Context.out(), "({}, {})", Input.X, Input.Y);
+	}
+};
+

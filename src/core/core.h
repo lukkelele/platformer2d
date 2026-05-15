@@ -123,4 +123,14 @@ namespace platformer2d {
 	};
 	LK_ENUM(EQuickLoad);
 
+	enum class EDifficulty : std::uint8_t
+	{
+		Easy,
+		Normal,
+		Hard,
+		Insane,
+		COUNT
+	};
+	LK_ENUM(EDifficulty);
+
 }

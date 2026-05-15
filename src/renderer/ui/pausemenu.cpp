@@ -6,6 +6,7 @@
 #include "game/instance.h"
 #include "renderer/color.h"
 #include "renderer/renderer.h"
+#include "renderer/ui/settingsmenu.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/ui_core.h"
 #include "renderer/ui/uilayer.h"
@@ -16,13 +17,8 @@ namespace platformer2d::UI {
 	FPauseMenu PauseMenu{};
 	FOnPauseMenuOpened OnPauseMenuOpened;
 
-	static constexpr float LABEL_COLUMN_WIDTH = 190.0f;
-	static constexpr float LABEL_INDENT_WIDTH = 24.0f;
-	static constexpr float COLUMN_ITEM_WIDTH = 410.0f;
-
 	static void DrawPauseMenu_Default();
 	static void DrawPauseMenu_Settings();
-	static void DrawDebugTools();
 
 	void OpenPauseMenu(const EPauseMenuView View)
 	{
@@ -57,7 +53,7 @@ namespace platformer2d::UI {
 		static const std::string Title = "platformer2d";
 		const ImVec2 TitleSize = ImGui::CalcTextSize(Title.c_str());
 		ImGui::SetCursorPosX((MenuSize.x * 0.50f) - (TitleSize.x * 0.50f));
-		UI::ColdTextGradient("platformer2d");
+		UI::Text::ColdGradient("platformer2d");
 		UI::Font::Pop();
 
 		UI::Font::Push(EFont::Roboto, EFontSize::Regular, EFontModifier::BoldItalic);
@@ -68,9 +64,7 @@ namespace platformer2d::UI {
 		UI::HoverText("Lukas Gunnarsson");
 		UI::Font::Pop();
 
-		/* @todo Versioning info here */
-
-		ImGui::Dummy(ImVec2(0.0f, 52.0f));
+		ImGui::Dummy(ImVec2(0, 52));
 	}
 
 	void DrawPauseMenuBackdrop()
@@ -115,8 +109,12 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		constexpr float Y_FACTOR = 0.80f;
-		const ImVec2 WindowSize = ImVec2((std::clamp(Viewport->Size.x * 0.33f, 630.0f, 680.0f)),
+		constexpr float Y_FACTOR = 0.85f;
+		const bool WideView = (PauseMenu.View == EPauseMenuView::Settings);
+		const float WidthMin = WideView ? 900.0f : 630.0f;
+		const float WidthMax = WideView ? 1140.0f : 680.0f;
+		const float WidthFactor = WideView ? 0.90f : 0.33f;
+		const ImVec2 WindowSize = ImVec2((std::clamp(Viewport->Size.x * WidthFactor, WidthMin, WidthMax)),
 			(Viewport->Size.y * Y_FACTOR));
 		const ImVec2 WindowPos = ImVec2((Viewport->Size.x * 0.50f) - (WindowSize.x * 0.50f),
 			((Viewport->Size.y * (1.0f - Y_FACTOR)) * 0.50f));
@@ -152,7 +150,7 @@ namespace platformer2d::UI {
 
 		UI::End();
 
-		DrawDebugTools();
+		UI::DrawSettingsDebugTools(PauseMenu.Settings);
 	}
 
 	void DrawPauseMenu_Default()
@@ -218,140 +216,26 @@ namespace platformer2d::UI {
 
 	void DrawPauseMenu_Settings()
 	{
-		FPauseMenu::FSettings& PauseSettings = PauseMenu.Settings;
-		ImGuiStyle& Style = ImGui::GetStyle();
-
 		const ImVec2 MenuSize = ImGui::GetContentRegionAvail();
-		const ImVec2 ButtonSize = {MenuSize.x, 62.0f};
+		constexpr float BUTTON_HEIGHT = 62.0f;
+		constexpr float SAVE_BUTTON_WIDTH = 200.0f;
+		constexpr float SPACING = 8.0f;
 
-		UI::ShiftCursorY(12.0f);
-		UI::BannerTextCentralized("Settings", EFont::Roboto, EFontModifier::Bold);
-		ImGui::Dummy(ImVec2(0, 10));
+		const float ContentHeight = MenuSize.y - BUTTON_HEIGHT - SPACING;
+		ImGui::BeginChild("##PauseSettingsBody", ImVec2(MenuSize.x, ContentHeight),
+			ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		UI::DrawSettingsPanel(PauseMenu.Settings);
+		ImGui::EndChild();
 
-		UI::Font::Push(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
-
-		constexpr float PaddingY = 12.0f;
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
-
-		UI::ShiftCursorX(20);
-		ImGui::PushStyleColor(ImGuiCol_Text, RGBA32::Text::Darker);
-		UI::HeaderText("Window", EFont::Roboto, EFontModifier::Bold);
-		ImGui::PopStyleColor(1);
-		UI::ShiftCursor(44, 10);
-		if (ImGui::BeginTable("##WindowSettings", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
-			FSettings& AppSettings = FSettings::Get();
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			const float IndentX = Avail.x * 0.35f;
-			ImGui::TableSetupColumn("Label", 0, Avail.x * 0.50f);
-			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x * 0.50f);
-
-			ImGui::TableNextRow();
-			if (UI::Checkbox("VSync", AppSettings.Window.bVSync, IndentX)) {
-				CWindow::Get().SetVSync(AppSettings.Window.bVSync);
-			}
-
-			ImGui::TableNextRow();
-			UI::Checkbox("Start Maximized", AppSettings.Window.bStartMaximized, IndentX);
-
-			ImGui::TableNextRow();
-			UI::Checkbox("Debug", PauseSettings.bDebug, IndentX);
-
-			ImGui::EndTable();
-		}
-
-		UI::ShiftCursorX(20);
-		ImGui::PushStyleColor(ImGuiCol_Text, RGBA32::Text::Darker);
-		UI::HeaderText("Renderer", EFont::Roboto, EFontModifier::Bold);
-		ImGui::PopStyleColor(1);
-		UI::ShiftCursor(44, 10);
-		if (ImGui::BeginTable("##RenderSettings", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			const float IndentX = Avail.x * 0.35f;
-			ImGui::TableSetupColumn("Label", 0, Avail.x * 0.35f);
-			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x * 0.50f);
-
-			ImGui::TableNextRow();
-			bool bDepthTest = CRenderer::GetDepthTest();
-
-			if (UI::Checkbox("Depth Test", bDepthTest, IndentX)) {
-				CRenderer::SetDepthTest(bDepthTest);
-			}
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			UI::BlendFunction();
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			UI::DepthFunction();
-
-			ImGui::EndTable();
-		}
-
-		ImGui::SeparatorText("Camera");
-		if (CGameInstance::IsValid()) {
-			auto& GameInstance = CGameInstance::Get();
-			if (CCamera* Camera = GameInstance.GetActiveCamera(); Camera != nullptr) {
-				ImGui::PushID("UI_CameraOptions");
-				ImGui::BeginTable("##CameraOptionsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-				ImGui::TableSetupColumn("Label", 0, LABEL_COLUMN_WIDTH);
-				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LABEL_COLUMN_WIDTH);
-
-				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				UI::ShiftCursor(LABEL_INDENT_WIDTH, 4.0f);
-				ImGui::Text("Zoom");
-
-				ImGui::TableSetColumnIndex(1);
-				UI::ShiftCursor(0.0f, 4.0f);
-				ImGui::SetNextItemWidth(COLUMN_ITEM_WIDTH);
-				float Zoom = Camera->GetZoom();
-				ImGui::SliderFloat("##CameraZoom", &Zoom, CCamera::ZOOM_MIN, CCamera::ZOOM_MAX, "%.2f");
-				if (ImGui::IsItemActive()) {
-					Camera->SetZoom(Zoom);
-				}
-
-				ImGui::EndTable();
-				ImGui::PopID();
-			}
-		}
-
-		ImGui::Dummy(ImVec2(0.0f, 12.0f + PaddingY * 0.50f));
-		if (ImGui::Button("Style Editor", ButtonSize)) {
-			PauseSettings.bStyleEditor = !PauseSettings.bStyleEditor;
-		}
-		if (ImGui::Button("ID Tool", ButtonSize)) {
-			PauseSettings.bIDStackTool = !PauseSettings.bIDStackTool;
-		}
-
-		ImGui::PopStyleVar(2);
-		UI::Font::Pop();
-
-		/* Button: Backward */
+		const float BackWidth = std::max(120.0f, MenuSize.x - SAVE_BUTTON_WIDTH - SPACING);
 		{
-			UI::ShiftCursorY(ImGui::GetContentRegionAvail().y - ButtonSize.y);
 			UI::FScopedColor ButtonHovered(ImGuiCol_ButtonHovered, RGBA32::Compliment);
-			if (ImGui::Button(LK_ICON_BACKWARD, ButtonSize)) {
+			if (ImGui::Button(LK_ICON_BACKWARD, ImVec2(BackWidth, BUTTON_HEIGHT))) {
 				PauseMenu.View = EPauseMenuView::Default;
 			}
 		}
-	}
-
-	void DrawDebugTools()
-	{
-		ImGuiStyle& Style = ImGui::GetStyle();
-		FPauseMenu::FSettings& PauseSettings = PauseMenu.Settings;
-		if (PauseSettings.bStyleEditor) {
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal));
-			if (ImGui::Begin("Style Editor", &PauseSettings.bStyleEditor)) {
-				ImGui::ShowStyleEditor(&Style);
-				ImGui::End();
-			}
-		}
-		if (PauseSettings.bIDStackTool) {
-			ImGui::ShowIDStackToolWindow(&PauseSettings.bIDStackTool);
-		}
+		ImGui::SameLine(0.0f, SPACING);
+		UI::DrawSaveButton(PauseMenu.Settings, ImVec2(SAVE_BUTTON_WIDTH, BUTTON_HEIGHT));
 	}
 
 }
