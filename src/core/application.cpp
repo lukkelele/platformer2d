@@ -11,6 +11,7 @@
 #include "physics/body.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/vertexbufferlayout.h"
+#include "renderer/ui/hudlayer.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/uilayer.h"
 #include "scene/effectmanager.h"
@@ -49,16 +50,12 @@ namespace platformer2d {
 		CKeyboard::Initialize();
 		CMouse::Initialize();
 
-		LK_TRACE_TAG("Application", "Adding UI layer to layerstack");
+		std::shared_ptr<CHudLayer> HudLayer = std::make_shared<CHudLayer>();
+		LayerStack.PushOverlay(HudLayer);
+
 		UILayer = std::make_shared<CUILayer>();
 		UILayer->Initialize();
 		LayerStack.PushOverlay(UILayer);
-
-#if LOAD_EDITOR_ON_STARTUP
-		LK_TRACE_TAG("Application", "Adding testlevel to layerstack");
-		std::shared_ptr<CEditor> Editor = std::make_shared<CEditor>();
-		LayerStack.PushLayer(Editor);
-#endif
 	}
 
 	void CApplication::Shutdown()
@@ -71,7 +68,7 @@ namespace platformer2d {
 			Settings.Serialize(SettingsFile);
 
 			UILayer.reset();
-			LK_TRACE_TAG("Application", "Release layerstack");
+			LK_DEBUG_TAG("Application", "Release layerstack");
 			LayerStack.Destroy();
 
 			CEffectManager::Get().Destroy();

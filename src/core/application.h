@@ -37,6 +37,5 @@ namespace platformer2d {
 		CLayerStack LayerStack;
 		CTimer Timer;
 	};
-
 }
 
