@@ -6,6 +6,12 @@
 
 namespace platformer2d {
 
+	bool CHealthSystem::IsDamageable(CActor* const Target)
+	{
+		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
+		return HC ? HC->IsDamageable() : false;
+	}
+
 	bool CHealthSystem::ApplyDamage(CActor* const Target, const float Amount)
 	{
 		if (!Target || (Amount <= 0.0f)) {
@@ -14,10 +20,8 @@ namespace platformer2d {
 
 		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
 		if (!HC) {
-			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target->GetName());
 			return false;
 		}
-
 		if (!HC->IsDamageable()) {
 			LK_DEBUG_TAG("Health", "[{}] Damage skipped (not damageable)", Target->GetName());
 			return false;
