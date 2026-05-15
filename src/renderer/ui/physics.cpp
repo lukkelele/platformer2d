@@ -106,28 +106,28 @@ namespace platformer2d::UI {
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - ColWidth);
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Gravity Scale", Data.GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");
+			UI::DragFloat("Gravity Scale", Data.GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Friction", Data.Friction, 0.01f, 0.0f, 2.0f, "%.2f");
+			UI::DragFloat("Friction", Data.Friction, 0.01f, 0.0f, 2.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Density", Data.Density, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::DragFloat("Density", Data.Density, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Linear Velocity", Data.LinearVelocity, 0.10f, 0.010f, 0.010f);
+			UI::DragFloat2("Linear Velocity", Data.LinearVelocity, 0.10f, 0.010f, 0.010f);
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Angular Velocity", Data.AngularVelocity, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::DragFloat("Angular Velocity", Data.AngularVelocity, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Linear Damping", Data.LinearDamping, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::DragFloat("Linear Damping", Data.LinearDamping, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Directional Force", Data.DirForce, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::DragFloat("Directional Force", Data.DirForce, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Jump Impulse", Data.JumpImpulse, 0.01f, 0.0f, 1.0f, "%.2f");
+			UI::DragFloat("Jump Impulse", Data.JumpImpulse, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			ImGui::TableNextRow();
 			UI::Checkbox("Sensor", Data.bSensor);

@@ -14,18 +14,15 @@
 #include "ui.h"
 #include "scene/scene.h"
 
-namespace platformer2d::UI::Widget {
+namespace platformer2d::UI {
 
 	struct FActorDataEntry
 	{
 		std::array<char, 64> NameBuf;
 	};
+	static std::unordered_map<LUUID, FActorDataEntry> ActorDataMap;
 
-	namespace {
-		std::unordered_map<LUUID, FActorDataEntry> ActorDataMap;
-	}
-
-	void ActorNode::Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	void Actor::Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Actor && Scene);
 		if (!Actor || !Scene) {
@@ -102,7 +99,7 @@ namespace platformer2d::UI::Widget {
 		}
 	}
 
-	void ActorNode::DeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	void Actor::DeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Actor && Scene);
 		if (!Actor || !Scene) {
@@ -136,13 +133,13 @@ namespace platformer2d::UI::Widget {
 	}
 
 	/* @fixme: Refactor these awful functions :) */
-	void ActorNode::Data(std::shared_ptr<CActor> Actor)
+	void Actor::Data(std::shared_ptr<CActor> Actor)
 	{
 		const LUUID Handle = Actor->GetHandle();
 		ImGui::PushID(Handle);
 
 		static constexpr float LabelColumnWidth = 180.0f;
-		ImGui::BeginTable("##ActorNode_Data", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
+		ImGui::BeginTable("##Actor_Data", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 		ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
@@ -186,7 +183,7 @@ namespace platformer2d::UI::Widget {
 		Table::NextRow();
 		{
 			ETexture Texture = Actor->GetTexture();
-			if (UI::Widget::Combo::TextureDropdown(Texture)) {
+			if (UI::TextureDropdown(Texture)) {
 				LK_INFO_TAG("UI", "Update {} texture: {}", Actor->GetName(), Enum::ToString(Texture));
 				Actor->SetTexture(Texture);
 			}
@@ -312,7 +309,7 @@ namespace platformer2d::UI::Widget {
 			Table::NextRow();
 			{
 				float Thickness = Actor->GetOutlineThickness();
-				if (UI::Widget::DragFloat("Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
+				if (UI::DragFloat("Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
 					Actor->SetOutlineThickness(Thickness);
 				}
 			}
@@ -322,7 +319,7 @@ namespace platformer2d::UI::Widget {
 			{
 				const glm::vec4& Color = Actor->GetOutlineColor();
 				glm::vec3 C = {Color.x, Color.y, Color.z};
-				if (UI::Widget::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
+				if (UI::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
 					Actor->SetOutlineColor(glm::vec4(C, 1.0f));
 				}
 			}
@@ -334,7 +331,7 @@ namespace platformer2d::UI::Widget {
 		ImGui::PopID();
 	}
 
-	void ActorNode::Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	void Actor::Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
 		LK_ASSERT(Actor && Scene);
 		const LUUID Handle = Actor->GetHandle();
@@ -353,9 +350,9 @@ namespace platformer2d::UI::Widget {
 		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName.data());
 		ImGui::PushID(Handle);
 		if (NodeOpened) {
-			ActorNode::Data(Actor);
-			UI::Widget::DrawComponents(Actor);
-			UI::Widget::ActorNode::DeleteButton(Actor, Scene);
+			Actor::Data(Actor);
+			UI::DrawComponents(Actor);
+			UI::Actor::DeleteButton(Actor, Scene);
 			ImGui::TreePop();
 
 			if (!WasOpen && !CSelectionContext::IsAnySelected()) {
@@ -367,7 +364,7 @@ namespace platformer2d::UI::Widget {
 		ImGui::PopID();
 	}
 
-	void OnActorDeleted(const LUUID ActorHandle)
+	void Actor::OnActorDeleted(const LUUID ActorHandle)
 	{
 		LK_DEBUG_TAG("UI", "Removing handle {} from actor cache", ActorHandle);
 		ActorDataMap.erase(ActorHandle);
@@ -382,7 +379,7 @@ namespace platformer2d::UI::Widget {
 		/***********************************
 		 * Transform Component
 		 **********************************/
-		UI::Widget::DrawComponent<FTransformComponent>("Transform", Actor, [Actor](FTransformComponent& TC)
+		UI::DrawComponent<FTransformComponent>("Transform", Actor, [Actor](FTransformComponent& TC)
 		{
 			UI::BeginPropertyGrid();
 			bool Changed = false;
@@ -390,14 +387,14 @@ namespace platformer2d::UI::Widget {
 			/* Translation */
 			ImGui::TableNextRow();
 			glm::vec3 Translation = TC.GetTranslation();
-			if (UI::Widget::DragFloat3("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f)) {
+			if (UI::DragFloat3("Translation", Translation, 0.0f, 0.010f, -100.0f, 100.0f)) {
 				Actor->SetPosition(Translation);
 			}
 
 			/* Rotation */
 			ImGui::TableNextRow();
 			float Rotation = glm::degrees(TC.GetRotation2D());
-			if (UI::Widget::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f")) {
+			if (UI::DragFloat("Rotation", Rotation, 0.10f, (-6 * 360.0f), (6 * 360.0f), "%.2f")) {
 				Actor->SetRotation(glm::radians(Rotation));
 			}
 
@@ -405,7 +402,7 @@ namespace platformer2d::UI::Widget {
 			/* Scale */
 			ImGui::TableNextRow();
 			glm::vec3& Scale = TC.Scale;
-			UI::Widget::DragFloat3("Scale", Scale, 1.0f, 0.010f, 0.010f);
+			UI::DragFloat3("Scale", Scale, 1.0f, 0.010f, 0.010f);
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
@@ -421,19 +418,19 @@ namespace platformer2d::UI::Widget {
 		/***********************************
 		 * Health Component
 		 **********************************/
-		UI::Widget::DrawComponent<FHealthComponent>("Health", Actor, [Actor](FHealthComponent& HC)
+		UI::DrawComponent<FHealthComponent>("Health", Actor, [Actor](FHealthComponent& HC)
 		{
 			UI::BeginPropertyGrid();
 
 			ImGui::TableNextRow();
 			float Health = HC.GetHealth();
-			if (UI::Widget::DragFloat("Health", Health, 1.0f, 1.0f, HC.GetMaxHealth(), "%1.f")) {
+			if (UI::DragFloat("Health", Health, 1.0f, 1.0f, HC.GetMaxHealth(), "%1.f")) {
 				HC.SetHealth(Health);
 			}
 
 			ImGui::TableNextRow();
 			float MaxHealth = HC.GetMaxHealth();
-			if (UI::Widget::DragFloat("Max Health", MaxHealth, 1.0f, 1.0f, 1000.0f, "%1.f")) {
+			if (UI::DragFloat("Max Health", MaxHealth, 1.0f, 1.0f, 1000.0f, "%1.f")) {
 				HC.SetMaxHealth(MaxHealth);
 				/* Clamp the health if max health is less than current health. */
 				if (MaxHealth < HC.GetHealth()) {
@@ -454,7 +451,7 @@ namespace platformer2d::UI::Widget {
 		/***********************************
 		 * Interaction Component
 		 **********************************/
-		UI::Widget::DrawComponent<FInteractionComponent>("Interaction", Actor, [Actor](FInteractionComponent& IC)
+		UI::DrawComponent<FInteractionComponent>("Interaction", Actor, [Actor](FInteractionComponent& IC)
 		{
 			EInteraction InteractionType = IC.GetType();
 			EInteraction Selected = InteractionType;
@@ -555,7 +552,7 @@ namespace platformer2d::UI::Widget {
 				{
 					ImGui::TableNextRow();
 					auto& Data = std::get<FDamageInteraction>(IC.GetData());
-					UI::Widget::DragFloat("Damage", Data.Damage, 1.0f, 0.0, 100.0f, "%.1f");
+					UI::DragFloat("Damage", Data.Damage, 1.0f, 0.0, 100.0f, "%.1f");
 					break;
 				}
 
@@ -582,7 +579,7 @@ namespace platformer2d::UI::Widget {
 				{
 					ImGui::TableNextRow();
 					auto& Data = std::get<FHealInteraction>(IC.GetData());
-					UI::Widget::DragFloat("Amount", Data.Amount, 1.0f, 0.0f, 1000.0f, "%.1f");
+					UI::DragFloat("Amount", Data.Amount, 1.0f, 0.0f, 1000.0f, "%.1f");
 					CheckboxInTable("Consume On Use", Data.bConsumeOnUse);
 					break;
 				}
@@ -596,7 +593,7 @@ namespace platformer2d::UI::Widget {
 				{
 					auto& Data = std::get<FJumppadInteraction>(IC.GetData());
 					ImGui::TableNextRow();
-					UI::Widget::DragFloat2("Impulse", Data.Impulse, 0.10f, -100.0f, 100.0f);
+					UI::DragFloat2("Impulse", Data.Impulse, 0.10f, -100.0f, 100.0f);
 					CheckboxInTable("Preserve Horizontal Velocity", Data.bPreserveHorizontalVelocity);
 					break;
 				}
@@ -605,7 +602,7 @@ namespace platformer2d::UI::Widget {
 				{
 					ImGui::TableNextRow();
 					auto& Data = std::get<FClimbableInteraction>(IC.GetData());
-					UI::Widget::DragFloat("Climb Speed", Data.ClimbSpeed, 0.10f, 0.0f, 20.0f, "%.2f");
+					UI::DragFloat("Climb Speed", Data.ClimbSpeed, 0.10f, 0.0f, 20.0f, "%.2f");
 					break;
 				}
 
@@ -638,7 +635,7 @@ namespace platformer2d::UI::Widget {
 		/**********************************
 		 * Effect Component
 		 **********************************/
-		UI::Widget::DrawComponent<FEffectComponent>("Effect", Actor, [Actor](FEffectComponent& EC)
+		UI::DrawComponent<FEffectComponent>("Effect", Actor, [Actor](FEffectComponent& EC)
 		{
 			UI::BeginPropertyGrid();
 			for (auto& Effect : EC.Effects) {
@@ -655,7 +652,7 @@ namespace platformer2d::UI::Widget {
 
 							auto& EffectRef = std::get<FRotateEffect>(Effect.Data);
 							UI::PushID();
-							UI::Widget::DragFloat("Angular Speed (deg/s)", EffectRef.AngularSpeedDegPerSecond, 1.0f, -360.0f, 360.0f);
+							UI::DragFloat("Angular Speed (deg/s)", EffectRef.AngularSpeedDegPerSecond, 1.0f, -360.0f, 360.0f);
 							UI::PopID();
 
 							ImGui::TreePop();
@@ -720,7 +717,7 @@ namespace platformer2d::UI::Widget {
 					UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
 					switch (EffectType) {
 						case EEffectType::Rotate:
-							UI::Widget::DragFloat<EPlacementPolicy::Auto>("Angular Speed", AngularSpeed, 1.0f, -360.0f, 360.0f);
+							UI::DragFloat<EPlacementPolicy::Auto>("Angular Speed", AngularSpeed, 1.0f, -360.0f, 360.0f);
 							break;
 
 						default:
@@ -785,10 +782,10 @@ namespace platformer2d::UI::Widget {
 				ImGui::TableSetupColumn("Icon", ImGuiTableColumnFlags_WidthFixed, AddCompPanelWidth * 0.12f);
 				ImGui::TableSetupColumn("Components", ImGuiTableColumnFlags_WidthFixed, AddCompPanelWidth * 0.88f);
 
-				UI::Widget::DrawAddComponentButton<FTransformComponent>("Transform", EditorResources.PlusIcon, Actor);
-				UI::Widget::DrawAddComponentButton<FEffectComponent>("Effect", EditorResources.PlusIcon, Actor);
-				UI::Widget::DrawAddComponentButton<FInteractionComponent>("Interaction", EditorResources.PlusIcon, Actor);
-				UI::Widget::DrawAddComponentButton<FHealthComponent>("Health", EditorResources.PlusIcon, Actor);
+				UI::DrawAddComponentButton<FTransformComponent>("Transform", EditorResources.PlusIcon, Actor);
+				UI::DrawAddComponentButton<FEffectComponent>("Effect", EditorResources.PlusIcon, Actor);
+				UI::DrawAddComponentButton<FInteractionComponent>("Interaction", EditorResources.PlusIcon, Actor);
+				UI::DrawAddComponentButton<FHealthComponent>("Health", EditorResources.PlusIcon, Actor);
 
 				ImGui::EndTable();
 			}
@@ -815,13 +812,13 @@ namespace platformer2d::UI::Widget {
 
 			ImGui::TableNextRow();
 			float DetectRadius = C->GetDetectRadius();
-			if (UI::Widget::DragFloat("Detect Radius", DetectRadius, 0.010f, 0.0f, 5.0f)) {
+			if (UI::DragFloat("Detect Radius", DetectRadius, 0.010f, 0.0f, 5.0f)) {
 				C->SetDetectRadius(DetectRadius);
 			}
 
 			ImGui::TableNextRow();
 			float StopRadius = C->GetStopRadius();
-			if (UI::Widget::DragFloat("Stop Radius", StopRadius, 0.010f, 0.0f, 5.0f)) {
+			if (UI::DragFloat("Stop Radius", StopRadius, 0.010f, 0.0f, 5.0f)) {
 				C->SetStopRadius(StopRadius);
 			}
 
@@ -830,8 +827,8 @@ namespace platformer2d::UI::Widget {
 			bool bTargetPlayer = bHasTarget;
 			if (UI::Checkbox("Target Player", bTargetPlayer)) {
 				if (!bHasTarget && bTargetPlayer) {
-					if (CGameInstance* GameInstance = CGameInstance::Get()) {
-						C->SetTarget(GameInstance->GetPlayer(0));
+					if (CGameInstance::IsValid()) {
+						C->SetTarget(CGameInstance::Get().GetPlayer(0));
 					}
 				} else if (!bTargetPlayer) {
 					C->SetTarget(nullptr);
@@ -868,7 +865,7 @@ namespace platformer2d::UI::Widget {
 		ImGui::Dummy(ImVec2(0, 4));
 		ImGui::TableNextRow();
 		FEnemyData& Data = Enemy->GetData();
-		UI::Widget::DragFloat2("Spawn Point", Data.SpawnPoint, 0.0f, 0.010f);
+		UI::DragFloat2("Spawn Point", Data.SpawnPoint, 0.0f, 0.010f);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 
@@ -907,7 +904,7 @@ namespace platformer2d::UI::Widget {
 
 		UI::ShiftCursorY(-12);
 		IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
-		UI::Widget::DrawController(Controller);
+		UI::DrawController(Controller);
 	}
 
 	void Rifle(std::shared_ptr<CRifle> InRifle)
@@ -948,11 +945,11 @@ namespace platformer2d::UI::Widget {
 
 		ImGui::Dummy(ImVec2(0, 4));
 
-		if (std::shared_ptr<CPlayer> Player = CGameInstance::Get()->GetPlayer(0)) {
-			UI::Widget::ActorNode::Entry(Player, InScene);
+		if (std::shared_ptr<CPlayer> Player = CGameInstance::Get().GetPlayer(0)) {
+			UI::Actor::Entry(Player, InScene);
 		}
 		for (auto& Actor : Actors) {
-			UI::Widget::ActorNode::Entry(Actor, InScene);
+			UI::Actor::Entry(Actor, InScene);
 		}
 
 		UI::End();

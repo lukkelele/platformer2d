@@ -10,7 +10,7 @@
 #include "widgets.h"
 #include "scene/scene.h"
 
-namespace platformer2d::UI::Widget::Combo {
+namespace platformer2d::UI {
 
 	void TextureModifier()
 	{

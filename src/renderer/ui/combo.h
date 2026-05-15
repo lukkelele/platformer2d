@@ -37,6 +37,7 @@ namespace platformer2d::UI {
 		return Updated;
 	}
 
+#if 0
 	/* @fixme: Remove */
 	template<typename TEnum>
 	inline bool Combo(std::string_view Label, const char*& Options, const std::size_t N, TEnum& Selected)
@@ -69,12 +70,11 @@ namespace platformer2d::UI {
 		ImGui::EndCombo();
 		return Updated;
 	}
+#endif
 
-	namespace Widget::Combo {
-		void TextureModifier();
-		bool TextureDropdown(ETexture& Selected);
-		bool BlendFunction(float IndentX = 0.0f);
-		bool DepthFunction(float IndentX = 0.0f);
-	}
+	void TextureModifier();
+	bool TextureDropdown(ETexture& Selected);
+	bool BlendFunction(float IndentX = 0.0f);
+	bool DepthFunction(float IndentX = 0.0f);
 
 }

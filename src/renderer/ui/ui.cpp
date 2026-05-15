@@ -91,13 +91,13 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::TableNextRow();
-		Updated |= UI::Widget::DragFloat2("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
+		Updated |= UI::DragFloat2("Position", Attr.Position, 0.0f, 0.010f, -100.0f, 100.0f);
 
 		ImGui::TableNextRow();
-		Updated |= UI::Widget::DragFloat2("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
+		Updated |= UI::DragFloat2("Size", Attr.Size, 1.0f, 0.010f, 0.010f, 2.0f);
 
 		ImGui::TableNextRow();
-		Updated |= UI::Widget::Combo::TextureDropdown(Attr.Texture);
+		Updated |= UI::TextureDropdown(Attr.Texture);
 
 		ImGui::TableNextRow();
 		Updated |= ColorDropdown(Attr.Color);
@@ -132,8 +132,8 @@ namespace platformer2d::UI {
 
 			ImGui::SameLine();
 			if (ImGui::Button("Teleport Player", ButtonSize)) {
-				CGameInstance* Instance = CGameInstance::Get();
-				Instance->GetSystem<CGameplaySystem>().Teleport(Instance->GetPlayer(0), {0.0f, 0.0f});
+				auto& GameInstance = CGameInstance::Get();
+				GameInstance.GetSystem<CGameplaySystem>().Teleport(GameInstance.GetPlayer(0), {0.0f, 0.0f});
 			}
 		}
 
@@ -196,8 +196,8 @@ namespace platformer2d::UI {
 				Aggregate(PhysicsBodyData, NewBodySpec);
 				LK_INFO("{}", CBody::ToString(NewBodySpec));
 
-				CGameInstance* Instance = CGameInstance::Get();
-				CGameplaySystem& Gameplay = Instance->GetSystem<CGameplaySystem>();
+				auto& GameInstance = CGameInstance::Get();
+				CGameplaySystem& Gameplay = GameInstance.GetSystem<CGameplaySystem>();
 				if (NewBodySpec.Type == EBodyType::Static) {
 					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreateStaticPolygon(
 						ActorAttr.NameBuf.data(),
@@ -206,7 +206,7 @@ namespace platformer2d::UI {
 						NewBodySpec,
 						FColor::Get(ActorAttr.Color));
 
-					const glm::vec3 PlayerPos = Instance->GetPlayer(0)->GetPosition();
+					const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
 					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
 				} else if (NewBodySpec.Type == EBodyType::Dynamic) {
 					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreatePolygon(
@@ -216,7 +216,7 @@ namespace platformer2d::UI {
 						FColor::Get(ActorAttr.Color),
 						ActorAttr.Texture);
 
-					const glm::vec3 PlayerPos = Instance->GetPlayer(0)->GetPosition();
+					const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
 					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
 				}
 			}
@@ -391,7 +391,7 @@ namespace platformer2d::UI {
 		/* Jump impulse. */
 		ImGui::TableNextRow();
 		float PlayerJumpImpulse = Player->GetJumpImpulse();
-		Changed |= UI::Widget::DragFloat("Jump Impulse", PlayerJumpImpulse, 0.010f, 0.0f, 20.0f, "%.3f");
+		Changed |= UI::DragFloat("Jump Impulse", PlayerJumpImpulse, 0.010f, 0.0f, 20.0f, "%.3f");
 		if (Changed) {
 			Player->SetJumpImpulse(PlayerJumpImpulse);
 		}
@@ -399,7 +399,7 @@ namespace platformer2d::UI {
 		/* Direction force. */
 		ImGui::TableNextRow();
 		float DirForce = Player->GetDirectionForce();
-		Changed |= UI::Widget::DragFloat("Direction Force", DirForce, 0.010f, 0.0f, 10.0f, "%.3f");
+		Changed |= UI::DragFloat("Direction Force", DirForce, 0.010f, 0.0f, 10.0f, "%.3f");
 		if (Changed) {
 			Player->SetDirectionForce(DirForce);
 		}
@@ -416,7 +416,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			glm::vec2 BodySize = Body->GetSize();
-			if (UI::Widget::DragFloat2("Body Size", BodySize, 0.10f, 0.010f, 0.10f, 2.0f)) {
+			if (UI::DragFloat2("Body Size", BodySize, 0.10f, 0.010f, 0.10f, 2.0f)) {
 				FPolygon& Shape = Body->GetShape<EShape::Polygon>();
 				Shape.Size = BodySize;
 			}
@@ -437,7 +437,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			float Mass = Body->GetMass();
-			Changed |= UI::Widget::DragFloat("Mass", Mass, 0.010f, 0.0f, 10.0f, "%.2f");
+			Changed |= UI::DragFloat("Mass", Mass, 0.010f, 0.0f, 10.0f, "%.2f");
 			if (Changed) {
 				Body->SetMass(Mass);
 			}
@@ -447,7 +447,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			float PlayerFriction = Body->GetFriction();
-			Changed |= UI::Widget::DragFloat("Friction", PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
+			Changed |= UI::DragFloat("Friction", PlayerFriction, 0.0f, 0.010f, 2.0f, "%.3f");
 			if (Changed) {
 				Body->SetFriction(PlayerFriction);
 			}
@@ -457,7 +457,7 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		{
 			float Restitution = Body->GetRestitution();
-			Changed |= UI::Widget::DragFloat("Restitution", Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
+			Changed |= UI::DragFloat("Restitution", Restitution, 0.010f, 0.0f, 2.0f, "%.3f");
 			if (Changed) {
 				Body->SetRestitution(Restitution);
 			}
@@ -467,7 +467,7 @@ namespace platformer2d::UI {
 		ImGui::Dummy(ImVec2(0, 8));
 
 		if (ImGui::TreeNodeEx("Attributes", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			UI::Widget::ActorNode::Data(Player);
+			UI::Actor::Data(Player);
 			ImGui::TreePop();
 		}
 	}
@@ -489,13 +489,13 @@ namespace platformer2d::UI {
 
 		ImGui::TableNextRow();
 		float ProjectileRadius = Rifle->GetProjectileRadius();
-		if (UI::Widget::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
+		if (UI::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
 			Rifle->SetProjectileRadius(ProjectileRadius);
 		}
 
 		ImGui::TableNextRow();
 		float ProjectileVelocity = Rifle->GetProjectileVelocity();
-		if (UI::Widget::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
+		if (UI::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
 			Rifle->SetProjectileVelocity(ProjectileVelocity);
 		}
 
@@ -523,11 +523,11 @@ namespace platformer2d::UI {
 
 	void Statistics(const EWidgetPlacement Placement)
 	{
-		CGameInstance* GameInstance = CGameInstance::Get();
-		if (!GameInstance) {
+		if (!CGameInstance::IsValid()) {
 			return;
 		}
 
+		auto& GameInstance = CGameInstance::Get();
 		const ImGuiStyle& Style = ImGui::GetStyle();
 
 		float TopBarOffsetY = 0.0f;
@@ -549,7 +549,7 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		std::shared_ptr<CPlayer> Player = GameInstance->GetPlayer();
+		std::shared_ptr<CPlayer> Player = GameInstance.GetPlayer();
 		CCamera& Camera = Player->GetCamera();
 
 		static constexpr float LabelColumnWidth = 150.0f;
@@ -557,6 +557,7 @@ namespace platformer2d::UI {
 		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
 
+		/* @fixme: Use UI::Table */
 		auto Label = [](std::string_view Str) -> void
 		{
 			ImGui::TableSetColumnIndex(0);
@@ -571,7 +572,7 @@ namespace platformer2d::UI {
 		};
 
 		/* FPS */
-		const float DeltaTime = GameInstance->GetDeltaTime();
+		const float DeltaTime = GameInstance.GetDeltaTime();
 		const float FPS = 1.0f / DeltaTime;
 		ImGui::TableNextRow();
 		Label("FPS");
@@ -745,7 +746,7 @@ namespace platformer2d::UI {
 		for (auto& Enemy : Enemies) {
 			UI::LargeText(Enemy->GetName());
 			ImGui::Dummy(ImVec2(0, 4));
-			UI::Widget::DrawEnemy(Enemy);
+			UI::DrawEnemy(Enemy);
 			ImGui::Dummy(ImVec2(0, 10));
 		}
 	}

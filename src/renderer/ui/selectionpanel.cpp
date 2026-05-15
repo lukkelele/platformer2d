@@ -15,12 +15,12 @@ namespace platformer2d::UI {
 
 	void SelectionPanel()
 	{
-		CGameInstance* GameInstance = CGameInstance::Get();
-		if (!GameInstance) {
+		if (!CGameInstance::IsValid()) {
 			return;
 		}
 
-		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+		auto& GameInstance = CGameInstance::Get();
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 		if (!Scene) {
 			return;
 		}
@@ -31,9 +31,9 @@ namespace platformer2d::UI {
 
 		const LUUID SelectedID = CSelectionContext::GetSelected();
 		if (std::shared_ptr<CActor> Actor = Scene->GetActor(SelectedID); Actor != nullptr) {
-			UI::Widget::ActorNode::Data(Actor);
-			UI::Widget::DrawComponents(Actor);
-			UI::Widget::ActorNode::DeleteButton(Actor, Scene);
+			UI::Actor::Data(Actor);
+			UI::DrawComponents(Actor);
+			UI::Actor::DeleteButton(Actor, Scene);
 		} else {
 			ImGui::Dummy(ImVec2(0, 4));
 		}

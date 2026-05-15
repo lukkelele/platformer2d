@@ -82,22 +82,18 @@ namespace platformer2d {
 	void CUILayer::Tick(const float DeltaTime)
 	{
 		LK_PROFILE_FUNC();
-		CGameInstance* GameInstance = CGameInstance::Get();
 		if (NextLevel.bSelected) {
-			LK_ASSERT(GameInstance);
-			if (GameInstance) {
-				LK_DEBUG_TAG("UILayer", "Level selected: {}", NextLevel.Path);
-				GameInstance->OpenScene(NextLevel.Path);
-				NextLevel.Clear();
-			} else {
-				LK_ERROR_TAG("UILayer", "No game instance, cannot enter level");
-			}
+			LK_ASSERT(CGameInstance::IsValid());
+			LK_DEBUG_TAG("UILayer", "Level selected: {}", NextLevel.Path);
+			auto& GameInstance = CGameInstance::Get();
+			CGameInstance::Get().OpenScene(NextLevel.Path);
+			NextLevel.Clear();
 		}
 
 		/* Draw dark overlay whenever the pause menu is open. */
-		if (GameInstance) {
+		if (CGameInstance::IsValid()) {
 			const CWindow& Window = CWindow::Get();
-			if (GameInstance->HasScene() && UI::IsPauseMenuOpen()) {
+			if (CGameInstance::Get().HasScene() && UI::IsPauseMenuOpen()) {
 				const glm::vec2 WindowSize = Window.GetSize();
 				constexpr glm::vec4 OverlayColor = {0.10f, 0.10f, 0.10f, 0.90f};
 				CRenderer::DrawQuad(glm::vec3(0.0f, 0.0f, 0.0f), WindowSize, OverlayColor);
@@ -117,8 +113,9 @@ namespace platformer2d {
 			}
 		}
 
-		if (CGameInstance* GameInstance = CGameInstance::Get()) {
-			if (GameInstance->HasScene()) {
+		if (CGameInstance::IsValid()) {
+			auto& GameInstance = CGameInstance::Get();
+			if (GameInstance.HasScene()) {
 				if (UI::IsPauseMenuOpen()) {
 					UI_PauseMenu();
 				}
@@ -273,18 +270,19 @@ namespace platformer2d {
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			UI::Widget::Combo::BlendFunction();
+			UI::BlendFunction();
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			UI::Widget::Combo::DepthFunction();
+			UI::DepthFunction();
 
 			ImGui::EndTable();
 		}
 
 		ImGui::SeparatorText("Camera");
-		if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr) {
-			if (CCamera* Camera = GameInstance->GetActiveCamera(); Camera != nullptr) {
+		if (CGameInstance::IsValid()) {
+			auto& GameInstance = CGameInstance::Get();
+			if (CCamera* Camera = GameInstance.GetActiveCamera(); Camera != nullptr) {
 				ImGui::PushID("UI_CameraOptions");
 				ImGui::BeginTable("##CameraOptionsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 				ImGui::TableSetupColumn("Label", 0, LABEL_COLUMN_WIDTH);
@@ -548,8 +546,7 @@ namespace platformer2d {
 
 	void UI::LevelLauncher()
 	{
-		CGameInstance* GameInstance = CGameInstance::Get();
-		const bool GameInstanceValid = (GameInstance != nullptr);
+		const bool GameInstanceValid = CGameInstance::IsValid();
 		if (!GameInstanceValid) {
 			UI::BeginViewport();
 		}
@@ -574,7 +571,8 @@ namespace platformer2d {
 		{
 			ImGui::Dummy(ImVec2(0, 46));
 		};
-
+		
+		/* @todo: Use single button func for levels */
 		if (ImGui::BeginTable("##LevelLauncher", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip)) {
 			ImGui::TableSetupColumn("L", 0, ImGui::GetContentRegionAvail().x);
 
@@ -589,8 +587,8 @@ namespace platformer2d {
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 				if (ImGui::Button(LK_ICON_CODEPEN "  Lukkelele's World", ButtonSize)) {
 					static const std::filesystem::path ScenePath(SCENES_DIR "/LukkelelesWorld.lscene");
-					if (GameInstance) {
-						GameInstance->OpenScene(ScenePath);
+					if (GameInstanceValid) {
+						CGameInstance::Get().OpenScene(ScenePath);
 					} else {
 						Core::Global.AddLayer(Core::ELayer::Runtime);
 						NextLevel.bSelected = true;
@@ -610,8 +608,8 @@ namespace platformer2d {
 				UI::ShiftCursorX((ImGui::GetContentRegionAvail().x * 0.50f) - (ButtonSize.x * 0.50f));
 				if (ImGui::Button(LK_ICON_PENCIL "  Test Level", ButtonSize)) {
 					static const std::filesystem::path ScenePath(SCENES_DIR "/TestLevel.lscene");
-					if (GameInstance) {
-						GameInstance->OpenScene(ScenePath);
+					if (GameInstanceValid) {
+						CGameInstance::Get().OpenScene(ScenePath);
 					} else {
 						Core::Global.AddLayer(Core::ELayer::Editor);
 						NextLevel.bSelected = true;

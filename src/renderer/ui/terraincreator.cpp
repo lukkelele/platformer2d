@@ -229,7 +229,7 @@ namespace platformer2d::UI {
 
 			Table::NextRow();
 			{
-				if (UI::Widget::Combo::TextureDropdown(State.Texture)) {
+				if (UI::TextureDropdown(State.Texture)) {
 					if (EditActor) {
 						ApplyChainToActor(EditActor, State);
 					}
@@ -238,7 +238,7 @@ namespace platformer2d::UI {
 
 			Table::NextRow();
 			{
-				if (UI::Widget::DragFloat("Texture Height", State.TextureHeight, 0.01f, 0.0f, 10.0f, "%.3f")) {
+				if (UI::DragFloat("Texture Height", State.TextureHeight, 0.01f, 0.0f, 10.0f, "%.3f")) {
 					if (EditActor) {
 						ApplyChainToActor(EditActor, State);
 					}
@@ -259,7 +259,7 @@ namespace platformer2d::UI {
 
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
 			if (ImGui::Button("To Player")) {
-				if (auto Player = CGameInstance::Get()->GetPlayer(0); Player != nullptr) {
+				if (auto Player = CGameInstance::Get().GetPlayer(0); Player != nullptr) {
 					const glm::vec3 PlayerPos = Player->GetPosition();
 					State.PreviewOrigin = {PlayerPos.x, PlayerPos.y};
 				}
