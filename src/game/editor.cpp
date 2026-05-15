@@ -509,9 +509,7 @@ namespace platformer2d {
 				break;
 			case EKey::Escape:
 				if (Data.State == EKeyState::Pressed) {
-					if (bEditorViewportFocused) {
-						UI::TogglePauseMenu();
-					}
+					UI::TogglePauseMenu();
 				}
 				break;
 			case EKey::GraveAccent:
@@ -549,7 +547,7 @@ namespace platformer2d {
 				break;
 		}
 
-		if (Player) {
+		if (Player && bEditorViewportHovered) {
 			Player->OnMouseButton(Data);
 		}
 	}
@@ -593,7 +591,6 @@ namespace platformer2d {
 
 			if (Scene) {
 				UI::Statistics();
-				UI::PlayerHud(Player);
 				UI::SelectionPanel();
 				UI_DrawGizmo();
 			}
@@ -758,13 +755,9 @@ namespace platformer2d {
 
 	void CEditor::UI_ViewportTexture()
 	{
-		const ImVec2 WindowSize = {
-			static_cast<float>(EditorViewportWidth),
-			static_cast<float>(EditorViewportHeight)};
-
+		const ImVec2 WindowSize = {static_cast<float>(EditorViewportWidth), static_cast<float>(EditorViewportHeight)};
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
-
 		ImGui::Image(
 			static_cast<ImTextureID>(ViewportTexture->GetID()),
 			WindowSize,

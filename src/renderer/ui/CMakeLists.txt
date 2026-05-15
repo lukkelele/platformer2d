@@ -5,7 +5,12 @@ project_library_sources(
 	imguilayer.h
 	imguilayer.cpp
 	editor_resources.h
+	hudlayer.h
+	hudlayer.cpp
+	levellauncher.h
+	levellauncher.cpp
 	pausemenu.h
+	pausemenu.cpp
 	physics.cpp
 	selectionpanel.h
 	selectionpanel.cpp

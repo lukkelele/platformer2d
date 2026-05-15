@@ -35,15 +35,19 @@ namespace platformer2d {
 
 		void SetActiveMenu(EMenu InMenu);
 
+		static void RequestMenu(EMenu InMenu);
+		[[nodiscard]] static EMenu GetActiveMenu();
+
 	private:
 		void UI_MainMenu();
-		void UI_PauseMenu();
 
 		void OnKey(const FKeyData& KeyData);
 
 	private:
 		std::unique_ptr<CImGuiLayer> ImGuiLayer = nullptr;
-		EMenu ActiveMenu = EMenu::MainMenu;
+
+		static inline EMenu ActiveMenu = EMenu::MainMenu;
+		static inline EMenu NextMenu = EMenu::None;
 
 		struct
 		{

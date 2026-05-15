@@ -58,15 +58,6 @@ namespace platformer2d::UI {
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoWindowMenuButton;
 
-	struct FViewportData
-	{
-		glm::vec2 MenuBarSize = {0.0f, 30.0f};
-		glm::vec2 LeftSidebarSize = {340.0f, 0.0f};
-		glm::vec2 RightSidebarSize = {340.0f, 0.0f};
-	};
-	extern FViewportData ViewportData;
-	const FViewportData& GetViewportData();
-
 	void PushID();
 	void PopID();
 	const char* GenerateID();
@@ -236,7 +227,7 @@ namespace platformer2d::UI {
 	/**
 	 * @brief Get texture ID as an ImTextureID.
 	 */
-	FORCEINLINE ImTextureID GetTextureID(const std::shared_ptr<CTexture>& Texture)
+	inline ImTextureID GetTextureID(const std::shared_ptr<CTexture>& Texture)
 	{
 		return static_cast<ImTextureID>(Texture->GetID());
 	};
@@ -271,35 +262,31 @@ namespace platformer2d::UI {
 		DrawButtonImage(Image, Image, Image, TintNormal, TintHovered, TintPressed, Rectangle.Min, Rectangle.Max);
 	}
 
-	namespace Widget {
-
-		inline void Underline(bool FullWidth = false, const float OffsetX = 0.0f, const float OffsetY = -1.0f)
-		{
-			if (FullWidth) {
-				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {
-					ImGui::PushColumnsBackground();
-				} else if (ImGui::GetCurrentTable() != nullptr) {
-					ImGui::TablePushBackgroundChannel();
-				}
-			}
-
-			const float Width = FullWidth ? ImGui::GetWindowWidth() : ImGui::GetContentRegionAvail().x;
-			const ImVec2 Cursor = ImGui::GetCursorScreenPos();
-			ImGui::GetWindowDrawList()->AddLine(
-				ImVec2(Cursor.x + OffsetX, Cursor.y + OffsetY),
-				ImVec2(Cursor.x + Width, Cursor.y + OffsetY),
-				RGBA32::BackgroundDark,
-				1.0f);
-
-			if (FullWidth) {
-				if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {
-					ImGui::PopColumnsBackground();
-				} else if (ImGui::GetCurrentTable() != nullptr) {
-					ImGui::TablePopBackgroundChannel();
-				}
+	inline void Underline(bool FullWidth = false, const float OffsetX = 0.0f, const float OffsetY = -1.0f)
+	{
+		if (FullWidth) {
+			if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {
+				ImGui::PushColumnsBackground();
+			} else if (ImGui::GetCurrentTable() != nullptr) {
+				ImGui::TablePushBackgroundChannel();
 			}
 		}
 
+		const float Width = FullWidth ? ImGui::GetWindowWidth() : ImGui::GetContentRegionAvail().x;
+		const ImVec2 Cursor = ImGui::GetCursorScreenPos();
+		ImGui::GetWindowDrawList()->AddLine(
+			ImVec2(Cursor.x + OffsetX, Cursor.y + OffsetY),
+			ImVec2(Cursor.x + Width, Cursor.y + OffsetY),
+			RGBA32::BackgroundDark,
+			1.0f);
+
+		if (FullWidth) {
+			if (ImGui::GetCurrentWindow()->DC.CurrentColumns != nullptr) {
+				ImGui::PopColumnsBackground();
+			} else if (ImGui::GetCurrentTable() != nullptr) {
+				ImGui::TablePopBackgroundChannel();
+			}
+		}
 	}
 }
 

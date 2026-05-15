@@ -15,6 +15,7 @@
 #include "renderer/ui/scoped.h"
 #include "scene/actor.h"
 #include "combo.h"
+#include "levellauncher.h"
 #include "pausemenu.h"
 
 namespace platformer2d {
@@ -39,9 +40,6 @@ namespace platformer2d::UI {
 		BottomRight,
 	};
 
-	LK_DECLARE_MULTICAST_DELEGATE(FOnPauseMenuOpened, bool);
-	extern FOnPauseMenuOpened OnPauseMenuOpened;
-
 	inline bool InTable()
 	{
 		return ImGui::GetCurrentTable() != nullptr;
@@ -54,6 +52,12 @@ namespace platformer2d::UI {
 			UI::ShiftCursorX(17.0f + IndentX);
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text(Str.data());
+		}
+
+		inline void Label(std::string_view Str, const EFont Font, const EFontSize FontSize = EFontSize::Regular, EFontModifier FontMod = EFontModifier::Normal, const float IndentX = 0.0f)
+		{
+			UI::FScopedFont ScopedFont(Font, FontSize, FontMod);
+			Label(Str, IndentX);
 		}
 
 		inline void NextColumn()
@@ -69,30 +73,7 @@ namespace platformer2d::UI {
 		};
 	}
 
-	inline bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 6.0f)
-	{
-		bool Active = false;
-		std::array<char, 64> LabelBuf = {0};
-		std::snprintf(LabelBuf.data(), LabelBuf.size(), "##%s", Str.data());
-
-		if (InTable()) {
-			Table::Label(Str);
-			Table::NextColumn();
-			ShiftCursorX(IndentX);
-			if (ImGui::Checkbox(LabelBuf.data(), &Value)) {
-				Active = true;
-			}
-		} else {
-			ImGui::Text(Str.data());
-			ImGui::SameLine(0.0f, IndentX);
-			if (ImGui::Checkbox(LabelBuf.data(), &Value)) {
-				Active = true;
-			}
-		}
-
-		return Active;
-	}
-
+	bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 6.0f);
 	bool BeginPropertyGrid(std::size_t LabelColumnWidth = 180.0f);
 	void EndPropertyGrid();
 
@@ -130,13 +111,6 @@ namespace platformer2d::UI {
 	extern FPhysicsBodyData PhysicsBodyData;
 	void Aggregate(const FPhysicsBodyData& Data, FBodySpecification& BodySpec);
 
-	void LevelLauncher();
-	void OpenPauseMenu(EPauseMenuView View = EPauseMenuView::Default);
-	void ClosePauseMenu(EPauseMenuView View = EPauseMenuView::Default);
-	void TogglePauseMenu();
-	bool IsPauseMenuOpen();
-	bool MainMenuButton(const ImVec2& Size);
-
 	bool ColorDropdown(EColor& Selected);
 
 	struct FActorAttributes
@@ -161,7 +135,6 @@ namespace platformer2d::UI {
 	void PlayerData(std::shared_ptr<CPlayer> Player);
 	void RifleData(std::shared_ptr<CRifle> Rifle);
 	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
-	void PlayerHud(std::shared_ptr<CPlayer> Player);
 	void EnemiesInfo(std::shared_ptr<CScene> Scene);
 
 	void ColdTextGradient(const char* Text, float Speed = 2.0f);
