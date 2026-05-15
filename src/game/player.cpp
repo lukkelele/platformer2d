@@ -399,15 +399,18 @@ namespace platformer2d {
 
 	void CPlayer::OnMouseButton(const FMouseButtonData& Data)
 	{
-		switch (Data.State) {
-			case EMouseButtonState::Pressed:
+		switch (Data.Button) {
+			case EMouseButton::Button0:
 			{
-				if (Data.Button == EMouseButton::Button0) {
+				if (Data.State == EMouseButtonState::Pressed) {
 					std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>();
 					if (Rifle && Rifle->IsEnabled()) {
-						const glm::vec2 TargetPos = CGameInstance::Get().GetMouseInWorldSpace(GetCamera());
-						if (Math::IsValid(TargetPos)) {
-							Rifle->Fire(TargetPos);
+						auto& GameInstance = CGameInstance::Get();
+						if (CCamera* Camera = GameInstance.GetActiveCamera()) {
+							const glm::vec2 TargetPos = GameInstance.GetMouseInWorldSpace(*Camera);
+							if (Math::IsValid(TargetPos)) {
+								Rifle->Fire(TargetPos);
+							}
 						}
 					}
 				}
