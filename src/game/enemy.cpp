@@ -22,7 +22,7 @@ namespace platformer2d {
 		HC.SetHealth(Archetype.MaxHealth);
 
 		SetSpawnPoint(InSpec.SpawnPoint);
-		CGameInstance::Get()->GetSystem<CGameplaySystem>().Teleport(this, InSpec.SpawnPoint);
+		CGameInstance::Get().GetSystem<CGameplaySystem>().Teleport(this, InSpec.SpawnPoint);
 	}
 
 	CEnemy::~CEnemy()
@@ -92,7 +92,7 @@ namespace platformer2d {
 
 	void CEnemy::Kill()
 	{
-		CGameInstance::Get()->GetSystem<CHealthSystem>().Kill(this);
+		CGameInstance::Get().GetSystem<CHealthSystem>().Kill(this);
 	}
 
 	void CEnemy::OnDeath()
@@ -109,7 +109,7 @@ namespace platformer2d {
 	{
 		LK_DEBUG_TAG("Enemy", "[{}] Revive: {}", GetName(), Enum::ToString(Variant));
 		if (Variant == EReviveVariant::AtSpawn) {
-			CGameInstance::Get()->GetSystem<CGameplaySystem>().Teleport(this, Data.SpawnPoint);
+			CGameInstance::Get().GetSystem<CGameplaySystem>().Teleport(this, Data.SpawnPoint);
 		}
 
 		auto& HC = GetComponent<FHealthComponent>();

@@ -51,6 +51,7 @@ namespace platformer2d {
 		void UI_MainMenubar();
 		void UI_LeftSidebar();
 		void UI_LevelLauncher();
+		void UI_BottomBar();
 
 		void PossessPlayerCamera();
 		void PossessEditorCamera();

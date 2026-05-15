@@ -456,7 +456,7 @@ namespace platformer2d {
 		}
 		LK_DEBUG_TAG("Editor", "OnActorDeleted: {}", Handle);
 		UpdateInputBuffer(Scene->GetActors().size());
-		UI::Widget::OnActorDeleted(Handle);
+		UI::Actor::OnActorDeleted(Handle);
 	}
 
 	void CEditor::OnKey(const FKeyData& Data)
@@ -626,7 +626,7 @@ namespace platformer2d {
 			return;
 		}
 
-		UI::Widget::SceneManagerPanel(Scene);
+		UI::SceneManagerPanel(Scene);
 		UI::CreatorMenu(Scene);
 		UI::RenderTerrainCreator(Scene);
 
@@ -664,7 +664,7 @@ namespace platformer2d {
 
 		if (Player) {
 			ImGui::Spacing();
-			UI::Widget::Rifle(Player->GetRifle());
+			UI::Rifle(Player->GetRifle());
 		}
 
 		ImGui::Spacing();
@@ -677,12 +677,14 @@ namespace platformer2d {
 				ImGui::Text("Main Viewport: (%.1f, %.1f)", Viewport->Size.x, Viewport->Size.y);
 			}
 
-			const int Gcd = std::gcd(ViewportWidth, ViewportHeight);
+			int Gcd = std::gcd(ViewportWidth, ViewportHeight);
 			ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
+			Gcd = std::gcd(EditorViewportWidth, EditorViewportHeight);
+			ImGui::Text("EditorViewport Aspect Ratio: %d/%d", (EditorViewportWidth / Gcd), (EditorViewportHeight / Gcd));
 
 			if (CCamera* Camera = GetActiveCamera()) {
 				const glm::vec2 HalfSize = Camera->GetHalfSize();
-				ImGui::Text("Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
+				ImGui::Text("Camera Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
 			}
 
 			if (CPhysicsWorld::IsValid()) {
@@ -738,61 +740,15 @@ namespace platformer2d {
 			}
 
 			ImGui::Spacing();
-			UI::Widget::EditorViewportInfo(bEditorViewportFocused, bEditorViewportHovered);
+			UI::EditorViewportInfo(bEditorViewportFocused, bEditorViewportHovered);
 
 			ImGui::TreePop();
-		}
-
-		const bool SceneActive = HasScene();
-		if (!SceneActive) {
-			ImGui::BeginDisabled();
-		}
-		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
-			UI::SetTooltip(LastSceneFilepath.generic_string());
-			ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
-			UI::SetTooltip(SceneToOpen.generic_string());
-			ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
-
-			UI::BeginPropertyGrid();
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Gravity", LevelData.Gravity, 0.0f, 0.010f);
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat2("Player Spawn", LevelData.PlayerSpawn, 0.0f, 0.010f);
-
-			ImGui::TableNextRow();
-			UI::Widget::DragFloat("Initial Camera Zoom", LevelData.SceneLoadCameraZoom, 0.01f, 0.0f, 1.0f);
-
-			if (CEditorCamera* EC = GetEditorCamera()) {
-				ImGui::TableNextRow();
-				bool LerpEnabled = EC->IsLerpEnabled();
-				if (UI::Checkbox("Editor Camera Lerp", LerpEnabled)) {
-					EC->SetLerpEnabled(LerpEnabled);
-					PendingEditorCameraLerp = LerpEnabled;
-				}
-
-				ImGui::TableNextRow();
-				float LerpSnap = EC->GetLerpSnapDistance();
-				if (UI::Widget::DragFloat("Lerp Snap Distance", LerpSnap, 0.05f, 0.0f, 100.0f)) {
-					EC->SetLerpSnapDistance(LerpSnap);
-				}
-			}
-			UI::EndPropertyGrid();
-			ImGui::TreePop();
-		}
-		if (!SceneActive) {
-			ImGui::EndDisabled();
 		}
 
 		UI::Font::Pop();
 		UI::End();
 
-		UI::PrepareBottomBar();
-		if (UI::Begin(UI::PanelID::BottomBar)) {
-			UI::End();
-		}
+		UI_BottomBar();
 	}
 
 	void CEditor::UI_Player()
@@ -1049,4 +1005,60 @@ namespace platformer2d {
 			}
 		}
 	}
+
+	void CEditor::UI_BottomBar()
+	{
+		UI::PrepareBottomBar();
+		if (!UI::Begin(UI::PanelID::BottomBar)) {
+			return;
+		}
+
+		const bool SceneActive = HasScene();
+		if (!SceneActive) {
+			ImGui::BeginDisabled();
+		}
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			ImGui::Text("Last Scene Filepath: %s", std::filesystem::relative(LastSceneFilepath, PROJECT_DIR).generic_string().c_str());
+			UI::SetTooltip(LastSceneFilepath.generic_string());
+			ImGui::Text("Scene To Open: %s", std::filesystem::relative(SceneToOpen, PROJECT_DIR).generic_string().c_str());
+			UI::SetTooltip(SceneToOpen.generic_string());
+			ImGui::Text("Open Scene Next Tick: %s", bOpenSceneNextTick ? "Yes" : "No");
+
+			UI::BeginPropertyGrid();
+
+			ImGui::TableNextRow();
+			UI::DragFloat2("Gravity", LevelData.Gravity, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
+			UI::DragFloat2("Player Spawn", LevelData.PlayerSpawn, 0.0f, 0.010f);
+
+			ImGui::TableNextRow();
+			UI::DragFloat("Initial Camera Zoom", LevelData.SceneLoadCameraZoom, 0.01f, 0.0f, 1.0f);
+
+			if (CEditorCamera* EC = GetEditorCamera()) {
+				ImGui::TableNextRow();
+				bool LerpEnabled = EC->IsLerpEnabled();
+				if (UI::Checkbox("Editor Camera Lerp", LerpEnabled)) {
+					EC->SetLerpEnabled(LerpEnabled);
+					PendingEditorCameraLerp = LerpEnabled;
+				}
+
+				ImGui::TableNextRow();
+				float LerpSnap = EC->GetLerpSnapDistance();
+				if (UI::DragFloat("Lerp Snap Distance", LerpSnap, 0.05f, 0.0f, 100.0f)) {
+					EC->SetLerpSnapDistance(LerpSnap);
+				}
+			}
+			UI::EndPropertyGrid();
+			ImGui::TreePop();
+		}
+		if (!SceneActive) {
+			ImGui::EndDisabled();
+		}
+
+		UI::End();
+	}
+
 }
+

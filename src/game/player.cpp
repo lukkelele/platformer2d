@@ -405,7 +405,7 @@ namespace platformer2d {
 				if (Data.Button == EMouseButton::Button0) {
 					std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>();
 					if (Rifle && Rifle->IsEnabled()) {
-						const glm::vec2 TargetPos = CGameInstance::Get()->GetMouseInWorldSpace(GetCamera());
+						const glm::vec2 TargetPos = CGameInstance::Get().GetMouseInWorldSpace(GetCamera());
 						if (Math::IsValid(TargetPos)) {
 							Rifle->Fire(TargetPos);
 						}

@@ -37,7 +37,7 @@ namespace platformer2d {
 	{
 		struct
 		{
-			bool bDrawRayHits = false;
+			bool bDrawRayHits = true;
 		} Debug;
 	};
 
@@ -73,7 +73,7 @@ namespace platformer2d {
 		CGameInstance& operator=(CGameInstance&&) = delete;
 		CGameInstance& operator=(const CGameInstance&) = delete;
 
-		[[nodiscard]] static CGameInstance* Get() { return Instance; }
+		[[nodiscard]] static CGameInstance& Get() { return *Instance; }
 		virtual void Initialize();
 		virtual void Destroy();
 		void OnAttach() override;
@@ -101,6 +101,7 @@ namespace platformer2d {
 			return *Ptr;
 		}
 
+		[[nodiscard]] static bool IsValid() { return (Instance != nullptr); }
 		[[nodiscard]] virtual CCamera* GetActiveCamera() const;
 		[[nodiscard]] std::shared_ptr<CPlayer> GetPlayer(std::size_t Idx = 0) const;
 		[[nodiscard]] std::shared_ptr<CScene> GetScene() const { return Scene; }

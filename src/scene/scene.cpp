@@ -66,8 +66,8 @@ namespace platformer2d {
 		OnActorDeleted.Add([&](const LUUID Handle)
 		{
 			LK_DEBUG_TAG("Scene", "OnActorDeleted: {}", Handle);
-			if (CGameInstance* GameInstance = CGameInstance::Get(); GameInstance != nullptr) {
-				std::shared_ptr<CPlayer> Player = GameInstance->GetPlayer(0);
+			if (CGameInstance::IsValid()) {
+				std::shared_ptr<CPlayer> Player = CGameInstance::Get().GetPlayer(0);
 				Player->SetAwake(true);
 			}
 		});

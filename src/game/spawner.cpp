@@ -13,9 +13,8 @@ namespace platformer2d {
 		if (ActorName.empty()) {
 			ActorName = Format("StaticPolygon{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
-		CGameInstance* GameInstance = CGameInstance::Get();
-		LK_VERIFY(GameInstance);
-		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
 		ActorSpec.Name = ActorName;
@@ -44,9 +43,8 @@ namespace platformer2d {
 		if (ActorName.empty()) {
 			ActorName = Format("StaticPolygon{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
-		CGameInstance* GameInstance = CGameInstance::Get();
-		LK_VERIFY(GameInstance);
-		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
 		ActorSpec.Name = ActorName;
@@ -72,9 +70,8 @@ namespace platformer2d {
 		if (ActorName.empty()) {
 			ActorName = Format("Polygon{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
-		CGameInstance* GameInstance = CGameInstance::Get();
-		LK_VERIFY(GameInstance);
-		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
 		ActorSpec.Name = ActorName;
@@ -100,9 +97,8 @@ namespace platformer2d {
 		if (ActorName.empty()) {
 			ActorName = Format("Chain{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
-		CGameInstance* GameInstance = CGameInstance::Get();
-		LK_VERIFY(GameInstance);
-		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
 		ActorSpec.Name = ActorName;
@@ -131,9 +127,8 @@ namespace platformer2d {
 	std::shared_ptr<CActor> CSpawner::CreateSpawnpoint(std::string_view Name, const glm::vec2& Pos)
 	{
 		LK_VERIFY(!Name.empty(), "Name cannot be empty");
-		CGameInstance* GameInstance = CGameInstance::Get();
-		LK_VERIFY(GameInstance);
-		std::shared_ptr<CScene> Scene = GameInstance->GetScene();
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
 		ActorSpec.Name = Name;
