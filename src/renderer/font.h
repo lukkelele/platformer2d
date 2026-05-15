@@ -64,9 +64,9 @@ namespace platformer2d {
 		void Push(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
 		void Push(EFontSize Size, EFontModifier Modifier = EFontModifier::Normal);
 		void Pop();
-		ImFont* Get(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
+		[[nodiscard]] ImFont* Get(EFont Font, EFontSize Size = EFontSize::Regular, EFontModifier Modifier = EFontModifier::Normal);
 
-		constexpr EFont GetDefault()
+		[[nodiscard]] constexpr EFont GetDefault()
 		{
 			return EFont::SourceSansPro;
 		}

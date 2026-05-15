@@ -6,9 +6,9 @@ namespace platformer2d::UI {
 
 	namespace {
 		using TFontArray = std::array<ImFont*, static_cast<std::size_t>(EFontSize::COUNT)>;
-		using TFontMap = std::unordered_map<EFont, TFontArray>;
+		using TFontMap = std::map<EFont, TFontArray>;
 
-		std::unordered_map<EFontModifier, TFontMap> FontMap = {
+		std::map<EFontModifier, TFontMap> FontMap = {
 			/* clang-format off */
 			{ EFontModifier::Normal,     { { EFont::SourceSansPro, TFontArray{} } } },
 			{ EFontModifier::Bold  ,     { { EFont::Roboto,        TFontArray{} } } },
@@ -81,10 +81,9 @@ namespace platformer2d::UI {
 		ImGui::PopFont();
 	}
 
-	ImFont* Font::Get(EFont Font, EFontSize Size, EFontModifier Modifier)
+	ImFont* Font::Get(const EFont Font, const EFontSize Size, const EFontModifier Modifier)
 	{
-		ImFont* FontRef = FontMap.at(Modifier)[Font][static_cast<int>(Size)];
-		return FontRef;
+		return FontMap.at(Modifier)[Font][std::to_underlying(Size)];
 	}
 
 }
