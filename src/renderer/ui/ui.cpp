@@ -532,67 +532,53 @@ namespace platformer2d::UI {
 
 		float TopBarOffsetY = 0.0f;
 		if (ImGuiWindow* Topbar = ImGui::FindWindowByName(PanelID::Topbar)) {
-			TopBarOffsetY = Topbar->Size.y;
+			TopBarOffsetY = Topbar->Size.y + ImGui::GetFrameHeight();
+		}
+
+		ImVec2 WindowPos;
+		if (ImGuiWindow* EditorViewport = ImGui::FindWindowByName(PanelID::Viewport)) {
+			WindowPos = EditorViewport->Pos;
+		} else {
+			WindowPos = ImGui::GetWindowPos();
 		}
 
 		ImGui::SetNextWindowBgAlpha(0.25f);
-		const ImVec2 WindowPos = ImGui::GetWindowPos();
 		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
 		ImGui::SetNextWindowPos({WindowPos.x + Padding, Padding + TopBarOffsetY}, ImGuiCond_Always);
-
-		ImGui::SetNextWindowSize(ImVec2(260, 0), ImGuiCond_Always);
-		static constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration
-			| ImGuiWindowFlags_NoDocking
-			| ImGuiWindowFlags_NoBringToFrontOnFocus;
-		if (!ImGui::Begin("##Statistics", nullptr, WindowFlags)) {
-			ImGui::End();
+		constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoDecoration
+			| ImGuiWindowFlags_NoDocking;
+		if (!UI::Begin("##Statistics", nullptr, WindowFlags)) {
 			return;
 		}
 
 		std::shared_ptr<CPlayer> Player = GameInstance.GetPlayer();
 		CCamera& Camera = Player->GetCamera();
 
-		static constexpr float LabelColumnWidth = 150.0f;
-		ImGui::BeginTable("##StatisticsTable", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
-
-		/* @fixme: Use UI::Table */
-		auto Label = [](std::string_view Str) -> void
-		{
-			ImGui::TableSetColumnIndex(0);
-			UI::ShiftCursor(17.0f, 4.0f);
-			ImGui::Text(Str.data());
-		};
-
-		auto NextColumn = []() -> void
-		{
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursor(0.0f, 4.0f);
-		};
+		constexpr float LabelColumnWidth = 150.0f;
+		UI::BeginPropertyGrid();
 
 		/* FPS */
 		const float DeltaTime = GameInstance.GetDeltaTime();
 		const float FPS = 1.0f / DeltaTime;
-		ImGui::TableNextRow();
-		Label("FPS");
-		NextColumn();
+		Table::NextRow();
+		Table::Label("FPS");
+		Table::NextColumn();
 		ImGui::Text("%1.f", FPS);
 
 		/* Camera zoom */
-		ImGui::TableNextRow();
-		Label("Camera Zoom");
-		NextColumn();
-		ImGui::Text("%.2f", Camera.GetZoom());
+		Table::NextRow();
+		Table::Label("Camera Zoom");
+		Table::NextColumn();
+		ImGui::Text("%.2f", GameInstance.GetActiveCamera()->GetZoom());
 
 		/* Camera lock */
-		ImGui::TableNextRow();
-		Label("Camera Lock");
-		NextColumn();
+		Table::NextRow();
+		Table::Label("Camera Lock");
+		Table::NextColumn();
 		const bool CameraLocked = Player->IsCameraLocked();
 		ImGui::Text("%s", CameraLocked ? "Active" : "Not active");
 
-		ImGui::EndTable();
+		UI::EndPropertyGrid();
 
 		if (ImGui::IsWindowHovered()) {
 			const ImVec2 Pos = ImGui::GetWindowPos();
@@ -605,7 +591,7 @@ namespace platformer2d::UI {
 			}
 		}
 
-		ImGui::End();
+		UI::End();
 	}
 
 	void PlayerHud(std::shared_ptr<CPlayer> Player)
