@@ -137,6 +137,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/external/lklog/include
 	${CMAKE_SOURCE_DIR}/external/imgui
 	${CMAKE_SOURCE_DIR}/external/ImGuizmo
+	${CMAKE_SOURCE_DIR}/external/nativefiledialog-extended/src/include
 	${CMAKE_SOURCE_DIR}/external/tracy/public
 	${CMAKE_SOURCE_DIR}/external/yaml-cpp/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
@@ -151,6 +152,7 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	lklog
 	imgui
 	ImGuizmo
+	nfd
 	stb_image
 	Tracy::TracyClient
 	yaml-cpp

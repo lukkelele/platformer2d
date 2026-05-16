@@ -100,6 +100,11 @@ add_subdirectory(tracy)
 add_subdirectory(yaml-cpp)
 
 ##############################
+# Library: nfd-extended
+##############################
+add_subdirectory(nativefiledialog-extended)
+
+##############################
 # Library: msdf-atlas-gen
 ##############################
 #set(MSDFGEN_DISABLE_PNG ON) # TODO: libpng be added as dependency (?)

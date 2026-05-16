@@ -31,3 +31,6 @@
 [submodule "external/lklog"]
 	path = external/lklog
 	url = https://github.com/lukkelele/lklog.git
+[submodule "external/nativefiledialog-extended"]
+	path = external/nativefiledialog-extended
+	url = https://github.com/btzy/nativefiledialog-extended.git
