@@ -11,8 +11,8 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [3.2585766, -0.29357958, 0.1]
-      Rotation: 0.42164484
+      Position: [3.25, -0.3, 0.1]
+      Rotation: 0.425
       Scale: [3.04, 0.12, 1]
     Body:
       Type: 0
@@ -20,9 +20,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [3.04, 0.12]
-        Rotation: 0.42164487
+        Rotation: 0.425
         Radius: 0.5
-      Position: [3.2585766, -0.29357958]
+      Position: [3.25, -0.3]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -38,8 +38,8 @@ Actors:
       Thickness: 11.3
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-1.4962326, -0.009999961, 0]
-      Rotation: 1.5707963
+      Position: [-1.5, -0, 0]
+      Rotation: 1.575
       Scale: [1.45, 0.95, 1]
     Body:
       Type: 0
@@ -47,9 +47,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [1.45, 0.95]
-        Rotation: 1.5707963
+        Rotation: 1.575
         Radius: 0.5
-      Position: [-1.4962326, -0.009999961]
+      Position: [-1.5, -0]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -65,7 +65,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-0.58150285, -0.09425083, 2]
+      Position: [-0.575, -0.1, 2]
       Rotation: 0
       Scale: [0.4, 0.06, 1]
     Body:
@@ -76,7 +76,7 @@ Actors:
         Size: [0.4, 0.06]
         Rotation: 0
         Radius: 0.5
-      Position: [-0.58150285, -0.09425083]
+      Position: [-0.575, -0.1]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -92,8 +92,8 @@ Actors:
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [0.46239638, 0.029140675, 2.6]
-      Rotation: 2.4725094
+      Position: [0.45, 0.025, 2.6]
+      Rotation: 2.8
       Scale: [0.4, 0.06, 1]
     EffectComponent:
       - Type: 1
@@ -104,9 +104,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.4, 0.06]
-        Rotation: 2.4788551
+        Rotation: 2.8
         Radius: 0.5
-      Position: [0.46239638, 0.029140675]
+      Position: [0.45, 0.025]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -122,8 +122,8 @@ Actors:
       Thickness: 4.3
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [0.20569733, -1.61759, 0]
-      Rotation: -3.1415925
+      Position: [0.2, -1.625, 0]
+      Rotation: -3.125
       Scale: [9.6, 0.22, 1]
     Body:
       Type: 0
@@ -131,9 +131,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [9.6, 0.22]
-        Rotation: 3.1415927
+        Rotation: -3.125
         Radius: 0.5
-      Position: [0.20569733, -1.61759]
+      Position: [0.2, -1.625]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -149,8 +149,8 @@ Actors:
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [4.9293427, -0.900186, 0]
-      Rotation: -3.1415925
+      Position: [4.925, -0.9, 0]
+      Rotation: -3.125
       Scale: [0.1, 1.2, 1]
     Body:
       Type: 0
@@ -158,9 +158,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [0.1, 1.2]
-        Rotation: 3.1415927
+        Rotation: -3.125
         Radius: 0.5
-      Position: [4.9293427, -0.900186]
+      Position: [4.925, -0.9]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -176,8 +176,8 @@ Actors:
       Thickness: 1
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [-0.014674859, -0.68743986, 0]
-      Rotation: -3.1415925
+      Position: [-0.025, -0.675, 0]
+      Rotation: -3.125
       Scale: [2, 0.08, 1]
     Body:
       Type: 0
@@ -185,9 +185,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [2, 0.08]
-        Rotation: 3.1415927
+        Rotation: -3.125
         Radius: 0.5
-      Position: [-0.014674859, -0.68743986]
+      Position: [-0.025, -0.675]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -203,7 +203,7 @@ Actors:
       Thickness: 8.2
       Color: [1, 0, 0, 1]
     TransformComponent:
-      Position: [-0.06911661, -0.4831181, 0.89]
+      Position: [-0.075, -0.475, 0.9]
       Rotation: 0
       Scale: [0.2, 0.2, 1]
     InteractionComponent:
@@ -222,7 +222,7 @@ Actors:
         Size: [0.2, 0.2]
         Rotation: 0
         Radius: 0.5
-      Position: [-0.06911661, -0.4831181]
+      Position: [-0.075, -0.475]
       Flags: 10
       Mass: 1
       MotionLock: 0
@@ -238,7 +238,7 @@ Actors:
       Thickness: 6.4
       Color: [0, 0, 0, 1]
     TransformComponent:
-      Position: [2.2, 0.67, 0]
+      Position: [2.2, 0.675, 0]
       Rotation: 0
       Scale: [1.31, 0.2, 1]
     Body:
@@ -249,7 +249,7 @@ Actors:
         Size: [1.31, 0.2]
         Rotation: 0
         Radius: 0.5
-      Position: [2.2, 0.67]
+      Position: [2.2, 0.675]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -265,8 +265,8 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [4.58, 1.24, 0]
-      Rotation: -2.9341714
+      Position: [4.575, 1.25, 0]
+      Rotation: -2.925
       Scale: [1.33, 0.15, 1]
     Body:
       Type: 0
@@ -274,9 +274,9 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [1.33, 0.15]
-        Rotation: -2.9341714
+        Rotation: -2.925
         Radius: 0.5
-      Position: [4.58, 1.24]
+      Position: [4.575, 1.25]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -292,8 +292,8 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [1.3199999, 1.8799999, 0]
-      Rotation: 2.8836203
+      Position: [1.325, 1.875, 0]
+      Rotation: 2.875
       Scale: [1.33, 0.15, 1]
     Body:
       Type: 0
@@ -301,39 +301,39 @@ Actors:
       Shape:
         ShapeType: 2
         Size: [1.33, 0.15]
-        Rotation: 2.8836203
+        Rotation: 2.875
         Radius: 0.5
-      Position: [1.3199999, 1.8799999]
+      Position: [1.325, 1.875]
       Flags: 2
       Mass: 1
       MotionLock: 0
       Sensor: false
-  - ID: 6023028379238085154
+  - ID: 5604123262548421685
     Type: 2
-    Name: Enemy
+    Name: Enemy-Grunt-2
     Texture: 9
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
-      Enabled: false
+      Enabled: true
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [-2.2274895, -1.4076246, -0.06]
+      Position: [-1.675, -1.325, 0.375]
       Rotation: 0
-      Scale: [0.2, 0.2, 1]
+      Scale: [0.38, 0.46, 1]
     HealthComponent:
-      MaxHealth: 100
+      MaxHealth: 60
       Damageable: true
     Body:
       Type: 1
       GravityScale: 1
       Shape:
         ShapeType: 2
-        Size: [0.2, 0.2]
+        Size: [0.38, 0.46]
         Rotation: 0
         Radius: 0.5
-      Position: [-2.2274895, -1.4076246]
+      Position: [-1.7, -1.325]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -342,4 +342,5 @@ Actors:
       ControllerType: 1
       HalfDistance: 1
       StartDelayInSeconds: 1
-    SpawnPoint: [-0.32, -1.41]
+    SpawnPoint: [-2.12, -1.05]
+    Archetype: 0
