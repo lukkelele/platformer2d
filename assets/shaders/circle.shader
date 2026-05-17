@@ -41,6 +41,8 @@ struct vertex_output
 
 layout(location = 0) in vertex_output v_input;
 
+uniform float u_brightness = 1.0;
+
 void main()
 {
 	const float dist = sqrt(dot(v_input.localpos, v_input.localpos));
@@ -53,6 +55,5 @@ void main()
 
 	float alpha = 1.0f - smoothstep(1.0f - fade, 1.0f, dist);
 	alpha *= smoothstep(1.0f - v_input.thickness - fade, 1.0f - v_input.thickness, dist);
-	color = v_input.color;
-	color.a = v_input.color.a * alpha;
+	color = vec4(v_input.color.rgb * u_brightness, v_input.color.a * alpha);
 }

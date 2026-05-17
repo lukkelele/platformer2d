@@ -60,6 +60,7 @@ uniform sampler2D u_texture12;
 uniform sampler2D u_texture13;
 uniform sampler2D u_texture14;
 uniform sampler2D u_texture15;
+uniform float u_brightness = 1.0;
 
 vec4 sample_texture(vec2 uv)
 {
@@ -119,7 +120,7 @@ void main()
 
     if (v_outlinethickness == 0.0)
     {
-        color = base_color;
+        color = vec4(base_color.rgb * u_brightness, base_color.a);
         return;
     }
 
@@ -133,11 +134,11 @@ void main()
     bool is_border = (dist_x <= border_uv_x) || (dist_y <= border_uv_y);
     if (is_border)
     {
-        color = v_outlinecolor;
+        color = vec4(v_outlinecolor.rgb * u_brightness, v_outlinecolor.a);
     }
     else
     {
-        color = base_color;
+        color = vec4(base_color.rgb * u_brightness, base_color.a);
     }
 
     /* Debug */

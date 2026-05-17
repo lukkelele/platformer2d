@@ -23,7 +23,9 @@ layout(location = 0) out vec4 color;
 
 in vec4 v_color;
 
+uniform float u_brightness = 1.0;
+
 void main()
 {
-    color = v_color;
+    color = vec4(v_color.rgb * u_brightness, v_color.a);
 }
