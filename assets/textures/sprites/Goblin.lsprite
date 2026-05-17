@@ -1,0 +1,17 @@
+Name: Goblin
+Type: Character
+Texture: Goblin
+TileSize: [32, 32]
+Animations:
+  Idle:
+    Row: 9
+    Frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    TicksPerFrame: 15
+  Walk:
+    Row: 7
+    Frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    TicksPerFrame: 10
+  Jump:
+    Row: 5
+    Frames: [2]
+
