@@ -11,9 +11,8 @@
 
 namespace platformer2d {
 
-	enum class EFontSize : std::int8_t
+	enum class EFontSize : std::uint8_t
 	{
-		None = -1,
 		Regular,
 		Smaller,
 		Small,
@@ -24,7 +23,7 @@ namespace platformer2d {
 		Banner,
 		COUNT
 	};
-	LK_ENUM_RANGE(EFontSize, EFontSize::None, EFontSize::COUNT);
+	LK_ENUM(EFontSize);
 
 	enum class EFontModifier : std::uint8_t
 	{
@@ -33,6 +32,16 @@ namespace platformer2d {
 		Italic,
 		BoldItalic,
 		SemiMedium,
+		Semibold,
+		SemiboldItalic,
+		Light,
+		LightItalic,
+		Medium,
+		MediumItalic,
+		Thin,
+		ThinItalic,
+		Black,
+		BlackItalic,
 		COUNT
 	};
 	LK_ENUM(EFontModifier);
@@ -56,8 +65,6 @@ namespace platformer2d {
 		bool MergeWithLast = false;
 		const ImWchar* GlyphRanges = nullptr;
 	};
-
-	extern const std::unordered_map<EFontSize, float> FontSizeMap;
 
 	namespace UI::Font {
 		void Add(const FFontConfiguration& FontConfig, bool IsDefault = false);
