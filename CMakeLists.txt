@@ -140,6 +140,7 @@ target_include_directories(${PROJECT_INTERFACE} INTERFACE
 	${CMAKE_SOURCE_DIR}/external/nativefiledialog-extended/src/include
 	${CMAKE_SOURCE_DIR}/external/tracy/public
 	${CMAKE_SOURCE_DIR}/external/yaml-cpp/include
+	${CMAKE_SOURCE_DIR}/external/json/include
 	${CMAKE_SOURCE_DIR}/modules/glad/include
 )
 
@@ -156,6 +157,7 @@ target_link_libraries(${PROJECT_INTERFACE} INTERFACE
 	stb_image
 	Tracy::TracyClient
 	yaml-cpp
+	nlohmann_json
 )
 
 add_executable(${PROJECT_NAME})

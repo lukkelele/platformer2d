@@ -100,6 +100,11 @@ add_subdirectory(tracy)
 add_subdirectory(yaml-cpp)
 
 ##############################
+# Library: nlohmann_json
+##############################
+add_subdirectory(json)
+
+##############################
 # Library: nfd-extended
 ##############################
 add_subdirectory(nativefiledialog-extended)
