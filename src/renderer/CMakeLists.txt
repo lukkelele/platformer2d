@@ -9,6 +9,8 @@ project_library_sources(
 	color.h
 	font.h
 	font.cpp
+	fontatlas.h
+	fontatlas.cpp
 	fontawesome.h
 	framebuffer.h
 	framebuffer.cpp
