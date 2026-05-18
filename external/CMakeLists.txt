@@ -110,9 +110,65 @@ add_subdirectory(json)
 add_subdirectory(nativefiledialog-extended)
 
 ##############################
+# Library: zlib
+##############################
+set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(ZLIB_BUILD_STATIC ON CACHE BOOL "" FORCE)
+set(ZLIB_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(ZLIB_BUILD_MINIZIP OFF CACHE BOOL "" FORCE)
+set(ZLIB_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(zlib)
+# zlib only creates ZLIB::ZLIB when shared lib is built.
+# Alias the static target so libpng finds it.
+if(NOT TARGET ZLIB::ZLIB)
+	add_library(ZLIB::ZLIB ALIAS zlibstatic)
+endif()
+
+##############################
+# Library: libpng
+##############################
+set(PNG_SHARED OFF CACHE BOOL "" FORCE)
+set(PNG_STATIC ON CACHE BOOL "" FORCE)
+set(PNG_FRAMEWORK OFF CACHE BOOL "" FORCE)
+set(PNG_TESTS OFF CACHE BOOL "" FORCE)
+set(PNG_TOOLS OFF CACHE BOOL "" FORCE)
+set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
+set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
+add_subdirectory(libpng)
+# msdfgen expects PNG::PNG, libpng's CMake doesn't create that alias.
+if(NOT TARGET PNG::PNG)
+	add_library(PNG::PNG ALIAS png_static)
+endif()
+
+##############################
+# Library: FreeType
+##############################
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_BZIP2 ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_PNG ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_ZLIB ON CACHE BOOL "" FORCE)
+add_subdirectory(freetype)
+if(NOT TARGET Freetype::Freetype)
+	add_library(Freetype::Freetype ALIAS freetype)
+endif()
+
+##############################
 # Library: msdf-atlas-gen
 ##############################
-#set(MSDFGEN_DISABLE_PNG ON) # TODO: libpng be added as dependency (?)
-# TODO: Need to fix freetype dependency. Do not want to use vcpkg toolchain :)
-#add_subdirectory(msdf-atlas-gen)
+set(MSDF_ATLAS_USE_VCPKG OFF CACHE BOOL "" FORCE)
+set(MSDF_ATLAS_USE_SKIA OFF CACHE BOOL "" FORCE)
+set(MSDF_ATLAS_BUILD_STANDALONE ON CACHE BOOL "" FORCE)
+set(MSDF_ATLAS_NO_ARTERY_FONT OFF CACHE BOOL "" FORCE)
+set(MSDF_ATLAS_INSTALL OFF CACHE BOOL "" FORCE)
+# TODO: I'd like to set DYNAMIC_RUNTIME to OFF
+set(MSDF_ATLAS_DYNAMIC_RUNTIME ON CACHE BOOL "" FORCE)
+set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_USE_OPENMP OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_DISABLE_SVG ON CACHE BOOL "" FORCE)
+set(MSDFGEN_DISABLE_PNG OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory(msdf-atlas-gen)
 
