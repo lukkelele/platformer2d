@@ -33,44 +33,50 @@ namespace platformer2d {
 	static constexpr std::uint32_t MAX_INDICES = MAX_QUADS * 6;
 	static constexpr std::uint32_t MAX_LINE_VERTICES = MAX_LINES * 2;
 	static constexpr std::uint32_t MAX_LINE_INDICES = MAX_LINES * 2;
+	static constexpr std::uint32_t MAX_TEXT_GLYPHS = 4096;
+	static constexpr std::uint32_t MAX_TEXT_VERTICES = MAX_TEXT_GLYPHS * 4;
+	static constexpr std::uint32_t MAX_TEXT_INDICES = MAX_TEXT_GLYPHS * 6;
 
 	CRenderer::FLineConfig CRenderer::LineConfig;
 	CRenderer::FCameraData CRenderer::CameraData;
 
-	struct FRendererData
-	{
-		uint16_t FrameIndex = 0;
-		uint16_t RefreshRate = 0;
-		std::shared_ptr<CTexture> WhiteTexture = nullptr;
-		std::shared_ptr<CFramebuffer> ViewportFramebuffer = nullptr;
-		std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
-
-		struct
-		{
-			bool bBlending = false;
-			uint32_t BlendSource = 0;
-			uint32_t BlendDestination = 0;
-			bool bDepthTest = false;
-			uint32_t DepthFunc = 0;
-		} GL;
-	};
-
 	namespace {
+		struct FRendererData
+		{
+			uint16_t FrameIndex = 0;
+			uint16_t RefreshRate = 0;
+			std::shared_ptr<CTexture> WhiteTexture = nullptr;
+			std::shared_ptr<CFramebuffer> ViewportFramebuffer = nullptr;
+			std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
 
-		FRendererData Data{};
-		FDrawStatistics DrawStats;
-
-		std::array<CRenderCommandQueue*, 2> CommandQueue;
-		std::atomic_uint8_t CommandQueueSubmissionIndex = 0;
-		const std::size_t CommandQueueCount = CommandQueue.size();
-
-		constexpr glm::vec2 QuadTextureCoords[] = {
-			{0.0f, 0.0f}, /*  Bottom Left.  */
-			{0.0f, 1.0f}, /*  Top Left.     */
-			{1.0f, 1.0f}, /*  Top Right.    */
-			{1.0f, 0.0f}  /*  Bottom Right. */
+			struct
+			{
+				bool bBlending = false;
+				uint32_t BlendSource = 0;
+				uint32_t BlendDestination = 0;
+				bool bDepthTest = false;
+				uint32_t DepthFunc = 0;
+			} GL;
 		};
 	}
+
+	static FRendererData Data{};
+	static FDrawStatistics DrawStats;
+
+	static std::array<CRenderCommandQueue*, 2> CommandQueue;
+	static std::atomic_uint8_t CommandQueueSubmissionIndex = 0;
+	static const std::size_t CommandQueueCount = CommandQueue.size();
+
+	static constexpr glm::vec2 QuadTextureCoords[] = {
+		{0.0f, 0.0f}, /*  Bottom Left.  */
+		{0.0f, 1.0f}, /*  Top Left.     */
+		{1.0f, 1.0f}, /*  Top Right.    */
+		{1.0f, 0.0f}  /*  Bottom Right. */
+	};
+
+	static void EmitTextGlyphs(const CFontAtlas& Font, std::string_view Text, const glm::vec3& Origin, float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, float OutlineWidth, FTextVertex*& VertexPtr,
+		std::uint32_t& IndexCount, std::uint32_t MaxIndices, float YSign, std::uint64_t& OutGlyphCount);
 
 	FORCEINLINE static void BindTextures()
 	{
@@ -104,11 +110,13 @@ namespace platformer2d {
 
 		LoadTextures();
 		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
+		LoadFonts();
 
 		CreateFramebuffer();
 		SetupQuadRenderer();
 		SetupLineRenderer();
 		SetupCircleRenderer();
+		SetupTextRenderer();
 
 		QuadShader->Bind();
 		BindTextures();
@@ -163,6 +171,20 @@ namespace platformer2d {
 			Data.ViewportFramebuffer->Destroy();
 			Data.ViewportFramebuffer.reset();
 		}
+
+		delete[] TextWorldVertexBufferBase;
+		TextWorldVertexBufferBase = nullptr;
+		TextWorldVertexBufferPtr = nullptr;
+		delete[] TextScreenVertexBufferBase;
+		TextScreenVertexBufferBase = nullptr;
+		TextScreenVertexBufferPtr = nullptr;
+		DefaultFont.reset();
+		for (auto& Row : Fonts) {
+			for (std::shared_ptr<CFontAtlas>& FontRef : Row) {
+				FontRef.reset();
+			}
+		}
+		TextShader.reset();
 	}
 
 	void CRenderer::CreateFramebuffer()
@@ -267,6 +289,56 @@ namespace platformer2d {
 		LK_OpenGL_Verify(glLineWidth(LineConfig.Width));
 	}
 
+	void CRenderer::SetupTextRenderer()
+	{
+		const FVertexBufferLayout TextLayout = {
+			/* clang-format off */
+			{ "pos",          EShaderDataType::Float3, },
+			{ "color",        EShaderDataType::Float4, },
+			{ "texcoord",     EShaderDataType::Float2, },
+			{ "outlinecolor", EShaderDataType::Float4, },
+			{ "outlinewidth", EShaderDataType::Float,  },
+			/* clang-format on */
+		};
+
+		TextWorldVAO = OpenGL::VertexArray::Create();
+		TextWorldVBO = OpenGL::VertexBuffer::Create(MAX_TEXT_VERTICES * sizeof(FTextVertex), TextLayout);
+		TextWorldVertexBufferBase = new FTextVertex[MAX_TEXT_VERTICES];
+		TextWorldVertexBufferPtr = TextWorldVertexBufferBase;
+
+		std::uint32_t* TextIndices = new std::uint32_t[MAX_TEXT_INDICES];
+		std::uint32_t Offset = 0;
+		for (std::uint32_t Idx = 0; Idx < MAX_TEXT_INDICES; Idx += 6) {
+			TextIndices[Idx + 0] = Offset + 0;
+			TextIndices[Idx + 1] = Offset + 1;
+			TextIndices[Idx + 2] = Offset + 2;
+			TextIndices[Idx + 3] = Offset + 2;
+			TextIndices[Idx + 4] = Offset + 3;
+			TextIndices[Idx + 5] = Offset + 0;
+			Offset += 4;
+		}
+		const GLuint TextEBO = OpenGL::ElementBuffer::Create(TextIndices, MAX_TEXT_INDICES * sizeof(std::uint32_t));
+
+		TextScreenVAO = OpenGL::VertexArray::Create();
+		TextScreenVBO = OpenGL::VertexBuffer::Create(MAX_TEXT_VERTICES * sizeof(FTextVertex), TextLayout);
+		TextScreenVertexBufferBase = new FTextVertex[MAX_TEXT_VERTICES];
+		TextScreenVertexBufferPtr = TextScreenVertexBufferBase;
+
+		/* Both text VAOs reuse the same index buffer. */
+		LK_OpenGL_Verify(glBindVertexArray(TextWorldVAO));
+		LK_OpenGL_Verify(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, TextEBO));
+		LK_OpenGL_Verify(glBindVertexArray(TextScreenVAO));
+		LK_OpenGL_Verify(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, TextEBO));
+		LK_OpenGL_Verify(glBindVertexArray(0));
+
+		delete[] TextIndices;
+
+		TextShader = std::make_shared<CShader>(SHADERS_DIR "/text.shader");
+		TextShader->Bind();
+		TextShader->Set("u_atlas", FontAtlasTextureSlot);
+		TextShader->Unbind();
+	}
+
 	void CRenderer::SetupCircleRenderer()
 	{
 		const FVertexBufferLayout CircleLayout = {
@@ -332,6 +404,78 @@ namespace platformer2d {
 		LoadTexture(TEXTURES_DIR "/ar15.png", ETexture::Rifle, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/goblin.png", ETexture::Goblin, EImageFormat::RGBA8);
 		Data.WhiteTexture = Data.Textures[ETexture::White];
+	}
+
+	void CRenderer::LoadFonts()
+	{
+		const std::filesystem::path FontsRoot = FONTS_DIR;
+		if (!std::filesystem::exists(FontsRoot)) {
+			LK_WARN_TAG("Renderer", "Fonts directory missing: {}", FontsRoot);
+			return;
+		}
+
+		for (const auto& Entry : std::filesystem::recursive_directory_iterator(FontsRoot)) {
+			if (!Entry.is_regular_file()) {
+				continue;
+			}
+			const std::filesystem::path& JsonPath = Entry.path();
+			const std::string FileName = JsonPath.filename().string();
+			if (!FileName.ends_with(".msdf.json")) {
+				continue;
+			}
+
+			const std::string BaseName = FileName.substr(0, FileName.size() - std::string_view(".msdf.json").size());
+			const std::filesystem::path PngPath = JsonPath.parent_path() / (BaseName + ".msdf.png");
+			if (!std::filesystem::exists(PngPath)) {
+				LK_WARN_TAG("Renderer", "Font JSON without matching PNG: {}", JsonPath);
+				continue;
+			}
+			const std::size_t DashPos = BaseName.find('-');
+			std::string_view Family;
+			std::string_view Variant;
+			if (DashPos == std::string::npos) {
+				Family = BaseName;
+				Variant = std::string_view{};
+			} else {
+				Family = std::string_view(BaseName).substr(0, DashPos);
+				Variant = std::string_view(BaseName).substr(DashPos + 1);
+			}
+
+			const EFont Font = Enum::FromString<EFont>(Family);
+			const EFontModifier Modifier = (Variant.empty() || (Variant == "Regular"))
+				? EFontModifier::Normal
+				: Enum::FromString<EFontModifier>(Variant);
+			if ((Font == EFont::None) || (Modifier == EFontModifier::COUNT)) {
+				LK_WARN_TAG("Renderer", "Skipping font with unknown family/modifier: {} ({}, {})", BaseName, Family, Variant);
+				continue;
+			}
+
+			const std::size_t FontIdx = static_cast<std::size_t>(Font);
+			const std::size_t ModIdx = static_cast<std::size_t>(Modifier);
+			LK_ASSERT(FontIdx < Fonts.size(), "Font index out of range (FontIdx={})", FontIdx);
+			LK_ASSERT(ModIdx < Fonts[FontIdx].size(), "Font modifier index out of range (ModIdx={})", ModIdx);
+			Fonts[FontIdx][ModIdx] = std::make_shared<CFontAtlas>(JsonPath, PngPath);
+		}
+
+		const std::size_t RobotoIdx = static_cast<std::size_t>(EFont::Roboto);
+		const std::size_t NormalIdx = static_cast<std::size_t>(EFontModifier::Normal);
+		DefaultFont = Fonts[RobotoIdx][NormalIdx];
+		if (!DefaultFont) {
+			LK_WARN_TAG("Renderer", "Default font not found (needs bake)");
+		}
+	}
+
+	const CFontAtlas& CRenderer::GetFont(const EFont Font, const EFontModifier Modifier)
+	{
+		const std::size_t FontIdx = static_cast<std::size_t>(Font);
+		const std::size_t ModIdx = static_cast<std::size_t>(Modifier);
+		LK_ASSERT((FontIdx < Fonts.size()) && (ModIdx < Fonts[FontIdx].size()) && Fonts.at(FontIdx).at(ModIdx));
+		return *Fonts.at(FontIdx).at(ModIdx);
+	}
+
+	const CFontAtlas& CRenderer::GetDefaultFont()
+	{
+		return *DefaultFont;
 	}
 
 	void CRenderer::SwapQueues()
@@ -414,6 +558,14 @@ namespace platformer2d {
 
 		CircleIndexCount = 0;
 		CircleVertexBufferPtr = CircleVertexBufferBase;
+
+		TextWorldIndexCount = 0;
+		TextWorldVertexBufferPtr = TextWorldVertexBufferBase;
+		TextWorldFont = nullptr;
+
+		TextScreenIndexCount = 0;
+		TextScreenVertexBufferPtr = TextScreenVertexBufferBase;
+		TextScreenFont = nullptr;
 	}
 
 	void CRenderer::NextBatch()
@@ -470,6 +622,57 @@ namespace platformer2d {
 			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, CircleIndexCount, GL_UNSIGNED_INT, nullptr));
 			CameraUniformBuffer->Unbind();
 			CircleShader->Unbind();
+		}
+
+		if ((TextWorldIndexCount > 0) && TextWorldFont && TextShader) {
+			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)TextWorldVertexBufferPtr - (std::uint8_t*)TextWorldVertexBufferBase);
+			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, TextWorldVBO));
+			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, TextWorldVertexBufferBase));
+
+			TextShader->Bind();
+			TextShader->Set("u_viewproj", CameraData.ViewProjection);
+			TextShader->Set("u_brightness", Brightness);
+			TextShader->Set("u_pxrange", TextWorldFont->GetDistanceRange());
+			TextShader->Set("u_atlas", FontAtlasTextureSlot);
+
+			LK_OpenGL_Verify(glActiveTexture(GL_TEXTURE0 + FontAtlasTextureSlot));
+			LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, TextWorldFont->GetTexture()->GetID()));
+
+			LK_OpenGL_Verify(glBindVertexArray(TextWorldVAO));
+			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, TextWorldIndexCount, GL_UNSIGNED_INT, nullptr));
+			TextShader->Unbind();
+		}
+
+		if ((TextScreenIndexCount > 0) && TextScreenFont && TextShader) {
+			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)TextScreenVertexBufferPtr - (std::uint8_t*)TextScreenVertexBufferBase);
+			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, TextScreenVBO));
+			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, TextScreenVertexBufferBase));
+
+			const float Width = static_cast<float>(Data.ViewportFramebuffer->GetWidth());
+			const float Height = static_cast<float>(Data.ViewportFramebuffer->GetHeight());
+			const glm::mat4 ScreenVP = glm::ortho(0.0f, Width, Height, 0.0f, -1.0f, 1.0f);
+
+			const bool DepthWas = Data.GL.bDepthTest;
+			if (DepthWas) {
+				SetDepthTest(false);
+			}
+
+			TextShader->Bind();
+			TextShader->Set("u_viewproj", ScreenVP);
+			TextShader->Set("u_brightness", Brightness);
+			TextShader->Set("u_pxrange", TextScreenFont->GetDistanceRange());
+			TextShader->Set("u_atlas", FontAtlasTextureSlot);
+
+			LK_OpenGL_Verify(glActiveTexture(GL_TEXTURE0 + FontAtlasTextureSlot));
+			LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, TextScreenFont->GetTexture()->GetID()));
+
+			LK_OpenGL_Verify(glBindVertexArray(TextScreenVAO));
+			LK_OpenGL_Verify(glDrawElements(GL_TRIANGLES, TextScreenIndexCount, GL_UNSIGNED_INT, nullptr));
+			TextShader->Unbind();
+
+			if (DepthWas) {
+				SetDepthTest(true);
+			}
 		}
 
 		Data.ViewportFramebuffer->Unbind();
@@ -720,6 +923,104 @@ namespace platformer2d {
 		DrawLine(P0, P1, Color);
 	}
 
+	void CRenderer::DrawText(const CFontAtlas& Font, const std::string_view Text, const glm::vec3& Pos,
+		const float Scale, const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		LK_ASSERT(!Text.empty(), "Pos={} Scale={}", Pos, Scale);
+		if (TextWorldFont && (TextWorldFont != &Font)) {
+			NextBatch();
+		}
+
+		TextWorldFont = &Font;
+		EmitTextGlyphs(Font, Text, Pos, Scale, Color, OutlineColor, OutlineWidth,
+			TextWorldVertexBufferPtr, TextWorldIndexCount, MAX_TEXT_INDICES, 1.0f,
+			DrawStats.GlyphCount);
+	}
+
+	void CRenderer::DrawText(const std::string_view Text, const glm::vec3& Pos, const float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		LK_ASSERT(DefaultFont);
+		DrawText(*DefaultFont, Text, Pos, Scale, Color, OutlineColor, OutlineWidth);
+	}
+
+	void CRenderer::DrawText(EFont Font, const std::string_view Text, const glm::vec2& Pos, const float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		DrawText(Font, EFontModifier::Normal, Text, glm::vec3(Pos, 0.0f), Scale, Color, OutlineColor, OutlineWidth);
+	}
+
+	void CRenderer::DrawText(EFont Font, const std::string_view Text, const glm::vec3& Pos, const float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		DrawText(Font, EFontModifier::Normal, Text, Pos, Scale, Color, OutlineColor, OutlineWidth);
+	}
+
+	void CRenderer::DrawText(EFont Font, EFontModifier FontMod, const std::string_view Text, const glm::vec2& Pos, const float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		DrawText(Font, FontMod, Text, glm::vec3(Pos, 0.0f), Scale, Color, OutlineColor, OutlineWidth);
+	}
+
+	void CRenderer::DrawText(EFont Font, EFontModifier FontMod, const std::string_view Text, const glm::vec3& Pos, const float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		LK_ASSERT(!Text.empty(), "Pos={} Scale={}", Pos, Scale);
+		const CFontAtlas& FontRef = GetFont(Font, FontMod);
+		if (TextWorldFont && (TextWorldFont != &FontRef)) {
+			NextBatch();
+		}
+
+		TextWorldFont = &FontRef;
+		EmitTextGlyphs(FontRef, Text, Pos, Scale, Color, OutlineColor, OutlineWidth,
+			TextWorldVertexBufferPtr, TextWorldIndexCount, MAX_TEXT_INDICES, 1.0f,
+			DrawStats.GlyphCount);
+	}
+
+	void CRenderer::DrawTextScreen(const CFontAtlas& Font, const std::string_view Text, const glm::vec2& PixelPos,
+		const float PixelSize, const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		LK_ASSERT(!Text.empty(), "PixelPos={} PixelSize={}", PixelPos, PixelSize);
+		if (TextScreenFont && (TextScreenFont != &Font)) {
+			NextBatch();
+		}
+
+		TextScreenFont = &Font;
+		const glm::vec3 Origin = {PixelPos.x, PixelPos.y, 0.0f};
+		EmitTextGlyphs(Font, Text, Origin, PixelSize, Color, OutlineColor, OutlineWidth,
+			TextScreenVertexBufferPtr, TextScreenIndexCount, MAX_TEXT_INDICES, -1.0f,
+			DrawStats.GlyphCount);
+	}
+
+	void CRenderer::DrawTextScreen(const std::string_view Text, const glm::vec2& PixelPos, const float PixelSize,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		LK_ASSERT(DefaultFont);
+		DrawTextScreen(*DefaultFont, Text, PixelPos, PixelSize, Color, OutlineColor, OutlineWidth);
+	}
+
+	void CRenderer::DrawTextScreen(const EFont Font, const std::string_view Text, const glm::vec2& PixelPos,
+		const float PixelSize, const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		DrawTextScreen(Font, EFontModifier::Normal, Text, PixelPos, PixelSize, Color, OutlineColor, OutlineWidth);
+	}
+
+	void CRenderer::DrawTextScreen(const EFont Font, const EFontModifier FontMod, const std::string_view Text, const glm::vec2& PixelPos,
+		const float PixelSize, const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
+	{
+		LK_ASSERT(!Text.empty(), "PixelPos={} PixelSize={}", PixelPos, PixelSize);
+		const CFontAtlas& FontRef = GetFont(Font, FontMod);
+		if (TextScreenFont && (TextScreenFont != &FontRef)) {
+			NextBatch();
+		}
+
+		TextScreenFont = &FontRef;
+		const glm::vec3 Origin = {PixelPos.x, PixelPos.y, 0.0f};
+		EmitTextGlyphs(FontRef, Text, Origin, PixelSize, Color, OutlineColor, OutlineWidth,
+			TextScreenVertexBufferPtr, TextScreenIndexCount, MAX_TEXT_INDICES, -1.0f,
+			DrawStats.GlyphCount);
+	}
+
 	const glm::vec4& CRenderer::GetClearColor()
 	{
 		return Data.ViewportFramebuffer->GetClearColor();
@@ -841,6 +1142,71 @@ namespace platformer2d {
 	void CRenderer::SetDebugRender(const bool Enabled)
 	{
 		bDebugRender = Enabled;
+	}
+
+	static void EmitTextGlyphs(const CFontAtlas& Font, const std::string_view Text, const glm::vec3& Origin, const float Scale,
+		const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth, FTextVertex*& VertexPtr, std::uint32_t& IndexCount,
+		const std::uint32_t MaxIndices, const float YSign, std::uint64_t& OutGlyphCount)
+	{
+		const FFontMetrics& Metrics = Font.GetMetrics();
+		glm::vec2 Cursor = {Origin.x, Origin.y};
+
+		for (std::size_t Idx = 0; Idx < Text.size(); Idx++) {
+			const char Ch = Text[Idx];
+			if (Ch == '\n') {
+				Cursor.x = Origin.x;
+				Cursor.y -= Metrics.LineHeight * Scale * YSign;
+				continue;
+			}
+
+			const std::uint32_t Codepoint = static_cast<std::uint8_t>(Ch);
+			const FGlyph& Glyph = Font.GetGlyph(Codepoint);
+
+			if (Glyph.bVisible) {
+				if ((IndexCount + 6) > MaxIndices) {
+					break;
+				}
+
+				const float X0 = Cursor.x + Glyph.PlaneMin.x * Scale;
+				const float X1 = Cursor.x + Glyph.PlaneMax.x * Scale;
+				const float Y0 = Cursor.y + Glyph.PlaneMin.y * Scale * YSign;
+				const float Y1 = Cursor.y + Glyph.PlaneMax.y * Scale * YSign;
+				const float Z = Origin.z;
+
+				VertexPtr->Position = {X0, Y0, Z};
+				VertexPtr->TexCoord = {Glyph.AtlasMin.x, Glyph.AtlasMin.y};
+				VertexPtr->Color = Color;
+				VertexPtr->OutlineColor = OutlineColor;
+				VertexPtr->OutlineWidth = OutlineWidth;
+				VertexPtr++;
+
+				VertexPtr->Position = {X0, Y1, Z};
+				VertexPtr->TexCoord = {Glyph.AtlasMin.x, Glyph.AtlasMax.y};
+				VertexPtr->Color = Color;
+				VertexPtr->OutlineColor = OutlineColor;
+				VertexPtr->OutlineWidth = OutlineWidth;
+				VertexPtr++;
+
+				VertexPtr->Position = {X1, Y1, Z};
+				VertexPtr->TexCoord = {Glyph.AtlasMax.x, Glyph.AtlasMax.y};
+				VertexPtr->Color = Color;
+				VertexPtr->OutlineColor = OutlineColor;
+				VertexPtr->OutlineWidth = OutlineWidth;
+				VertexPtr++;
+
+				VertexPtr->Position = {X1, Y0, Z};
+				VertexPtr->TexCoord = {Glyph.AtlasMax.x, Glyph.AtlasMin.y};
+				VertexPtr->Color = Color;
+				VertexPtr->OutlineColor = OutlineColor;
+				VertexPtr->OutlineWidth = OutlineWidth;
+				VertexPtr++;
+
+				IndexCount += 6;
+				OutGlyphCount++;
+			}
+
+			Cursor.x += Glyph.Advance * Scale;
+		}
 	}
 
 }

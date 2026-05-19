@@ -38,7 +38,8 @@ namespace platformer2d {
 		{
 			Quad,
 			Line,
-			Circle
+			Circle,
+			Text
 		};
 
 	public:
