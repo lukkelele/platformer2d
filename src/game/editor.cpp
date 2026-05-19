@@ -199,6 +199,9 @@ namespace platformer2d {
 
 	void CEditor::OnPostTick(const float InDeltaTime)
 	{
+		if (Scene) {
+			CRenderer::DrawText(EFont::SourceSansPro, Scene->GetName(), {-1.3f, 1.1f}, 0.40f, FColor::White, FColor::Black, 1.0f);
+		}
 		UI::RenderChainPreview(Scene);
 		UI::RenderActorPreview(Scene);
 	}
