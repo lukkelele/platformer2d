@@ -19,7 +19,7 @@ namespace platformer2d {
 	{
 	public:
 		CEnemy(const FEnemySpecification& InSpec, const FActorSpecification& InActorSpec, const FBodySpecification& InBodySpec);
-		CEnemy(CEnemy&&) = default;
+		CEnemy(CEnemy&&) = delete;
 		CEnemy(const CEnemy&) = delete;
 		virtual ~CEnemy();
 

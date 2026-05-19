@@ -167,7 +167,7 @@ namespace platformer2d {
 
 	bool CEnemy::Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable) const
 	{
-		LK_WARN_TAG("Enemy", "Serializing");
+		LK_TRACE_TAG("Enemy", "[{}] Serializing", GetName());
 		CActor::Serialize(Out, EExtendableSerializer::Yes);
 
 		Out << YAML::Key << "Controller";
@@ -233,7 +233,7 @@ namespace platformer2d {
 		}
 
 		const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle);
-		LK_ASSERT(IdleAnim, "{}: Missing idle", GetName());
+		LK_ASSERT(IdleAnim, "{}: Missing anim", GetName());
 		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		SpriteFrame.Next = IdleAnim->GetFrame(FrameIndex);
 	}
@@ -244,16 +244,14 @@ namespace platformer2d {
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 		if (std::abs(LinearVelocity.x) < CBody::LINEAR_VELOCITY_X_EPSILON) {
 			SetMovementState(EMovementState::Idle);
-			if (const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle); IdleAnim != nullptr) {
-				SpriteFrame.Next = IdleAnim->First();
-			}
+			const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle);
+			LK_ASSERT(IdleAnim, "{}: Missing anim", GetName());
+			SpriteFrame.Next = IdleAnim->First();
 			return;
 		}
 
 		const FSpriteAnimation* WalkAnim = SpriteSheet.Find(ESpriteFrame::Walk);
-		if (WalkAnim == nullptr) {
-			return;
-		}
+		LK_ASSERT(WalkAnim, "{}: Missing anim", GetName());
 		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		SpriteFrame.Next = WalkAnim->GetFrame(FrameIndex);
 	}
