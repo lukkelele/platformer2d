@@ -18,6 +18,7 @@ namespace platformer2d {
 		Red,
 		Green,
 		Blue,
+		LightBlue,
 		Magenta,
 		COUNT
 	};
@@ -43,7 +44,7 @@ namespace platformer2d {
 	enum class EColorRange
 	{
 		Normalized, /* 0.0f <-> 1.0f */
-		Byte,       /* 0.0f <-> 255.0f */
+		Byte, /* 0.0f <-> 255.0f */
 	};
 
 	template<EColorRange Range>
@@ -65,9 +66,19 @@ namespace platformer2d {
 	template<typename TVector = glm::vec4, EColorRange Range = EColorRange::Normalized>
 	struct TColor;
 
-	/**
-	 * @class TColor3
-	 */
+	struct FColorValue : glm::vec4
+	{
+		using glm::vec4::vec4;
+
+		constexpr FColorValue WithAlpha(const float Alpha) const
+		{
+			return FColorValue(r, g, b, Alpha);
+		}
+
+		template<typename T>
+		constexpr T As() const;
+	};
+
 	template<EColorRange Range>
 	struct TColor<glm::vec3, Range> : TColorInternal<Range>
 	{
@@ -77,13 +88,13 @@ namespace platformer2d {
 
 	public:
 		/* clang-format off */
-		static constexpr glm::vec3 White       = {B::Scale(1.0f), B::Scale(1.0f), B::Scale(1.0f)};
-		static constexpr glm::vec3 Black       = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f)};
-		static constexpr glm::vec3 Red         = {B::Scale(1.0f), B::Scale(0.0f), B::Scale(0.0f)};
-		static constexpr glm::vec3 Green       = {B::Scale(0.0f), B::Scale(1.0f), B::Scale(0.0f)};
-		static constexpr glm::vec3 Blue        = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(1.0f)};
-		static constexpr glm::vec3 Magenta     = {B::Scale(0.96f), B::Scale(0.105f), B::Scale(0.83f)};
-		static constexpr glm::vec3 Transparent = {B::Scale(0.0f), B::Scale(0.0f), B::Scale(0.0f)};
+		static constexpr glm::vec3 White       = { B::Scale(1.0f),  B::Scale(1.0f),   B::Scale(1.0f)  };
+		static constexpr glm::vec3 Black       = { B::Scale(0.0f),  B::Scale(0.0f),   B::Scale(0.0f)  };
+		static constexpr glm::vec3 Red         = { B::Scale(1.0f),  B::Scale(0.0f),   B::Scale(0.0f)  };
+		static constexpr glm::vec3 Green       = { B::Scale(0.0f),  B::Scale(1.0f),   B::Scale(0.0f)  };
+		static constexpr glm::vec3 Blue        = { B::Scale(0.0f),  B::Scale(0.0f),   B::Scale(1.0f)  };
+		static constexpr glm::vec3 Magenta     = { B::Scale(0.96f), B::Scale(0.105f), B::Scale(0.83f) };
+		static constexpr glm::vec3 Transparent = { B::Scale(0.0f),  B::Scale(0.0f),   B::Scale(0.0f)  };
 		/* clang-format on */
 
 		template<typename To = VecType, typename From>
@@ -113,12 +124,9 @@ namespace platformer2d {
 			}
 		}
 
+		/* @fixme: Use Enum::View */
 		static constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& GetArray();
 	};
-
-	/**
-	 * @class TColor4
-	 */
 
 	template<EColorRange Range>
 	struct TColor<glm::vec4, Range> : TColorInternal<Range>
@@ -129,24 +137,36 @@ namespace platformer2d {
 
 	public:
 		/* clang-format off */
-		static constexpr glm::vec4 White       = {B::Scale(1.0f),   B::Scale(1.0f),   B::Scale(1.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 Black       = {B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 Transparent = {B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(0.0f),  B::Scale(0.0f)};
-		static constexpr glm::vec4 Red         = {B::Scale(1.0f),   B::Scale(0.0f),   B::Scale(0.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 Green       = {B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(0.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 LightGreen  = {B::Scale(0.0f),   B::Scale(0.75f),  B::Scale(0.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 Blue        = {B::Scale(0.0f),   B::Scale(0.0f),   B::Scale(1.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 LightBlue   = {B::Scale(0.60f),  B::Scale(0.80f),  B::Scale(1.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 NiceBlue    = {B::Scale(0.325f), B::Scale(0.91f),  B::Scale(0.99f), B::Scale(1.0f)};
-		static constexpr glm::vec4 SkyBlue     = {B::Scale(0.0f),   B::Scale(0.540f), B::Scale(0.87f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Gray        = {B::Scale(0.45f),  B::Scale(0.45f),  B::Scale(0.45f), B::Scale(1.0f)};
-		static constexpr glm::vec4 LightGray   = {B::Scale(0.70f),  B::Scale(0.70f),  B::Scale(0.70f), B::Scale(1.0f)};
-		static constexpr glm::vec4 Cyan        = {B::Scale(0.0f),   B::Scale(1.0f),   B::Scale(1.0f),  B::Scale(1.0f)};
-		static constexpr glm::vec4 Magenta     = {B::Scale(0.96f),  B::Scale(0.105f), B::Scale(0.83f), B::Scale(1.0f)};
+		static constexpr FColorValue White        = {B::Scale(1.0f),    B::Scale(1.0f),    B::Scale(1.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue Black        = {B::Scale(0.0f),    B::Scale(0.0f),    B::Scale(0.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue Transparent  = {B::Scale(0.0f),    B::Scale(0.0f),    B::Scale(0.0f),   B::Scale(0.0f)};
+		static constexpr FColorValue Red          = {B::Scale(1.0f),    B::Scale(0.0f),    B::Scale(0.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue DarkRed      = {B::Scale(0.706f),  B::Scale(0.176f),  B::Scale(0.176f), B::Scale(0.784f)};
+		static constexpr FColorValue WarmRed      = {B::Scale(0.863f),  B::Scale(0.235f),  B::Scale(0.235f), B::Scale(0.863f)};
+		static constexpr FColorValue Green        = {B::Scale(0.0f),    B::Scale(1.0f),    B::Scale(0.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue LightGreen   = {B::Scale(0.47f),   B::Scale(0.88f),   B::Scale(0.47f),  B::Scale(1.0f)};
+		static constexpr FColorValue BrightGreen  = {B::Scale(0.0f),    B::Scale(0.804f),  B::Scale(0.059f), B::Scale(1.0f)};
+		static constexpr FColorValue VividGreen   = {B::Scale(0.0f),    B::Scale(0.804f),  B::Scale(0.059f), B::Scale(0.353f)};
+		static constexpr FColorValue Yellow       = {B::Scale(1.0f),    B::Scale(0.87f),   B::Scale(0.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue Blue         = {B::Scale(0.0f),    B::Scale(0.0f),    B::Scale(1.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue LightBlue    = {B::Scale(0.31f),   B::Scale(0.80f),   B::Scale(1.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue NiceBlue     = {B::Scale(0.325f),  B::Scale(0.91f),   B::Scale(0.99f),  B::Scale(1.0f)};
+		static constexpr FColorValue SkyBlue      = {B::Scale(0.0f),    B::Scale(0.540f),  B::Scale(0.87f),  B::Scale(1.0f)};
+		static constexpr FColorValue RoyalBlue    = {B::Scale(0.235f),  B::Scale(0.431f),  B::Scale(0.784f), B::Scale(0.824f)};
+		static constexpr FColorValue HoverBlue    = {B::Scale(0.314f),  B::Scale(0.549f),  B::Scale(0.902f), B::Scale(0.902f)};
+		static constexpr FColorValue Gray         = {B::Scale(0.45f),   B::Scale(0.45f),   B::Scale(0.45f),  B::Scale(1.0f)};
+		static constexpr FColorValue LightGray    = {B::Scale(0.70f),   B::Scale(0.70f),   B::Scale(0.70f),  B::Scale(1.0f)};
+		static constexpr FColorValue Cyan         = {B::Scale(0.0f),    B::Scale(1.0f),    B::Scale(1.0f),   B::Scale(1.0f)};
+		static constexpr FColorValue Magenta      = {B::Scale(0.96f),   B::Scale(0.105f),  B::Scale(0.83f),  B::Scale(1.0f)};
 		/* clang-format on */
 
 		template<typename To = VecType, typename From>
 		static constexpr To Convert(const From& InColor);
+
+		static constexpr FColorValue ModAlpha(const glm::vec4& InColor, const float Alpha)
+		{
+			return FColorValue(InColor.r, InColor.g, InColor.b, Alpha);
+		}
 
 		static constexpr const glm::vec4& Lookup(const EColor Color)
 		{
@@ -187,6 +207,24 @@ namespace platformer2d {
 	using TColor3 = TColor<glm::vec3, Range>;
 	using FColor3 = TColor3<EColorRange::Normalized>;
 
+	template<EColorRange Range>
+	template<typename To, typename From>
+	inline constexpr To TColor<glm::vec4, Range>::Convert(const From& InColor)
+	{
+		if constexpr (std::is_base_of_v<glm::vec4, From> && !std::is_same_v<From, glm::vec4>) {
+			return Convert<To>(static_cast<const glm::vec4&>(InColor));
+		} else {
+			static_assert(sizeof(To) == 0, "Unsupported TColor4 conversion: no specialization defined for (To, From)");
+		}
+	}
+
+	template<EColorRange Range>
+	template<typename To, typename From>
+	inline constexpr To TColor<glm::vec3, Range>::Convert(const From& InColor)
+	{
+		static_assert(sizeof(To) == 0, "Unsupported TColor3 conversion: no specialization defined for (To, From)");
+	}
+
 	template<>
 	template<>
 	inline constexpr glm::vec4 TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
@@ -207,7 +245,7 @@ namespace platformer2d {
 
 	template<>
 	template<>
-	inline constexpr uint32_t TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
+	inline constexpr std::uint32_t TColor<glm::vec4, EColorRange::Normalized>::Convert(const glm::vec4& InColor)
 	{
 		const float Rf = (InColor.r < 0.0f) ? 0.0f : ((InColor.r > 1.0f) ? 1.0f : InColor.r);
 		const float Gf = (InColor.g < 0.0f) ? 0.0f : ((InColor.g > 1.0f) ? 1.0f : InColor.g);
@@ -273,6 +311,12 @@ namespace platformer2d {
 		return (A << 24) | (B << 16) | (G << 8) | R;
 	}
 
+	template<typename T>
+	inline constexpr T FColorValue::As() const
+	{
+		return TColor<glm::vec4, EColorRange::Normalized>::template Convert<T>(static_cast<const glm::vec4&>(*this));
+	}
+
 	namespace RGBA32 {
 		inline constexpr std::uint32_t White = IM_COL32(255, 255, 255, 255);
 		inline constexpr std::uint32_t Black = IM_COL32(0, 0, 0, 255);
@@ -333,7 +377,7 @@ namespace platformer2d {
 		}
 	}
 
-	namespace _Internal {
+	namespace Internal {
 		static constexpr std::array<EColor, std::to_underlying(EColor::COUNT)> ColorArray = {
 			EColor::White,
 			EColor::Black,
@@ -351,6 +395,7 @@ namespace platformer2d {
 			{        EColor::Red,         FColor::Red},
 			{      EColor::Green,       FColor::Green},
 			{       EColor::Blue,        FColor::Blue},
+			{  EColor::LightBlue,   FColor::LightBlue},
 			{    EColor::Magenta,     FColor::Magenta},
 		};
 	}
@@ -358,8 +403,8 @@ namespace platformer2d {
 	template<EColorRange Range>
 	inline constexpr bool TColor<glm::vec4, Range>::DeduceEnum(EColor& Color, const glm::vec4& V)
 	{
-		for (const auto& [ColorEnum, C] : _Internal::TColor4Map) {
-			if ((C.r == V.r) && (C.g == V.g) && (C.b == V.b) && (C.a == V.a)) {
+		for (const auto& [ColorEnum, C] : Internal::TColor4Map) {
+			if ((C.r == V.r) && (C.g == V.g) && (C.b == V.b)) {
 				Color = ColorEnum;
 				return true;
 			}
@@ -371,19 +416,19 @@ namespace platformer2d {
 	template<EColorRange Range>
 	inline constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& TColor<glm::vec3, Range>::GetArray()
 	{
-		return _Internal::ColorArray;
+		return Internal::ColorArray;
 	}
 
 	template<EColorRange Range>
 	inline constexpr const std::array<EColor, std::to_underlying(EColor::COUNT)>& TColor<glm::vec4, Range>::GetArray()
 	{
-		return _Internal::ColorArray;
+		return Internal::ColorArray;
 	}
 
 	template<EColorRange Range>
 	const std::unordered_map<EColor, glm::vec4>& TColor<glm::vec4, Range>::GetMap()
 	{
-		return _Internal::TColor4Map;
+		return Internal::TColor4Map;
 	}
 
 }
