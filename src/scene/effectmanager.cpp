@@ -22,20 +22,19 @@ namespace platformer2d {
 		LK_TRACE_TAG("EffectManager", "Initialize");
 
 		{
+			/* @fixme: Should use .lsprite */
 			FSpriteAnimation SwooshAnim;
-			constexpr glm::vec2 TilePos = { 0, 0 };
+			constexpr glm::vec2 TilePos = {0, 0};
 			SwooshAnim.StartTileX = TilePos.x;
 			SwooshAnim.StartTileY = TilePos.y;
 			SwooshAnim.FrameCount = 4;
 			SwooshAnim.TicksPerFrame = 18;
-			constexpr glm::vec2 TileSize = { 32, 32 };
+			constexpr glm::vec2 TileSize = {32, 32};
 			std::shared_ptr<CSprite> SwooshSprite = std::make_shared<CSprite>(
 				CRenderer::GetTexture(ETexture::Swoosh),
-				TilePos, 
-				TileSize, 
-				SwooshAnim
-			);
-
+				TilePos,
+				TileSize,
+				SwooshAnim);
 			RegisterEffect(EEffect::Swoosh, SwooshSprite);
 		}
 
@@ -56,18 +55,18 @@ namespace platformer2d {
 
 		int Idx = 0;
 		ExpiredIdx.clear();
-		for (FEffectEntry& Entry : ActiveEffects)
-		{
+		for (FEffectEntry& Entry : ActiveEffects) {
+			/* Drive the effect by its velocity. */
+			Entry.Pos += Entry.Velocity * DeltaTime;
+
 			/* Render the effect. */
-			if (CurrentTime <= Entry.TimeExpire)
-			{
+			if (CurrentTime <= Entry.TimeExpire) {
 				std::shared_ptr<TEffectTexture>& EffectTex = TextureMap.at(Entry.Effect);
 
 				std::visit([&Entry](auto& EffectTex)
 				{
 					using T = std::decay_t<decltype(EffectTex)>;
-					if constexpr (std::is_same_v<T, CSprite>)
-					{
+					if constexpr (std::is_same_v<T, CSprite>) {
 						CSprite& S = EffectTex;
 						const FSpriteAnimation& Anim = S.GetAnimation();
 						const uint16_t FrameIndex = CRenderer::GetFrameIndex();
@@ -79,24 +78,17 @@ namespace platformer2d {
 							Entry.Size,
 							*S.GetTexture(),
 							S.GetUV(),
-							FColor::White
-						);
-					}
-					else if constexpr (std::is_same_v<T, CTexture>)
-					{
+							FColor::White);
+					} else if constexpr (std::is_same_v<T, CTexture>) {
 						const CTexture& Tex = EffectTex;
 						CRenderer::DrawQuad(
 							glm::vec3(Entry.Pos, Entry.ZIndex),
 							Entry.Size,
 							Tex,
-							FColor::White
-						);
+							FColor::White);
 					}
-
 				}, *EffectTex);
-			}
-			else
-			{
+			} else {
 				LK_TRACE_TAG("EffectManager", "Expired: {}", Enum::ToString(Entry.Effect));
 				ExpiredIdx.push_back(Idx);
 			}
@@ -104,13 +96,11 @@ namespace platformer2d {
 			Idx++;
 		}
 
-		if (!ExpiredIdx.empty())
-		{
+		if (!ExpiredIdx.empty()) {
 			/* Sort in reverse. */
 			std::sort(ExpiredIdx.rbegin(), ExpiredIdx.rend());
 
-			for (const int Idx : ExpiredIdx)
-			{
+			for (const int Idx : ExpiredIdx) {
 				LK_TRACE_TAG("EffectManager", "Remove effect: {}", Idx);
 				ActiveEffects.erase(ActiveEffects.begin() + Idx);
 			}
@@ -120,7 +110,7 @@ namespace platformer2d {
 	}
 
 	void CEffectManager::Play(EEffect Effect, const glm::vec2& Pos, std::chrono::milliseconds TimeActive,
-							  const glm::vec2& Size, const float ZIndex)
+		const glm::vec2& Size, const float ZIndex, const glm::vec2& Velocity)
 	{
 		using namespace std::chrono;
 		LK_TRACE_TAG("EffectManager", "Play: {} -> {} ({}ms)", Enum::ToString(Effect), Pos, TimeActive.count());
@@ -130,6 +120,7 @@ namespace platformer2d {
 			.TimeExpire = steady_clock::now() + TimeActive,
 			.Size = Size,
 			.ZIndex = ZIndex,
+			.Velocity = Velocity,
 		};
 		ActiveEffects.emplace_back(Entry);
 	}

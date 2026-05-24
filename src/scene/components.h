@@ -120,7 +120,7 @@ namespace platformer2d {
 	/**************************************
 	 * EffectComponent
 	 **************************************/
-	enum class EEffectType
+	enum class EEffectType : std::uint8_t
 	{
 		None,
 		Rotate,

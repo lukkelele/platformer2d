@@ -74,8 +74,9 @@ namespace platformer2d::Serialization {
 			const FEffectInstance& Instance = EC.Effects[Index];
 			YAML::Node EffectNode;
 
+			static_assert(std::is_unsigned_v<std::underlying_type_t<EEffectType>>);
 			Out << YAML::BeginMap;
-			Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(Instance.Type);
+			Out << YAML::Key << "Type" << YAML::Value << static_cast<std::size_t>(Instance.Type);
 
 			switch (Instance.Type) {
 				case EEffectType::Rotate:
@@ -278,7 +279,7 @@ namespace platformer2d::Serialization {
 					/* The actual enum value to the type based on the kind. */
 					ObjectTypeValue = Node["ObjectType"].as<int>();
 				} catch (const std::exception& E) {
-					LK_ERROR_TAG("Deserializer", "Failed to deserialize 'Object'");
+					LK_ERROR_TAG("Deserializer", "Failed to read 'ObjectType' from node");
 					Data.Object = std::monostate{};
 					ObjectTypeValue = -1;
 				}
@@ -286,31 +287,31 @@ namespace platformer2d::Serialization {
 				if (ObjectTypeValue >= 0) {
 					if (Data.Kind == EPickupKind::Item) {
 						FPickupItem Object = {.Type = static_cast<EItemType>(ObjectTypeValue)};
-
 						const YAML::Node& ObjectNode = Node["Object"];
 						if (ObjectNode.IsDefined() && ObjectNode["PayloadKind"]) {
 							const auto PayloadKind = static_cast<EItemPayload>(ObjectNode["PayloadKind"].as<std::underlying_type_t<EItemPayload>>());
 							if ((PayloadKind == EItemPayload::Consumable) && ObjectNode["Consumable"]) {
-								const YAML::Node& Pn = ObjectNode["Consumable"];
+								const YAML::Node& ConsumableNode = ObjectNode["Consumable"];
 								FConsumablePayload P;
-								DeserializeProperty("Kind", P.Kind, EConsumableKind::Health, Pn);
-								DeserializeProperty("Amount", P.Amount, 25.0f, Pn);
+								DeserializeProperty("Kind", P.Kind, EConsumableKind::Health, ConsumableNode);
+								DeserializeProperty("Amount", P.Amount, 25.0f, ConsumableNode);
 								Object.Payload = P;
 							} else if ((PayloadKind == EItemPayload::Ammo) && ObjectNode["Ammo"]) {
-								const YAML::Node& Pn = ObjectNode["Ammo"];
+								const YAML::Node& AmmoNode = ObjectNode["Ammo"];
 								FAmmoPayload P;
-								DeserializeProperty("Weapon", P.Weapon, EWeaponType::Rifle, Pn);
+								DeserializeProperty("Weapon", P.Weapon, EWeaponType::Rifle, AmmoNode);
 								std::uint16_t Count = 30;
-								DeserializeProperty("Count", Count, std::uint16_t(30), Pn);
+								DeserializeProperty("Count", Count, std::uint16_t(30), AmmoNode);
 								P.Count = Count;
 								Object.Payload = P;
+							} else {
+								LK_ERROR_TAG("Serializer", "Unhandled deserialization of {}", Enum::ToString(Object.Type));
 							}
 						}
 
 						Data.Object = Object;
 					} else if (Data.Kind == EPickupKind::Weapon) {
-						FPickupWeapon Object = {
-							.Type = static_cast<EWeaponType>(ObjectTypeValue)};
+						FPickupWeapon Object = {.Type = static_cast<EWeaponType>(ObjectTypeValue)};
 
 						const YAML::Node& ObjectNode = Node["Object"];
 						LK_ASSERT(ObjectNode.IsDefined(), "Object node not defined");
@@ -319,8 +320,10 @@ namespace platformer2d::Serialization {
 							FRifleSpecification Spec;
 							DeserializeProperty("MagazineSize", Spec.MagazineSize, 30, SpecNode);
 							Object.Spec = Spec;
-							Data.Object = Object;
+						} else {
+							LK_ERROR_TAG("Serializer", "Unhandled deserialization of {}", Enum::ToString(Object.Type));
 						}
+						Data.Object = Object;
 					}
 				} else {
 					LK_ERROR_TAG("Deserializer", "Failed to deduce object type from {}", Enum::ToString(Data.Kind));
@@ -437,6 +440,20 @@ namespace platformer2d::Serialization {
 				}
 				if (ShapeNode["TextureHeight"]) {
 					Chain.TextureHeight = ShapeNode["TextureHeight"].as<float>();
+				}
+				if (ShapeNode["TextureSide"]) {
+					const auto V = ShapeNode["TextureSide"].as<std::size_t>();
+					LK_ASSERT(V < std::to_underlying(EDirection::COUNT), "TextureSide is too large: {}", V);
+					Chain.TextureSide = static_cast<EDirection>(V);
+				}
+				if (ShapeNode["TextureOffset"]) {
+					Chain.TextureOffset = ShapeNode["TextureOffset"].as<float>();
+				}
+				if (ShapeNode["TextureTile"]) {
+					Chain.bTextureTile = ShapeNode["TextureTile"].as<bool>();
+				}
+				if (ShapeNode["TextureTileWidth"]) {
+					Chain.TextureTileWidth = ShapeNode["TextureTileWidth"].as<float>();
 				}
 				const YAML::Node Points = ShapeNode["Points"];
 				if (Points && Points.IsSequence()) {
