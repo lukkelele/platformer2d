@@ -5,6 +5,7 @@
 #include "core/core.h"
 #include "item.h"
 #include "rifle.h"
+#include "melee.h"
 #include "serialization/serializable.h"
 
 namespace platformer2d {
@@ -124,6 +125,10 @@ namespace platformer2d {
 		[[nodiscard]] bool GetNextFreeIdx(std::size_t& Idx) const;
 		void SetName(std::string_view InName);
 
+		bool Select(std::size_t Idx);
+		[[nodiscard]] std::size_t GetSelectedIdx() const { return SelectedIdx; }
+		[[nodiscard]] std::shared_ptr<IWeapon> GetSelectedWeapon() const;
+
 		[[nodiscard]] std::vector<std::shared_ptr<IItem>> Snapshot() const;
 		void Restore(const std::vector<std::shared_ptr<IItem>>& Items);
 
@@ -143,6 +148,7 @@ namespace platformer2d {
 		std::uint8_t PlayerIdx = 0;
 		std::string Name;
 		std::array<FInventoryItem, MAX_ITEMS> Items;
+		std::size_t SelectedIdx = 0;
 	};
 
 	template<>
@@ -157,6 +163,25 @@ namespace platformer2d {
 				std::shared_ptr<IWeapon> Weapon = std::static_pointer_cast<IWeapon>(Entry.ItemRef);
 				if (Weapon->GetWeaponType() == EWeaponType::Rifle) {
 					return std::static_pointer_cast<CRifle>(Weapon);
+				}
+			}
+		}
+
+		return nullptr;
+	}
+
+	template<>
+	inline std::shared_ptr<CMelee> CInventory::FindFirstOf()
+	{
+		for (const auto& Entry : Items) {
+			if (!IsSlotValid(Entry)) {
+				continue;
+			}
+
+			if (Entry.ItemRef->GetItemType() == EItemType::Weapon) {
+				std::shared_ptr<IWeapon> Weapon = std::static_pointer_cast<IWeapon>(Entry.ItemRef);
+				if (Weapon->GetWeaponType() == EWeaponType::Melee) {
+					return std::static_pointer_cast<CMelee>(Weapon);
 				}
 			}
 		}

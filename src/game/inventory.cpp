@@ -50,7 +50,6 @@ namespace platformer2d {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
@@ -61,7 +60,6 @@ namespace platformer2d {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
@@ -73,7 +71,6 @@ namespace platformer2d {
 				Free++;
 			}
 		}
-
 		return Free;
 	}
 
@@ -100,6 +97,32 @@ namespace platformer2d {
 		Name = InName;
 	}
 
+	bool CInventory::Select(const std::size_t Idx)
+	{
+		if (Idx >= Items.size()) {
+			LK_WARN_TAG("Inventory", "Cannot select {}, max {}", Idx, Items.size());
+			return false;
+		}
+
+		LK_DEBUG_TAG("Inventory", "Select {}", Idx);
+		SelectedIdx = Idx;
+		return true;
+	}
+
+	std::shared_ptr<IWeapon> CInventory::GetSelectedWeapon() const
+	{
+		if (SelectedIdx >= Items.size()) {
+			return nullptr;
+		}
+
+		const FInventoryItem& Entry = Items.at(SelectedIdx);
+		if (!IsSlotValid(Entry) || (Entry.ItemRef->GetItemType() != EItemType::Weapon)) {
+			return nullptr;
+		}
+
+		return std::static_pointer_cast<IWeapon>(Entry.ItemRef);
+	}
+
 	std::vector<std::shared_ptr<IItem>> CInventory::Snapshot() const
 	{
 		std::vector<std::shared_ptr<IItem>> Out;
@@ -122,6 +145,7 @@ namespace platformer2d {
 
 		for (const std::shared_ptr<IItem>& Item : InItems) {
 			if (!Item) {
+				LK_ERROR_TAG("Inventory", "Cannot restore invalid item");
 				continue;
 			}
 
