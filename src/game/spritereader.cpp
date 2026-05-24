@@ -73,7 +73,6 @@ namespace platformer2d {
 			return std::nullopt;
 		}
 
-		LK_DEBUG_TAG("SpriteReader", R"(Read: "{}")", Filepath);
 		YAML::Node Root;
 		try {
 			std::ifstream Stream(Filepath);
