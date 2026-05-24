@@ -43,6 +43,10 @@ namespace platformer2d {
 			return;
 		}
 
+		if (!UI::IsViewportTabActive()) {
+			return;
+		}
+
 		if (std::shared_ptr<CPlayer> Player = GameInstance.GetPlayer(0)) {
 			DrawHud(Player);
 		}

@@ -32,17 +32,21 @@ namespace platformer2d::UI {
 		BodySpec.bSensor = Data.bSensor;
 
 		/* Body flags. */
-		int BodyFlags = EBodyFlag::EBodyFlag_None;
+		std::underlying_type_t<EBodyFlag> BodyFlags = EBodyFlag::EBodyFlag_None;
 		if (Data.BodyFlag.bPreSolveEvents) {
+			LK_DEBUG_TAG("UI", "BodyFlag: PreSolve");
 			BodyFlags |= EBodyFlag::EBodyFlag_PreSolveEvents;
 		}
 		if (Data.BodyFlag.bContactEvents) {
+			LK_DEBUG_TAG("UI", "BodyFlag: Contact");
 			BodyFlags |= EBodyFlag::EBodyFlag_ContactEvents;
 		}
 		if (Data.BodyFlag.bSensorEvents) {
+			LK_DEBUG_TAG("UI", "BodyFlag: Sensor");
 			BodyFlags |= EBodyFlag::EBodyFlag_SensorEvents;
 		}
 		if (Data.BodyFlag.bBullet) {
+			LK_DEBUG_TAG("UI", "BodyFlag: Bullet");
 			BodyFlags |= EBodyFlag::EBodyFlag_Bullet;
 		}
 		BodySpec.Flags = static_cast<EBodyFlag>(BodyFlags);
@@ -96,7 +100,7 @@ namespace platformer2d::UI {
 		/************************
 		 * Attributes.
 		 ************************/
-		if (ImGui::TreeNodeEx("Physics", ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed)) {
+		if (ImGui::TreeNodeEx("Physics", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			BeginPropertyGrid();
 			Table::NextRow();
 			UI::DragFloat("Gravity Scale", Data.GravityScale, 0.01f, 0.0f, 2.0f, "%.2f");

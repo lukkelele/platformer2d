@@ -46,85 +46,82 @@ namespace platformer2d::UI {
 			Core::ELayer LaunchLayer;
 		};
 
-		static const std::array<FLevelEntry, 2> LevelEntries = {{
-			{"Lukkelele's World", SCENES_DIR "/LukkelelesWorld.lscene", ETexture::Background, RGBA32::SmoothGreen, Core::ELayer::Runtime},
-			{"Test Level",        SCENES_DIR "/TestLevel.lscene",       ETexture::Bricks,     RGBA32::DarkGray,    Core::ELayer::Editor},
-		}};
-
-		bool DrawLevelCard(const FLevelEntry& Entry, const FCheckpointPreview& Preview,
-			const ImVec2& Size, const std::size_t Index)
-		{
-			ImGui::PushID(static_cast<int>(Index));
-			const ImVec2 CardPos = ImGui::GetCursorScreenPos();
-			const bool Clicked = ImGui::InvisibleButton("##card", Size);
-			const bool Hovered = ImGui::IsItemHovered();
-			const bool Active = ImGui::IsItemActive();
-
-			ImDrawList* DrawList = ImGui::GetWindowDrawList();
-			const ImVec2 CardMin = CardPos;
-			const ImVec2 CardMax(CardPos.x + Size.x, CardPos.y + Size.y);
-
-			constexpr float Rounding = 10.0f;
-			const std::uint32_t BgIdle = FColor::Convert<std::uint32_t>(glm::vec4(0.10f, 0.10f, 0.13f, 1.0f));
-			const std::uint32_t BgHover = FColor::Convert<std::uint32_t>(glm::vec4(0.16f, 0.16f, 0.20f, 1.0f));
-			const std::uint32_t BgActive = FColor::Convert<std::uint32_t>(glm::vec4(0.22f, 0.22f, 0.26f, 1.0f));
-			const std::uint32_t BgColor = Active ? BgActive : (Hovered ? BgHover : BgIdle);
-			const std::uint32_t BorderColor = Hovered ? Entry.AccentColor : RGBA32::Muted;
-			const float BorderThickness = Hovered ? 2.0f : 1.0f;
-
-			DrawList->AddRectFilled(CardMin, CardMax, BgColor, Rounding);
-			DrawList->AddRect(CardMin, CardMax, BorderColor, Rounding, 0, BorderThickness);
-
-			constexpr float ImgPad = 10.0f;
-			const float ImgH = Size.y * 0.52f;
-			const ImVec2 ImgMin(CardMin.x + ImgPad, CardMin.y + ImgPad);
-			const ImVec2 ImgMax(CardMax.x - ImgPad, CardMin.y + ImgH);
-
-			std::shared_ptr<CTexture> Tex = CRenderer::GetTexture(Entry.Texture);
-			if (Tex && (Tex->GetWidth() > 0) && (Tex->GetHeight() > 0)) {
-				DrawList->AddImageRounded(static_cast<ImU64>(Tex->GetID()),
-					ImgMin, ImgMax, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f),
-					RGBA32::White, Rounding * 0.6f);
-			} else {
-				DrawList->AddRectFilled(ImgMin, ImgMax, RGBA32::DarkerGray, Rounding * 0.6f);
-			}
-
-			DrawList->AddRect(ImgMin, ImgMax, RGBA32::Muted, Rounding * 0.6f, 0, 1.0f);
-
-			const float TextX = CardMin.x + 18.0f;
-			float TextY = ImgMax.y + 16.0f;
-
+		static const std::array<FLevelEntry, 2> LevelEntries = {
 			{
-				UI::FScopedFont NameFont(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
-				DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-					ImVec2(TextX, TextY), RGBA32::White, Entry.Name);
-				TextY += ImGui::GetFontSize() + 12.0f;
-			}
+             {"Lukkelele's World", SCENES_DIR "/LukkelelesWorld.lscene", ETexture::Rifle, RGBA32::SmoothGreen, Core::ELayer::Runtime},
+             {"Test Level", SCENES_DIR "/TestLevel.lscene", ETexture::Bricks, RGBA32::DarkGray, Core::ELayer::Editor},
+			 }
+        };
+	}
 
-			char StatusBuf[128] = {0};
-			std::uint32_t StatusColor = RGBA32::Text::Darker;
-			if (Preview.bExists) {
-				std::snprintf(StatusBuf, sizeof(StatusBuf), LK_ICON_FLAG "  In progress: %s", Preview.CurrentID.c_str());
-				StatusColor = RGBA32::NiceGreen;
-			} else {
-				std::snprintf(StatusBuf, sizeof(StatusBuf), LK_ICON_HOURGLASS "  Not started");
-			}
+	static bool DrawLevelCard(const FLevelEntry& Entry, const FCheckpointPreview& Preview, const ImVec2& Size, const std::size_t Index)
+	{
+		ImGui::PushID(static_cast<int>(Index));
+		const ImVec2 CardPos = ImGui::GetCursorScreenPos();
+		const bool Clicked = ImGui::InvisibleButton("##card", Size);
+		const bool Hovered = ImGui::IsItemHovered();
+		const bool Active = ImGui::IsItemActive();
 
-			char ProgressBuf[64] = {0};
-			std::snprintf(ProgressBuf, sizeof(ProgressBuf), LK_ICON_CHECK_CIRCLE_O "  Checkpoints cleared: %zu", Preview.TriggeredCount);
+		ImDrawList* DrawList = ImGui::GetWindowDrawList();
+		const ImVec2 CardMin = CardPos;
+		const ImVec2 CardMax(CardPos.x + Size.x, CardPos.y + Size.y);
 
-			{
-				UI::FScopedFont InfoFont(EFont::Roboto, EFontSize::Large, EFontModifier::Normal);
-				DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-					ImVec2(TextX, TextY), StatusColor, StatusBuf);
-				TextY += ImGui::GetFontSize() + 6.0f;
-				DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-					ImVec2(TextX, TextY), RGBA32::Text::Darker, ProgressBuf);
-			}
+		constexpr float Rounding = 10.0f;
+		const std::uint32_t BgIdle = FColor::Convert<std::uint32_t>(glm::vec4(0.10f, 0.10f, 0.13f, 1.0f));
+		const std::uint32_t BgHover = FColor::Convert<std::uint32_t>(glm::vec4(0.16f, 0.16f, 0.20f, 1.0f));
+		const std::uint32_t BgActive = FColor::Convert<std::uint32_t>(glm::vec4(0.22f, 0.22f, 0.26f, 1.0f));
+		const std::uint32_t BgColor = Active ? BgActive : (Hovered ? BgHover : BgIdle);
+		const std::uint32_t BorderColor = Hovered ? Entry.AccentColor : RGBA32::Muted;
+		const float BorderThickness = Hovered ? 2.0f : 1.0f;
 
-			ImGui::PopID();
-			return Clicked;
+		DrawList->AddRectFilled(CardMin, CardMax, BgColor, Rounding);
+		DrawList->AddRect(CardMin, CardMax, BorderColor, Rounding, 0, BorderThickness);
+
+		constexpr float ImgPad = 10.0f;
+		const float ImgH = Size.y * 0.52f;
+		const ImVec2 ImgMin(CardMin.x + ImgPad, CardMin.y + ImgPad);
+		const ImVec2 ImgMax(CardMax.x - ImgPad, CardMin.y + ImgH);
+
+		std::shared_ptr<CTexture> Tex = CRenderer::GetTexture(Entry.Texture);
+		if (Tex && (Tex->GetWidth() > 0) && (Tex->GetHeight() > 0)) {
+			DrawList->AddImageRounded(static_cast<ImU64>(Tex->GetID()),
+				ImgMin, ImgMax, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f),
+				RGBA32::White, Rounding * 0.60f);
+		} else {
+			DrawList->AddRectFilled(ImgMin, ImgMax, RGBA32::DarkerGray, Rounding * 0.6f);
 		}
+
+		DrawList->AddRect(ImgMin, ImgMax, RGBA32::Muted, Rounding * 0.6f, 0, 1.0f);
+
+		const float TextX = CardMin.x + 18.0f;
+		float TextY = ImgMax.y + 16.0f;
+
+		{
+			UI::FScopedFont NameFont(EFont::Roboto, EFontSize::Larger, EFontModifier::Bold);
+			DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(TextX, TextY), RGBA32::White, Entry.Name);
+			TextY += ImGui::GetFontSize() + 12.0f;
+		}
+
+		std::array<char, 128> StatusBuf = {0};
+		std::uint32_t StatusColor = RGBA32::Text::Darker;
+		if (Preview.bExists) {
+			std::snprintf(StatusBuf.data(), StatusBuf.size(), LK_ICON_FLAG "  In progress: %s", Preview.CurrentID.c_str());
+			StatusColor = RGBA32::NiceGreen;
+		} else {
+			std::snprintf(StatusBuf.data(), StatusBuf.size(), LK_ICON_HOURGLASS "  Not started");
+		}
+
+		std::array<char, 64> ProgressBuf = {0};
+		std::snprintf(ProgressBuf.data(), ProgressBuf.size(), LK_ICON_CHECK_CIRCLE_O "  Checkpoints cleared: %zu", Preview.TriggeredCount);
+		{
+			UI::FScopedFont InfoFont(EFont::Roboto, EFontSize::Large, EFontModifier::Normal);
+			DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(TextX, TextY), StatusColor, StatusBuf.data());
+			TextY += ImGui::GetFontSize() + 6.0f;
+			DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(TextX, TextY), RGBA32::Text::Darker, ProgressBuf.data());
+		}
+
+		ImGui::PopID();
+		return Clicked;
 	}
 
 	void TickLevelLauncher()

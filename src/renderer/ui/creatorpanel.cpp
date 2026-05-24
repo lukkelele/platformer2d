@@ -49,7 +49,7 @@ namespace platformer2d::UI {
 		return Updated;
 	}
 
-	void Creator(std::shared_ptr<CScene> Scene)
+	void Creator(std::shared_ptr<CScene>& Scene)
 	{
 		const bool WindowOpened = UI::Begin(PanelID::Creator, nullptr);
 		if (!WindowOpened) {
@@ -89,7 +89,7 @@ namespace platformer2d::UI {
 		UI::End();
 	}
 
-	void ActorCreateButtons(std::shared_ptr<CScene> Scene)
+	void ActorCreateButtons(std::shared_ptr<CScene>& Scene)
 	{
 		LK_ASSERT(Scene);
 		const ImVec2 Avail = ImGui::GetContentRegionAvail();
@@ -121,7 +121,7 @@ namespace platformer2d::UI {
 			if (ImGui::Button("Create", ButtonSize)) {
 				FBodySpecification NewBodySpec;
 				Aggregate(PhysicsBodyData, NewBodySpec);
-				LK_INFO("{}", CBody::ToString(NewBodySpec));
+				LK_INFO_TAG("Creator", "{}", CBody::ToString(NewBodySpec));
 
 				auto& GameInstance = CGameInstance::Get();
 				CGameplaySystem& Gameplay = GameInstance.GetSystem<CGameplaySystem>();
@@ -133,8 +133,11 @@ namespace platformer2d::UI {
 						NewBodySpec,
 						FColor::Get(ActorAttr.Color));
 
-					const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
-					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
+					/* @fixme: Only do this if the preview is disabled and not within range. */
+					if (!ActorAttr.bPreview) {
+						const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
+						Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
+					}
 				} else if (NewBodySpec.Type == EBodyType::Dynamic) {
 					std::shared_ptr<CActor> SpawnedPolygon = CSpawner::CreatePolygon(
 						ActorAttr.NameBuf.data(),
@@ -143,8 +146,11 @@ namespace platformer2d::UI {
 						FColor::Get(ActorAttr.Color),
 						ActorAttr.Texture);
 
-					const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
-					Gameplay.Teleport(SpawnedPolygon, {PlayerPos.x, PlayerPos.y + 0.50f});
+					/* @fixme: Only do this if the preview is disabled and not within range. */
+					if (!ActorAttr.bPreview) {
+						const glm::vec3 PlayerPos = GameInstance.GetPlayer(0)->GetPosition();
+						Gameplay.Teleport(SpawnedPolygon, { PlayerPos.x, PlayerPos.y + 0.50f });
+					}
 				}
 			}
 

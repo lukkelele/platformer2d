@@ -19,7 +19,12 @@ namespace platformer2d::UI {
 		LK_ASSERT(Actor && (State.Points.size() >= 4));
 		CBody* Body = Actor->GetBody();
 		if (Body && (Body->TryGetShape<EShape::Chain>() != nullptr)) {
-			Body->GetShape<EShape::Chain>().TextureHeight = State.TextureHeight;
+			FChain& ChainRef = Body->GetShape<EShape::Chain>();
+			ChainRef.TextureHeight = State.TextureHeight;
+			ChainRef.TextureSide = State.TextureSide;
+			ChainRef.TextureOffset = State.TextureOffset;
+			ChainRef.bTextureTile = State.bTextureTile;
+			ChainRef.TextureTileWidth = State.TextureTileWidth;
 			Body->SetChainPoints(State.Points, State.bLoop, State.bBlockBothSides);
 		} else {
 			FBodySpecification BodySpec;
@@ -32,12 +37,21 @@ namespace platformer2d::UI {
 			Chain.bLoop = State.bLoop;
 			Chain.bBlockBothSides = State.bBlockBothSides;
 			Chain.TextureHeight = State.TextureHeight;
+			Chain.TextureSide = State.TextureSide;
+			Chain.TextureOffset = State.TextureOffset;
+			Chain.bTextureTile = State.bTextureTile;
+			Chain.TextureTileWidth = State.TextureTileWidth;
 			BodySpec.Shape.emplace<FChain>(Chain);
 
 			Actor->ReplaceBody(BodySpec);
 		}
-		Actor->SetColor(FColor::Get(State.Color));
-		Actor->SetTexture(State.Texture);
+
+		if (Actor->GetColor() != FColor::Get(State.Color)) {
+			Actor->SetColor(FColor::Get(State.Color));
+		}
+		if (Actor->GetTexture() != State.Texture) {
+			Actor->SetTexture(State.Texture);
+		}
 	}
 
 	static void UI_DebugInfo()
@@ -155,6 +169,10 @@ namespace platformer2d::UI {
 					State.bLoop = Chain->bLoop;
 					State.bBlockBothSides = Chain->bBlockBothSides;
 					State.TextureHeight = Chain->TextureHeight;
+					State.TextureSide = Chain->TextureSide;
+					State.TextureOffset = Chain->TextureOffset;
+					State.bTextureTile = Chain->bTextureTile;
+					State.TextureTileWidth = Chain->TextureTileWidth;
 					State.Texture = SelectedActor->GetTexture();
 					const glm::vec3 ActorPos = SelectedActor->GetPosition();
 					State.PreviewOrigin = {ActorPos.x, ActorPos.y};
@@ -236,6 +254,39 @@ namespace platformer2d::UI {
 					ApplyChainToActor(EditActor, State);
 				}
 			}
+
+			Table::NextRow();
+			Table::Label("Texture Side");
+			Table::NextColumn();
+			if (UI::Combo("##TextureSide", Enum::View<EDirection>(), State.TextureSide)) {
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
+				}
+			}
+			if (ImGui::IsItemHovered()) {
+				UI::SetTooltip("None = centered on chain. Up/Down = offset perpendicular to segment. Left/Right unused for chains");
+			}
+
+			Table::NextRow();
+			if (UI::DragFloat("Texture Offset", State.TextureOffset, 0.01f, -10.0f, 10.0f, "%.3f")) {
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
+				}
+			}
+
+			Table::NextRow();
+			if (UI::Checkbox("Tile Texture", State.bTextureTile)) {
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
+				}
+			}
+
+			Table::NextRow();
+			if (UI::DragFloat("Tile Width", State.TextureTileWidth, 0.01f, 0.0f, 10.0f, "%.3f")) {
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
+				}
+			}
 		}
 		EndPropertyGrid();
 
@@ -295,16 +346,6 @@ namespace platformer2d::UI {
 		}
 		if (!ValidPoints) {
 			ImGui::EndDisabled();
-		}
-
-		if (CSelectionContext::IsAnySelected()) {
-			State.bPreviewVisible = ValidPoints;
-			if (SelectedActor && (SelectedActor->GetTexture() == ETexture::White)) {
-				EColor DeducedColor;
-				if (FColor::DeduceEnum(DeducedColor, SelectedActor->GetColor())) {
-					State.Color = DeducedColor;
-				}
-			}
 		}
 
 		ImGui::PopStyleVar(2);

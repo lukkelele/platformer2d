@@ -43,10 +43,17 @@ namespace platformer2d::UI {
 		float ValueMin = 0.0f, float ValueMax = 0.0f,
 		const char* Format = "%.3f", ImGuiSliderFlags Flags = 0)
 	{
-		constexpr int LABEL_BUFSIZE = 72;
+		/* Store the any width set by ImGui::SetNextItemWidth before this function. */
+		float NextItemWidth = 0.0f;
+		{
+			ImGuiContext& G = *GImGui;
+			if (G.NextItemData.HasFlags & ImGuiNextItemDataFlags_HasWidth) {
+				NextItemWidth = G.NextItemData.Width;
+			}
+		}
 
 		const int LabelSize = std::strlen(Label);
-		std::array<char, LABEL_BUFSIZE> LabelBuf{};
+		std::array<char, 72> LabelBuf{};
 		std::snprintf(LabelBuf.data(), LabelBuf.size(), "##%s", Label);
 
 		constexpr float SpacingX = 8.0f;
@@ -77,7 +84,7 @@ namespace platformer2d::UI {
 			ImGui::SameLine();
 		}
 
-		const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);
+		const float InputItemWidth = (NextItemWidth > 0.0f) ? NextItemWidth : ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f);
 		ImGui::SetNextItemWidth(InputItemWidth);
 		const ImGuiID InputID = ImGui::GetID(LabelBuf.data());
 		bool Modified = ImGui::DragScalar(

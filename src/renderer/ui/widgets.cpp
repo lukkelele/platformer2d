@@ -17,11 +17,7 @@
 
 namespace platformer2d::UI {
 
-	struct FActorDataEntry
-	{
-		std::array<char, 64> NameBuf;
-	};
-	static std::unordered_map<LUUID, FActorDataEntry> ActorDataMap;
+	// std::unordered_map<LUUID, Internal::FActorDataEntry> ActorDataMap;
 
 	void Actor::Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
@@ -32,8 +28,8 @@ namespace platformer2d::UI {
 
 		/* Button: Create */
 		{
-			static const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			static constexpr ImVec2 ButtonSize = ImVec2(112, 50);
+			const ImVec2 Avail = ImGui::GetContentRegionAvail();
+			constexpr ImVec2 ButtonSize = ImVec2(112, 50);
 
 			ImGui::BeginTable("##ActorButtons", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
 			ImGui::TableSetupColumn("L", 0, Avail.x * 0.30f);
@@ -46,7 +42,7 @@ namespace platformer2d::UI {
 			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8);
 			{
-				UI::FScopedColorStack ButtonColours(
+				UI::FScopedColorStack ButtonColor(
 					ImGuiCol_Button, RGBA32::LightGreen,
 					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
 					ImGuiCol_ButtonActive, RGBA32::NiceGreen);
@@ -55,7 +51,6 @@ namespace platformer2d::UI {
 				if (ActorExists) {
 					ImGui::BeginDisabled();
 				}
-
 				const float CursorPosX = 0.50f * ImGui::GetContentRegionAvail().x;
 				UI::ShiftCursorX(CursorPosX - ButtonSize.x);
 				if (ImGui::Button("Create", ButtonSize)) {
@@ -107,8 +102,8 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		static const ImVec2 Avail = ImGui::GetContentRegionAvail();
-		static constexpr ImVec2 ButtonSize = ImVec2(138, 50);
+		const ImVec2 Avail = ImGui::GetContentRegionAvail();
+		constexpr ImVec2 ButtonSize = ImVec2(138, 50);
 
 		UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
 		UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
@@ -133,203 +128,208 @@ namespace platformer2d::UI {
 		}
 	}
 
+	static bool Node_BodyFlags(CBody& Body)
+	{
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		if (!ImGui::TreeNodeEx("Body Flags", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return false;
+		}
+
+		ImGuiStyle& Style = ImGui::GetStyle();
+		BeginPropertyGrid();
+		const std::uint32_t BodyFlags = Body.GetSpecification().Flags;
+		const float DisabledAlpha = Style.DisabledAlpha;
+		Style.DisabledAlpha = 1.0f;
+
+		Table::NextRow();
+		bool PreSolveFlag = (BodyFlags & EBodyFlag::EBodyFlag_PreSolveEvents);
+		DisabledCheckbox("PreSolve", PreSolveFlag);
+
+		Table::NextRow();
+		bool ContactFlag = (BodyFlags & EBodyFlag::EBodyFlag_ContactEvents);
+		DisabledCheckbox("Contact", ContactFlag);
+
+		Table::NextRow();
+		bool SensorFlag = (BodyFlags & EBodyFlag::EBodyFlag_SensorEvents);
+		DisabledCheckbox("Sensor", SensorFlag);
+
+		Table::NextRow();
+		bool BulletFlag = (BodyFlags & EBodyFlag::EBodyFlag_Bullet);
+		DisabledCheckbox("Bullet", BulletFlag);
+
+		Style.DisabledAlpha = DisabledAlpha;
+
+		EndPropertyGrid();
+		ImGui::TreePop();
+		return true;
+	}
+
+	static bool Node_Physics(CBody& Body)
+	{
+		if (!ImGui::TreeNodeEx("Physics", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return false;
+		}
+
+		BeginPropertyGrid();
+		ImGui::Unindent();
+
+		Table::NextRow();
+		bool Enabled = Body.IsEnabled();
+		if (UI::Checkbox("Body Enabled", Enabled)) {
+			Body.SetEnabled(Enabled);
+		}
+
+		Table::NextRow();
+		Table::Label("Awake");
+		Table::NextColumn();
+		ImGui::Text("%s", Body.IsAwake() ? "Yes" : "No");
+
+		Table::NextRow();
+		Table::Label("Body Size");
+		Table::NextColumn();
+		const glm::vec2 BodySize = Body.GetSize();
+		ImGui::Text("(%.2f, %.2f)", BodySize.x, BodySize.y);
+
+		Table::NextRow();
+		Table::Label("Linear Velocity");
+		Table::NextColumn();
+		const glm::vec2 LinearV = Body.GetLinearVelocity();
+		ImGui::Text("(%.2f, %.2f)", LinearV.x, LinearV.y);
+
+		Table::NextRow();
+		Table::Label("Angular Velocity");
+		Table::NextColumn();
+		const float AngularV = Body.GetAngularVelocity();
+		ImGui::Text("%.2f", AngularV);
+
+		Table::NextRow();
+		Table::Label("AABB");
+		Table::NextColumn();
+		const FAABB AABB = Body.GetAABB();
+		ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
+		ImGui::SameLine(0.0f, 16.0f);
+		ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
+
+		ImGui::Indent();
+		EndPropertyGrid();
+		ImGui::TreePop();
+		return true;
+	}
+
+	static bool Node_Outline(CActor& Actor)
+	{
+		if (!ImGui::TreeNodeEx("Outline", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return false;
+		}
+
+		BeginPropertyGrid();
+		Table::NextRow();
+		Table::Label("Enabled");
+		Table::NextColumn();
+		bool Enabled = Actor.IsOutlineEnabled();
+		if (ImGui::Checkbox("##Enabled", &Enabled)) {
+			Actor.SetOutlineEnabled(Enabled);
+		}
+
+		Table::NextRow();
+		float Thickness = Actor.GetOutlineThickness();
+		if (UI::DragFloat("Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
+			Actor.SetOutlineThickness(Thickness);
+		}
+
+		Table::NextRow();
+		const glm::vec4& Color = Actor.GetOutlineColor();
+		glm::vec3 C = {Color.x, Color.y, Color.z};
+		if (UI::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
+			Actor.SetOutlineColor(glm::vec4(C, 1.0f));
+		}
+
+		UI::EndPropertyGrid();
+		ImGui::TreePop();
+		return true;
+	}
+
 	/* @fixme: Refactor these awful functions :) */
 	void Actor::Data(std::shared_ptr<CActor> Actor)
 	{
 		const LUUID Handle = Actor->GetHandle();
-		ImGui::PushID(Handle);
+		FScopedID ScopedID(Handle);
 
-		static constexpr float LabelColumnWidth = 180.0f;
-		ImGui::BeginTable("##Actor_Data", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("L", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
-
-		/**
-		 * Cache the actor, done to be able to rename it.
-		 */
-		if (!ActorDataMap.contains(Handle)) {
-			LK_TRACE_TAG("UI", "Caching handle {}", Handle);
-			auto [Iter, Inserted] = ActorDataMap.emplace(Handle, FActorDataEntry{});
-			if (Inserted) {
-				/* Populate the buffer with the actor name. */
-				FActorDataEntry& Data = Iter->second;
-				std::snprintf(Data.NameBuf.data(), Data.NameBuf.size(), "%s", Actor->GetName().data());
-			}
+		/* Cache the actor, done to be able to rename it. */
+		if (!ActorCache.Contains(*Actor)) {
+			ActorCache.Cache(*Actor);
 		}
 
 		FTransformComponent& TC = Actor->GetTransformComponent();
-		const CBody* Body = Actor->GetBody();
+		CBody* Body = Actor->GetBody();
 
-		/* Actor name. */
-		auto Iter = ActorDataMap.find(Handle);
-		if (Iter != ActorDataMap.end()) {
-			ImGui::TableNextRow();
-			FActorDataEntry& Data = Iter->second;
-			UI::Table::Label("Name");
-			UI::Table::NextColumn();
+		auto& Style = ImGui::GetStyle();
 
-			UI::FScopedStyle ButtonFrame(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-			ImGui::InputText("##Name", Data.NameBuf.data(), Data.NameBuf.size());
-			ImGui::SameLine();
+		BeginPropertyGrid();
+		Input::ActorName(*Actor);
 
-			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 3);
-			if (ImGui::Button(LK_ICON_CHECK_CIRCLE)) {
-				LK_DEBUG_TAG("UI", "Rename {} to: {}", Handle, Data.NameBuf.data());
-				Actor->SetName(Data.NameBuf.data());
-			}
-		}
-
-		/* Texture. */
 		Table::NextRow();
-		{
-			ETexture Texture = Actor->GetTexture();
-			if (UI::TextureDropdown(Texture)) {
-				LK_INFO_TAG("UI", "Update {} texture: {}", Actor->GetName(), Enum::ToString(Texture));
-				Actor->SetTexture(Texture);
-			}
+		ETexture Texture = Actor->GetTexture();
+		if (UI::TextureDropdown(Texture)) {
+			LK_INFO_TAG("UI", "Update {} texture: {}", Actor->GetName(), Enum::ToString(Texture));
+			Actor->SetTexture(Texture);
 		}
 
-		/* Color. */
 		Table::NextRow();
-		{
-			const glm::vec4& ColorRef = Actor->GetColor();
-			EColor Color = EColor::White;
-			const bool ColorDeduced = FColor::DeduceEnum(Color, ColorRef);
-			if (!ColorDeduced) {
-				ImGui::BeginDisabled();
-			}
-			if (ColorDropdown(Color)) {
-				LK_INFO_TAG("UI", "Update {} color: {}", Actor->GetName(), Enum::ToString(Color));
-				Actor->SetColor(FColor::Get(Color));
-			}
-			if (!ColorDeduced) {
-				ImGui::EndDisabled();
-			}
+		const glm::vec4& ColorRef = Actor->GetColor();
+		EColor Color = EColor::White;
+		const bool ColorDeduced = FColor::DeduceEnum(Color, ColorRef);
+		if (!ColorDeduced) {
+			LK_WARN_TAG("UI", "Failed to deduce: {}", ColorRef);
+			ImGui::BeginDisabled();
+		}
+		const bool ColorUpdated = ColorDropdown(Color);
+		if (ColorUpdated) {
+			LK_INFO_TAG("UI", "Update {} color: {}", Actor->GetName(), Enum::ToString(Color));
+			Actor->SetColor(FColor::Get(Color));
+		}
+		ImGui::SameLine();
+		glm::vec4 ColorValue = Actor->GetColor();
+		ImGui::SetNextItemWidth(50.0f);
+		if (ImGui::SliderFloat("A##ColorAlpha", &ColorValue.a, 0.0f, 1.0f, "%.2f") || ColorUpdated) {
+			Actor->SetColor(ColorValue);
+		}
+		if (!ColorDeduced) {
+			ImGui::EndDisabled();
 		}
 
-		/* Tick info. */
-		UI::Table::NextRow();
-		{
+		Table::NextRow();
+		std::underlying_type_t<EActorFlag> Flags = Actor->GetFlags();
+		Table::Label("Flags");
+		Table::NextColumn();
+		ImGui::Text("0x%X", Flags);
+
+		EndPropertyGrid();
+
+		if (Body) {
+			BeginPropertyGrid();
+			Table::NextRow();
 			Table::Label("Tick");
 			Table::NextColumn();
 			ImGui::Text("%s", Actor->IsTickEnabled() ? "Enabled" : "Disabled");
+
+			Table::NextRow();
+			Table::Label("Body Type");
+			Table::NextColumn();
+			ImGui::Text("%s", Enum::ToString<const char*>(Body->GetType()));
+
+			Table::NextRow();
+			Table::Label("Sensor");
+			Table::NextColumn();
+			ImGui::Text("%s", Body->IsSensor() ? "Yes" : "No");
+			EndPropertyGrid();
+
+			ImGui::Spacing();
+			Node_BodyFlags(*Body);
+			Node_Physics(*Body);
 		}
 
-		if (Body) {
-			/* Body Type. */
-			ImGui::TableNextRow();
-			{
-				Table::Label("Body Type");
-				Table::NextColumn();
-				ImGui::Text("%s", Enum::ToString<const char*>(Body->GetType()));
-			}
-
-			/* Body Size. */
-			ImGui::TableNextRow();
-			{
-				Table::Label("Body Size");
-				Table::NextColumn();
-				const glm::vec2 Size = Body->GetSize();
-				ImGui::Text("(%.2f, %.2f)", Size.x, Size.y);
-			}
-
-			/* Linear Velocity. */
-			Table::NextRow();
-			{
-				Table::Label("Linear Velocity");
-				Table::NextColumn();
-				const glm::vec2 V = Body->GetLinearVelocity();
-				ImGui::Text("(%.2f, %.2f)", V.x, V.y);
-			}
-
-			/* Angular Velocity. */
-			Table::NextRow();
-			{
-				Table::Label("Angular Velocity");
-				Table::NextColumn();
-				const float V = Body->GetAngularVelocity();
-				ImGui::Text("%.2f", V);
-			}
-
-			/* AABB. */
-			Table::NextRow();
-			{
-				Table::Label("AABB");
-				Table::NextColumn();
-				const FAABB AABB = Body->GetAABB();
-				ImGui::Text("Min (%.2f, %.2f)", AABB.Min.x, AABB.Min.y);
-				ImGui::SameLine(0.0f, 16.0f);
-				ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
-			}
-
-			/* Enabled. */
-			ImGui::TableNextRow();
-			{
-				bool Enabled = Body->IsEnabled();
-				if (UI::Checkbox("Body Enabled", Enabled)) {
-					Body->SetEnabled(Enabled);
-				}
-			}
-
-			/* Awake. */
-			ImGui::TableNextRow();
-			{
-				Table::Label("Awake");
-				Table::NextColumn();
-				ImGui::Text("%s", Body->IsAwake() ? "Yes" : "No");
-			}
-
-			/* Sensor. */
-			ImGui::TableNextRow();
-			{
-				Table::Label("Sensor");
-				Table::NextColumn();
-				ImGui::Text("%s", Body->IsSensor() ? "Yes" : "No");
-			}
-		}
-
-		ImGui::EndTable();
-
-		/* Node: Outline */
-		if (ImGui::TreeNodeEx("Outline", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			UI::BeginPropertyGrid();
-
-			/* Outline enabled. */
-			Table::NextRow();
-			{
-				UI::Table::Label("Enabled");
-				UI::Table::NextColumn();
-				bool Enabled = Actor->IsOutlineEnabled();
-				if (ImGui::Checkbox("##Enabled", &Enabled)) {
-					Actor->SetOutlineEnabled(Enabled);
-				}
-			}
-
-			/* Outline thickness. */
-			Table::NextRow();
-			{
-				float Thickness = Actor->GetOutlineThickness();
-				if (UI::DragFloat("Thickness", Thickness, 0.10f, 0.0f, 20.0f)) {
-					Actor->SetOutlineThickness(Thickness);
-				}
-			}
-
-			/* Outline color. */
-			Table::NextRow();
-			{
-				const glm::vec4& Color = Actor->GetOutlineColor();
-				glm::vec3 C = {Color.x, Color.y, Color.z};
-				if (UI::DragFloat3("Outline Color", C, 1.0f, 0.010f, 0.0f, 1.0f)) {
-					Actor->SetOutlineColor(glm::vec4(C, 1.0f));
-				}
-			}
-			UI::EndPropertyGrid();
-
-			ImGui::TreePop();
-		}
-
-		ImGui::PopID();
+		Node_Outline(*Actor);
 	}
 
 	void Actor::Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
@@ -351,8 +351,9 @@ namespace platformer2d::UI {
 		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName.data());
 		ImGui::PushID(Handle);
 		if (NodeOpened) {
+			/* @fixme: Restructure */
 			Actor::Data(Actor);
-			UI::DrawComponents(Actor);
+			DrawComponents(Actor);
 			UI::Actor::DeleteButton(Actor, Scene);
 			ImGui::TreePop();
 
@@ -368,7 +369,7 @@ namespace platformer2d::UI {
 	void Actor::OnActorDeleted(const LUUID ActorHandle)
 	{
 		LK_DEBUG_TAG("UI", "Removing handle {} from actor cache", ActorHandle);
-		ActorDataMap.erase(ActorHandle);
+		ActorCache.Erase(ActorHandle);
 	}
 
 	void DrawComponents(std::shared_ptr<CActor> Actor)
@@ -836,11 +837,6 @@ namespace platformer2d::UI {
 				}
 			}
 
-			ImGui::TableNextRow();
-			UI::Table::Label("Has Target");
-			UI::Table::NextColumn();
-			ImGui::Text("%s", (C->HasTarget() ? "Yes" : "No"));
-
 			UI::EndPropertyGrid();
 		}
 	}
@@ -867,6 +863,15 @@ namespace platformer2d::UI {
 		ImGui::TableNextRow();
 		FEnemyData& Data = Enemy->GetData();
 		UI::DragFloat2("Spawn Point", Data.SpawnPoint, 0.0f, 0.010f);
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(1);
+		UI::ShiftCursorX(7);
+		const LUUID EnemyHandle = Enemy->GetHandle();
+		bool ShowSpawnPoint = UI::IsSpawnPointVisible(EnemyHandle);
+		if (ImGui::Checkbox("Show Spawn Point", &ShowSpawnPoint)) {
+			UI::SetSpawnPointVisible(EnemyHandle, ShowSpawnPoint);
+		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 
@@ -962,5 +967,4 @@ namespace platformer2d::UI {
 		ImGui::Text("Focused: %s", Focused ? "Yes" : "No");
 		ImGui::Text("Hovered: %s", Hovered ? "Yes" : "No");
 	}
-
 }

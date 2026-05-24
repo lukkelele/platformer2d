@@ -12,6 +12,10 @@
 #include "renderer/texture.h"
 #include "scoped.h"
 
+namespace platformer2d {
+	class CActor;
+}
+
 namespace platformer2d::UI {
 
 	namespace PanelID {
@@ -28,6 +32,8 @@ namespace platformer2d::UI {
 		inline constexpr const char* const SceneManager = "Scene Manager";
 		inline constexpr const char* const Creator = "Creator";
 		inline constexpr const char* const TerrainCreator = "Terrain Creator";
+		inline constexpr const char* const TextureInspector = "Texture Inspector";
+		inline constexpr const char* const SpriteInspector = "Sprite Inspector";
 	}
 
 	inline ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
@@ -58,6 +64,25 @@ namespace platformer2d::UI {
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoWindowMenuButton;
 
+	namespace Internal {
+		struct FActorDataEntry
+		{
+			std::array<char, 64> NameBuf;
+		};
+	}
+	struct FActorCache
+	{
+		std::unordered_map<LUUID, Internal::FActorDataEntry> Map;
+		bool Contains(const LUUID Handle) const { return Map.contains(Handle); }
+		bool Contains(const CActor& Actor) const;
+		bool Cache(const CActor& Actor);
+
+		auto Find(const LUUID Handle) { return Map.find(Handle); }
+		auto End() const { return Map.end(); }
+		auto Erase(const LUUID Handle) { return Map.erase(Handle); }
+	};
+	inline FActorCache ActorCache;
+
 	void PushID();
 	void PopID();
 	const char* GenerateID();
@@ -71,6 +96,9 @@ namespace platformer2d::UI {
 
 	void PrepareViewport();
 	ImGuiDockNode* FindCentralNode(ImGuiID DockspaceID);
+	void RouteToCentralNode();
+
+	bool IsViewportTabActive();
 
 	inline void ShiftCursorX(const float Distance)
 	{
@@ -226,6 +254,44 @@ namespace platformer2d::UI {
 		if (YPadding > 0.0f) {
 			ImGui::Dummy(ImVec2(0, YPadding));
 		}
+	}
+
+	inline void VSplitter(const char* InID, float* InOutLeftWidth, const float Thickness, const float Height)
+	{
+		const ImVec2 Cursor = ImGui::GetCursorScreenPos();
+		ImGui::InvisibleButton(InID, ImVec2(Thickness, Height));
+		const bool Active = ImGui::IsItemActive();
+		const bool Hovered = ImGui::IsItemHovered();
+		if (Active) {
+			*InOutLeftWidth += ImGui::GetIO().MouseDelta.x;
+		}
+		if (Active || Hovered) {
+			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+		}
+
+		const std::uint32_t Color = Active ? FColor::LightBlue.WithAlpha(0.90f).As<std::uint32_t>()
+			: Hovered                      ? FColor::LightBlue.WithAlpha(0.70f).As<std::uint32_t>()
+										   : FColor::Gray.WithAlpha(0.70f).As<std::uint32_t>();
+		ImGui::GetWindowDrawList()->AddRectFilled(Cursor, ImVec2(Cursor.x + Thickness, Cursor.y + Height), Color);
+	}
+
+	inline void HSplitter(const char* InID, float* InOutTopHeight, const float Thickness, const float Width)
+	{
+		const ImVec2 Cursor = ImGui::GetCursorScreenPos();
+		ImGui::InvisibleButton(InID, ImVec2(Width, Thickness));
+		const bool Active = ImGui::IsItemActive();
+		const bool Hovered = ImGui::IsItemHovered();
+		if (Active) {
+			*InOutTopHeight += ImGui::GetIO().MouseDelta.y;
+		}
+		if (Active || Hovered) {
+			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+		}
+
+		const std::uint32_t Color = Active ? FColor::LightBlue.WithAlpha(0.90f).As<std::uint32_t>()
+			: Hovered                      ? FColor::LightBlue.WithAlpha(0.70f).As<std::uint32_t>()
+										   : FColor::Gray.WithAlpha(0.70f).As<std::uint32_t>();
+		ImGui::GetWindowDrawList()->AddRectFilled(Cursor, ImVec2(Cursor.x + Width, Cursor.y + Thickness), Color);
 	}
 
 	/**

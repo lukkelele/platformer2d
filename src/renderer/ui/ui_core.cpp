@@ -4,6 +4,9 @@
 
 #include "core/profiler.h"
 #include "editor_resources.h"
+#include "spriteinspector.h"
+#include "textureinspector.h"
+#include "scene/actor.h"
 
 namespace platformer2d {
 	FEditorResources EditorResources;
@@ -29,6 +32,23 @@ namespace platformer2d::UI {
 			| ImGuiWindowFlags_NoBringToFrontOnFocus
 			| ImGuiWindowFlags_NoBackground
 			| ImGuiWindowFlags_NoSavedSettings;
+	}
+
+	bool FActorCache::Cache(const CActor& Actor)
+	{
+		LK_TRACE_TAG("UI", "Caching handle {}", Actor.GetHandle());
+		auto [Iter, Inserted] = Map.emplace(Actor.GetHandle(), Internal::FActorDataEntry{});
+		if (Inserted) {
+			/* Populate the buffer with the actor name. */
+			Internal::FActorDataEntry& Data = Iter->second;
+			std::snprintf(Data.NameBuf.data(), Data.NameBuf.size(), "%s", Actor.GetName().data());
+		}
+		return Inserted;
+	}
+
+	bool FActorCache::Contains(const CActor& Actor) const
+	{
+		return Map.contains(Actor.GetHandle());
 	}
 
 	void PushID()
@@ -145,6 +165,8 @@ namespace platformer2d::UI {
 			ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopbarFraction, nullptr, &DockID_Main);
 
 			ImGui::DockBuilderDockWindow(PanelID::Viewport, DockID_Main);
+			ImGui::DockBuilderDockWindow(PanelID::TextureInspector, DockID_Main);
+			ImGui::DockBuilderDockWindow(PanelID::SpriteInspector, DockID_Main);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
 			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
 			ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
@@ -235,8 +257,28 @@ namespace platformer2d::UI {
 		/* Modify the size on the y-axis to account for the docking separators. */
 		Window->Flags |= ImGuiWindowFlags_NoTitleBar;
 		DockNode->Size = ImVec2(DockNode->Size.x, (DockNode->Size.y - Style.DockingSeparatorSize));
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoTabBar;
-		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking;
+		DockNode->LocalFlags |= ImGuiDockNodeFlags_NoWindowMenuButton;
+
+		const bool AnyInspectorOpen = UI::IsTextureInspectorOpen() || UI::IsSpriteInspectorOpen();
+		if (AnyInspectorOpen) {
+			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoTabBar;
+			DockNode->LocalFlags &= ~ImGuiDockNodeFlags_NoDocking;
+		} else {
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDocking;
+		}
+	}
+
+	bool IsViewportTabActive()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(PanelID::Viewport);
+		if (!Window) {
+			return true;
+		}
+		if (!Window->DockIsActive) {
+			return true;
+		}
+		return Window->DockTabIsVisible;
 	}
 
 	ImGuiDockNode* FindCentralNode(const ImGuiID DockspaceID)
@@ -268,6 +310,13 @@ namespace platformer2d::UI {
 		}
 
 		return nullptr;
+	}
+
+	void RouteToCentralNode()
+	{
+		if (ImGuiDockNode* Central = UI::FindCentralNode(ImGui::GetID(UI::PanelID::Dockspace))) {
+			ImGui::SetNextWindowDockID(Central->ID, ImGuiCond_FirstUseEver);
+		}
 	}
 
 }

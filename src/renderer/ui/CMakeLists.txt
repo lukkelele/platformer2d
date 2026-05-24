@@ -21,11 +21,15 @@ project_library_sources(
 	physics.cpp
 	quickcreator.h
 	quickcreator.cpp
+	scoped.h
 	selectionpanel.h
 	selectionpanel.cpp
 	settingsmenu.h
 	settingsmenu.cpp
-	scoped.h
+	spriteinspector.h
+	spriteinspector.cpp
+	textureinspector.h
+	textureinspector.cpp
 	terraincreator.cpp
 	text.cpp
 	ui.h

@@ -28,16 +28,20 @@ namespace platformer2d::UI {
 		EColor Color = EColor::White;
 		ETexture Texture = ETexture::White;
 		float TextureHeight = 0.20f;
+		EDirection TextureSide = EDirection::None;
+		float TextureOffset = 0.0f;
+		bool bTextureTile = false;
+		float TextureTileWidth = 0.0f;
 		std::array<char, 64> NameBuf = {0};
 		LUUID EditTarget = LUUID::Null;
 		bool bHasEditTarget = false;
-		bool bPreviewVisible = true;
+		bool bPreviewVisible = false;
 
 		struct
 		{
 			bool bLastNodeState = false;
-			bool bPreviewVisible = true;
-		} Cache;
+			bool bPreviewVisible = false;
+		} Cache{.bPreviewVisible = bPreviewVisible};
 
 		void ResetPoints()
 		{
@@ -57,6 +61,10 @@ namespace platformer2d::UI {
 			PreviewOrigin = {0.0f, 0.0f};
 			Texture = ETexture::White;
 			TextureHeight = 0.20f;
+			TextureSide = EDirection::None;
+			TextureOffset = 0.0f;
+			bTextureTile = false;
+			TextureTileWidth = 0.0f;
 		}
 	};
 

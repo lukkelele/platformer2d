@@ -54,7 +54,7 @@ namespace platformer2d::UI {
 			OtherColors&&... OtherColorPairs)
 			: Count((sizeof...(OtherColorPairs) / 2) + 1)
 		{
-			static_assert((sizeof...(OtherColorPairs) & 1u) == 0, "FScopedColorStack expects a list of pairs of color IDs and colors");
+			static_assert((sizeof...(OtherColorPairs) & 1U) == 0, "FScopedColorStack expects a list of pairs of color IDs and colors");
 			PushColor(FirstColorID, FirstColor, std::forward<OtherColors>(OtherColorPairs)...);
 		}
 
@@ -90,7 +90,7 @@ namespace platformer2d::UI {
 			OtherStylePairs&&... OtherPairs)
 			: StackCount((sizeof...(OtherPairs) / 2) + 1)
 		{
-			static_assert((sizeof...(OtherPairs) & 1u) == 0);
+			static_assert((sizeof...(OtherPairs) & 1U) == 0);
 			PushStyle(FirstStyleVar, FirstValue, std::forward<OtherStylePairs>(OtherPairs)...);
 		}
 

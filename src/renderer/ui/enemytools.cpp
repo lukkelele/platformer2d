@@ -1,5 +1,7 @@
 #include "enemytools.h"
 
+#include <unordered_set>
+
 #include "core/log.h"
 #include "core/selectioncontext.h"
 #include "core/string.h"
@@ -8,6 +10,7 @@
 #include "renderer/color.h"
 #include "renderer/fontawesome.h"
 #include "renderer/font.h"
+#include "renderer/renderer.h"
 #include "renderer/texture.h"
 #include "physics/body.h"
 #include "physics/bodytype.h"
@@ -18,6 +21,33 @@
 #include "ui.h"
 
 namespace platformer2d::UI {
+
+	static bool bShowAllSpawnPoints = false;
+	static std::unordered_set<LUUID> VisibleSpawnPoints;
+
+	bool IsSpawnPointGloballyVisible()
+	{
+		return bShowAllSpawnPoints;
+	}
+
+	void SetSpawnPointGloballyVisible(const bool Enabled)
+	{
+		bShowAllSpawnPoints = Enabled;
+	}
+
+	bool IsSpawnPointVisible(const LUUID Handle)
+	{
+		return VisibleSpawnPoints.contains(Handle);
+	}
+
+	void SetSpawnPointVisible(const LUUID Handle, const bool Visible)
+	{
+		if (Visible) {
+			VisibleSpawnPoints.insert(Handle);
+		} else {
+			VisibleSpawnPoints.erase(Handle);
+		}
+	}
 
 	static std::shared_ptr<CEnemy> GetSelectedEnemy(const std::shared_ptr<CScene>& Scene)
 	{
@@ -90,8 +120,8 @@ namespace platformer2d::UI {
 		UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 6.0f);
 
 		{
-			UI::FScopedColor ButtonBg(ImGuiCol_Button, IM_COL32(180, 45, 45, 200));
-			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, IM_COL32(220, 60, 60, 220));
+			UI::FScopedColor ButtonBg(ImGuiCol_Button, FColor::DarkRed.As<std::uint32_t>());
+			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::WarmRed.As<std::uint32_t>());
 			if (ImGui::Button(LK_ICON_TIMES "  Kill All", ButtonSize)) {
 				std::vector<std::shared_ptr<CEnemy>> Enemies = Scene->GetAllOfType<CEnemy>();
 				LK_INFO_TAG("EnemyTools", "Killing {} enemies", Enemies.size());
@@ -106,13 +136,33 @@ namespace platformer2d::UI {
 		ImGui::SameLine();
 		{
 			UI::FScopedColor ButtonBg(ImGuiCol_Button, RGBA32::SmoothGreen);
-			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
+			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::VividGreen.As<std::uint32_t>());
 			if (ImGui::Button(LK_ICON_HEART "  Revive All", ButtonSize)) {
 				std::vector<std::shared_ptr<CEnemy>> Enemies = Scene->GetAllOfType<CEnemy>();
 				LK_INFO_TAG("EnemyTools", "Reviving {} enemies", Enemies.size());
 				for (const std::shared_ptr<CEnemy>& Enemy : Enemies) {
 					if (Enemy && Enemy->IsDead()) {
 						Enemy->Revive(CEnemy::EReviveVariant::AtSpawn);
+					}
+				}
+			}
+		}
+
+		ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
+		static EEnemyState BulkState = EEnemyState::Idle;
+		ImGui::SetNextItemWidth(140.0f);
+		UI::Combo("##BulkEnemyState", Enum::View<EEnemyState>(), BulkState);
+		ImGui::SameLine(0.0f, 8.0f);
+		{
+			UI::FScopedColor ButtonBg(ImGuiCol_Button, FColor::RoyalBlue.As<std::uint32_t>());
+			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::HoverBlue.As<std::uint32_t>());
+			if (ImGui::Button(LK_ICON_BOLT "  Set State All", ButtonSize)) {
+				std::vector<std::shared_ptr<CEnemy>> Enemies = Scene->GetAllOfType<CEnemy>();
+				LK_INFO_TAG("EnemyTools", "Set state of {} enemies to {}", Enemies.size(), Enum::ToString(BulkState));
+				for (const std::shared_ptr<CEnemy>& Enemy : Enemies) {
+					if (Enemy) {
+						Enemy->SetState(BulkState);
 					}
 				}
 			}
@@ -170,8 +220,8 @@ namespace platformer2d::UI {
 			ImGui::BeginDisabled();
 		}
 		{
-			UI::FScopedColor ButtonBg(ImGuiCol_Button, IM_COL32(180, 45, 45, 200));
-			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, IM_COL32(220, 60, 60, 220));
+			UI::FScopedColor ButtonBg(ImGuiCol_Button, FColor::DarkRed.As<std::uint32_t>());
+			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::WarmRed.As<std::uint32_t>());
 			if (ImGui::Button(LK_ICON_TIMES "  Kill", ButtonSize)) {
 				Enemy->Kill();
 			}
@@ -186,13 +236,43 @@ namespace platformer2d::UI {
 		}
 		{
 			UI::FScopedColor ButtonBg(ImGuiCol_Button, RGBA32::SmoothGreen);
-			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, IM_COL32(0, 205, 15, 90));
+			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::VividGreen.As<std::uint32_t>());
 			if (ImGui::Button(LK_ICON_HEART "  Revive", ButtonSize)) {
 				Enemy->Revive(CEnemy::EReviveVariant::AtSpawn);
 			}
 		}
 		if (!Dead) {
 			ImGui::EndDisabled();
+		}
+	}
+
+	void RenderEnemySpawnPoints(const std::shared_ptr<CScene>& Scene)
+	{
+		if (!Scene) {
+			return;
+		}
+		const std::vector<std::shared_ptr<CEnemy>> Enemies = Scene->GetAllOfType<CEnemy>();
+		if (Enemies.empty()) {
+			return;
+		}
+
+		constexpr float MarkerRadius = 0.030f;
+		constexpr float CrossArm = 0.130f;
+		constexpr std::uint16_t LineWidth = 2;
+		static const glm::vec4 MarkColor = FColor::Red.WithAlpha(0.95f);
+		static const glm::vec4 LinkColor = FColor::Black.WithAlpha(0.95f);
+
+		for (const std::shared_ptr<CEnemy>& Enemy : Enemies) {
+			LK_ASSERT(Enemy);
+			if (!bShowAllSpawnPoints && !VisibleSpawnPoints.contains(Enemy->GetHandle())) {
+				continue;
+			}
+
+			const glm::vec2 Sp = Enemy->GetSpawnPoint();
+			CRenderer::DrawCrossMark(Sp, MarkColor);
+
+			const glm::vec3 EnemyPos = Enemy->GetPosition();
+			CRenderer::DrawLine(EnemyPos, {Sp.x, Sp.y, 0.0f}, LinkColor, LineWidth);
 		}
 	}
 
@@ -226,6 +306,14 @@ namespace platformer2d::UI {
 			ImGui::TextUnformatted("Bulk");
 		}
 		DrawBulkActions(Scene);
+
+		ImGui::Dummy(ImVec2(0.0f, 6.0f));
+		{
+			UI::FScopedColor SubHeader(ImGuiCol_Text, RGBA32::Text::Darker);
+			UI::FScopedFont SubFont(EFont::Roboto, EFontSize::Regular, EFontModifier::Bold);
+			ImGui::TextUnformatted("Visualization");
+		}
+		ImGui::Checkbox("Show All Spawn Points", &bShowAllSpawnPoints);
 
 		std::shared_ptr<CEnemy> Selected = GetSelectedEnemy(Scene);
 		DrawSelectedSection(Selected);

@@ -27,6 +27,8 @@ namespace platformer2d::UI {
 			SpawnBlock,
 			SpawnEnemy,
 			SpawnSpawnpoint,
+			SpawnSensor,
+			SpawnItem,
 			COUNT
 		};
 		LK_ENUM(EPresetAction);
@@ -35,6 +37,8 @@ namespace platformer2d::UI {
 		{
 			Blocks,
 			Enemies,
+			Interactable,
+			Items,
 			Misc,
 			COUNT
 		};
@@ -53,10 +57,12 @@ namespace platformer2d::UI {
 			EBodyType BodyType = EBodyType::Static;
 
 			EEnemyArchetype Archetype = EEnemyArchetype::Grunt;
+
+			EInteraction Interaction = EInteraction::None;
 		};
 	}
 
-	static const std::array<FQuickPreset, 9> Presets = {
+	static const std::array<FQuickPreset, 11> Presets = {
 		{
          {EPresetGroup::Blocks, EPresetAction::SpawnBlock, LK_ICON_CUBE, "Small", {0.20f, 0.20f}, FColor::Convert(RGBA32::Gray), ETexture::White, EBodyType::Static},
          {EPresetGroup::Blocks, EPresetAction::SpawnBlock, LK_ICON_CUBE, "Medium", {0.50f, 0.50f}, FColor::Convert(RGBA32::DarkerGray), ETexture::White, EBodyType::Static},
@@ -66,6 +72,9 @@ namespace platformer2d::UI {
          {EPresetGroup::Enemies, EPresetAction::SpawnEnemy, LK_ICON_USER_SECRET, "Grunt", {0.20f, 0.20f}, FColor::White, ETexture::Goblin, EBodyType::Dynamic, EEnemyArchetype::Grunt},
          {EPresetGroup::Enemies, EPresetAction::SpawnEnemy, LK_ICON_USER_MD, "Jumper", {0.20f, 0.20f}, FColor::White, ETexture::Goblin, EBodyType::Dynamic, EEnemyArchetype::Jumper},
          {EPresetGroup::Enemies, EPresetAction::SpawnEnemy, LK_ICON_CROSSHAIRS, "Ranged", {0.20f, 0.20f}, FColor::White, ETexture::Goblin, EBodyType::Dynamic, EEnemyArchetype::RangedShooter},
+
+         {EPresetGroup::Interactable, EPresetAction::SpawnSensor, LK_ICON_STETHOSCOPE, "Sensor", {0.15f, 0.40f}, FColor::LightBlue, ETexture::White, EBodyType::Static, EEnemyArchetype::None, EInteraction::Heal},
+         {EPresetGroup::Items, EPresetAction::SpawnItem, LK_ICON_REBEL, "Rifle", {0.20f, 0.20f}, FColor::White, ETexture::Rifle, EBodyType::Static, EEnemyArchetype::None, EInteraction::Pickup},
 
          {EPresetGroup::Misc, EPresetAction::SpawnSpawnpoint, LK_ICON_FLAG, "Spawn", {0.10f, 0.10f}, FColor::Convert(RGBA32::SmoothGreen), ETexture::White, EBodyType::Static},
          {EPresetGroup::Misc, EPresetAction::SpawnBlock, LK_ICON_BOMB, "Hazard", {0.25f, 0.25f}, FColor::Convert(RGBA32::Red), ETexture::White, EBodyType::Static},
@@ -94,7 +103,7 @@ namespace platformer2d::UI {
 	}
 
 	/* @todo: Move to CSpawner */
-	static void SpawnBlock(const std::shared_ptr<CScene>& Scene, const FQuickPreset& Preset)
+	static void SpawnBlock(const FQuickPreset& Preset, const std::shared_ptr<CScene>& Scene)
 	{
 		ApplyBlockToActorAttr(Preset);
 		const std::string Name = MakeUniqueName(Scene, Preset.Label);
@@ -112,7 +121,7 @@ namespace platformer2d::UI {
 	}
 
 	/* @todo: Move to CSpawner */
-	static void SpawnEnemy(const std::shared_ptr<CScene>& Scene, const FQuickPreset& Preset)
+	static void SpawnEnemy(const FQuickPreset& Preset, const std::shared_ptr<CScene>& Scene)
 	{
 		FEnemySpecification EnemySpec;
 		EnemySpec.Archetype = Preset.Archetype;
@@ -144,6 +153,113 @@ namespace platformer2d::UI {
 		CSpawner::CreateSpawnpoint("PlayerSpawn", ActorAttr.Position);
 	}
 
+	static void SpawnSensor(const FQuickPreset& Preset, const std::shared_ptr<CScene>& Scene)
+	{
+		LK_UNUSED(Preset);
+		ApplyBlockToActorAttr(Preset);
+		const std::string Name = MakeUniqueName(Scene, Preset.Label);
+		FBodySpecification BodySpec;
+		BodySpec.Type = Preset.BodyType;
+		BodySpec.Position = ActorAttr.Position;
+		BodySpec.Flags = EBodyFlag_PreSolveEvents | EBodyFlag_SensorEvents;
+		BodySpec.bSensor = true;
+
+		LK_INFO_TAG("QuickCreator", "Spawn sensor: {}", Name);
+		std::shared_ptr<CActor> Actor;
+		if (Preset.BodyType == EBodyType::Static) {
+			Actor = CSpawner::CreateStaticPolygon(Name, ActorAttr.Position, Preset.Size, BodySpec, Preset.Color, Preset.Texture);
+		} else {
+			Actor = CSpawner::CreatePolygon(Name, BodySpec, Preset.Size, Preset.Color, Preset.Texture);
+		}
+
+		Actor->SetOutlineColor(FColor::Black);
+		Actor->SetOutlineThickness(2.0f);
+
+		auto& IC = Actor->AddComponent<FInteractionComponent>();
+		IC.Type = Preset.Interaction;
+		switch (IC.Type) {
+			case EInteraction::Damage:
+			{
+				IC.Data = FDamageInteraction{};
+				break;
+			}
+			case EInteraction::Heal:
+			{
+				IC.Data = FHealInteraction{};
+				break;
+			}
+			case EInteraction::Killzone:
+			{
+				IC.Data = FKillzoneInteraction{};
+				break;
+			}
+			case EInteraction::Climbable:
+			{
+				IC.Data = FClimbableInteraction{};
+				break;
+			}
+			case EInteraction::Checkpoint:
+			{
+				IC.Data = FCheckpointInteraction{};
+				break;
+			}
+			default:
+				LK_ERROR_TAG("QuickCreator", "Unhandled interaction: {}", Enum::ToString(IC.Type));
+				break;
+		}
+	}
+
+	static void SpawnRifle(const FQuickPreset& Preset, const std::shared_ptr<CScene>& Scene)
+	{
+		/* @todo: Determine type of item to spawn */
+		ApplyBlockToActorAttr(Preset);
+		const std::string Name = MakeUniqueName(Scene, Preset.Label);
+		FBodySpecification BodySpec;
+		BodySpec.Type = Preset.BodyType;
+		BodySpec.Position = ActorAttr.Position;
+		BodySpec.Flags = EBodyFlag_PreSolveEvents | EBodyFlag_SensorEvents;
+		BodySpec.bSensor = true;
+
+		LK_INFO_TAG("QuickCreator", "Spawn item: {}", Name);
+		std::shared_ptr<CActor> Actor;
+		if (Preset.BodyType == EBodyType::Static) {
+			Actor = CSpawner::CreateStaticPolygon(Name, ActorAttr.Position, Preset.Size, BodySpec, Preset.Color, Preset.Texture);
+		} else {
+			Actor = CSpawner::CreatePolygon(Name, BodySpec, Preset.Size, Preset.Color, Preset.Texture);
+		}
+
+		Actor->SetOutlineColor(FColor::Magenta);
+		Actor->SetOutlineThickness(2.0f);
+
+		auto& IC = Actor->AddComponent<FInteractionComponent>();
+		FPickupInteraction PI{};
+		PI.Kind = EPickupKind::Weapon;
+		FRifleSpecification RifleSpec{};
+		RifleSpec.MagazineSize = 30;
+		FPickupWeapon Weapon = {
+			.Type = EWeaponType::Rifle,
+			.Spec = RifleSpec
+		};
+		PI.bExpireWhenPickedUp = false;
+		PI.Object = Weapon;
+
+		IC.Type = EInteraction::Pickup;
+		IC.Data = PI;
+
+		ActorAttr.Reset();
+	}
+
+	static void SpawnItem(const FQuickPreset& Preset, const std::shared_ptr<CScene>& Scene)
+	{
+		const std::string Label = StringUtils::ToLower(Preset.Label);
+		if (Label == "rifle") {
+			SpawnRifle(Preset, Scene);
+		} else {
+			LK_ERROR_TAG("QuickCreator", "Item not handled: {}", Label);
+			LK_ASSERT(false, "Item not handled: {}", Label)
+		}
+	}
+
 	static void OnPresetClicked(const std::shared_ptr<CScene>& Scene, const FQuickPreset& Preset)
 	{
 		if (!Scene) {
@@ -151,9 +267,11 @@ namespace platformer2d::UI {
 		}
 
 		switch (Preset.Action) {
-			case EPresetAction::SpawnBlock:      SpawnBlock(Scene, Preset); break;
-			case EPresetAction::SpawnEnemy:      SpawnEnemy(Scene, Preset); break;
+			case EPresetAction::SpawnBlock:      SpawnBlock(Preset, Scene); break;
+			case EPresetAction::SpawnEnemy:      SpawnEnemy(Preset, Scene); break;
 			case EPresetAction::SpawnSpawnpoint: SpawnSpawnpoint(Preset); break;
+			case EPresetAction::SpawnSensor:     SpawnSensor(Preset, Scene); break;
+			case EPresetAction::SpawnItem:       SpawnItem(Preset, Scene); break;
 		}
 	}
 
@@ -189,7 +307,7 @@ namespace platformer2d::UI {
 				ImGui::TextUnformatted(Enum::ToString<const char*>(CurrentGroup));
 				ImGui::SameLine(0.0f, 6.0f);
 				UI::ShiftCursorY(-12.0f);
-				ImGui::SetCursorPosX(LargestTextSize.x + ImGui::GetFrameHeight());
+				ImGui::SetCursorPosX(LargestTextSize.x + ImGui::GetFrameHeight() * 2.0f);
 			} else {
 				ImGui::SameLine(0.0f, 4.0f);
 				UI::ShiftCursorY(-12.0f);

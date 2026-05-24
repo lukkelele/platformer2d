@@ -20,13 +20,24 @@ namespace platformer2d::UI {
 		std::array<char, 128> NameBuf = {0};
 		bool bPreview = true;
 		bool bPreviewSelected = false;
+
+		void ResetPos() { Position = {0.0f, 0.0f}; }
+		void ResetSize() { Size = {0.20f, 0.20f}; }
+		void Reset()
+		{
+			ResetPos();
+			ResetSize();
+			Texture = ETexture::White;
+			Color = EColor::White;
+			NameBuf.fill('\0');
+		}
 	};
 	extern FActorAttributes ActorAttr;
 
 	bool ActorAttributes(FActorAttributes& Attr);
 
-	void Creator(std::shared_ptr<CScene> Scene);
-	void ActorCreateButtons(std::shared_ptr<CScene> Scene);
+	void Creator(std::shared_ptr<CScene>& Scene);
+	void ActorCreateButtons(std::shared_ptr<CScene>& Scene);
 	void RenderActorPreview(const std::shared_ptr<CScene>& Scene);
 }
 

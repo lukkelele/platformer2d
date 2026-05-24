@@ -49,36 +49,15 @@ namespace platformer2d::UI {
 	}
 
 	namespace Table {
-		inline void Label(std::string_view Str, const float IndentX = 0.0f)
-		{
-			ImGui::TableSetColumnIndex(0); /* @todo: Remove */
-			UI::ShiftCursorX(17.0f + IndentX);
-			ImGui::AlignTextToFramePadding();
-			ImGui::Text(Str.data());
-		}
-
-		inline void Label(std::string_view Str, const EFont Font, const EFontSize FontSize = EFontSize::Regular, EFontModifier FontMod = EFontModifier::Normal, const float IndentX = 0.0f)
-		{
-			UI::FScopedFont ScopedFont(Font, FontSize, FontMod);
-			Label(Str, IndentX);
-		}
-
-		inline void NextColumn()
-		{
-			ImGui::TableSetColumnIndex(1);
-			UI::ShiftCursorX(7);
-			ImGui::AlignTextToFramePadding();
-		};
-
-		inline void NextRow()
-		{
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-		};
+		void Label(std::string_view Str, float IndentX = 0.0f);
+		void Label(std::string_view Str, EFont Font, EFontSize FontSize = EFontSize::Regular, EFontModifier FontMod = EFontModifier::Normal, float IndentX = 0.0f);
+		void NextColumn();
+		void NextRow();
 	}
 
 	bool Checkbox(std::string_view Str, bool& Value, const float IndentX = 6.0f);
-	bool BeginPropertyGrid(float LabelColumnWidth = 180.0f);
+	void DisabledCheckbox(std::string_view Str, bool& Value, const float IndentX = 6.0f);
+	bool BeginPropertyGrid(float LabelColumnWidth = 180.0f, ImGuiTableColumnFlags ColumnFlags = ImGuiTableColumnFlags_None);
 	void EndPropertyGrid();
 
 	bool ColorDropdown(EColor& Selected);
@@ -88,10 +67,17 @@ namespace platformer2d::UI {
 	bool DrawTranslateGizmo(glm::vec2& Position, const glm::mat4& ViewMatrix, const glm::mat4& ProjectionMatrix);
 	void DrawDivider(float Width, std::uint32_t Color);
 
-	void PlayerData(std::shared_ptr<CPlayer> Player);
+	void PlayerData(std::shared_ptr<CPlayer>& Player);
 	void RifleData(std::shared_ptr<CRifle> Rifle);
 	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
-	void EnemiesInfo(std::shared_ptr<CScene> Scene);
+	void EnemiesInfo(std::shared_ptr<CScene>& Scene);
+	void SpriteSheetModification(std::shared_ptr<CPlayer>& Player);
+
+	namespace Input {
+		bool ActorName(CActor& Actor);
+	}
+
+	bool PickImageFile(std::filesystem::path& OutPath);
 
 	void PrepareLeftSidebar();
 	void PrepareRightSidebar();
