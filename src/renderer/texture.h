@@ -14,7 +14,6 @@ namespace platformer2d {
 	enum class ETexture : std::uint8_t
 	{
 		White,
-		Background,
 		Player,
 		Metal,
 		Bricks,
@@ -22,7 +21,9 @@ namespace platformer2d {
 		Swoosh,
 		Cloud,
 		Rifle,
+		Axe,
 		Goblin,
+		GoblinArmored,
 		COUNT
 	};
 	LK_ENUM(ETexture);
@@ -34,12 +35,19 @@ namespace platformer2d {
 		CTexture(const FTextureSpecification& Specification, const FBuffer& InData);
 		CTexture(std::uint32_t InWidth, std::uint32_t InHeight, void* InData = nullptr);
 		CTexture() = delete;
+		CTexture(CTexture&&) = delete;
+		CTexture(const CTexture&) = default;
 		~CTexture();
+
+		CTexture& operator=(CTexture&&) = delete;
+		CTexture& operator=(const CTexture&) = delete;
 
 		void Bind(std::uint32_t Slot = 0) const;
 		void Unbind(std::uint32_t Slot = 0) const;
 
 		void Invalidate();
+
+		bool Reload(const FTextureSpecification& NewSpec);
 
 		[[nodiscard]] LRendererID GetID() const { return ID; }
 		[[nodiscard]] std::uint32_t GetWidth() const { return Width; }

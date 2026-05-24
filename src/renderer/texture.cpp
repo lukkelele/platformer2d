@@ -262,6 +262,85 @@ namespace platformer2d {
 		}
 	}
 
+	bool CTexture::Reload(const FTextureSpecification& NewSpec)
+	{
+		if (NewSpec.Path.empty() || !std::filesystem::exists(NewSpec.Path)) {
+			LK_ERROR_TAG("Texture", "Reload failed, path does not exist: {}", NewSpec.Path);
+			return false;
+		}
+
+		if (ID) {
+			LK_OpenGL_Verify(glDeleteTextures(1, &ID));
+			ID = 0;
+		}
+
+		LK_OpenGL_Verify(glCreateTextures(GL_TEXTURE_2D, 1, &ID));
+		LK_OpenGL_Verify(glBindTexture(GL_TEXTURE_2D, ID));
+
+		DataFormat = OpenGL::GetImageFormat(NewSpec.Format);
+		InternalFormat = OpenGL::GetImageInternalFormat(NewSpec.Format);
+		DataType = OpenGL::GetFormatDataType(NewSpec.Format);
+
+		stbi_set_flip_vertically_on_load(NewSpec.bFlipVertical);
+		int ReadWidth = 0, ReadHeight = 0, ReadChannels = 0;
+		const bool IsHdr = stbi_is_hdr(NewSpec.Path.generic_string().c_str());
+
+		constexpr int DESIRED_CHANNELS = 4;
+		void* Data = nullptr;
+		if (IsHdr) {
+			Data = stbi_loadf(NewSpec.Path.generic_string().c_str(), &ReadWidth, &ReadHeight, &ReadChannels, DESIRED_CHANNELS);
+		} else {
+			Data = stbi_load(NewSpec.Path.generic_string().c_str(), &ReadWidth, &ReadHeight, &ReadChannels, DESIRED_CHANNELS);
+		}
+		if (!Data) {
+			LK_ERROR_TAG("Texture", "Reload failed, stbi could not load: {}", NewSpec.Path);
+			return false;
+		}
+
+		if (NewSpec.bInvert && !IsHdr) {
+			InvertRgba8(Data, ReadWidth, ReadHeight);
+		}
+
+		Width = ReadWidth;
+		Height = ReadHeight;
+		Channels = ReadChannels;
+		Path = NewSpec.Path;
+		if (!NewSpec.Name.empty()) {
+			Name = NewSpec.Name;
+		}
+
+		const std::uint64_t ImageSize = OpenGL::CalculateImageSize(NewSpec.Format, Width, Height);
+		ImageBuffer.Release();
+		ImageBuffer = FBuffer::Copy(Data, ImageSize);
+
+		LK_OpenGL_Verify(glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			InternalFormat,
+			Width,
+			Height,
+			0,
+			DataFormat,
+			DataType,
+			ImageBuffer.Data
+		));
+		stbi_image_free(Data);
+
+		Mips = NewSpec.Mips;
+		const bool bMipmap = (NewSpec.Mips > 1);
+		if (bMipmap) {
+			LK_OpenGL_Verify(glGenerateTextureMipmap(ID));
+		} else {
+			LK_OpenGL_Verify(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0));
+		}
+
+		OpenGL::SetTextureWrap(NewSpec.SamplerWrap);
+		OpenGL::SetTextureFilter(NewSpec.SamplerFilter, bMipmap);
+
+		LK_TRACE_TAG("Texture", "Reloaded {} ({}x{}) Format={}", Path.filename(), Width, Height, Enum::ToString(NewSpec.Format));
+		return true;
+	}
+
 	void CTexture::SetWrap(const ETextureWrap InWrap) const
 	{
 		LK_DEBUG_TAG("Texture", "Set wrap: {} ({}) (Index {})", Enum::ToString(InWrap), Path.filename(), Slot);
