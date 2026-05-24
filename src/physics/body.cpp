@@ -69,6 +69,7 @@ namespace platformer2d {
 
 	glm::vec2 CBody::GetPosition() const
 	{
+		LK_ASSERT(b2Body_IsValid(ID), "ID={}: Invalid body", ID.index1);
 		const b2Vec2 Pos = b2Body_GetPosition(ID);
 		return glm::vec2(Pos.x, Pos.y);
 	}
@@ -448,6 +449,10 @@ namespace platformer2d {
 				Out << YAML::Key << "BlockBothSides" << YAML::Value << ShapeRef.bBlockBothSides;
 				Out << YAML::Key << "Friction" << YAML::Value << ShapeRef.Friction;
 				Out << YAML::Key << "TextureHeight" << YAML::Value << ShapeRef.TextureHeight;
+				Out << YAML::Key << "TextureSide" << YAML::Value << static_cast<std::size_t>(ShapeRef.TextureSide);
+				Out << YAML::Key << "TextureOffset" << YAML::Value << ShapeRef.TextureOffset;
+				Out << YAML::Key << "TextureTile" << YAML::Value << ShapeRef.bTextureTile;
+				Out << YAML::Key << "TextureTileWidth" << YAML::Value << ShapeRef.TextureTileWidth;
 				Out << YAML::Key << "Points" << YAML::Value << YAML::BeginSeq;
 				for (const glm::vec2& P : ShapeRef.Points) {
 					Out << P;

@@ -15,7 +15,7 @@ namespace platformer2d {
 
 	class CActor;
 
-	enum EMotionLock : uint32_t
+	enum EMotionLock : std::uint32_t
 	{
 		EMotionLock_None = 0,
 		EMotionLock_X = LK_BIT(1),
@@ -24,7 +24,7 @@ namespace platformer2d {
 		EMotionLock_All = (EMotionLock_X | EMotionLock_Y | EMotionLock_Z)
 	};
 
-	enum EBodyFlag : uint32_t
+	enum EBodyFlag : std::uint32_t
 	{
 		EBodyFlag_None = 0,
 		EBodyFlag_PreSolveEvents = LK_BIT(1),
@@ -46,8 +46,8 @@ namespace platformer2d {
 		float LinearDamping = 0.0f;
 		float AngularVelocity = 0.0f;
 		float AngularDamping = 0.0f;
-		float DirForce = 5.630f;
-		float JumpImpulse = 0.530f;
+		float DirForce = 4.560f;
+		float JumpImpulse = 0.480f;
 		std::underlying_type_t<EBodyFlag> Flags = EBodyFlag_None;
 		std::underlying_type_t<EMotionLock> MotionLock = EMotionLock_None;
 		bool bSensor = false;
@@ -60,14 +60,20 @@ namespace platformer2d {
 	public:
 		CBody(const FBodySpecification& Spec, CActor* Owner);
 		CBody() = delete;
+		CBody(CBody&&) = delete;
+		CBody(const CBody&) = delete;
 		~CBody();
+
+		CBody& operator=(CBody&&) = delete;
+		CBody& operator=(const CBody&) = delete;
 
 		void Tick(float InDeltaTime);
 
-		const b2BodyId& GetID() const { return ID; }
-		const b2ShapeId& GetShapeID() const { return ShapeID; }
-		const b2ChainId& GetChainID() const { return ChainID; }
-		EBodyType GetType() const;
+		[[nodiscard]] const b2BodyId& GetID() const { return ID; }
+		[[nodiscard]] const b2ShapeId& GetShapeID() const { return ShapeID; }
+		[[nodiscard]] const b2ChainId& GetChainID() const { return ChainID; }
+		[[nodiscard]] EBodyType GetType() const;
+		[[nodiscard]] const FBodySpecification& GetSpecification() const { return BodySpec; }
 
 		bool IsEnabled() const;
 		void SetEnabled(bool Enabled) const;
@@ -126,7 +132,7 @@ namespace platformer2d {
 		float GetFriction() const;
 		void SetFriction(float Friction) const;
 
-		inline const TShape& GetShape() const { return Shape; }
+		[[nodiscard]] const TShape& GetShape() const { return Shape; }
 
 		/**
 		 * @brief Safe shape accessor.
@@ -156,7 +162,7 @@ namespace platformer2d {
 
 		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
-		static std::string ToString(const FBodySpecification& Spec);
+		[[nodiscard]] static std::string ToString(const FBodySpecification& Spec);
 
 	public:
 		static constexpr float LINEAR_VELOCITY_X_EPSILON = 0.010f;
