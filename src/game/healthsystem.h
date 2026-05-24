@@ -21,10 +21,10 @@ namespace platformer2d {
 		void Initialize(CGameInstance& Owner) override {}
 		void Shutdown() override {}
 
-		bool IsDamageable(CActor* Target);
-		bool ApplyDamage(CActor* Target, float Amount);
-		bool Heal(CActor* Target, float Amount);
-		bool Kill(CActor* Target);
+		bool IsDamageable(CActor& Target);
+		bool ApplyDamage(CActor& Target, float Amount);
+		bool Heal(CActor& Target, float Amount);
+		bool Kill(CActor& Target);
 	};
 
 }

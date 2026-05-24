@@ -6,73 +6,70 @@
 
 namespace platformer2d {
 
-	bool CHealthSystem::IsDamageable(CActor* const Target)
+	bool CHealthSystem::IsDamageable(CActor& Target)
 	{
-		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
+		FHealthComponent* HC = Target.TryGetComponent<FHealthComponent>();
 		return HC ? HC->IsDamageable() : false;
 	}
 
-	bool CHealthSystem::ApplyDamage(CActor* const Target, const float Amount)
+	bool CHealthSystem::ApplyDamage(CActor& Target, const float Amount)
 	{
-		if (!Target || (Amount <= 0.0f)) {
+		if (Amount <= 0.0f) {
 			return false;
 		}
 
-		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
+		FHealthComponent* HC = Target.TryGetComponent<FHealthComponent>();
 		if (!HC) {
 			return false;
 		}
 		if (!HC->IsDamageable()) {
-			LK_DEBUG_TAG("Health", "[{}] Damage skipped (not damageable)", Target->GetName());
+			LK_DEBUG_TAG("Health", "[{}] Damage skipped (not damageable)", Target.GetName());
 			return false;
 		}
 
 		HC->SetHealth(HC->GetHealth() - Amount);
-		LK_DEBUG_TAG("Health", "[{}] -{} HP -> {}/{}", Target->GetName(), Amount, HC->GetHealth(), HC->GetMaxHealth());
+		LK_DEBUG_TAG("Health", "[{}] -{} HP -> {}/{}", Target.GetName(), Amount, HC->GetHealth(), HC->GetMaxHealth());
 
 		if (HC->IsDead()) {
-			LK_INFO_TAG("Health", "[{}] Killed", Target->GetName());
-			Target->OnDeath();
+			LK_INFO_TAG("Health", "[{}] Killed", Target.GetName());
+			Target.OnDeath(EDeathReason::Damage);
 			return true;
 		}
 
 		return false;
 	}
 
-	bool CHealthSystem::Heal(CActor* const Target, const float Amount)
+	bool CHealthSystem::Heal(CActor& Target, const float Amount)
 	{
-		if (!Target || Amount <= 0.0f) {
+		if (Amount <= 0.0f) {
 			return false;
 		}
 
-		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
+		FHealthComponent* HC = Target.TryGetComponent<FHealthComponent>();
+		LK_ASSERT(HC, R"(Target "{}" has no health component)", Target.GetName());
 		if (!HC) {
-			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target->GetName());
+			LK_ERROR_TAG("HealthSystem", R"(Target "{}" has no health component)", Target.GetName());
 			return false;
 		}
 
 		const float NewHealth = std::min(HC->GetHealth() + Amount, HC->GetMaxHealth());
 		HC->SetHealth(NewHealth);
-		LK_DEBUG_TAG("Health", "[{}] +{} HP -> {}/{}", Target->GetName(), Amount, HC->GetHealth(), HC->GetMaxHealth());
+		LK_DEBUG_TAG("Health", "[{}] +{} HP -> {}/{}", Target.GetName(), Amount, HC->GetHealth(), HC->GetMaxHealth());
 
 		return true;
 	}
 
-	bool CHealthSystem::Kill(CActor* const Target)
+	bool CHealthSystem::Kill(CActor& Target)
 	{
-		if (!Target) {
-			return false;
-		}
-
-		FHealthComponent* HC = Target->TryGetComponent<FHealthComponent>();
+		FHealthComponent* HC = Target.TryGetComponent<FHealthComponent>();
 		if (!HC) {
-			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target->GetName());
+			LK_WARN_TAG("HealthSystem", R"(Target "{}" has no health component)", Target.GetName());
 			return false;
 		}
 
 		HC->SetHealth(0.0f);
-		LK_INFO_TAG("Health", "[{}] Killed (forced)", Target->GetName());
-		Target->OnDeath();
+		LK_INFO_TAG("Health", "[{}] Killed (forced)", Target.GetName());
+		Target.OnDeath(EDeathReason::KillCommand);
 
 		return true;
 	}
