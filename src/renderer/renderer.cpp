@@ -13,10 +13,11 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
-#include "core/settings.h"
-#include "core/window.h"
 #include "core/profiler.h"
+#include "core/settings.h"
+#include "core/string.h"
 #include "core/timer.h"
+#include "core/window.h"
 #include "backendinfo.h"
 #include "debugrenderer.h"
 #include "opengl.h"
@@ -43,19 +44,20 @@ namespace platformer2d {
 	namespace {
 		struct FRendererData
 		{
-			uint16_t FrameIndex = 0;
-			uint16_t RefreshRate = 0;
+			std::uint16_t FrameIndex = 0;
+			std::uint16_t RefreshRate = 0;
 			std::shared_ptr<CTexture> WhiteTexture = nullptr;
 			std::shared_ptr<CFramebuffer> ViewportFramebuffer = nullptr;
-			std::unordered_map<ETexture, std::shared_ptr<CTexture>> Textures;
+			std::map<ETexture, std::shared_ptr<CTexture>> Textures;
+			std::map<ETexture, FSpriteSheet> SpriteSheets;
 
 			struct
 			{
 				bool bBlending = false;
-				uint32_t BlendSource = 0;
-				uint32_t BlendDestination = 0;
+				std::uint32_t BlendSource = 0;
+				std::uint32_t BlendDestination = 0;
 				bool bDepthTest = false;
-				uint32_t DepthFunc = 0;
+				std::uint32_t DepthFunc = 0;
 			} GL;
 		};
 	}
@@ -109,7 +111,6 @@ namespace platformer2d {
 		}
 
 		LoadTextures();
-		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
 		LoadFonts();
 
 		CreateFramebuffer();
@@ -369,13 +370,11 @@ namespace platformer2d {
 
 	void CRenderer::LoadTextures()
 	{
-		Data.Textures.reserve(MaxTextures);
-
 		auto LoadTexture = [](std::string_view Path, const ETexture Texture,
 							   const EImageFormat Format = EImageFormat::RGBA8,
 							   const glm::vec2& Size = {0.0f, 0.0f}) -> void
 		{
-			LK_VERIFY(std::filesystem::exists(Path), "Texture {} does not exist", static_cast<int>(Texture));
+			LK_VERIFY(std::filesystem::exists(Path), "Texture {} has no path", Enum::ToString(Texture));
 			LK_VERIFY(!Data.Textures.contains(Texture));
 			FTextureSpecification Spec = {
 				.Path = Path.data(),
@@ -393,8 +392,23 @@ namespace platformer2d {
 			Data.Textures.emplace(std::make_pair(Texture, std::make_shared<CTexture>(Spec)));
 		};
 
+		auto LoadSpriteSheet = [&](const ETexture Texture) -> void
+		{
+			LK_VERIFY(!Data.SpriteSheets.contains(Texture), "Sprite sheet already loaded: {}", Enum::ToString(Texture));
+			const std::string SpritePath = std::format("{}/sprites/{}.lsprite", TEXTURES_DIR, Enum::ToString(Texture));
+			if (!std::filesystem::exists(SpritePath)) {
+				LK_TRACE_TAG("Renderer", "No sprite sheet for: {}", Enum::ToString(Texture));
+				return;
+			}
+
+			FSpriteReader Reader;
+			std::optional<FSpriteSheet> LoadedSheet = Reader.Read(SpritePath);
+			LK_VERIFY(LoadedSheet, "Failed to load: {} ({})", Enum::ToString(Texture), StringUtils::GetPathRelativeToProject(SpritePath));
+			LK_DEBUG_TAG("Renderer", "Load sprite: {} ({})", Enum::ToString(Texture), StringUtils::GetPathRelativeToProject(SpritePath));
+			Data.SpriteSheets.emplace(Texture, std::move(*LoadedSheet));
+		};
+
 		LoadTexture(TEXTURES_DIR "/white.png", ETexture::White, EImageFormat::RGBA8, {1.0f, 1.0f});
-		LoadTexture(TEXTURES_DIR "/sunny.png", ETexture::Background, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/characters.png", ETexture::Player, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/metal.png", ETexture::Metal, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/bricks.png", ETexture::Bricks, EImageFormat::RGBA8);
@@ -402,8 +416,15 @@ namespace platformer2d {
 		LoadTexture(TEXTURES_DIR "/swoosh.png", ETexture::Swoosh, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/cloud-1.png", ETexture::Cloud, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/ar15.png", ETexture::Rifle, EImageFormat::RGBA8);
+		LoadTexture(TEXTURES_DIR "/white.png", ETexture::Axe, EImageFormat::RGBA8);
 		LoadTexture(TEXTURES_DIR "/goblin.png", ETexture::Goblin, EImageFormat::RGBA8);
 		Data.WhiteTexture = Data.Textures[ETexture::White];
+		LK_INFO_TAG("Renderer", "Loaded {} textures", Data.Textures.size());
+
+		for (const auto& [Texture, TextureRef] : Data.Textures) {
+			LoadSpriteSheet(Texture);
+		}
+		LK_INFO_TAG("Renderer", "Loaded {} sprite sheets", Data.SpriteSheets.size());
 	}
 
 	void CRenderer::LoadFonts()
@@ -923,6 +944,23 @@ namespace platformer2d {
 		DrawLine(P0, P1, Color);
 	}
 
+	void CRenderer::DrawCrossMark(const glm::vec2& Pos, const glm::vec4& Color, const std::uint16_t LineWidth, const float CrossArm, const float MarkerRadius)
+	{
+		DrawCrossMark(glm::vec3(Pos, 0.0f), Color, LineWidth, CrossArm, MarkerRadius);
+	}
+
+	void CRenderer::DrawCrossMark(const glm::vec3& Pos, const glm::vec4& Color, const std::uint16_t LineWidth, const float CrossArm, const float MarkerRadius)
+	{
+		const glm::vec3 SpV3 = {Pos.x, Pos.y, 0.0f};
+		const glm::vec3 LeftV = {Pos.x - CrossArm, Pos.y, 0.0f};
+		const glm::vec3 RightV = {Pos.x + CrossArm, Pos.y, 0.0f};
+		const glm::vec3 BotV = {Pos.x, Pos.y - CrossArm, 0.0f};
+		const glm::vec3 TopV = {Pos.x, Pos.y + CrossArm, 0.0f};
+		DrawLine(LeftV, RightV, Color, LineWidth);
+		DrawLine(BotV, TopV, Color, LineWidth);
+		DrawCircleFilled(SpV3, MarkerRadius, Color);
+	}
+
 	void CRenderer::DrawText(const CFontAtlas& Font, const std::string_view Text, const glm::vec3& Pos,
 		const float Scale, const glm::vec4& Color, const glm::vec4& OutlineColor, const float OutlineWidth)
 	{
@@ -1086,13 +1124,38 @@ namespace platformer2d {
 
 	std::shared_ptr<CTexture> CRenderer::GetTexture(const ETexture Texture)
 	{
-		LK_ASSERT(Data.Textures.contains(Texture));
+		LK_ASSERT(Data.Textures.contains(Texture), "Not loaded: {}", Enum::ToString(Texture));
 		return Data.Textures[Texture];
 	}
 
-	const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& CRenderer::GetTextures()
+	ETexture CRenderer::GetTexture(const std::filesystem::path& Path)
+	{
+		for (const auto& [Texture, Ref] : Data.Textures) {
+			if (Ref) {
+				const std::filesystem::path TexturePath = StringUtils::GetPathRelativeToAssetsDir(Ref->GetFilePath());
+				if (Path == TexturePath) {
+					return Texture;
+				}
+			}
+		}
+		return ETexture::White;
+	}
+
+	const std::map<ETexture, std::shared_ptr<CTexture>>& CRenderer::GetTextures()
 	{
 		return Data.Textures;
+	}
+
+	const FSpriteSheet* CRenderer::GetSpriteSheet(const ETexture Texture)
+	{
+		const auto Iter = Data.SpriteSheets.find(Texture);
+		return (Iter != Data.SpriteSheets.end()) ? &Data.SpriteSheets.find(Texture)->second : nullptr;
+	}
+
+	FSpriteSheet* CRenderer::GetSpriteSheetMutable(const ETexture Texture)
+	{
+		const auto Iter = Data.SpriteSheets.find(Texture);
+		return (Iter != Data.SpriteSheets.end()) ? &Iter->second : nullptr;
 	}
 
 	std::shared_ptr<CShader> CRenderer::GetShader(const CShader::EType ShaderType)

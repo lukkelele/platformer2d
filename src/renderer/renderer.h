@@ -21,6 +21,7 @@
 namespace platformer2d {
 
 	class CRenderThread;
+	struct FSpriteSheet;
 
 	struct FQuadVertex
 	{
@@ -124,6 +125,8 @@ namespace platformer2d {
 		static void DrawCircleFilled(const glm::vec3& P0, float Radius, const glm::vec4& Color, float Thickness = 1.0f);
 
 		static void DrawTransform(const glm::mat4& Transform, float Scale = 1.0f, const glm::vec4& Color = FColor::Magenta);
+		static void DrawCrossMark(const glm::vec2& Pos, const glm::vec4& Color = FColor::Black, std::uint16_t LineWidth = 2, float CrossArm = 0.08f, float MarkerRadius = 0.020f);
+		static void DrawCrossMark(const glm::vec3& Pos, const glm::vec4& Color = FColor::Black, std::uint16_t LineWidth = 2, float CrossArm = 0.08f, float MarkerRadius = 0.020f);
 
 		static void DrawText(const CFontAtlas& Font, std::string_view Text, const glm::vec3& Pos, float Scale = 0.30f, const glm::vec4& Color = FColor::White, const glm::vec4& OutlineColor = FColor::Transparent, float OutlineWidth = 0.0f);
 		static void DrawText(std::string_view Text, const glm::vec3& Pos, float Scale = 0.30f, const glm::vec4& Color = FColor::White, const glm::vec4& OutlineColor = FColor::Transparent, float OutlineWidth = 0.0f);
@@ -155,7 +158,10 @@ namespace platformer2d {
 
 		[[nodiscard]] static std::shared_ptr<CTexture> GetWhiteTexture();
 		[[nodiscard]] static std::shared_ptr<CTexture> GetTexture(ETexture Texture);
-		[[nodiscard]] static const std::unordered_map<ETexture, std::shared_ptr<CTexture>>& GetTextures();
+		[[nodiscard]] static ETexture GetTexture(const std::filesystem::path& Path);
+		[[nodiscard]] static const std::map<ETexture, std::shared_ptr<CTexture>>& GetTextures();
+		[[nodiscard]] static const FSpriteSheet* GetSpriteSheet(ETexture Texture);
+		[[nodiscard]] static FSpriteSheet* GetSpriteSheetMutable(ETexture Texture);
 		[[nodiscard]] static std::shared_ptr<CShader> GetShader(CShader::EType ShaderType);
 
 		static void SetBlending(bool Enabled);
