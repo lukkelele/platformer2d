@@ -120,6 +120,10 @@ void main()
 
     if (v_outlinethickness == 0.0)
     {
+        if (base_color.a <= 0.0)
+        {
+            discard;
+        }
         color = vec4(base_color.rgb * u_brightness, base_color.a);
         return;
     }
@@ -138,6 +142,10 @@ void main()
     }
     else
     {
+        if (base_color.a <= 0.0)
+        {
+            discard;
+        }
         color = vec4(base_color.rgb * u_brightness, base_color.a);
     }
 
