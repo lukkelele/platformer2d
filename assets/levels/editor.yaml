@@ -1,9 +1,9 @@
 Level: Editor
-Scene: assets/scenes/LukkelelesWorld.lscene
+Scene: assets/scenes/FiringRange.lscene
 PlayerSpawn: [-0.43, -0.48]
 CameraZoom: 0.35
-EditorCameraPos: [0.95148706, -1.2897294]
-EditorCameraZoom: 0.39854383
+EditorCameraPos: [0.26118758, -0.35996526]
+EditorCameraZoom: 0.39999986
 EditorCameraLerp: true
 Physics:
   Gravity: [0, -5]
