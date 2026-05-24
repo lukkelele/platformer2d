@@ -3,7 +3,9 @@ Actors:
   - ID: 5128418
     Type: 0
     Name: SpawnPlatform
-    Texture: 5
+    Flags: 0
+    Texture: 4
+    TexturePath: assets/textures/wood.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -30,7 +32,9 @@ Actors:
   - ID: 3228445016720479417
     Type: 0
     Name: PickupSensor
-    Texture: 8
+    Flags: 0
+    Texture: 7
+    TexturePath: assets/textures/ar15.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -65,7 +69,9 @@ Actors:
   - ID: 15990891867282018781
     Type: 0
     Name: SpawnPlatform_L
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [0, 0, 0, 1]
     Deletable: true
     Outline:
@@ -92,7 +98,9 @@ Actors:
   - ID: 701761141178170648
     Type: 0
     Name: SpawnPlatform_L2
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [0, 0, 0, 1]
     Deletable: true
     Outline:
@@ -119,7 +127,9 @@ Actors:
   - ID: 9256023951461460780
     Type: 0
     Name: Actor-7
-    Texture: 4
+    Flags: 0
+    Texture: 2
+    TexturePath: assets/textures/metal.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -146,7 +156,9 @@ Actors:
   - ID: 53049546525723785
     Type: 0
     Name: Actor-8
-    Texture: 4
+    Flags: 0
+    Texture: 3
+    TexturePath: assets/textures/bricks.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -173,7 +185,9 @@ Actors:
   - ID: 14273804503324569173
     Type: 0
     Name: Actor-9
-    Texture: 5
+    Flags: 0
+    Texture: 2
+    TexturePath: assets/textures/metal.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -200,7 +214,9 @@ Actors:
   - ID: 10201305046586675725
     Type: 0
     Name: Polygon31377
-    Texture: 3
+    Flags: 0
+    Texture: 2
+    TexturePath: assets/textures/metal.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -227,7 +243,9 @@ Actors:
   - ID: 12630086009550323143
     Type: 0
     Name: Polygon25906
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [0, 1, 0, 1]
     Deletable: true
     Outline:
@@ -254,7 +272,9 @@ Actors:
   - ID: 14264624605002909565
     Type: 0
     Name: Polygon26886
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -281,7 +301,9 @@ Actors:
   - ID: 13353547355279602666
     Type: 0
     Name: Polygon45790
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -308,7 +330,9 @@ Actors:
   - ID: 13892995572850106145
     Type: 0
     Name: Polygon43494
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -335,7 +359,9 @@ Actors:
   - ID: 9243632943422268573
     Type: 0
     Name: Actor-15
-    Texture: 7
+    Flags: 0
+    Texture: 6
+    TexturePath: assets/textures/cloud-1.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -362,7 +388,9 @@ Actors:
   - ID: 2039619565334997909
     Type: 0
     Name: Polygon21644
+    Flags: 0
     Texture: 0
+    TexturePath: assets/textures/white.png
     Color: [0, 0, 0, 0]
     Deletable: true
     Outline:
@@ -389,7 +417,9 @@ Actors:
   - ID: 8048995373038793859
     Type: 0
     Name: Cloud1
-    Texture: 7
+    Flags: 0
+    Texture: 6
+    TexturePath: assets/textures/cloud-1.png
     Color: [1, 1, 1, 1]
     Deletable: true
     Outline:
@@ -397,7 +427,7 @@ Actors:
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [-2.2, -0.175, 0]
+      Position: [-2.075, -0.075, 0]
       Rotation: 0
       Scale: [1.4, 1.4, 1]
     Body:
@@ -408,7 +438,7 @@ Actors:
         Size: [1.4, 1.4]
         Rotation: 0
         Radius: 0.5
-      Position: [-2.2, -0.175]
+      Position: [-2.075, -0.075]
       Flags: 2
       Mass: 1
       MotionLock: 0

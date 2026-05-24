@@ -1,0 +1,138 @@
+Name: SensorTest
+Actors:
+  - ID: 1643993609784039960
+    Type: 0
+    Name: BasePlatform
+    Flags: 0
+    Texture: 0
+    TexturePath: assets/textures/white.png
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: false
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-0.425, -0.825, 0]
+      Rotation: 0
+      Scale: [1, 1, 1]
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 16
+        Loop: false
+        BlockBothSides: false
+        Friction: 0.6
+        TextureHeight: 0.2
+        TextureSide: 4
+        TextureOffset: 0
+        TextureTile: false
+        TextureTileWidth: 0
+        Points:
+          - [-2.45, 0]
+          - [-0.5, 0]
+          - [0.5, 0]
+          - [1, 0]
+          - [3.05, 0]
+      Position: [-0.425, -0.825]
+      Flags: 2
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+  - ID: 14511733853288753020
+    Type: 0
+    Name: Heal-Sensor
+    Flags: 0
+    Texture: 0
+    TexturePath: assets/textures/white.png
+    Color: [0, 1, 0, 0.74]
+    Deletable: true
+    Outline:
+      Enabled: false
+      Thickness: 4
+      Color: [0, 0, 0, 1]
+    TransformComponent:
+      Position: [-1.125, -0.55, 0.95]
+      Rotation: 0
+      Scale: [0.2, 0.47, 1]
+    InteractionComponent:
+      InteractionType: 3
+      Amount: 25
+      ConsumeOnUse: true
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.2, 0.47]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-1.125, -0.55]
+      Flags: 10
+      Mass: 1
+      MotionLock: 0
+      Sensor: true
+  - ID: 14309977818943134285
+    Type: 0
+    Name: Killzone-Sensor
+    Flags: 0
+    Texture: 0
+    TexturePath: assets/textures/white.png
+    Color: [0.31, 0.8, 1, 1]
+    Deletable: true
+    Outline:
+      Enabled: false
+      Thickness: 2
+      Color: [0, 0, 0, 1]
+    TransformComponent:
+      Position: [1.075, -0.55, 0]
+      Rotation: 0
+      Scale: [0.15, 0.4, 1]
+    InteractionComponent:
+      InteractionType: 4
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.15, 0.4]
+        Rotation: 0
+        Radius: 0.5
+      Position: [1.075, -0.55]
+      Flags: 10
+      Mass: 1
+      MotionLock: 0
+      Sensor: true
+  - ID: 14166512880857763302
+    Type: 0
+    Name: Damage-Sensor
+    Flags: 0
+    Texture: 0
+    TexturePath: assets/textures/white.png
+    Color: [1, 0, 0, 0.76]
+    Deletable: true
+    Outline:
+      Enabled: false
+      Thickness: 3.6
+      Color: [0, 0, 0, 1]
+    TransformComponent:
+      Position: [0.15, -0.575, 0]
+      Rotation: 0
+      Scale: [0.15, 0.4, 1]
+    InteractionComponent:
+      InteractionType: 1
+      Damage: 0
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.15, 0.4]
+        Rotation: 0
+        Radius: 0.5
+      Position: [0.15, -0.575]
+      Flags: 10
+      Mass: 1
+      MotionLock: 0
+      Sensor: true
