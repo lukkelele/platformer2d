@@ -73,9 +73,7 @@ namespace platformer2d {
 			Container.reserve(Actors.size());
 
 			for (const auto& Actor : Actors) {
-				if (!Actor) {
-					continue;
-				}
+				LK_ASSERT(Actor);
 
 				/* @todo: Use dynamic casting until derived class type can be used for runtime checks */
 				if (const auto Casted = std::dynamic_pointer_cast<T>(Actor)) {
@@ -91,8 +89,20 @@ namespace platformer2d {
 		{
 			std::vector<std::shared_ptr<T>> Result;
 			GetAllOfType<T>(Result);
-
 			return Result;
+		}
+
+		std::size_t GetAllWithFlags(EActorFlag Flags, std::vector<std::shared_ptr<CActor>>& Container)
+		{
+			Container.clear();
+			Container.reserve(Actors.size());
+			for (const auto& Actor : Actors) {
+				LK_ASSERT(Actor);
+				if (Actor->HasFlag(Flags)) {
+					Container.push_back(Actor);
+				}
+			}
+			return Container.size();
 		}
 
 		bool DoesActorExist(LUUID Handle);

@@ -58,19 +58,64 @@ namespace platformer2d {
 		const ETexture Texture = Actor.GetTexture();
 		const std::size_t Last = Chain.bLoop ? Count : (Count - 1);
 		const bool Textured = (Texture != ETexture::White) && (Chain.TextureHeight > 0.0f);
-		if (Textured) {
-			for (std::size_t Idx = 0; Idx < Last; Idx++) {
-				const glm::vec2 P0 = Origin + Chain.Points[Idx];
-				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
-				const glm::vec2 Center = (P0 + P1) * 0.50f;
-				const float AngleDeg = glm::degrees(std::atan2(P1.y - P0.y, P1.x - P0.x));
-				CRenderer::DrawQuad(Center, glm::vec2(glm::length(P1 - P0), Chain.TextureHeight), Texture, Color, AngleDeg);
-			}
-		} else {
+		if (!Textured) {
 			for (std::size_t Idx = 0; Idx < Last; Idx++) {
 				const glm::vec2 P0 = Origin + Chain.Points[Idx];
 				const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
 				CRenderer::DrawLine(P0, P1, Color, 4);
+			}
+			return;
+		}
+
+		const float SideSign = (Chain.TextureSide == EDirection::Up) ? 1.0f
+			: (Chain.TextureSide == EDirection::Down)                ? -1.0f
+																	 : 0.0f;
+		const bool HasSide = (SideSign != 0.0f);
+		const float HalfHeight = Chain.TextureHeight * 0.50f;
+		const float TileWidth = (Chain.TextureTileWidth > 0.0f) ? Chain.TextureTileWidth : Chain.TextureHeight;
+		const bool CanTile = Chain.bTextureTile && (TileWidth > 0.0f);
+
+		for (std::size_t Idx = 0; Idx < Last; Idx++) {
+			const glm::vec2 P0 = Origin + Chain.Points[Idx];
+			const glm::vec2 P1 = Origin + Chain.Points[(Idx + 1) % Count];
+			const glm::vec2 Edge = P1 - P0;
+			const float Length = glm::length(Edge);
+			if (Length <= 0.0f) {
+				continue;
+			}
+
+			const glm::vec2 Dir = Edge / Length;
+			const glm::vec2 Perp = {-Dir.y, Dir.x};
+			const float AngleDeg = glm::degrees(std::atan2(Dir.y, Dir.x));
+			const float PerpShift = (HasSide ? HalfHeight * SideSign : 0.0f) + Chain.TextureOffset;
+			const glm::vec2 Shift = Perp * PerpShift;
+
+			if (!CanTile) {
+				const glm::vec2 Center = (P0 + P1) * 0.50f + Shift;
+				CRenderer::DrawQuad(Center, glm::vec2(Length, Chain.TextureHeight), Texture, Color, AngleDeg);
+				continue;
+			}
+
+			const std::size_t FullTiles = static_cast<std::size_t>(std::floor(Length / TileWidth));
+			const float PartialLen = Length - (FullTiles * TileWidth);
+
+			for (std::size_t TileIdx = 0; TileIdx < FullTiles; TileIdx++) {
+				const float TileStart = TileIdx * TileWidth + (TileWidth * 0.50f);
+				const glm::vec2 TileCenter = P0 + Dir * TileStart + Shift;
+				CRenderer::DrawQuad(TileCenter, glm::vec2(TileWidth, Chain.TextureHeight), Texture, Color, AngleDeg);
+			}
+
+			if (PartialLen > 0.0f) {
+				const float Frac = PartialLen / TileWidth;
+				const float TileStart = FullTiles * TileWidth + (PartialLen * 0.50f);
+				const glm::vec2 TileCenter = P0 + Dir * TileStart + Shift;
+				const std::array<glm::vec2, 4> TexCoords = {
+					glm::vec2(0.0f, 0.0f),
+					glm::vec2(0.0f, 1.0f),
+					glm::vec2(Frac, 1.0f),
+					glm::vec2(Frac, 0.0f)};
+				CRenderer::DrawQuad(TileCenter, glm::vec2(PartialLen, Chain.TextureHeight),
+					*CRenderer::GetTexture(Texture), std::span<const glm::vec2, 4>(TexCoords), Color, AngleDeg);
 			}
 		}
 	}
@@ -275,15 +320,19 @@ namespace platformer2d {
 	{
 		LK_DEBUG_TAG("Scene", "Deserializing actors");
 		for (const YAML::Node& Node : ActorsNode) {
-			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Texture"] && Node["Color"] && Node["TransformComponent"]);
+			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Flags"] && Node["TexturePath"] && Node["Color"] && Node["TransformComponent"]);
 			FActorSpecification ActorSpec;
 			ActorSpec.Handle = Node["ID"].as<LUUID>();
 			ActorSpec.Name = Node["Name"].as<std::string>();
+			ActorSpec.Flags = static_cast<EActorFlag>(Node["Flags"].as<std::underlying_type_t<EActorFlag>>());
 			const EActorType ActorType = static_cast<EActorType>(Node["Type"].as<std::size_t>());
 			ActorSpec.Type = ActorType;
 			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorSpec.Name, ActorSpec.Handle);
 
-			ActorSpec.Texture = static_cast<ETexture>(Node["Texture"].as<std::underlying_type_t<ETexture>>());
+			const std::string TexturePath = Node["TexturePath"].as<std::string>();
+			ActorSpec.Texture = CRenderer::GetTexture(TexturePath);
+			LK_TRACE_TAG("Scene", "Deserialize: {} -> {}", TexturePath, Enum::ToString(ActorSpec.Texture));
+
 			ActorSpec.Color = Node["Color"].as<glm::vec4>();
 
 			const YAML::Node& OutlineNode = Node["Outline"];
