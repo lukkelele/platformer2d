@@ -199,6 +199,6 @@ struct lklog::fmt::formatter<b2Vec2>
 	template<typename FormatContext>
 	auto format(const b2Vec2& Input, FormatContext& Context) const
 	{
-		return lklog::fmt::format_to(Context.out(), "({:.2f}, {:.2f})", Input.x, Input.y);
+		return lklog::fmt::format_to(Context.out(), "{{{:.2f}, {:.2f}}}", Input.x, Input.y);
 	}
 };

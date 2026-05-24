@@ -105,12 +105,13 @@ namespace platformer2d {
 		}
 	}
 
-	enum class EDirection
+	enum class EDirection : std::uint8_t
 	{
 		Up,
 		Down,
 		Left,
 		Right,
+		None,
 		COUNT
 	};
 	LK_ENUM(EDirection);
