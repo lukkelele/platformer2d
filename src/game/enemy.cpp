@@ -22,21 +22,14 @@ namespace platformer2d {
 		HC.SetMaxHealth(Archetype.MaxHealth);
 		HC.SetHealth(Archetype.MaxHealth);
 
-		std::string_view SpritePath;
-		if (Texture == ETexture::Goblin) {
-			SpritePath = TEXTURES_DIR "/sprites/Goblin.lsprite";
-		}
-		FSpriteReader Reader;
-		std::optional<FSpriteSheet> LoadedSheet = Reader.Read(SpritePath);
-		LK_ASSERT(LoadedSheet, "Failed to read: {}", SpritePath);
-		SpriteSheet = std::move(*LoadedSheet);
-
-		const FSpriteCoord InitialFrame = SpriteSheet.Get(ESpriteFrame::Idle).First();
+		SpriteSheet = CRenderer::GetSpriteSheet(Texture);
+		LK_ASSERT(SpriteSheet, "Sprite sheet not loaded: {}", Enum::ToString(Texture));
+		const FSpriteCoord InitialFrame = SpriteSheet->Get(ESpriteFrame::Idle).First();
 		SpriteFrame.Current = InitialFrame;
 		SpriteFrame.Next = InitialFrame;
 
 		const glm::vec2 TilePos{InitialFrame.X, InitialFrame.Y};
-		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet.TileSize);
+		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet->TileSize);
 		LK_DEBUG_TAG("Enemy", R"([{}] {} Texture="{}" TilePos={})", Name, Enum::ToString(ArchetypeKind), Enum::ToString(Texture), TilePos);
 
 		SetSpawnPoint(InSpec.SpawnPoint);
@@ -124,12 +117,12 @@ namespace platformer2d {
 
 	void CEnemy::Kill()
 	{
-		CGameInstance::Get().GetSystem<CHealthSystem>().Kill(this);
+		CGameInstance::Get().GetSystem<CHealthSystem>().Kill(*this);
 	}
 
-	void CEnemy::OnDeath()
+	void CEnemy::OnDeath(const EDeathReason Reason)
 	{
-		LK_DEBUG_TAG("Enemy", "[{}] OnDeath", GetName());
+		LK_DEBUG_TAG("Enemy", "[{}] OnDeath: {}", GetName(), Enum::ToString(Reason));
 		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
 		SetFlag(EActorFlag_Transparent, 1);
 		if (Body) {
@@ -232,7 +225,7 @@ namespace platformer2d {
 			return;
 		}
 
-		const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle);
+		const FSpriteAnimation* IdleAnim = SpriteSheet->Find(ESpriteFrame::Idle);
 		LK_ASSERT(IdleAnim, "{}: Missing anim", GetName());
 		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		SpriteFrame.Next = IdleAnim->GetFrame(FrameIndex);
@@ -244,13 +237,13 @@ namespace platformer2d {
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 		if (std::abs(LinearVelocity.x) < CBody::LINEAR_VELOCITY_X_EPSILON) {
 			SetMovementState(EMovementState::Idle);
-			const FSpriteAnimation* IdleAnim = SpriteSheet.Find(ESpriteFrame::Idle);
+			const FSpriteAnimation* IdleAnim = SpriteSheet->Find(ESpriteFrame::Idle);
 			LK_ASSERT(IdleAnim, "{}: Missing anim", GetName());
 			SpriteFrame.Next = IdleAnim->First();
 			return;
 		}
 
-		const FSpriteAnimation* WalkAnim = SpriteSheet.Find(ESpriteFrame::Walk);
+		const FSpriteAnimation* WalkAnim = SpriteSheet->Find(ESpriteFrame::Walk);
 		LK_ASSERT(WalkAnim, "{}: Missing anim", GetName());
 		const std::uint16_t FrameIndex = CRenderer::GetFrameIndex();
 		SpriteFrame.Next = WalkAnim->GetFrame(FrameIndex);
@@ -261,11 +254,11 @@ namespace platformer2d {
 		LK_ASSERT(Body);
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 		if (LinearVelocity.y > CBody::LINEAR_VELOCITY_Y_EPSILON) {
-			if (const FSpriteAnimation* Anim = SpriteSheet.Find(ESpriteFrame::JumpAscend); Anim != nullptr) {
+			if (const FSpriteAnimation* Anim = SpriteSheet->Find(ESpriteFrame::JumpAscend); Anim != nullptr) {
 				SpriteFrame.Next = Anim->First();
 			}
 		} else if (LinearVelocity.y < -CBody::LINEAR_VELOCITY_Y_EPSILON) {
-			if (const FSpriteAnimation* Anim = SpriteSheet.Find(ESpriteFrame::JumpDescend); Anim != nullptr) {
+			if (const FSpriteAnimation* Anim = SpriteSheet->Find(ESpriteFrame::JumpDescend); Anim != nullptr) {
 				SpriteFrame.Next = Anim->First();
 			}
 		}
@@ -282,7 +275,7 @@ namespace platformer2d {
 		const int Capacity = std::min(b2Body_GetContactCapacity(BodyID), MAX_CONTACTS);
 
 		bool bGrounded = false;
-		std::array<b2ContactData, MAX_CONTACTS> ContactData = { 0 };
+		std::array<b2ContactData, MAX_CONTACTS> ContactData = {0};
 		const int Count = b2Body_GetContactData(BodyID, ContactData.data(), Capacity);
 		for (int Idx = 0; Idx < Count; Idx++) {
 			const b2BodyId BodyA = b2Shape_GetBody(ContactData.at(Idx).shapeIdA);
@@ -301,14 +294,14 @@ namespace platformer2d {
 
 	void CEnemy::UpdateSprite()
 	{
-		//LK_WARN_TAG("Enemy", "Current={}  Next={}", SpriteFrame.Current, SpriteFrame.Next);
+		// LK_WARN_TAG("Enemy", "Current={}  Next={}", SpriteFrame.Current, SpriteFrame.Next);
 		SetSpriteTilePos(SpriteFrame.Next);
 		LK_ASSERT(SpriteFrame.Current == SpriteFrame.Next);
 	}
 
 	void CEnemy::SetSpriteTilePos(const FSpriteCoord& InCoord, const bool ForceUpdate)
 	{
-		//LK_TRACE_TAG("Enemy", "SetSpriteTilePos: Forced={} Current={} Next={}", ForceUpdate, SpriteFrame.Current, SpriteFrame.Next); /* @todo: Remove once tested */
+		// LK_TRACE_TAG("Enemy", "SetSpriteTilePos: Forced={} Current={} Next={}", ForceUpdate, SpriteFrame.Current, SpriteFrame.Next); /* @todo: Remove once tested */
 		if (ForceUpdate || (SpriteFrame.Current != InCoord)) {
 			const bool FlipHorizontal = (Data.LookDirection == EDirection::Left);
 			Sprite->SetTilePos(InCoord.X, InCoord.Y, FlipHorizontal);

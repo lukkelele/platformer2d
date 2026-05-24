@@ -24,7 +24,7 @@ namespace platformer2d {
 		virtual ~CEnemy();
 
 		void Tick(float DeltaTime) override;
-		void OnDeath() override;
+		void OnDeath(EDeathReason Reason) override;
 		[[nodiscard]] EActorType GetActorType() const override { return EActorType::Enemy; }
 
 		void SetController(std::unique_ptr<IEnemyController> InController);
@@ -84,7 +84,7 @@ namespace platformer2d {
 
 	private:
 		FEnemyData Data{};
-		std::unique_ptr<IEnemyController> Controller = nullptr;
+		std::unique_ptr<IEnemyController> Controller;
 		EEnemyArchetype ArchetypeKind = EEnemyArchetype::Grunt;
 
 		float MoveSpeed = 1.20f;
@@ -92,8 +92,8 @@ namespace platformer2d {
 		bool bJumping = false;
 		bool bJustLanded = false;
 
-		std::unique_ptr<CSprite> Sprite = nullptr;
-		FSpriteSheet SpriteSheet;
+		std::unique_ptr<CSprite> Sprite;
+		const FSpriteSheet* SpriteSheet = nullptr;
 		FSpriteFrame SpriteFrame;
 		bool bShouldUpdateSprite = false;
 	};
