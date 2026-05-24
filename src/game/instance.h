@@ -113,6 +113,7 @@ namespace platformer2d {
 		void ResumeGame();
 		[[nodiscard]] bool IsGamePaused();
 
+		[[nodiscard]] virtual std::pair<std::uint16_t, std::uint16_t> GetActiveViewportSize() const;
 		[[nodiscard]] virtual glm::vec2 GetMouseInViewportSpace();
 		[[nodiscard]] virtual glm::vec2 GetMouseInWorldSpace(const CCamera& Camera);
 		[[nodiscard]] const std::filesystem::path& GetLastSceneFilepath() const { return LastSceneFilepath; }
@@ -161,9 +162,9 @@ namespace platformer2d {
 
 		void InitializeSystems();
 		void ShutdownSystems();
+		void TickSystems();
 
 		virtual void UpdateViewportBounds();
-		[[nodiscard]] virtual std::pair<std::uint16_t, std::uint16_t> GetActiveViewportSize() const;
 		[[nodiscard]] const std::array<glm::vec2, 2>& GetViewportBounds() { return ViewportBounds; }
 
 		static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);

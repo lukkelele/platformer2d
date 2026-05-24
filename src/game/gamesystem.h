@@ -19,6 +19,7 @@ namespace platformer2d {
 
 		virtual void Initialize(CGameInstance& Owner) = 0;
 		virtual void Shutdown() = 0;
+		virtual void Tick() {};
 
 	protected:
 		CGameInstance* OwnerRef = nullptr;

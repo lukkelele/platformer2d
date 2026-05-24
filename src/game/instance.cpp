@@ -153,6 +153,7 @@ namespace platformer2d {
 
 		CScene::RenderActor(*Player);
 
+		TickSystems();
 		OnPostTick(InDeltaTime);
 
 		Scene->Render();
@@ -247,6 +248,7 @@ namespace platformer2d {
 
 	void CGameInstance::OpenScene(const std::filesystem::path& ScenePath)
 	{
+		LK_INFO_TAG("GameInstance", R"(Open scene: "{}")", ScenePath);
 		if (ScenePath.empty()) {
 			LK_ERROR_TAG("GameInstance", "No scene to open");
 			return;
@@ -317,12 +319,12 @@ namespace platformer2d {
 
 		Player->OnDied.Add([this](const FPlayerData&)
 		{
-			CCheckpointSystem& Checkpoint = GetSystem<CCheckpointSystem>();
+			auto& Checkpoint = GetSystem<CCheckpointSystem>();
+			LK_INFO_TAG("GameInstance", "Player died, respawning at {}", Checkpoint.HasCheckpoint() ? "checkpoint" : "at default spawn");
 			if (Checkpoint.HasCheckpoint()) {
 				Checkpoint.RestoreToPlayer(*Player);
 			} else {
-				LK_DEBUG_TAG("GameInstance", "Player died, no checkpoint -> respawn at PlayerSpawn");
-				GetSystem<CGameplaySystem>().Teleport(Player, LevelData.PlayerSpawn);
+				LK_DEBUG_TAG("GameInstance", "No checkpoint");
 				auto& HC = Player->GetComponent<FHealthComponent>();
 				HC.SetMaxHealth();
 
@@ -330,6 +332,14 @@ namespace platformer2d {
 				LK_ASSERT(Body);
 				Body->SetEnabled(true);
 				Body->SetLinearVelocity({0.0f, 0.0f});
+
+				/* Find any spawnpoints. */
+				std::vector<std::shared_ptr<CActor>> Spawnpoints;
+				if (Scene->GetAllWithFlags(EActorFlag_Spawnpoint, Spawnpoints) > 0) {
+					GetSystem<CGameplaySystem>().Teleport(Player, Spawnpoints.at(0)->GetPosition());
+				} else {
+					GetSystem<CGameplaySystem>().Teleport(Player, LevelData.PlayerSpawn);
+				}
 			}
 		});
 
@@ -450,6 +460,11 @@ namespace platformer2d {
 		}
 	}
 
+	std::pair<std::uint16_t, std::uint16_t> CGameInstance::GetActiveViewportSize() const
+	{
+		return {ViewportWidth, ViewportHeight};
+	}
+
 	glm::vec2 CGameInstance::GetMouseInViewportSpace()
 	{
 		glm::vec2 MousePos = CMouse::GetPos();
@@ -496,15 +511,19 @@ namespace platformer2d {
 		}
 	}
 
+	void CGameInstance::TickSystems()
+	{
+		for (std::size_t Idx = Systems.size(); Idx > 0; Idx--) {
+			if (Systems[Idx - 1]) {
+				Systems[Idx - 1]->Tick();
+			}
+		}
+	}
+
 	void CGameInstance::UpdateViewportBounds()
 	{
 		ViewportBounds[0] = {0.0f, 0.0f};
 		ViewportBounds[1] = CWindow::Get().GetSize();
-	}
-
-	std::pair<std::uint16_t, std::uint16_t> CGameInstance::GetActiveViewportSize() const
-	{
-		return {ViewportWidth, ViewportHeight};
 	}
 
 	bool CGameInstance::PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)
