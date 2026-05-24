@@ -24,17 +24,33 @@ namespace platformer2d {
 	};
 	LK_ENUM(EMovementState);
 
+	enum class EDeathReason
+	{
+		Unknown,
+		KillCommand,
+		Killzone,
+		Damage,
+		COUNT
+	};
+	LK_ENUM(EDeathReason);
+
 	class CActor : public ISerializable<ESerializable::Yaml>
 	{
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
 		CActor(const FActorSpecification& InSpec, const FBodySpecification& BodySpec);
+		CActor(CActor&&) = delete;
+		CActor(const CActor&) = delete;
 		virtual ~CActor();
 
+		CActor& operator=(CActor&&) = delete;
+		CActor& operator=(const CActor&) = delete;
+
 		virtual void Tick(float DeltaTime);
-		virtual void OnDeath() {}
-		LUUID GetHandle() const { return Handle; }
-		virtual EActorType GetActorType() const { return EActorType::Object; }
+		[[nodiscard]] LUUID GetHandle() const { return Handle; }
+		[[nodiscard]] virtual EActorType GetActorType() const { return EActorType::Object; }
+
+		virtual void OnDeath(EDeathReason Reason) {}
 
 		template<typename T>
 		T& As()
@@ -50,20 +66,11 @@ namespace platformer2d {
 			return static_cast<const T&>(*this);
 		}
 
-		/**
-		 * @brief Check if actor has a specific flag.
-		 */
-		bool HasFlag(const EActorFlag Flag) const
-		{
-			return ((ActorFlags & std::to_underlying(Flag)) == std::to_underlying(Flag));
-		}
+		[[nodiscard]] std::underlying_type_t<EActorFlag> GetFlags() const { return ActorFlags; }
 
-		/**
-		 * @brief Check if actor has any of the flags.
-		 */
-		bool HasAnyFlags(const EActorFlag Flags) const
+		[[nodiscard]] bool HasFlag(const EActorFlag Flag) const
 		{
-			return static_cast<bool>(ActorFlags & Flags);
+			return static_cast<bool>(ActorFlags & std::to_underlying(Flag));
 		}
 
 		void SetFlag(const EActorFlag Flag, bool Value = true)
@@ -75,9 +82,9 @@ namespace platformer2d {
 			}
 		}
 
-		glm::vec2 GetSize() const;
+		[[nodiscard]] glm::vec2 GetSize() const;
 		void SetSize(const glm::vec2& InSize);
-		const glm::vec3& GetPosition() const { return TransformComp.Translation; }
+		[[nodiscard]] const glm::vec3& GetPosition() const { return TransformComp.Translation; }
 		void SetPosition(float X, float Y);
 		void SetPosition(const glm::vec2& NewPos);
 		void SetPosition(const glm::vec3& NewPos);
@@ -88,32 +95,32 @@ namespace platformer2d {
 		float GetRotation() const;
 		void SetRotation(float AngleRad);
 
-		FTransformComponent& GetTransformComponent() { return TransformComp; }
-		const FTransformComponent& GetTransformComponent() const { return TransformComp; }
-		CBody* GetBody() { return Body ? Body.get() : nullptr; }
-		const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
+		[[nodiscard]] FTransformComponent& GetTransformComponent() { return TransformComp; }
+		[[nodiscard]] const FTransformComponent& GetTransformComponent() const { return TransformComp; }
+		[[nodiscard]] CBody* GetBody() { return Body ? Body.get() : nullptr; }
+		[[nodiscard]] const CBody* GetBody() const { return Body ? Body.get() : nullptr; }
 		void ReplaceBody(const FBodySpecification& NewSpec);
-		bool IsMoving() const;
+		[[nodiscard]] bool IsMoving() const;
 
-		bool IsTickEnabled() const { return bTickEnabled; }
+		[[nodiscard]] bool IsTickEnabled() const { return bTickEnabled; }
 		void SetTickEnabled(bool Enabled);
-		bool IsDeletable() const { return bDeletable; }
+		[[nodiscard]] bool IsDeletable() const { return bDeletable; }
 		void SetDeletable(bool Deletable);
-		bool IsPlayer() const { return GetActorType() == EActorType::Player; }
-		bool IsSensor() const { return (Body ? Body->IsSensor() : false); }
+		[[nodiscard]] bool IsPlayer() const { return GetActorType() == EActorType::Player; }
+		[[nodiscard]] bool IsSensor() const { return (Body ? Body->IsSensor() : false); }
 
-		ETexture GetTexture() const { return Texture; }
-		const glm::vec4& GetColor() const { return Color; }
+		[[nodiscard]] ETexture GetTexture() const { return Texture; }
+		[[nodiscard]] const glm::vec4& GetColor() const { return Color; }
 		void SetColor(const glm::vec4& InColor);
 
 		[[nodiscard]] virtual const CSprite* GetSprite() const { return nullptr; }
 
-		std::string_view GetName() const { return Name; }
+		[[nodiscard]] std::string_view GetName() const { return Name; }
 		void SetName(std::string_view InName);
 		void SetTexture(ETexture InTexture);
-		bool IsOutlineEnabled() const { return Outline.bEnabled; }
-		float GetOutlineThickness() const { return Outline.Thickness; }
-		const glm::vec4& GetOutlineColor() const { return Outline.Color; }
+		[[nodiscard]] bool IsOutlineEnabled() const { return Outline.bEnabled; }
+		[[nodiscard]] float GetOutlineThickness() const { return Outline.Thickness; }
+		[[nodiscard]] const glm::vec4& GetOutlineColor() const { return Outline.Color; }
 		void SetOutlineEnabled(bool Enabled);
 		void SetOutlineThickness(float InThickness);
 		void SetOutlineColor(const glm::vec4& InColor);
@@ -140,43 +147,43 @@ namespace platformer2d {
 		}
 
 		template<typename T>
-		T& GetComponent()
+		[[nodiscard]] T& GetComponent()
 		{
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
-		const T& GetComponent() const
+		[[nodiscard]] const T& GetComponent() const
 		{
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
-		T* TryGetComponent()
+		[[nodiscard]] T* TryGetComponent()
 		{
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
-		const T* TryGetComponent() const
+		[[nodiscard]] const T* TryGetComponent() const
 		{
 			static_assert(sizeof(T) == 0, "GetComponent not specialized for this type");
 		}
 
 		template<typename T>
-		bool HasComponent() const
+		[[nodiscard]] bool HasComponent() const
 		{
 			return false;
 		}
 
 		template<typename... T>
-		bool HasAnyComponents() const
+		[[nodiscard]] bool HasAnyComponents() const
 		{
 			return (HasComponent<T>() || ...);
 		}
 
 		template<typename... TExcluded>
-		bool HasAnyComponentsExcept() const
+		[[nodiscard]] bool HasAnyComponentsExcept() const
 		{
 			bool Ret = false;
 			if constexpr (!IsComponentOneOf<FTransformComponent, TExcluded...>) {
@@ -207,7 +214,7 @@ namespace platformer2d {
 		std::optional<FCameraComponent> CameraComp;
 
 		std::string Name;
-		uint64_t ActorFlags = EActorFlag_None;
+		std::underlying_type_t<EActorFlag> ActorFlags = EActorFlag_None;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
 

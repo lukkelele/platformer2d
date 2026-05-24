@@ -1,6 +1,8 @@
 #include "actor.h"
 
 #include "core/log.h"
+#include "core/string.h"
+#include "renderer/renderer.h"
 #include "serialization/serialization.h"
 
 namespace platformer2d {
@@ -77,7 +79,7 @@ namespace platformer2d {
 
 	void CActor::ReplaceBody(const FBodySpecification& NewSpec)
 	{
-		LK_TRACE_TAG("Actor", "ReplaceBody: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
+		LK_DEBUG_TAG("Actor", "Replacing body: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
 		if (Body) {
 			Body->Replace(NewSpec, this);
 		} else {
@@ -199,7 +201,9 @@ namespace platformer2d {
 		Out << YAML::Key << "ID" << YAML::Value << Handle;
 		Out << YAML::Key << "Type" << YAML::Value << std::to_underlying(GetActorType());
 		Out << YAML::Key << "Name" << YAML::Value << Name;
+		Out << YAML::Key << "Flags" << YAML::Value << ActorFlags;
 		Out << YAML::Key << "Texture" << YAML::Value << static_cast<std::size_t>(Texture);
+		Out << YAML::Key << "TexturePath" << YAML::Value << StringUtils::GetPathRelativeToAssetsDir(CRenderer::GetTexture(Texture)->GetFilePath());
 		Out << YAML::Key << "Color" << YAML::Value << Color;
 		Out << YAML::Key << "Deletable" << YAML::Value << bDeletable;
 

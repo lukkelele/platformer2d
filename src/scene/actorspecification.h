@@ -6,7 +6,7 @@
 
 namespace platformer2d {
 
-	enum class EActorType : uint16_t
+	enum class EActorType : std::uint16_t
 	{
 		Object,
 		Player,
@@ -15,12 +15,14 @@ namespace platformer2d {
 		Projectile,
 		COUNT
 	};
+	LK_ENUM(EActorType);
 
 	enum EActorFlag : std::uint64_t
 	{
 		EActorFlag_None = 0,
 		EActorFlag_Transparent = LK_BIT(1),
 		EActorFlag_Terrain = LK_BIT(2),
+		EActorFlag_Spawnpoint = LK_BIT(3),
 	};
 
 	struct FActorSpecification
@@ -43,26 +45,5 @@ namespace platformer2d {
 		{}
 	};
 
-	namespace Enum {
-		inline const char* ToString(const EActorType Type)
-		{
-			const char* S = "";
-#define _(EnumValue)                                  \
-	case EActorType::EnumValue: S = #EnumValue; break
-			switch (Type) {
-				_(Object);
-				_(Player);
-				_(Enemy);
-				_(Spawnpoint);
-				_(Projectile);
-				_(COUNT);
-				default:
-					LK_THROW_ENUM_ERR(Type);
-					break;
-			}
-#undef _
-			return S;
-		}
-	}
-
 }
+
