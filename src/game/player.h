@@ -33,7 +33,7 @@ namespace platformer2d {
 		~CPlayer();
 
 		void Tick(float DeltaTime) override;
-		void OnDeath() override;
+		void OnDeath(EDeathReason Reason) override;
 		EActorType GetActorType() const override { return EActorType::Player; }
 		void Jump();
 
@@ -58,10 +58,21 @@ namespace platformer2d {
 		void SetCameraLock(bool Locked);
 
 		[[nodiscard]] std::pair<FSpriteCoord, FSpriteCoord> GetCurrentAndNextSpriteFrame() const { return std::make_pair(SpriteFrame.Current, SpriteFrame.Next); }
-		[[nodiscard]] const FSpriteSheet& GetSpriteSheet() const { return SpriteSheet; }
+		[[nodiscard]] const FSpriteSheet* GetSpriteSheet() const { return SpriteSheet; }
+		void SetSpriteSheet(ETexture InTexture);
+
+		[[nodiscard]] float GetSpriteScale() const { return SpriteScale; }
+		void SetSpriteScale(const float InScale) { SpriteScale = InScale; }
+		[[nodiscard]] const glm::vec2& GetSpriteOffset() const { return SpriteOffset; }
+		void SetSpriteOffset(const glm::vec2& InOffset) { SpriteOffset = InOffset; }
 
 		[[nodiscard]] bool HasRifle();
-		std::shared_ptr<CRifle> GetRifle();
+		[[nodiscard]] std::shared_ptr<CRifle> GetRifle();
+
+		void ThrowProjectile();
+		[[nodiscard]] bool CanThrowProjectile() const;
+		void SetProjectileThrowSpeed(const float InSpeed) { ProjectileThrowSpeed = InSpeed; }
+		[[nodiscard]] float GetProjectileThrowSpeed() const { return ProjectileThrowSpeed; }
 
 		[[nodiscard]] bool IsInClimbZone() const { return bInClimbZone; }
 		[[nodiscard]] float GetClimbSpeed() const { return ClimbSpeed; }
@@ -117,8 +128,19 @@ namespace platformer2d {
 		bool bShouldUpdateSprite = false;
 
 		std::unique_ptr<CSprite> Sprite = nullptr;
-		FSpriteSheet SpriteSheet;
+		const FSpriteSheet* SpriteSheet = nullptr;
 		FSpriteFrame SpriteFrame;
+
+		float SpriteScale = 1.0f;
+		glm::vec2 SpriteOffset{0.0f, 0.0f};
+
+		std::chrono::steady_clock::time_point NextProjectileTime{};
+		std::chrono::milliseconds ProjectileCooldown = 650ms;
+		std::chrono::milliseconds ProjectileExpireTimeout = 3000ms;
+		float ProjectileThrowSpeed = 3.5f;
+		float ProjectileRadius = 0.040f;
+		float ProjectileRestitution = 0.42f;
+		float ProjectileDamage = 12.0f;
 	};
 }
 

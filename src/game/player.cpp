@@ -9,6 +9,8 @@
 #include "renderer/renderer.h"
 #include "scene/effectmanager.h"
 #include "instance.h"
+#include "projectilesystem.h"
+#include "physics/physicsworld.h"
 
 namespace platformer2d {
 
@@ -26,6 +28,7 @@ namespace platformer2d {
 		: CActor(InSpec, BodySpec)
 		, Inventory("PlayerInventory")
 	{
+		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
 		if (Name.empty()) {
 			Name = "Player";
 		}
@@ -35,19 +38,14 @@ namespace platformer2d {
 		AddComponent<FHealthComponent>();
 		SetDeletable(false);
 
-		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
-
-		FSpriteReader Reader;
-		std::optional<FSpriteSheet> LoadedSheet = Reader.Read(TEXTURES_DIR "/sprites/Player.lsprite");
-		LK_VERIFY(LoadedSheet, "Failed to read Player.lsprite");
-		SpriteSheet = std::move(*LoadedSheet);
-
-		const FSpriteCoord InitialFrame = SpriteSheet.Get(ESpriteFrame::Idle).First();
+		SpriteSheet = CRenderer::GetSpriteSheet(Texture);
+		LK_ASSERT(SpriteSheet, "Sprite sheet not loaded: {}", Enum::ToString(Texture));
+		const FSpriteCoord InitialFrame = SpriteSheet->Get(ESpriteFrame::Idle).First();
 		SpriteFrame.Current = InitialFrame;
 		SpriteFrame.Next = InitialFrame;
 
 		const glm::vec2 TilePos{InitialFrame.X, InitialFrame.Y};
-		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet.TileSize);
+		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet->TileSize);
 
 		Timer.Reset();
 		LK_VERIFY(Body && Sprite && CamComp.Camera);
@@ -59,6 +57,12 @@ namespace platformer2d {
 		std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>();
 		Rifle->Equip(this);
 		Inventory.AddItem(Rifle);
+#endif
+
+#ifdef SPAWN_WITH_MELEE
+		std::shared_ptr<CMelee> Melee = std::make_shared<CMelee>();
+		Melee->Equip(this);
+		Inventory.AddItem(Melee);
 #endif
 	}
 
@@ -107,17 +111,20 @@ namespace platformer2d {
 			SetMovementState(EMovementState::Airborne);
 			Body->ApplyImpulse({0.0f, JumpImpulse});
 
-			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Jump).First();
-			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms);
+			SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::Jump).First();
+			const float JumpSwooshDirX = (LookDir == EDirection::Left) ? 0.40f : -0.40f;
+			CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 220ms,
+				{0.15f, 0.15f}, 1.0f, {JumpSwooshDirX, -0.60f});
 
 			OnJumped.Broadcast(Data);
 		}
 	}
 
-	void CPlayer::OnDeath()
+	void CPlayer::OnDeath(const EDeathReason Reason)
 	{
-		LK_INFO_TAG("Player", "[{}] OnDeath", GetName());
-		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
+		LK_INFO_TAG("Player", "[{}] OnDeath: {}", GetName(), Enum::ToString(Reason));
+		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms,
+			{0.15f, 0.15f}, 1.0f, {0.0f, 0.40f});
 		if (Body) {
 			Body->SetLinearVelocity({0.0f, 0.0f});
 			Body->SetEnabled(false);
@@ -153,6 +160,24 @@ namespace platformer2d {
 		bCameraLock = Locked;
 	}
 
+	void CPlayer::SetSpriteSheet(const ETexture InTexture)
+	{
+		const FSpriteSheet* Sheet = CRenderer::GetSpriteSheet(InTexture);
+		LK_ASSERT(Sheet);
+		LK_VERIFY(Sheet->Has(ESpriteFrame::Idle), "{}: Missing idle", Enum::ToString(InTexture));
+		LK_DEBUG_TAG("Player", "Swapping sprite sheet: {} -> {}", Enum::ToString(Texture), Enum::ToString(InTexture));
+		Texture = InTexture;
+		SpriteSheet = Sheet;
+
+		const FSpriteCoord InitialFrame = SpriteSheet->Get(ESpriteFrame::Idle).First();
+		SpriteFrame.Current = InitialFrame;
+		SpriteFrame.Next = InitialFrame;
+
+		const glm::vec2 TilePos{InitialFrame.X, InitialFrame.Y};
+		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet->TileSize);
+		bShouldUpdateSprite = true;
+	}
+
 	bool CPlayer::HasRifle()
 	{
 		return (Inventory.FindFirstOf<CRifle>() != nullptr);
@@ -161,6 +186,38 @@ namespace platformer2d {
 	std::shared_ptr<CRifle> CPlayer::GetRifle()
 	{
 		return Inventory.FindFirstOf<CRifle>();
+	}
+
+	bool CPlayer::CanThrowProjectile() const
+	{
+		return std::chrono::steady_clock::now() >= NextProjectileTime;
+	}
+
+	void CPlayer::ThrowProjectile()
+	{
+		if (!CanThrowProjectile()) {
+			return;
+		}
+
+		const float DirSign = (LookDir == EDirection::Left) ? -1.0f : 1.0f;
+
+		FProjectileSpawnParams Params;
+		Params.Spawner = this;
+		Params.Position = {GetPosition().x + (DirSign * 0.080f), GetPosition().y + 0.020f};
+		Params.Velocity = {DirSign * ProjectileThrowSpeed, ProjectileThrowSpeed * 0.55f};
+		Params.Radius = ProjectileRadius;
+		Params.Restitution = ProjectileRestitution;
+		Params.Damage = ProjectileDamage;
+		Params.Color = FColor::Red;
+		Params.MaxBounceCount = 1;
+		Params.bExplodeOnImpact = false;
+		Params.RenderZ = -0.020f;
+		Params.ExpireTimeout = ProjectileExpireTimeout;
+		Params.NamePrefix = "Ball";
+
+		CGameInstance::Get().GetSystem<CProjectileSystem>().Spawn(Params);
+
+		NextProjectileTime = std::chrono::steady_clock::now() + ProjectileCooldown;
 	}
 
 	void CPlayer::SetClimbZone(const bool InZone, const float InClimbSpeed)
@@ -260,12 +317,12 @@ namespace platformer2d {
 			if (MovingByInput) {
 				SetMovementState(EMovementState::Running);
 			} else {
-				SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Hit).First();
+				SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::Hit).First();
 			}
 		} else {
 			const auto TimeNow = std::chrono::steady_clock::now();
 			if (TimeNow - LastInputTime > 150ms) {
-				SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Idle).First();
+				SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::Idle).First();
 			}
 		}
 	}
@@ -277,10 +334,10 @@ namespace platformer2d {
 		const bool MovingByInput = (LastDirForce != 0.0f);
 
 		if (std::abs(LinearVelocity.x) > VELOCITY_THRESHOLD_X) {
-			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Walk).GetFrame(FrameIndex);
+			SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::Walk).GetFrame(FrameIndex);
 		} else if (!MovingByInput && std::abs(LinearVelocity.x) < VELOCITY_THRESHOLD_X) {
 			SetMovementState(EMovementState::Idle);
-			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::Idle).First();
+			SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::Idle).First();
 		}
 	}
 
@@ -289,9 +346,9 @@ namespace platformer2d {
 		const glm::vec2 LinearVelocity = Body->GetLinearVelocity();
 
 		if (LinearVelocity.y > VELOCITY_THRESHOLD_Y) {
-			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::JumpAscend).First();
+			SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::JumpAscend).First();
 		} else if (LinearVelocity.y < -VELOCITY_THRESHOLD_Y) {
-			SpriteFrame.Next = SpriteSheet.Get(ESpriteFrame::JumpDescend).First();
+			SpriteFrame.Next = SpriteSheet->Get(ESpriteFrame::JumpDescend).First();
 		}
 	}
 
@@ -332,8 +389,10 @@ namespace platformer2d {
 	void CPlayer::SyncTransformComponent()
 	{
 		const glm::vec2 BodySize = Body->GetSize();
-		TransformComp.Scale.x = BodySize.x;
-		TransformComp.Scale.y = BodySize.y;
+		TransformComp.Scale.x = BodySize.x * SpriteScale;
+		TransformComp.Scale.y = BodySize.y * SpriteScale;
+		TransformComp.Translation.x += SpriteOffset.x;
+		TransformComp.Translation.y += SpriteOffset.y;
 	}
 
 	void CPlayer::UpdateSprite()
@@ -376,9 +435,27 @@ namespace platformer2d {
 	{
 		switch (Data.Key) {
 			case EKey::Q:
+				if (Data.State == EKeyState::Pressed) {
+					ThrowProjectile();
+				}
 				break;
 
 			case EKey::F:
+				break;
+
+			case EKey::G:
+				break;
+
+			case EKey::D1:
+				if (Data.State == EKeyState::Pressed) {
+					Inventory.Select(0);
+				}
+				break;
+
+			case EKey::D2:
+				if (Data.State == EKeyState::Pressed) {
+					Inventory.Select(1);
+				}
 				break;
 
 			case EKey::R:
@@ -404,16 +481,29 @@ namespace platformer2d {
 			case EMouseButton::Button0:
 			{
 				if (Data.State == EMouseButtonState::Pressed) {
-					std::shared_ptr<CRifle> Rifle = Inventory.FindFirstOf<CRifle>();
-					if (Rifle && Rifle->IsEnabled()) {
-						auto& GameInstance = CGameInstance::Get();
-						if (CCamera* Camera = GameInstance.GetActiveCamera()) {
-							const glm::vec2 TargetPos = GameInstance.GetMouseInWorldSpace(*Camera);
-							if (Math::IsValid(TargetPos)) {
-								Rifle->Fire(TargetPos);
-							}
+					std::shared_ptr<IWeapon> Selected = Inventory.GetSelectedWeapon();
+					if (!Selected) {
+						break;
+					}
+
+					glm::vec2 TargetPos{0.0f, 0.0f};
+					auto& GameInstance = CGameInstance::Get();
+					if (CCamera* Camera = GameInstance.GetActiveCamera()) {
+						const glm::vec2 World = GameInstance.GetMouseInWorldSpace(*Camera);
+						if (Math::IsValid(World)) {
+							TargetPos = World;
 						}
 					}
+
+					if (Selected->GetWeaponType() == EWeaponType::Rifle) {
+						CRifle& Rifle = static_cast<CRifle&>(*Selected);
+						if (!Rifle.IsEnabled()) {
+							break;
+						}
+					}
+
+					LK_TRACE_TAG("Player", "PrimaryAction: {}", Enum::ToString(Selected->GetWeaponType()));
+					Selected->PrimaryAction(TargetPos);
 				}
 			}
 		}
