@@ -5,11 +5,12 @@
 #include "instance.h"
 #include "inventory.h"
 #include "player.h"
-#include "rifle.h"
 #include "physics/body.h"
 #include "physics/physicsworld.h"
 #include "scene/actor.h"
 #include "scene/scene.h"
+#include "renderer/renderer.h"
+#include "rifle.h"
 
 namespace platformer2d {
 
@@ -23,16 +24,41 @@ namespace platformer2d {
 
 	void CInteractionSystem::Shutdown()
 	{
-		LK_DEBUG_TAG("InteractionSystem", "Shutdown");
+		LK_TRACE_TAG("InteractionSystem", "Shutdown");
 		CPhysicsWorld::OnSensorBeginEvent.Remove(OnSensorBeginHandle);
 		CPhysicsWorld::OnSensorEndEvent.Remove(OnSensorEndHandle);
 		OwnerRef = nullptr;
 	}
 
+	void CInteractionSystem::Tick()
+	{
+		auto& GameInstance = CGameInstance::Get();
+		auto [ViewW, ViewH] = GameInstance.GetActiveViewportSize();
+
+		/* @todo: Need to handle deleted actors from begun interactions. */
+		for (const TInteractionData* Interaction : ActiveInteractions) {
+			std::visit([&]<typename T>(const T& Data)
+			{
+				constexpr float TEXT_SIZE = 64.0f;
+				if constexpr (std::is_same_v<T, FHealInteraction>) {
+					CRenderer::Submit([ViewW, ViewH]()
+					{
+						CRenderer::DrawTextScreen("Heal", {ViewW * 0.10f, ViewH * 0.30f}, TEXT_SIZE, FColor::LightGreen, FColor::Black, 2.0f);
+					});
+				} else if constexpr (std::is_same_v<T, FDamageInteraction>) {
+					CRenderer::Submit([ViewW, ViewH]()
+					{
+						CRenderer::DrawTextScreen("Damage", {ViewW * 0.10f, ViewH * 0.30f}, TEXT_SIZE, FColor::Red, FColor::Black, 2.0f);
+					});
+				}
+			}, *Interaction);
+		}
+	}
+
 	void CInteractionSystem::OnSensorBegin(const CSensorBeginEvent& Event)
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("Interaction", "OnSensorBegin: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		LK_DEBUG_TAG("InteractionSystem", "OnSensorBegin: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
 		LK_ASSERT(OwnerRef);
 		/* Force a sensor event to contain a player. This will probably change in the future. */
 		const std::shared_ptr<CPlayer> Player = OwnerRef->GetPlayer(0);
@@ -48,22 +74,24 @@ namespace platformer2d {
 		LK_DEBUG("[BEGIN] Interaction: {}", Enum::ToString(IC->GetType()));
 		Event.Sensor->SetOutlineEnabled(true);
 
+		const bool IsPlayerVisitor = (Event.Visitor == Player.get());
+
 		std::visit([&]<typename T>(T& Data)
 		{
 			if constexpr (std::is_same_v<T, FDamageInteraction>) {
-				OwnerRef->GetSystem<CHealthSystem>().ApplyDamage(Event.Visitor, Data.Damage);
+				OwnerRef->GetSystem<CHealthSystem>().ApplyDamage(*Event.Visitor, Data.Damage);
 			} else if constexpr (std::is_same_v<T, FPickupInteraction>) {
-				if (Event.Visitor == Player.get()) {
+				if (IsPlayerVisitor) {
 					CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 					HandlePickup(PlayerRef, *IC);
 				}
 			} else if constexpr (std::is_same_v<T, FHealInteraction>) {
-				OwnerRef->GetSystem<CHealthSystem>().Heal(Event.Visitor, Data.Amount);
+				OwnerRef->GetSystem<CHealthSystem>().Heal(*Event.Visitor, Data.Amount);
 				if (Data.bConsumeOnUse) {
 					LK_DEBUG_TAG("Interaction", "[TODO] Despawn heal source {}", Event.Sensor->GetName());
 				}
 			} else if constexpr (std::is_same_v<T, FKillzoneInteraction>) {
-				OwnerRef->GetSystem<CHealthSystem>().Kill(Event.Visitor);
+				OwnerRef->GetSystem<CHealthSystem>().Kill(*Event.Visitor);
 			} else if constexpr (std::is_same_v<T, FJumppadInteraction>) {
 				if (CBody* Body = Event.Visitor->GetBody()) {
 					const glm::vec2 Vel = Body->GetLinearVelocity();
@@ -71,11 +99,11 @@ namespace platformer2d {
 					Body->SetLinearVelocity({NewX, Data.Impulse.y});
 				}
 			} else if constexpr (std::is_same_v<T, FClimbableInteraction>) {
-				if (Event.Visitor == Player.get()) {
+				if (IsPlayerVisitor) {
 					static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
 				}
 			} else if constexpr (std::is_same_v<T, FCheckpointInteraction>) {
-				if (Event.Visitor == Player.get()) {
+				if (IsPlayerVisitor) {
 					CPlayer& PlayerRef = *static_cast<CPlayer*>(Event.Visitor);
 					const std::shared_ptr<CScene> Scene = OwnerRef->GetScene();
 					const std::filesystem::path ScenePath = (Scene ? Scene->GetFilepath() : OwnerRef->GetLastSceneFilepath());
@@ -83,12 +111,15 @@ namespace platformer2d {
 				}
 			}
 		}, IC->GetData());
+
+		ActiveInteractions.push_back(std::addressof(IC->GetData()));
+		LK_TRACE_TAG("InteractionSystem", "Active interactions: {}", ActiveInteractions.size());
 	}
 
 	void CInteractionSystem::OnSensorEnd(const CSensorEndEvent& Event)
 	{
 		LK_ASSERT(Event.Sensor && Event.Visitor);
-		LK_DEBUG_TAG("Interaction", "OnSensorEnd: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
+		LK_DEBUG_TAG("InteractionSystem", "OnSensorEnd: Sensor={} Visitor={}", Event.Sensor->GetName(), Event.Visitor->GetName());
 		LK_ASSERT(OwnerRef);
 		/* Force a sensor event to contain a player. This will probably change in the future. */
 		const std::shared_ptr<CPlayer> Player = OwnerRef->GetPlayer(0);
@@ -105,11 +136,23 @@ namespace platformer2d {
 		LK_DEBUG("[END] Interaction: {}", Enum::ToString(IC->GetType()));
 		Event.Sensor->SetOutlineEnabled(false);
 
-		if (IC->GetType() == EInteraction::Climbable) {
-			if (Event.Visitor == Player.get()) {
-				static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(false);
+		const bool IsPlayerVisitor = (Event.Visitor == Player.get());
+
+		TInteractionData& InteractionData = IC->GetData();
+		std::visit([&]<typename T>(T& Data)
+		{
+			if constexpr (std::is_same_v<T, FClimbableInteraction>) {
+				if (IsPlayerVisitor) {
+					static_cast<CPlayer*>(Event.Visitor)->SetClimbZone(true, Data.ClimbSpeed);
+				}
 			}
-		}
+		}, InteractionData);
+
+		std::erase_if(ActiveInteractions, [&InteractionData](const TInteractionData* Other)
+		{
+			return std::addressof(InteractionData) == Other;
+		});
+		LK_TRACE_TAG("InteractionSystem", "Active interactions: {}", ActiveInteractions.size());
 	}
 
 	void CInteractionSystem::HandlePickup(CPlayer& Player, const FInteractionComponent& IC)

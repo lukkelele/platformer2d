@@ -23,6 +23,7 @@ namespace platformer2d {
 
 		void Initialize(CGameInstance& Owner) override;
 		void Shutdown() override;
+		void Tick() override;
 
 	protected:
 		virtual void OnSensorBegin(const CSensorBeginEvent& Event);
@@ -33,6 +34,9 @@ namespace platformer2d {
 		virtual void HandlePickup_Weapon(const FPickupInteraction& Interaction, CPlayer& Player);
 
 	private:
+		std::vector<TInteractionData*> ActiveInteractions;
+		//std::vector<TInteractionData&> ActiveInteractions;
+
 		Core::FDelegateHandle OnSensorBeginHandle;
 		Core::FDelegateHandle OnSensorEndHandle;
 	};
