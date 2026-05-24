@@ -15,8 +15,9 @@ namespace platformer2d {
 
 		void Tick(float DeltaTime) override;
 		void Render() override;
+		[[nodiscard]] EWeaponType GetWeaponType() const override { return EWeaponType::Rifle; }
 
-		EWeaponType GetWeaponType() const override { return EWeaponType::Rifle; }
+		void PrimaryAction(const glm::vec2& TargetWorldPos) override;
 
 		/**
 		 * @brief Fire at target position in world space.
@@ -24,16 +25,16 @@ namespace platformer2d {
 		void Fire(const glm::vec2& TargetPos);
 
 		bool Reload();
-		bool NeedToReload() const { return Ammo <= 0; }
-		std::uint16_t GetAmmo() const { return Ammo; }
-		std::uint16_t GetMagazineSize() const { return MagazineSize; }
+		[[nodiscard]] bool NeedToReload() const { return Ammo <= 0; }
+		[[nodiscard]] std::uint16_t GetAmmo() const { return Ammo; }
+		[[nodiscard]] std::uint16_t GetMagazineSize() const { return MagazineSize; }
 
 		void Equip(CActor* Actor);
 
 		/**
 		 * @brief Check if the rifle is held by a specific actor.
 		 */
-		bool IsHeldBy(const CActor* Actor) const;
+		[[nodiscard]] bool IsHeldBy(const CActor* Actor) const;
 
 		/**
 		 * @brief Enable or disable if the rifle can shoot.
@@ -42,26 +43,21 @@ namespace platformer2d {
 		bool IsEnabled() const { return bEnabled; }
 
 		void SetLookDirection(EDirection InDirection);
-		EDirection GetLookDirection() const { return LookDir; }
+		[[nodiscard]] EDirection GetLookDirection() const { return LookDir; }
 		void RequestLookDirection(EDirection InDirection);
 
 		void SetProjectileRadius(float InRadius);
-		float GetProjectileRadius() const { return ProjectileRadius; }
+		[[nodiscard]] float GetProjectileRadius() const { return ProjectileRadius; }
 		void SetProjectileVelocity(float InVelocity);
-		float GetProjectileVelocity() const { return ProjectileVelocity; }
+		[[nodiscard]] float GetProjectileVelocity() const { return ProjectileVelocity; }
 		void SetProjectileRestitution(float InRestitution);
-		float GetProjectileRestitution() const { return ProjectileRestitution; }
+		[[nodiscard]] float GetProjectileRestitution() const { return ProjectileRestitution; }
 		void SetProjectileExplodeOnImpact(bool ExplodeOnImpact);
-		float GetProjectileExplodeOnImpact() const { return bProjectileExplodeOnImpact; }
+		[[nodiscard]] float GetProjectileExplodeOnImpact() const { return bProjectileExplodeOnImpact; }
 		void SetProjectileColor(const glm::vec4& InColor);
-		const glm::vec4& GetProjectileColor() const { return ProjectileColor; }
+		[[nodiscard]] const glm::vec4& GetProjectileColor() const { return ProjectileColor; }
 
-		const CActor* GetOwner() const { return Owner; }
-
-	private:
-		void RenderProjectile(const std::shared_ptr<CProjectile>& Projectile) const;
-		bool DestroyProjectile(const b2BodyId& ID);
-		void DestroyExpiredProjectiles();
+		[[nodiscard]] const CActor* GetOwner() const { return Owner; }
 
 	private:
 		CActor* Owner = nullptr;
@@ -88,9 +84,6 @@ namespace platformer2d {
 		std::uint16_t Ammo;
 		std::uint16_t MagazineSize;
 		glm::vec2 MuzzleOffset = {0.080f, 0.050f};
-
-		std::vector<std::shared_ptr<CProjectile>> Fired;
-		std::queue<b2BodyId> ExpiredQueue;
 	};
 
 }

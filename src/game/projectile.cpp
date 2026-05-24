@@ -2,19 +2,10 @@
 
 namespace platformer2d {
 
-	CProjectile::CProjectile(const FActorSpecification& InSpec, CRifle* InOwner, const TDestroy DestroyCallback)
+	CProjectile::CProjectile(const FActorSpecification& InSpec, CActor* InSpawner)
 		: CActor(InSpec)
-		, Owner(InOwner)
-		, OnDestroy(DestroyCallback)
+		, Spawner(InSpawner)
 	{
-	}
-
-	void CProjectile::Destroy()
-	{
-		LK_TRACE("{}: Destroy", Name);
-		if (Owner && OnDestroy) {
-			(Owner->*OnDestroy)(ID);
-		}
 	}
 
 }

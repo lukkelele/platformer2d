@@ -1,6 +1,8 @@
 #include "rifle.h"
 
 #include "game/player.h"
+#include "game/instance.h"
+#include "game/projectilesystem.h"
 #include "renderer/renderer.h"
 #include "physics/physicsworld.h"
 
@@ -16,15 +18,6 @@ namespace platformer2d {
 	CRifle::~CRifle()
 	{
 		LK_DEBUG_TAG("Rifle", "Release: {}", Enum::ToString(GetWeaponType()));
-
-		LK_TRACE_TAG("Rifle", "Destroying {} projectiles", Fired.size());
-		for (const std::shared_ptr<CProjectile> Projectile : Fired) {
-			ExpiredQueue.push(Projectile->ID);
-		}
-
-		DestroyExpiredProjectiles();
-
-		LK_ASSERT(ExpiredQueue.empty(), "ExpiredQueue not empty: {}", ExpiredQueue.size());
 	}
 
 	void CRifle::Tick(const float DeltaTime)
@@ -34,32 +27,6 @@ namespace platformer2d {
 		}
 
 		Render();
-
-		if (DeltaTime > 0.0f) {
-			const auto TimeNow = std::chrono::steady_clock::now();
-			for (const auto& Projectile : Fired) {
-				LK_ASSERT(Projectile && b2Body_IsValid(Projectile->ID));
-				RenderProjectile(Projectile);
-
-				if (TimeNow > (Projectile->TimeFired + ExpireTimeout)) {
-					ExpiredQueue.push(Projectile->ID);
-				}
-			}
-		} else {
-			/* Adjust expire time if paused. */
-			using namespace std::chrono;
-			/**
-			 * @todo: The calculated time will never truly match the difference from steady clock.
-			 * Need a better way to handle the timestep if paused.
-			 */
-			const std::chrono::duration<float> DeltaSeconds{DeltaTime};
-			for (auto& Projectile : Fired) {
-				RenderProjectile(Projectile);
-				Projectile->TimeFired += duration_cast<steady_clock::duration>(DeltaSeconds);
-			}
-		}
-
-		DestroyExpiredProjectiles();
 	}
 
 	void CRifle::Render()
@@ -80,16 +47,16 @@ namespace platformer2d {
 			std::span<const glm::vec2, 4>(*TexCoords));
 	}
 
+	void CRifle::PrimaryAction(const glm::vec2& TargetWorldPos)
+	{
+		Fire(TargetWorldPos);
+	}
+
 	void CRifle::Fire(const glm::vec2& TargetPos)
 	{
 		if (!Owner || (Ammo <= 0)) {
 			return;
 		}
-
-		b2BodyDef BodyDef = b2DefaultBodyDef();
-		BodyDef.type = b2_dynamicBody;
-		BodyDef.position = b2Vec2(Origin.x, Origin.y);
-		BodyDef.isBullet = true;
 
 		const glm::vec2 Diff = TargetPos - glm::vec2(Origin.x, Origin.y);
 		float LenSq = (Diff.x * Diff.x) + (Diff.y * Diff.y);
@@ -98,44 +65,40 @@ namespace platformer2d {
 		}
 
 		const float InvLen = (1.0f / std::sqrt(LenSq));
-		const b2Vec2 Dir = b2Vec2(Diff.x * InvLen, Diff.y * InvLen);
-		BodyDef.linearVelocity = b2Vec2(ProjectileVelocity * Dir.x, ProjectileVelocity * Dir.y);
+		const glm::vec2 Dir = glm::vec2(Diff.x * InvLen, Diff.y * InvLen);
+		const glm::vec2 Velocity = glm::vec2(ProjectileVelocity * Dir.x, ProjectileVelocity * Dir.y);
 
+		glm::vec2 SpawnPos = glm::vec2(Origin.x, Origin.y);
 		/* Offset muzzle based on look direction. */
-		if (BodyDef.linearVelocity.x < 0.0f) {
+		if (Velocity.x < 0.0f) {
 			/* Left */
-			BodyDef.position.x -= MuzzleOffset.x;
+			SpawnPos.x -= MuzzleOffset.x;
 			RequestLookDirection(EDirection::Left);
-		} else if (BodyDef.linearVelocity.x > 0.0f) {
+		} else if (Velocity.x > 0.0f) {
 			/* Right */
-			BodyDef.position.x += MuzzleOffset.x;
+			SpawnPos.x += MuzzleOffset.x;
 			RequestLookDirection(EDirection::Right);
 		}
 
-		FActorSpecification Spec;
-		Spec.Name = Format("Projectile-{}", Ammo);
-		Spec.Pos = Origin;
-		Spec.Color = ProjectileColor;
-		std::shared_ptr<CProjectile> Projectile = std::make_shared<CProjectile>(Spec, this, &CRifle::DestroyProjectile);
-		Projectile->ID = CPhysicsWorld::CreateBody(BodyDef);
-		Projectile->bExplodeOnImpact = bProjectileExplodeOnImpact;
-		Projectile->MaxBounceCount = ProjectileBounceCount;
-		Projectile->Damage = ProjectileDamage;
+		FProjectileSpawnParams Params;
+		Params.Spawner = Owner;
+		Params.Position = SpawnPos;
+		Params.Velocity = Velocity;
+		Params.Radius = ProjectileRadius;
+		Params.Restitution = ProjectileRestitution;
+		Params.Damage = ProjectileDamage;
+		Params.Color = ProjectileColor;
+		Params.MaxBounceCount = ProjectileBounceCount;
+		Params.bExplodeOnImpact = bProjectileExplodeOnImpact;
+		Params.bIsBullet = true;
+		Params.RenderZ = -0.010f;
+		Params.ExpireTimeout = ExpireTimeout;
+		Params.NamePrefix = "Projectile";
 
-		b2Circle Circle = {
-			{0.0f, 0.0f},
-            ProjectileRadius
-        };
-		b2ShapeDef ShapeDef = b2DefaultShapeDef();
-		ShapeDef.userData = Projectile.get();
-		ShapeDef.enableContactEvents = true;
-		ShapeDef.material.restitution = ProjectileRestitution;
-		Projectile->ShapeID = b2CreateCircleShape(Projectile->ID, &ShapeDef, &Circle);
-		Projectile->TimeFired = std::chrono::steady_clock::now();
-		Fired.push_back(Projectile);
+		const CProjectile* Projectile = CGameInstance::Get().GetSystem<CProjectileSystem>().Spawn(Params);
 
 		Ammo--;
-		LK_TRACE_TAG("Rifle", "Fire: {} Ammo={} Velocity={}", Projectile->GetName(), Ammo, BodyDef.linearVelocity);
+		LK_TRACE_TAG("Rifle", "Fire: {} Ammo={} Velocity={}", Projectile->GetName(), Ammo, Velocity);
 	}
 
 	bool CRifle::Reload()
@@ -199,39 +162,6 @@ namespace platformer2d {
 	void CRifle::SetProjectileColor(const glm::vec4& InColor)
 	{
 		ProjectileColor = InColor;
-	}
-
-	void CRifle::RenderProjectile(const std::shared_ptr<CProjectile>& Projectile) const
-	{
-		const b2Vec2 Pos = b2Body_GetPosition(Projectile->ID);
-		const float Angle = b2Rot_GetAngle(b2Body_GetRotation(Projectile->ID));
-		const glm::vec3 P0 = {Pos.x, Pos.y, -0.010f};
-		CRenderer::DrawCircleFilled(P0, ProjectileRadius, Projectile->GetColor(), 1.0f);
-	}
-
-	bool CRifle::DestroyProjectile(const b2BodyId& ID)
-	{
-		const std::size_t Removed = std::erase_if(Fired, [&ID](std::shared_ptr<CProjectile> Projectile)
-		{
-			if (!Projectile || !b2Body_IsValid(ID) || B2_IS_NULL(ID) || B2_IS_NULL(Projectile->ID) || !B2_ID_EQUALS(ID, Projectile->ID)) {
-				return false;
-			}
-
-			b2DestroyBody(ID);
-			return true;
-		});
-		LK_ASSERT(Removed == 1, "Failed to remove projectile (Removed={})", Removed);
-		return (Removed == 1);
-	}
-
-	void CRifle::DestroyExpiredProjectiles()
-	{
-		/* Remove expired projectiles. */
-		while (!ExpiredQueue.empty()) {
-			b2BodyId& Expired = ExpiredQueue.front();
-			DestroyProjectile(Expired);
-			ExpiredQueue.pop();
-		}
 	}
 
 }

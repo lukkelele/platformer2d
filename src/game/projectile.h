@@ -8,23 +8,19 @@
 
 namespace platformer2d {
 
-	class CRifle;
+	class CProjectileSystem;
 
 	class CProjectile : public CActor
 	{
 	public:
-		using TDestroy = bool (CRifle::*)(const b2BodyId&);
-
-	public:
-		CProjectile(const FActorSpecification& InSpec, CRifle* InOwner, TDestroy DestroyCallback);
+		CProjectile(const FActorSpecification& InSpec, CActor* InSpawner);
 		CProjectile() = delete;
 		~CProjectile() = default;
 
-		void Destroy();
 		bool ExplodesOnImpact() const { return bExplodeOnImpact; }
 		float GetDamage() const { return Damage; }
 
-		const CRifle* GetOwner() const { return Owner; }
+		const CActor* GetSpawner() const { return Spawner; }
 		virtual EActorType GetActorType() const override { return EActorType::Projectile; }
 
 	public:
@@ -32,16 +28,18 @@ namespace platformer2d {
 		uint8_t MaxBounceCount = 1;
 
 	private:
-		CRifle* Owner;
-		TDestroy OnDestroy;
+		CActor* Spawner;
 		b2BodyId ID{};
 		b2ShapeId ShapeID{};
 		std::chrono::steady_clock::time_point TimeFired;
+		std::chrono::milliseconds ExpireTimeout = 3000ms;
 
 		bool bExplodeOnImpact = true;
 		float Damage = 10.0f;
+		float Radius = 0.040f;
+		float RenderZ = -0.020f;
 
-		friend class CRifle;
+		friend class CProjectileSystem;
 	};
 
 }
