@@ -16,8 +16,7 @@ namespace platformer2d::test {
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		LK_ASSERT(Window && Window->GetGlfwWindow());
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
@@ -30,8 +29,7 @@ namespace platformer2d::test {
 		LK_DEBUG("Catch result: {}", CatchResult);
 
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
-		const FWindowData& WindowData = Window.GetData();
+		const FWindowData& WindowData = CWindow::Get().GetData();
 
 		CKeyboard::Initialize();
 
@@ -104,7 +102,7 @@ namespace platformer2d::test {
 			ImGui::EndTable();
 
 			CTest::ImGui_EndFrame();
-			glfwSwapBuffers(Window.GetGlfwWindow());
+			glfwSwapBuffers(CWindow::Get().GetGlfwWindow());
 		}
 	}
 

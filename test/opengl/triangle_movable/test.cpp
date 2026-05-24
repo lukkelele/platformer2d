@@ -36,8 +36,7 @@ namespace platformer2d::test {
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		LK_ASSERT(Window && Window->GetGlfwWindow());
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
@@ -48,8 +47,7 @@ namespace platformer2d::test {
 		bRunning = true;
 		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
-		const FWindowData& WindowData = Window.GetData();
+		const FWindowData& WindowData = CWindow::Get().GetData();
 
 		/* 1) Create vertex array. */
 		GLuint VertexArray;
@@ -127,7 +125,7 @@ namespace platformer2d::test {
 			glUseProgram(0);
 
 			CTest::ImGui_EndFrame();
-			glfwSwapBuffers(Window.GetGlfwWindow());
+			glfwSwapBuffers(CWindow::Get().GetGlfwWindow());
 		}
 	}
 
