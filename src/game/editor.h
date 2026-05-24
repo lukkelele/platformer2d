@@ -49,6 +49,7 @@ namespace platformer2d {
 		void UI_DrawGizmo();
 		void UI_Topbar();
 		void UI_MainMenubar();
+		void UI_NewScenePopup();
 		void UI_LeftSidebar();
 		void UI_LevelLauncher();
 		void UI_SceneBrowser();
@@ -78,6 +79,8 @@ namespace platformer2d {
 
 		bool bPendingViewportResize = false;
 		bool bSerializeOnNextSceneOpened = false;
+
+		std::array<char, 64> NewSceneNameBuf{};
 	};
 
 }

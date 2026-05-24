@@ -13,6 +13,8 @@
 #include "core/input/mouse.h"
 #include "core/math/math.h"
 #include "game/enemy.h"
+#include "game/gameplaysystem.h"
+#include "game/healthsystem.h"
 #include "game/player.h"
 #include "game/spawner.h"
 #include "game/controller/patrolcontroller.h"
@@ -23,7 +25,9 @@
 #include "renderer/ui/pausemenu.h"
 #include "renderer/ui/quickcreator.h"
 #include "renderer/ui/selectionpanel.h"
+#include "renderer/ui/spriteinspector.h"
 #include "renderer/ui/terraincreator.h"
+#include "renderer/ui/textureinspector.h"
 #include "renderer/ui/ui.h"
 #include "renderer/ui/widgets.h"
 #include "physics/body.h"
@@ -37,6 +41,7 @@ namespace platformer2d {
 	static constexpr const char* UI_ID_LEVEL = "Level";
 	static constexpr const char* UI_ID_PLAYER = "Player";
 	static int GizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+	static bool SceneBrowserCacheDirty = true;
 
 	namespace {
 		const FGameSpecification GameSpec = {
@@ -100,6 +105,8 @@ namespace platformer2d {
 
 	void CEditor::OnSceneOpened()
 	{
+		LK_VERIFY(Scene);
+		LK_DEBUG_TAG("Editor", "OnSceneOpened");
 		const float InitWidth = (EditorViewportWidth > 0) ? static_cast<float>(EditorViewportWidth) : SCREEN_WIDTH;
 		const float InitHeight = (EditorViewportHeight > 0) ? static_cast<float>(EditorViewportHeight) : SCREEN_HEIGHT;
 
@@ -107,7 +114,7 @@ namespace platformer2d {
 		CameraSpec.Name = "EditorCamera";
 		EditorCamera = std::make_shared<CActor>(CameraSpec);
 		auto& CamComp = EditorCamera->AddComponent<FCameraComponent>();
-		std::shared_ptr<CEditorCamera> Camera = std::make_shared<CEditorCamera>(InitWidth, InitHeight);
+		auto Camera = std::make_shared<CEditorCamera>(InitWidth, InitHeight);
 		CamComp.Camera = Camera;
 
 		const glm::vec2 InitPos = (bHasSavedEditorCameraState ? EditorCameraSavedPos : LevelData.PlayerSpawn);
@@ -121,6 +128,12 @@ namespace platformer2d {
 		if (bSerializeOnNextSceneOpened) {
 			bSerializeOnNextSceneOpened = false;
 			Serialize(GetSpecification().LevelFilepath);
+		}
+
+		/* Find any spawnpoints. */
+		std::vector<std::shared_ptr<CActor>> Spawnpoints;
+		if (Scene->GetAllWithFlags(EActorFlag_Spawnpoint, Spawnpoints) > 0) {
+			GetSystem<CGameplaySystem>().Teleport(Player, Spawnpoints.at(0)->GetPosition());
 		}
 	}
 
@@ -204,6 +217,7 @@ namespace platformer2d {
 		}
 		UI::RenderChainPreview(Scene);
 		UI::RenderActorPreview(Scene);
+		UI::RenderEnemySpawnPoints(Scene);
 	}
 
 	CCamera* CEditor::GetActiveCamera() const
@@ -447,16 +461,11 @@ namespace platformer2d {
 
 	void CEditor::UpdateEditorViewportBounds()
 	{
-		ImGuiWindow* Window = ImGui::GetCurrentWindow();
-		const ImVec2 WindowPos = Window->Pos;
+		const ImVec2 WindowPos = ImGui::GetCurrentWindow()->Pos;
 		const ImVec2 RegionMin = ImGui::GetWindowContentRegionMin();
 		const ImVec2 RegionMax = ImGui::GetWindowContentRegionMax();
-		EditorViewportBounds[0] = {
-			WindowPos.x + RegionMin.x,
-			WindowPos.y + RegionMin.y};
-		EditorViewportBounds[1] = {
-			WindowPos.x + RegionMax.x,
-			WindowPos.y + RegionMax.y};
+		EditorViewportBounds[0] = {WindowPos.x + RegionMin.x, WindowPos.y + RegionMin.y};
+		EditorViewportBounds[1] = {WindowPos.x + RegionMax.x, WindowPos.y + RegionMax.y};
 
 		const float VpWidth = EditorViewportBounds[1].x - EditorViewportBounds[0].x;
 		const float VpHeight = EditorViewportBounds[1].y - EditorViewportBounds[0].y;
@@ -506,23 +515,40 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Editor", "OnActorDeleted: {}", Handle);
 		UpdateInputBuffer(Scene->GetActors().size());
 		UI::Actor::OnActorDeleted(Handle);
+		UI::SetSpawnPointVisible(Handle, false);
 	}
 
 	void CEditor::OnKey(const FKeyData& Data)
 	{
 		switch (Data.Key) {
 			case EKey::Q:
-				GizmoOp = -1;
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						GizmoOp = -1;
+					}
+				}
 				break;
 			case EKey::W:
-				GizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						GizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+					}
+				}
 				break;
 			case EKey::E:
-				GizmoOp = ImGuizmo::OPERATION::ROTATE;
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						GizmoOp = ImGuizmo::OPERATION::ROTATE;
+					}
+				}
 				break;
 #if 0
 			case EKey::R:
-				GizmoOp = ImGuizmo::OPERATION::SCALE;
+				if (Data.State == EKeyState::Pressed) {
+					if (bEditorViewportFocused) {
+						GizmoOp = ImGuizmo::OPERATION::SCALE;
+					}
+				}
 				break;
 #endif
 			case EKey::S:
@@ -580,7 +606,6 @@ namespace platformer2d {
 
 	void CEditor::HandleViewportLeftClick()
 	{
-		/* If the preview gizmo handle is under the cursor, let ImGuizmo capture the drag. */
 		if (UI::ActorAttr.bPreviewSelected && ImGuizmo::IsOver()) {
 			return;
 		}
@@ -669,8 +694,6 @@ namespace platformer2d {
 				}
 			}
 
-			UI_Level();
-
 			if (Scene) {
 				const auto& StatsGraphics = FSettings::Get().Graphics;
 				if (StatsGraphics.bShowFPS || StatsGraphics.bShowFrametime || StatsGraphics.bShowDebugStats) {
@@ -683,6 +706,8 @@ namespace platformer2d {
 			UI::End();
 		}
 
+		UI_Level();
+
 		UI::PrepareMenuBar();
 		if (UI::Begin(UI::PanelID::Menubar, nullptr, UI::SidebarFlags | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar)) {
 			UI_MainMenubar();
@@ -694,6 +719,9 @@ namespace platformer2d {
 			UI_Topbar();
 			UI::End();
 		}
+
+		UI::RenderSpriteInspector();
+		UI::RenderTextureInspector();
 
 		UI::End();
 	}
@@ -831,13 +859,7 @@ namespace platformer2d {
 		const ImVec2 WindowSize = {static_cast<float>(EditorViewportWidth), static_cast<float>(EditorViewportHeight)};
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
-		ImGui::Image(
-			static_cast<ImTextureID>(ViewportTexture->GetID()),
-			WindowSize,
-			ImVec2(0, 1),
-			ImVec2(1, 0),
-			ImVec4(1, 1, 1, 1),
-			ImVec4(1, 1, 1, 0));
+		UI::Image(ViewportTexture, WindowSize);
 	}
 
 	void CEditor::UI_DrawGizmo()
@@ -1013,8 +1035,23 @@ namespace platformer2d {
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Tools")) {
+			if (ImGui::MenuItem("Sprite Inspector", nullptr, UI::IsSpriteInspectorOpen())) {
+				UI::ToggleSpriteInspector();
+			}
+			if (ImGui::MenuItem("Texture Inspector", nullptr, UI::IsTextureInspectorOpen())) {
+				UI::ToggleTextureInspector();
+			}
+			ImGui::EndMenu();
+		}
+
 		const bool HasValidScene = (Scene != nullptr);
+		bool OpenNewScenePopup = false;
 		if (ImGui::BeginMenu("Scene")) {
+			if (ImGui::MenuItem("New")) {
+				OpenNewScenePopup = true;
+			}
+
 			if (HasValidScene) {
 				ImGui::BeginDisabled();
 			}
@@ -1053,6 +1090,83 @@ namespace platformer2d {
 		}
 
 		ImGui::EndMenuBar();
+
+		if (OpenNewScenePopup) {
+			NewSceneNameBuf.fill('\0');
+			ImGui::OpenPopup("New Scene");
+		}
+		UI_NewScenePopup();
+	}
+
+	void CEditor::UI_NewScenePopup()
+	{
+		const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Appearing);
+
+		if (!ImGui::BeginPopupModal("New Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
+			return;
+		}
+
+		ImGui::TextUnformatted("Scene name");
+		if (ImGui::IsWindowAppearing()) {
+			ImGui::SetKeyboardFocusHere();
+		}
+		ImGui::SetNextItemWidth(360.0f);
+		const bool EnterPressed = ImGui::InputText("##NewSceneName", NewSceneNameBuf.data(), NewSceneNameBuf.size(), ImGuiInputTextFlags_EnterReturnsTrue);
+
+		const std::string Name(NewSceneNameBuf.data());
+		const bool NameEmpty = Name.empty();
+
+		std::filesystem::path NewPath;
+		bool FileExists = false;
+		if (!NameEmpty) {
+			NewPath = std::filesystem::path(SCENES_DIR) / (Name + "." + CScene::FILE_EXTENSION);
+			std::error_code Ec;
+			FileExists = std::filesystem::exists(NewPath, Ec);
+		}
+
+		const float HintLineHeight = ImGui::GetTextLineHeightWithSpacing();
+		if (FileExists) {
+			UI::FScopedColor TextColor(ImGuiCol_Text, ImVec4(1.0f, 0.40f, 0.40f, 1.0f));
+			ImGui::TextUnformatted("Scene already exists");
+		} else {
+			ImGui::Dummy(ImVec2(0.0f, HintLineHeight));
+		}
+
+		const bool CanCreate = !NameEmpty && !FileExists;
+
+		constexpr float ButtonW = 96.0f;
+		const float Spacing = ImGui::GetStyle().ItemSpacing.x;
+		const float Avail = ImGui::GetContentRegionAvail().x;
+		ImGui::Dummy(ImVec2(0.0f, 6.0f));
+		UI::ShiftCursorX(Avail - (ButtonW * 2.0f + Spacing));
+
+		if (!CanCreate) {
+			ImGui::BeginDisabled();
+		}
+		const bool CreatePressed = ImGui::Button("Create", ImVec2(ButtonW, 0.0f)) || (EnterPressed && CanCreate);
+		if (CreatePressed) {
+			CScene EmptyScene(Name);
+			if (EmptyScene.Serialize(NewPath)) {
+				LK_INFO_TAG("Editor", "Created new scene: {}", StringUtils::GetPathRelativeToProject(NewPath));
+				SwitchToScene(NewPath);
+				SceneBrowserCacheDirty = true; /* Refresh scene browser. */
+				ImGui::CloseCurrentPopup();
+			} else {
+				LK_ERROR_TAG("Editor", "Failed to create scene file: {}", NewPath);
+			}
+		}
+		if (!CanCreate) {
+			ImGui::EndDisabled();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(ButtonW, 0.0f))) {
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
 	}
 
 	void CEditor::UI_LeftSidebar()
@@ -1106,9 +1220,8 @@ namespace platformer2d {
 	{
 		static const std::filesystem::path ScenesRoot(SCENES_DIR);
 		static std::vector<std::filesystem::path> CachedScenes;
-		static bool CacheDirty = true;
 
-		if (CacheDirty) {
+		if (SceneBrowserCacheDirty) {
 			CachedScenes.clear();
 			std::error_code Ec;
 			const std::filesystem::path Root(SCENES_DIR);
@@ -1123,10 +1236,9 @@ namespace platformer2d {
 				}
 			}
 			std::sort(CachedScenes.begin(), CachedScenes.end());
-			CacheDirty = false;
+			SceneBrowserCacheDirty = false;
 		}
 
-		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		if (!ImGui::TreeNodeEx("Scenes", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			return;
 		}
@@ -1134,7 +1246,7 @@ namespace platformer2d {
 		{
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 6.0f);
 			if (ImGui::Button("Refresh")) {
-				CacheDirty = true;
+				SceneBrowserCacheDirty = true;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Browse")) {
@@ -1236,11 +1348,41 @@ namespace platformer2d {
 		if (!SceneActive) {
 			ImGui::EndDisabled();
 		}
+		ImGui::EndChild();
+		ImGui::SameLine(0.0f, 0.0f);
 
+		ImGui::BeginChild("##PlayerInfo", ImVec2(std::max(Avail.x * 0.33f, 580.0f), Avail.y), ImGuiChildFlags_None);
+		ImGui::Indent();
+		UI_Player();
+		ImGui::Unindent();
+		ImGui::EndChild();
+		ImGui::SameLine(0.0f, 0.0f);
+
+		ImGui::BeginChild("##PlayerMod", ImVec2(std::max(Avail.x * 0.33f, 580.0f), Avail.y), ImGuiChildFlags_None);
+		ImGui::Indent();
+		{
+			UI::FScopedFont ScopedFont(EFontSize::Large);
+			UI::FScopedStyleStack StyleStack(
+				ImGuiStyleVar_FramePadding, ImVec2(8, 3),
+				ImGuiStyleVar_FrameRounding, 4.0f);
+			if (ImGui::Button("Kill Player")) {
+				GetSystem<CHealthSystem>().Kill(*Player);
+			}
+
+			static float Damage = 25.0f;
+			if (ImGui::Button("Damage Player")) {
+				GetSystem<CHealthSystem>().ApplyDamage(*Player, Damage);
+			}
+			ImGui::SameLine(0, 6);
+			ImGui::SetNextItemWidth(50.0f);
+			UI::DragFloat("Damage", Damage, 1.0f, 1.0f, 100.0f, "%.0f");
+
+			UI::SpriteSheetModification(Player);
+		}
+		ImGui::Unindent();
 		ImGui::EndChild();
 
 		UI::End();
 	}
-
 }
 
