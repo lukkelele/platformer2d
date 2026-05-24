@@ -28,6 +28,8 @@ project_library_sources(
 	runtimelayer.cpp
 	rifle.h
 	rifle.cpp
+	melee.h
+	melee.cpp
 	player.h
 	player.cpp
 	projectile.h

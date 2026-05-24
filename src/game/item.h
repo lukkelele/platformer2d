@@ -9,7 +9,7 @@ namespace platformer2d {
 	{
 	public:
 		virtual ~IItem() = default;
-		virtual EItemType GetItemType() const = 0;
+		[[nodiscard]] virtual EItemType GetItemType() const = 0;
 	};
 
 }
