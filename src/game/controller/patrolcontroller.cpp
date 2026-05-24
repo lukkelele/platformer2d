@@ -85,7 +85,7 @@ namespace platformer2d {
 
 	void CPatrolController::SetTarget(std::shared_ptr<CActor> InTarget)
 	{
-		LK_DEBUG_TAG("PatrolController", "Targeting: {}", (InTarget ? InTarget->GetName() : "NULL"));
+		LK_DEBUG_TAG("PatrolController", "Targeting: {}", (InTarget ? InTarget->GetName() : "None"));
 		TargetRef = InTarget;
 	}
 

@@ -11,6 +11,7 @@ namespace platformer2d {
 
 	enum class EEnemyArchetype : std::uint8_t
 	{
+		None,
 		Grunt,
 		Jumper,
 		RangedShooter,
