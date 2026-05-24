@@ -24,7 +24,7 @@ struct lklog::fmt::formatter<glm::vec2>
 	template<typename FormatContext>
 	auto format(const glm::vec2& Input, FormatContext& Context) const
 	{
-		return lklog::fmt::format_to(Context.out(), "({:.2f}, {:.2f})", Input.x, Input.y);
+		return lklog::fmt::format_to(Context.out(), "{{{:.2f}, {:.2f}}}", Input.x, Input.y);
 	}
 };
 
@@ -40,7 +40,7 @@ struct lklog::fmt::formatter<glm::vec3>
 	template<typename FormatContext>
 	auto format(const glm::vec3& Input, FormatContext& Context) const
 	{
-		return lklog::fmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f})", Input.x, Input.y, Input.z);
+		return lklog::fmt::format_to(Context.out(), "{{{:.2f}, {:.2f}, {:.2f}}}", Input.x, Input.y, Input.z);
 	}
 };
 
@@ -56,7 +56,7 @@ struct lklog::fmt::formatter<glm::vec4>
 	template<typename FormatContext>
 	auto format(const glm::vec4& Input, FormatContext& Context) const
 	{
-		return lklog::fmt::format_to(Context.out(), "({:.2f}, {:.2f}, {:.2f}, {:.2f})", Input.x, Input.y, Input.z, Input.z);
+		return lklog::fmt::format_to(Context.out(), "{{{:.2f}, {:.2f}, {:.2f}, {:.2f}}}", Input.x, Input.y, Input.z, Input.w);
 	}
 };
 
