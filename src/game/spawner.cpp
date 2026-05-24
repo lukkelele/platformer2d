@@ -58,7 +58,7 @@ namespace platformer2d {
 		BodySpecRef.Position = Pos;
 		BodySpecRef.Shape.emplace<FPolygon>(Polygon);
 
-		LK_INFO_TAG("Spawner", "Create: {}", Name);
+		LK_INFO_TAG("Spawner", "Create static polygon: {}", Name);
 		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
 	}
@@ -84,7 +84,7 @@ namespace platformer2d {
 		};
 		BodySpec.Shape.emplace<FPolygon>(Polygon);
 
-		LK_INFO_TAG("Spawner", "Create: {} (Texture={} Color={})", Name, Enum::ToString(Texture), Color);
+		LK_INFO_TAG("Spawner", "Create polygon: {} (Texture={} Color={})", Name, Enum::ToString(Texture), Color);
 		std::shared_ptr<CActor> Actor = Scene->Create<CActor>(ActorSpec, BodySpec);
 		return Actor;
 	}
@@ -92,12 +92,12 @@ namespace platformer2d {
 	std::shared_ptr<CActor> CSpawner::CreateChain(std::string_view Name, std::span<const glm::vec2> Points,
 		const bool Loop, const bool BlockBothSides, const glm::vec4& Color)
 	{
+		LK_VERIFY(CGameInstance::IsValid());
 		LK_ASSERT(Points.size() >= 4, "Chain requires at least 4 points");
 		std::string ActorName(Name);
 		if (ActorName.empty()) {
 			ActorName = Format("Chain{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())));
 		}
-		LK_VERIFY(CGameInstance::IsValid());
 		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
@@ -126,8 +126,8 @@ namespace platformer2d {
 
 	std::shared_ptr<CActor> CSpawner::CreateSpawnpoint(std::string_view Name, const glm::vec2& Pos)
 	{
-		LK_VERIFY(!Name.empty(), "Name cannot be empty");
 		LK_VERIFY(CGameInstance::IsValid());
+		LK_VERIFY(!Name.empty(), "Name cannot be empty");
 		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
 
 		FActorSpecification ActorSpec;
@@ -138,6 +138,7 @@ namespace platformer2d {
 		ActorSpec.OutlineEnabled = true;
 		ActorSpec.OutlineColor = FColor::Magenta;
 		ActorSpec.OutlineThickness = 6.0f;
+		ActorSpec.Flags = EActorFlag_Spawnpoint;
 
 		std::shared_ptr<CActor> Spawnpoint = Scene->Create<CActor>(ActorSpec);
 		Spawnpoint->SetSize({0.25f, 0.25f});
