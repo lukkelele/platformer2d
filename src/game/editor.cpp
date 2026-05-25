@@ -49,7 +49,7 @@ namespace platformer2d {
 			.InstanceName = "Editor",
 			.LevelFilepath = std::filesystem::path(LEVELS_DIR "/editor.yaml"),
 			.Player = {
-				.ActorSpec = FActorSpecification(ETexture::Player),
+				.ActorSpec = FActorSpecification(ETexture::Player, "Player"),
 				.BodySpec = {
 					.Type = EBodyType::Dynamic,
 					.Shape = FCapsule{
@@ -135,6 +135,15 @@ namespace platformer2d {
 		if (Scene->GetAllWithFlags(EActorFlag_Spawnpoint, Spawnpoints) > 0) {
 			GetSystem<CGameplaySystem>().Teleport(Player, Spawnpoints.at(0)->GetPosition());
 		}
+
+		if (CDebugRenderer::DebugDraw) {
+			if (auto* ActiveCamera = GetActiveCamera()) {
+				CDebugRenderer::SetDrawBounds(ActiveCamera->GetPosition(), ActiveCamera->GetHalfSize());
+			}
+
+			/* Pass scene to Box2D callbacks. */
+			CDebugRenderer::DebugDraw->context = Scene.get();
+		}
 	}
 
 	static bool IsSameScenePath(const std::filesystem::path& Lhs, const std::filesystem::path& Rhs)
@@ -187,6 +196,10 @@ namespace platformer2d {
 		SaveScene();
 		EditorCamera.reset();
 		bUseEditorCamera = true;
+
+		if (CDebugRenderer::DebugDraw) {
+			CDebugRenderer::DebugDraw->context = nullptr;
+		}
 	}
 
 	void CEditor::OnPreTick(const float InDeltaTime)
@@ -245,7 +258,7 @@ namespace platformer2d {
 			return;
 		}
 
-		const CCamera& PlayerCam = Player->GetCamera();
+		CCamera& PlayerCam = Player->GetCamera();
 		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
 		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
 			EC->BeginSwitchLerp(PlayerCam.GetPosition(), PlayerCam.GetZoom());
@@ -253,6 +266,7 @@ namespace platformer2d {
 			EC->CancelSwitchLerp();
 		}
 
+		PlayerCam.SetActive(false);
 		EC->SetActive(true);
 		bUseEditorCamera = true;
 	}
@@ -273,6 +287,7 @@ namespace platformer2d {
 		}
 
 		EC->SetActive(false);
+		PlayerCam.SetActive(true);
 		bUseEditorCamera = false;
 	}
 
@@ -668,6 +683,10 @@ namespace platformer2d {
 		if (Player) {
 			Player->OnMouseScroll(Direction);
 		}
+
+		if (auto* ActiveCamera = GetActiveCamera()) {
+			CDebugRenderer::SetDrawBounds(ActiveCamera->GetPosition(), ActiveCamera->GetHalfSize());
+		}
 	}
 
 	void CEditor::RenderUI()
@@ -1016,6 +1035,7 @@ namespace platformer2d {
 	void CEditor::UI_MainMenubar()
 	{
 		ImGui::BeginMenuBar();
+		ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 		if (ImGui::MenuItem("Settings")) {
 			if (UI::IsPauseMenuOpen()) {
 				UI::ClosePauseMenu(UI::EPauseMenuView::Default);
@@ -1032,6 +1052,7 @@ namespace platformer2d {
 			if (ImGui::MenuItem("Close")) {
 				Core::Global.RemoveLayer(Core::ELayer::Editor);
 			}
+
 			ImGui::EndMenu();
 		}
 
@@ -1044,6 +1065,49 @@ namespace platformer2d {
 			}
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("Debug")) {
+			auto Option = [](const char* Label, bool& Value)
+			{
+				if (ImGui::MenuItem(Label, nullptr, Value)) {
+					Value = !Value;
+				}
+			};
+
+			const bool DebugRendererValid = (CDebugRenderer::DebugDraw != nullptr);
+			if (!DebugRendererValid) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::BeginMenu("Physics")) {
+				Option("Body Shapes", CDebugRenderer::DebugDraw->drawShapes);
+				Option("Body Names", CDebugRenderer::DebugDraw->drawBodyNames);
+				Option("Body Mass", CDebugRenderer::DebugDraw->drawMass);
+				Option("Contact Forces", CDebugRenderer::DebugDraw->drawContactForces);
+				Option("Contact Normals", CDebugRenderer::DebugDraw->drawContactNormals);
+				Option("Friction Forces", CDebugRenderer::DebugDraw->drawFrictionForces);
+				Option("Joints", CDebugRenderer::DebugDraw->drawJoints);
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Draw")) {
+				Option("Text", CDebugRenderer::StringConf.bDraw);
+				Option("Circles", CDebugRenderer::CircleConf.bDraw);
+				Option("Solid Circles", CDebugRenderer::CircleSolidConf.bDraw);
+				Option("Points", CDebugRenderer::PointConf.bDraw);
+				Option("Polygons", CDebugRenderer::PolygonConf.bDraw);
+				Option("Solid Polygons", CDebugRenderer::PolygonSolidConf.bDraw);
+				Option("Solid Capsule", CDebugRenderer::CapsuleSolidConf.bDraw);
+				Option("Transforms", CDebugRenderer::TransformConf.bDraw);
+				Option("Segments", CDebugRenderer::SegmentConf.bDraw);
+				ImGui::EndMenu();
+			}
+			if (!DebugRendererValid) {
+				ImGui::EndDisabled();
+			}
+
+			ImGui::EndMenu();
+		}
+		ImGui::PopItemFlag();
 
 		const bool HasValidScene = (Scene != nullptr);
 		bool OpenNewScenePopup = false;
@@ -1320,6 +1384,24 @@ namespace platformer2d {
 			UI::Table::NextRow();
 			UI::DragFloat("Initial Camera Zoom", LevelData.SceneLoadCameraZoom, 0.01f, 0.0f, 1.0f);
 
+			UI::Table::NextRow();
+			int LineW = static_cast<int>(CDebugRenderer::SegmentConf.LineWidth);
+			if (ImGui::DragInt("Segment Line Width", &LineW, 1, 1, 12)) {
+				CDebugRenderer::SegmentConf.LineWidth = static_cast<std::uint16_t>(LineW);
+			}
+
+			UI::Table::NextRow();
+			UI::DragFloat("Polygon Alpha", CDebugRenderer::PolygonConf.Alpha, 0.01, 0.0f, 1.0f, "%.2f");
+			UI::Table::NextRow();
+			UI::DragFloat("Solid Polygon Alpha", CDebugRenderer::PolygonSolidConf.Alpha, 0.01, 0.0f, 1.0f, "%.2f");
+
+			UI::Table::NextRow();
+			static EColor TransformColor = EColor::White;
+			const bool ColorDeduced = FColor::DeduceEnum(TransformColor, CDebugRenderer::TransformConf.Color);
+			if (UI::ColorDropdown(TransformColor)) {
+				CDebugRenderer::TransformConf.Color = FColor::Get(TransformColor);
+			}
+
 			/* Editor Camera */
 			if (CEditorCamera* EC = GetEditorCamera()) {
 				UI::Table::NextRow();
@@ -1335,12 +1417,6 @@ namespace platformer2d {
 					EC->SetLerpSnapDistance(LerpSnap);
 				}
 			}
-
-			auto& InputSettings = FSettings::Get().Input;
-			UI::Table::NextRow();
-			UI::Checkbox("Edge Pan", InputSettings.bEdgePan);
-			UI::Table::NextRow();
-			UI::DragFloat("Edge Pan Speed", InputSettings.EdgePanSpeed, 0.010f, 1.0f, 20.0f);
 
 			UI::EndPropertyGrid();
 			ImGui::TreePop();
