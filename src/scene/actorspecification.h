@@ -40,8 +40,9 @@ namespace platformer2d {
 		glm::vec4 OutlineColor = FColor::Transparent;
 
 		FActorSpecification() = default;
-		FActorSpecification(const ETexture InTexture)
+		FActorSpecification(const ETexture InTexture, std::string InName = "")
 			: Texture(InTexture)
+			, Name(std::move(InName))
 		{}
 	};
 
