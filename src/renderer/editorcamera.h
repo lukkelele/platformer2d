@@ -13,8 +13,7 @@ namespace platformer2d {
 		void Tick(float DeltaTime, bool ViewportHovered);
 		void SetViewportBounds(const glm::vec2& InMin, const glm::vec2& InMax);
 
-		void SetActive(bool InActive);
-		[[nodiscard]] bool IsActive() const { return bActive; }
+		void SetActive(bool InActive) override;
 
 		[[nodiscard]] bool IsLerpEnabled() const { return bLerpEnabled; }
 		void SetLerpEnabled(bool Enabled);
@@ -33,7 +32,6 @@ namespace platformer2d {
 		static constexpr float EDGE_PAN_MARGIN_PX = 64.0f;
 
 	private:
-		bool bActive = false;
 		bool bLerpEnabled = true;
 		float LerpSnapDistance = DEFAULT_LERP_SNAP_DISTANCE;
 

@@ -42,6 +42,9 @@ namespace platformer2d {
 
 		void SetOrthographic(float InWidth, float InHeight, float InNearClip = -1.0f, float InFarClip = 1.0f);
 
+		virtual void SetActive(bool InActive);
+		[[nodiscard]] bool IsActive() const { return bActive; }
+
 		void SetZoom(float InZoom);
 		[[nodiscard]] float GetZoom() const { return Zoom; }
 
@@ -85,6 +88,7 @@ namespace platformer2d {
 		static constexpr float SWITCH_LERP_EPSILON_ZOOM = 0.0005f;
 
 	protected:
+		bool bActive = false;
 		float ViewportWidth;
 		float ViewportHeight;
 		float AspectRatio;

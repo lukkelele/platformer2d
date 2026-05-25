@@ -8,6 +8,8 @@
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "renderer/debugrenderer.h"
+
 namespace platformer2d {
 
 	CCamera::CCamera(const float InWidth, const float InHeight, const float InNearP, const float InFarP)
@@ -43,6 +45,18 @@ namespace platformer2d {
 		OrthographicFar = InFarClip;
 	}
 
+	void CCamera::SetActive(const bool InActive)
+	{
+		if (bActive == InActive) {
+			return;
+		}
+
+		bActive = InActive;
+		if (!bActive) {
+			CancelSwitchLerp();
+		}
+	}
+
 	void CCamera::SetZoom(const float InZoom)
 	{
 		Zoom = std::max(ZOOM_MIN, std::min(ZOOM_MAX, InZoom));
@@ -54,6 +68,7 @@ namespace platformer2d {
 		if (!bSwitchLerping) {
 			SwitchTargetPos = Center;
 			SwitchTargetZoom = Zoom;
+			CDebugRenderer::SetDrawBounds(GetPosition(), GetHalfSize());
 		}
 
 		Center = StartPos;
@@ -83,6 +98,7 @@ namespace platformer2d {
 
 		UpdateView();
 		UpdateProjection();
+		CDebugRenderer::SetDrawBounds(GetPosition(), GetHalfSize());
 	}
 
 	void CCamera::Target(const glm::vec2& TargetPos, const float DeltaTime)

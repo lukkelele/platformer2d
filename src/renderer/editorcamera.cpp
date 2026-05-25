@@ -5,26 +5,14 @@
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 
+#include "renderer/debugrenderer.h"
+
 namespace platformer2d {
 
 	CEditorCamera::CEditorCamera(const float InWidth, const float InHeight)
 		: CCamera(InWidth, InHeight)
 	{
 		LK_TRACE_TAG("EditorCamera", "Created ({}x{})", InWidth, InHeight);
-	}
-
-	void CEditorCamera::SetActive(const bool InActive)
-	{
-		if (bActive == InActive) {
-			return;
-		}
-
-		bActive = InActive;
-		if (!bActive) {
-			bPanning = false;
-			bWasMiddleDown = false;
-			CancelSwitchLerp();
-		}
 	}
 
 	void CEditorCamera::Tick(const float DeltaTime, const bool ViewportHovered)
@@ -69,6 +57,20 @@ namespace platformer2d {
 		Update();
 	}
 
+	void CEditorCamera::SetActive(const bool InActive)
+	{
+		if (bActive == InActive) {
+			return;
+		}
+
+		bActive = InActive;
+		if (!bActive) {
+			bPanning = false;
+			bWasMiddleDown = false;
+			CancelSwitchLerp();
+		}
+	}
+
 	void CEditorCamera::HandlePan(const glm::vec2& Mouse, const float Sensitivity, const float DragSign)
 	{
 		const glm::vec2 Half = GetHalfSize();
@@ -83,6 +85,7 @@ namespace platformer2d {
 		Center.y += Delta.y * WorldPerPixelY;
 		SetPosition(Center);
 		LastMousePos = Mouse;
+		CDebugRenderer::SetDrawBounds(GetPosition(), GetHalfSize());
 	}
 
 	void CEditorCamera::HandleEdgePan(const float DeltaTime, const glm::vec2& Mouse, const float EdgePanSpeed)
