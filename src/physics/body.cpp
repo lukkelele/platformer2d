@@ -3,6 +3,7 @@
 #include "core/math/math.h"
 #include "physicsworld.h"
 #include "serialization/yaml.h"
+#include "scene/actor.h"
 
 namespace platformer2d {
 
@@ -627,6 +628,7 @@ namespace platformer2d {
 
 	void CBody::Build(const FBodySpecification& Spec, CActor* Owner)
 	{
+		LK_ASSERT(Owner, "Body requires an owner");
 		BodySpec = Spec;
 		GravityScale = Spec.GravityScale;
 		ShapeType = DetermineShapeType(Spec.Shape);
@@ -652,6 +654,8 @@ namespace platformer2d {
 
 		ID = CPhysicsWorld::CreateBody(BodyDef);
 		Shape = Spec.Shape;
+		b2Body_SetName(ID, Owner->GetName().data());
+		LK_ASSERT(!Owner->GetName().empty(), "Actor name is empty");
 
 		switch (ShapeType) {
 			case EShape::Polygon:

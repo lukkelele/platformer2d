@@ -41,9 +41,7 @@ namespace platformer2d {
 
 		static glm::vec2 GetGravity();
 		static void SetGravity(const glm::vec2& Gravity);
-		static uint8_t GetSubstep() { return Substep; }
-
-		static void InitDebugDraw(b2DebugDraw& DebugDrawRef);
+		static std::uint8_t GetSubstep() { return Substep; }
 
 	private:
 		static bool PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx);
@@ -59,8 +57,6 @@ namespace platformer2d {
 	private:
 		static inline b2WorldId WorldID;
 		static inline uint8_t Substep = 6;
-
-		static inline std::unique_ptr<b2DebugDraw> DebugDraw = nullptr;
 	};
 
 }

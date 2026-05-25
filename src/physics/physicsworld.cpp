@@ -4,12 +4,11 @@
 #include "core/math/math.h"
 #include "game/player.h"
 #include "renderer/renderer.h"
+#include "renderer/debugrenderer.h"
 
 namespace platformer2d {
 
-	namespace {
-		bool bPaused = false;
-	}
+	static bool bPaused = false;
 
 	void CPhysicsWorld::Initialize(const glm::vec2& Gravity)
 	{
@@ -44,11 +43,11 @@ namespace platformer2d {
 		HandleSensorEvents();
 		HandleContactEvents();
 
-		if (DebugDraw) {
-			CRenderer::Submit([&]()
+		if (CDebugRenderer::DebugDraw) {
+			CRenderer::Submit([=]()
 			{
 				if (b2World_IsValid(WorldID) && !bPaused) {
-					b2World_Draw(WorldID, DebugDraw.get());
+					b2World_Draw(WorldID, CDebugRenderer::DebugDraw);
 				}
 			});
 		}
@@ -113,12 +112,6 @@ namespace platformer2d {
 	{
 		LK_ASSERT(b2World_IsValid(WorldID));
 		b2World_SetGravity(WorldID, Math::Convert(Gravity));
-	}
-
-	void CPhysicsWorld::InitDebugDraw(b2DebugDraw& DebugDrawRef)
-	{
-		LK_ASSERT(DebugDraw == nullptr);
-		DebugDraw = std::make_unique<b2DebugDraw>(DebugDrawRef);
 	}
 
 	bool CPhysicsWorld::PreSolve(b2ShapeId ShapeA, b2ShapeId ShapeB, b2Vec2 Point, b2Vec2 Normal, void* Ctx)

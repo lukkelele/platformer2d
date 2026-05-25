@@ -27,6 +27,9 @@ namespace platformer2d {
 		static void Initialize();
 		static void Destroy();
 
+		static void SetDrawBounds(const glm::vec2& CameraPos, const glm::vec2& CameraHalfSize);
+		static void SetUserData(void* Ctx);
+
 		static void Draw(const std::shared_ptr<CActor> Actor);
 		static void Draw(const CBody* Body, const glm::vec4& Color = FColor::Magenta, const glm::vec4& OutlineColor = FColor::Transparent, float OutlineThickness = 0.0f);
 		static void DrawOutline(const CBody* Body, const glm::vec4& OutlineColor = FColor::Magenta, float OutlineThickness = 6.0f);
@@ -45,8 +48,76 @@ namespace platformer2d {
 			const glm::vec4& LineColor = FColor::Convert(RGBA32::Magenta),
 			float Radius = 0.030f, const glm::vec4& CircleColor = FColor::Red);
 
+		static void EnableAllDrawOptions();
+		static void DisableAllDrawOptions();
+
+	private:
+		static void Box2D_DrawString(b2Vec2 P, const char* Text, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawCircle(b2Vec2 Center, float Radius, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawSolidCircle(b2Transform T, float Radius, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawPoint(b2Vec2 Center, float Size, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawPolygon(const b2Vec2* Vertices, int Count, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawSolidPolygon(b2Transform T, const b2Vec2* Vertices, int Count, float Radius, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawSolidCapsule(b2Vec2 InP0, b2Vec2 InP1, float Radius, b2HexColor HexColor, void* Ctx);
+		static void Box2D_DrawTransform(b2Transform T, void* Ctx);
+		static void Box2D_DrawSegment(b2Vec2 InP0, b2Vec2 InP1, b2HexColor HexColor, void* Ctx);
+
 	public:
+		static inline b2DebugDraw* DebugDraw = nullptr;
 		static inline glm::mat4 ViewProjection = glm::mat4(1.0f);
+
+		struct FStringConf
+		{
+			bool bDraw = true;
+			float Size = 0.070f;
+		} static inline StringConf;
+
+		struct FCircleConf
+		{
+			bool bDraw = true;
+		} static inline CircleConf;
+
+		struct FCircleSolidConf
+		{
+			bool bDraw = true;
+		} static inline CircleSolidConf;
+
+		struct FPointConf
+		{
+			bool bDraw = true;
+			float Size = 0.010f;
+		} static inline PointConf;
+
+		struct FPolygonConf
+		{
+			bool bDraw = true;
+			float Alpha = 1.0f;
+		} static inline PolygonConf;
+
+		struct FPolygonSolidConf
+		{
+			bool bDraw = true;
+			float Alpha = 1.0f;
+		} static inline PolygonSolidConf;
+
+		struct FCapsuleSolidConf
+		{
+			bool bDraw = true;
+			float Alpha = 1.0f;
+		} static inline CapsuleSolidConf;
+
+		struct FTransformConf
+		{
+			bool bDraw = true;
+			float Scale = 1.0f;
+			glm::vec4 Color = FColor::Magenta;
+		} static inline TransformConf;
+
+		struct FSegmentConf
+		{
+			bool bDraw = true;
+			std::uint16_t LineWidth = 2;
+		} static inline SegmentConf;
 
 	private:
 		static inline GLuint QuadVAO = 0;
@@ -59,7 +130,7 @@ namespace platformer2d {
 		static inline std::shared_ptr<CShader> LineShader = nullptr;
 		struct FLineConfig
 		{
-			uint16_t Width = 2;
+			std::uint16_t Width = 2;
 		};
 		static FLineConfig LineConfig;
 
