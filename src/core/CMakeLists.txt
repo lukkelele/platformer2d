@@ -4,6 +4,7 @@ project_library_sources(
 	application.cpp
 	assert.h
 	buffer.h
+	class.h
 	core.h
 	core.cpp
 	delegate.h
@@ -14,6 +15,7 @@ project_library_sources(
 	log.h
 	log_formatters.h
 	macros.h
+	object.h
 	platform.h
 	profiler.h
 	selectioncontext.h

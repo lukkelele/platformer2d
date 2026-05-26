@@ -23,6 +23,7 @@
 #include "enum.h"
 #include "log.h"
 #include "macros.h"
+#include "object.h"
 #include "uuid.h"
 
 #define LK_MARK_NOT_IMPLEMENTED()                                   \
