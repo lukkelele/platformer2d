@@ -156,6 +156,7 @@ namespace platformer2d {
 		static constexpr FColorValue HoverBlue    = {B::Scale(0.314f),  B::Scale(0.549f),  B::Scale(0.902f), B::Scale(0.902f)};
 		static constexpr FColorValue Gray         = {B::Scale(0.45f),   B::Scale(0.45f),   B::Scale(0.45f),  B::Scale(1.0f)};
 		static constexpr FColorValue LightGray    = {B::Scale(0.70f),   B::Scale(0.70f),   B::Scale(0.70f),  B::Scale(1.0f)};
+		static constexpr FColorValue DarkGray     = {B::Scale(0.20f),   B::Scale(0.20f),   B::Scale(0.20f),  B::Scale(1.0f)};
 		static constexpr FColorValue Cyan         = {B::Scale(0.0f),    B::Scale(1.0f),    B::Scale(1.0f),   B::Scale(1.0f)};
 		static constexpr FColorValue Magenta      = {B::Scale(0.96f),   B::Scale(0.105f),  B::Scale(0.83f),  B::Scale(1.0f)};
 		/* clang-format on */
