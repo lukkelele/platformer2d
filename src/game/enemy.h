@@ -96,6 +96,8 @@ namespace platformer2d {
 		const FSpriteSheet* SpriteSheet = nullptr;
 		FSpriteFrame SpriteFrame;
 		bool bShouldUpdateSprite = false;
+
+		LK_CLASS();
 	};
 }
 

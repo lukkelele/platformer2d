@@ -34,7 +34,7 @@ namespace platformer2d {
 	};
 	LK_ENUM(EDeathReason);
 
-	class CActor : public ISerializable<ESerializable::Yaml>
+	class CActor : public LObject, public ISerializable<ESerializable::Yaml>
 	{
 	public:
 		CActor(const FActorSpecification& Spec = FActorSpecification());
@@ -230,6 +230,8 @@ namespace platformer2d {
 		LUUID Handle;
 		bool bTickEnabled = true;
 		bool bDeletable = true;
+
+		LK_CLASS();
 	};
 
 }

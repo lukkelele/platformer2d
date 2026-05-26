@@ -69,15 +69,14 @@ namespace platformer2d {
 		template<typename T>
 		std::size_t GetAllOfType(std::vector<std::shared_ptr<T>>& Container)
 		{
+			static_assert(std::is_base_of_v<CActor, T>);
 			Container.clear();
 			Container.reserve(Actors.size());
 
 			for (const auto& Actor : Actors) {
 				LK_ASSERT(Actor);
-
-				/* @todo: Use dynamic casting until derived class type can be used for runtime checks */
-				if (const auto Casted = std::dynamic_pointer_cast<T>(Actor)) {
-					Container.push_back(Casted);
+				if (Actor->IsClass<T>()) {
+					Container.push_back(std::static_pointer_cast<T>(Actor));
 				}
 			}
 

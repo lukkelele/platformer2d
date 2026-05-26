@@ -19,10 +19,12 @@ namespace platformer2d {
 		virtual void Tick(float DeltaTime) = 0;
 		virtual void Render() = 0;
 		[[nodiscard]] virtual EWeaponType GetWeaponType() const = 0;
+		[[nodiscard]] virtual EItemType GetItemType() const override { return EItemType::Weapon; }
 
 		virtual void PrimaryAction(const glm::vec2& TargetWorldPos) = 0;
 
-		[[nodiscard]] virtual EItemType GetItemType() const override { return EItemType::Weapon; }
+	private:
+		LK_CLASS();
 	};
 
 }

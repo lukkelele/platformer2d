@@ -141,6 +141,8 @@ namespace platformer2d {
 		float ProjectileRadius = 0.040f;
 		float ProjectileRestitution = 0.42f;
 		float ProjectileDamage = 12.0f;
+
+		LK_CLASS();
 	};
 }
 

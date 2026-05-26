@@ -47,7 +47,7 @@ namespace platformer2d {
 		void Shutdown() override;
 		void Tick() override;
 
-		CProjectile* Spawn(const FProjectileSpawnParams& Params);
+		[[nodiscard]] CProjectile* Spawn(const FProjectileSpawnParams& Params);
 
 	private:
 		void OnContactBegin(const CContactBeginEvent& Event);

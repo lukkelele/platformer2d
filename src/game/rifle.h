@@ -84,6 +84,8 @@ namespace platformer2d {
 		std::uint16_t Ammo;
 		std::uint16_t MagazineSize;
 		glm::vec2 MuzzleOffset = {0.080f, 0.050f};
+
+		LK_CLASS();
 	};
 
 }

@@ -59,6 +59,8 @@ namespace platformer2d {
 		std::chrono::steady_clock::time_point StateEntered;
 
 		std::vector<CActor*> AlreadyHit;
+
+		LK_CLASS();
 	};
 
 }

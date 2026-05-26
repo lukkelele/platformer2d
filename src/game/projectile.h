@@ -17,18 +17,17 @@ namespace platformer2d {
 		CProjectile() = delete;
 		~CProjectile() = default;
 
-		bool ExplodesOnImpact() const { return bExplodeOnImpact; }
-		float GetDamage() const { return Damage; }
-
-		const CActor* GetSpawner() const { return Spawner; }
-		virtual EActorType GetActorType() const override { return EActorType::Projectile; }
+		[[nodiscard]] bool ExplodesOnImpact() const { return bExplodeOnImpact; }
+		[[nodiscard]] float GetDamage() const { return Damage; }
+		[[nodiscard]] const CActor* GetSpawner() const { return Spawner; }
+		[[nodiscard]] virtual EActorType GetActorType() const override { return EActorType::Projectile; }
 
 	public:
-		uint8_t BounceCount = 0;
-		uint8_t MaxBounceCount = 1;
+		std::uint8_t BounceCount = 0;
+		std::uint8_t MaxBounceCount = 1;
 
 	private:
-		CActor* Spawner;
+		CActor* Spawner = nullptr;
 		b2BodyId ID{};
 		b2ShapeId ShapeID{};
 		std::chrono::steady_clock::time_point TimeFired;
@@ -40,6 +39,8 @@ namespace platformer2d {
 		float RenderZ = -0.020f;
 
 		friend class CProjectileSystem;
+
+		LK_CLASS();
 	};
 
 }
