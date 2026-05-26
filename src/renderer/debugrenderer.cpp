@@ -232,12 +232,12 @@ namespace platformer2d {
 		QuadShader->Unbind();
 	}
 
-	void CDebugRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const uint16_t LineWidth)
+	void CDebugRenderer::DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, const std::uint16_t LineWidth)
 	{
 		DrawLine({P0.x, P0.y, 0.0f}, {P1.x, P1.y, 0.0f}, Color, LineWidth);
 	}
 
-	void CDebugRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, const uint16_t LineWidth)
+	void CDebugRenderer::DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, const std::uint16_t LineWidth)
 	{
 		LineShader->Set("u_viewproj", ViewProjection);
 		LineShader->Set("u_color", Color);
@@ -343,8 +343,11 @@ namespace platformer2d {
 		const glm::vec3 Dir = RayCast.Dir;
 		const glm::vec3 HitPos = Origin + Dir * T;
 		LK_DEBUG_TAG("DebugRenderer", "RayHit: Origin={} Dir={} HitPos={} LineWidth={} Radius={}", Origin, Dir, HitPos, LineWidth, Radius);
-		CRenderer::DrawLine(Origin, HitPos, LineColor, LineWidth);
-		CRenderer::DrawCircleFilled(HitPos, Radius, CircleColor);
+		CRenderer::Submit([=]()
+		{
+			CRenderer::DrawLine(Origin, HitPos, LineColor, LineWidth);
+			CRenderer::DrawCircleFilled(HitPos, Radius, CircleColor);
+		});
 	}
 
 	void CDebugRenderer::EnableAllDrawOptions()
