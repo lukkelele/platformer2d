@@ -40,6 +40,7 @@ macro(test_option name)
 endmacro()
 
 test_option(LK_TEST_CORE_BUFFER)
+test_option(LK_TEST_CORE_CLASS)
 test_option(LK_TEST_CORE_ENUM)
 test_option(LK_TEST_GAME_INSTANCE)
 test_option(LK_TEST_GAME_SPRITEREADER)
