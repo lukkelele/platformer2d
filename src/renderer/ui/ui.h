@@ -60,7 +60,7 @@ namespace platformer2d::UI {
 	bool BeginPropertyGrid(float LabelColumnWidth = 180.0f, ImGuiTableColumnFlags ColumnFlags = ImGuiTableColumnFlags_None);
 	void EndPropertyGrid();
 
-	bool ColorDropdown(EColor& Selected);
+	bool ColorDropdown(EColor& Selected, float ComboWidth = -1.0f);
 
 	bool DrawGizmo(std::uint32_t Operation, CActor& Actor, const glm::mat4& ViewMatrix,
 		const glm::mat4& ProjectionMatrix, const glm::vec3& CameraPos = glm::vec3(0.0f, 0.0f, 0.0f));

@@ -146,32 +146,24 @@ namespace platformer2d::UI {
 		const bool BodyFlagsOpened = ImGui::TreeNodeEx("Body Flags", ImGuiTreeNodeFlags_SpanAvailWidth);
 		ImGui::PopFont();
 		if (BodyFlagsOpened) {
-			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
-			BeginPropertyGrid();
+			ImGui::Dummy(ImVec2(0, 2));
+			UI::ShiftCursorX(4.0f);
 
-			Table::NextRow();
-			Table::Label("Pre Solve Events");
-			Table::NextColumn();
-			ImGui::Checkbox("##PreSolveEvents", &Data.BodyFlag.bPreSolveEvents);
+			FChipRow Row;
+			const auto Chip = [&](const char* Label, bool& Value)
+			{
+				Row.Next(Label);
+				if (UI::FlagChip(Label, Value, RGBA32::Orange)) {
+					Value = !Value;
+				}
+			};
+			Chip("PreSolve", Data.BodyFlag.bPreSolveEvents);
+			Chip("Contact", Data.BodyFlag.bContactEvents);
+			Chip("Sensor", Data.BodyFlag.bSensorEvents);
+			Chip("Bullet", Data.BodyFlag.bBullet);
 
-			Table::NextRow();
-			Table::Label("Contact Events");
-			Table::NextColumn();
-			ImGui::Checkbox("##ContactEvents", &Data.BodyFlag.bContactEvents);
-
-			Table::NextRow();
-			Table::Label("Sensor Events");
-			Table::NextColumn();
-			ImGui::Checkbox("##SensorEvents", &Data.BodyFlag.bSensorEvents);
-
-			Table::NextRow();
-			Table::Label("Bullet");
-			Table::NextColumn();
-			ImGui::Checkbox("##Bullet", &Data.BodyFlag.bBullet);
-
-			EndPropertyGrid();
 			ImGui::TreePop();
-		} 
+		}
 
 		/************************
 		 * Motion Lock.
@@ -181,47 +173,34 @@ namespace platformer2d::UI {
 		const bool MotionLockOpened = ImGui::TreeNodeEx("Motion Lock", ImGuiTreeNodeFlags_SpanAvailWidth);
 		UI::Font::Pop();
 		if (MotionLockOpened) {
-			UI::FScopedStyle CellPadding(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
+			ImGui::Dummy(ImVec2(0, 2));
+			UI::ShiftCursorX(4.0f);
 
-			/* Axis: X */
-			if (ImGui::Checkbox("X", &Data.MotionLock.X)) {
-				if (Data.MotionLock.X) {
-					Data.MotionLock.All = false;
+			FChipRow Row;
+			const auto AxisChip = [&](const char* Label, bool& Value)
+			{
+				Row.Next(Label);
+				if (UI::FlagChip(Label, Value, RGBA32::NiceBlue)) {
+					Value = !Value;
+					if (Value) {
+						Data.MotionLock.All = false;
+					}
 				}
-			}
+			};
+			AxisChip("X", Data.MotionLock.X);
+			AxisChip("Y", Data.MotionLock.Y);
+			AxisChip("Z", Data.MotionLock.Z);
 
-			/* Axis: Y */
-			ImGui::SameLine(0.0f, 18.0f);
-			if (ImGui::Checkbox("Y", &Data.MotionLock.Y)) {
-				if (Data.MotionLock.Y) {
-					Data.MotionLock.All = false;
-				}
-			}
-
-			/* Axis: Z */
-			ImGui::SameLine(0.0f, 18.0f);
-			if (ImGui::Checkbox("Z", &Data.MotionLock.Z)) {
-				if (Data.MotionLock.Z) {
-					Data.MotionLock.All = false;
-				}
-			}
-
-			/* All */
-			ImGui::SameLine(0.0f, 32.0f);
-			if (ImGui::Checkbox("All", &Data.MotionLock.All)) {
-				if (Data.MotionLock.All) {
-					Data.MotionLock.X = true;
-					Data.MotionLock.Y = true;
-					Data.MotionLock.Z = true;
-				} else {
-					Data.MotionLock.X = false;
-					Data.MotionLock.Y = false;
-					Data.MotionLock.Z = false;
-				}
+			Row.Next("All");
+			if (UI::FlagChip("All", Data.MotionLock.All, RGBA32::NiceGreen)) {
+				Data.MotionLock.All = !Data.MotionLock.All;
+				Data.MotionLock.X = Data.MotionLock.All;
+				Data.MotionLock.Y = Data.MotionLock.All;
+				Data.MotionLock.Z = Data.MotionLock.All;
 			}
 
 			ImGui::TreePop();
-		} 
+		}
 
 		ImGui::PopID();
 	}

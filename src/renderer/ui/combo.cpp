@@ -114,20 +114,26 @@ namespace platformer2d::UI {
 		LK_ASSERT((SelectedIdx >= 0) && (SelectedIdx < Names.size()));
 
 		static const std::string Label = "Texture";
-		if (ImGui::GetCurrentTable() != nullptr) {
+		const bool InTable = (ImGui::GetCurrentTable() != nullptr);
+		if (InTable) {
 			ImGui::TableSetColumnIndex(0);
 			UI::ShiftCursorX(17.0f);
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text(Label.c_str());
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursorX(7);
 		} else {
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text(Label.c_str());
 			ImGui::SameLine();
 		}
 
-		const float ComboItemWidth = ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
+		const float ComboItemWidth = InTable ? -1.0f : ((ImGui::GetContentRegionAvail().x - 8.0f) / 2.0f);
 		ImGui::SetNextItemWidth(ComboItemWidth);
+		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+		UI::FScopedStyle FramePadding(ImGuiStyleVar_FramePadding, ImVec2(8, 4));
+		UI::FScopedStyle PopupRounding(ImGuiStyleVar_PopupRounding, 6.0f);
 		if (ImGui::BeginCombo("##Texture", Names[SelectedIdx])) {
 			for (std::size_t Idx = 0; Idx < Names.size(); Idx++) {
 				const bool IsSelected = (SelectedIdx == Idx);

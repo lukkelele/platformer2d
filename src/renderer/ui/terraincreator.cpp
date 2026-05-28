@@ -14,6 +14,15 @@ namespace platformer2d::UI {
 
 	FTerrainCreator TerrainCreator;
 
+	static bool TerrainSection(const char* Label)
+	{
+		ImGui::PushFont(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		const bool Open = ImGui::TreeNodeEx(Label, ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding);
+		ImGui::PopFont();
+		return Open;
+	}
+
 	static void ApplyChainToActor(std::shared_ptr<CActor> Actor, FTerrainCreator& State)
 	{
 		LK_ASSERT(Actor && (State.Points.size() >= 4));
@@ -87,55 +96,90 @@ namespace platformer2d::UI {
 	{
 		FTerrainCreator& State = TerrainCreator;
 		bool PointsModified = false;
+
+		const float IconButton = ImGui::GetFrameHeight();
+
 		for (std::size_t Idx = 0; Idx < State.Points.size(); Idx++) {
 			UI::FScopedID ScopedID(static_cast<int>(Idx));
-			ImGui::Text("%2zu", Idx);
-			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(160.0f);
+			ImGui::AlignTextToFramePadding();
+			{
+				UI::FScopedColor IndexColor(ImGuiCol_Text, RGBA32::Text::Darker);
+				ImGui::Text("%2zu", Idx);
+			}
+			ImGui::SameLine(0.0f, 8.0f);
+
+			const float Reserved = (IconButton * 2.0f) + 14.0f;
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - Reserved);
 			if (ImGui::DragFloat2("##Point", &State.Points.at(Idx).x, 0.05f, 0.0f, 0.0f, "%.3f")) {
 				PointsModified = true;
 			}
 
-			ImGui::SameLine();
-			if (ImGui::SmallButton("Insert")) {
-				const glm::vec2 InsertAt = ((Idx + 1) < State.Points.size())
-					? (State.Points.at(Idx) + State.Points.at(Idx + 1)) * 0.50f
-					: State.Points.at(Idx) + glm::vec2(0.50f, 0.0f);
-				State.Points.insert(State.Points.begin() + Idx + 1, InsertAt);
-				PointsModified = true;
-				break;
+			/* Insert after. */
+			ImGui::SameLine(0.0f, 6.0f);
+			{
+				UI::FScopedColorStack Colors(
+					ImGuiCol_Button, RGBA32::BackgroundDark,
+					ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+					ImGuiCol_ButtonActive, RGBA32::NiceGreen);
+				if (ImGui::Button(LK_ICON_PLUS, ImVec2(IconButton, IconButton))) {
+					const glm::vec2 InsertAt = ((Idx + 1) < State.Points.size())
+						? (State.Points.at(Idx) + State.Points.at(Idx + 1)) * 0.50f
+						: State.Points.at(Idx) + glm::vec2(0.50f, 0.0f);
+					State.Points.insert(State.Points.begin() + Idx + 1, InsertAt);
+					PointsModified = true;
+					break;
+				}
 			}
+			UI::SetTooltip("Insert point after");
 
-			ImGui::SameLine();
+			/* Delete. */
+			ImGui::SameLine(0.0f, 4.0f);
 			const bool CanDelete = (State.Points.size() > 4);
 			if (!CanDelete) {
 				ImGui::BeginDisabled();
 			}
-			if (ImGui::SmallButton("X")) {
-				State.Points.erase(State.Points.begin() + Idx);
-				PointsModified = true;
-				if (!CanDelete) {
-					ImGui::EndDisabled();
+			{
+				UI::FScopedColorStack Colors(
+					ImGuiCol_Button, RGBA32::BackgroundDark,
+					ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.12f, 0.12f, 0.85f),
+					ImGuiCol_ButtonActive, ImVec4(0.70f, 0.15f, 0.15f, 1.0f));
+				if (ImGui::Button(LK_ICON_TIMES, ImVec2(IconButton, IconButton))) {
+					State.Points.erase(State.Points.begin() + Idx);
+					PointsModified = true;
+					break;
 				}
-				break;
 			}
 			if (!CanDelete) {
 				ImGui::EndDisabled();
 			}
+			UI::SetTooltip("Delete point");
 		}
 
-		if (ImGui::Button("Append Point")) {
-			const glm::vec2 Tail = State.Points.empty()
-				? glm::vec2(0.0f, 0.0f)
-				: (State.Points.back() + glm::vec2(0.50f, 0.0f));
-			State.Points.push_back(Tail);
-			PointsModified = true;
+		ImGui::Dummy(ImVec2(0, 4));
+		{
+			UI::FScopedColorStack Colors(
+				ImGuiCol_Button, RGBA32::DarkGreen,
+				ImGuiCol_ButtonHovered, RGBA32::NiceGreen,
+				ImGuiCol_ButtonActive, RGBA32::LightGreen);
+			std::array<char, 32> Label = {0};
+			std::snprintf(Label.data(), Label.size(), "%s  Append", LK_ICON_PLUS_CIRCLE);
+			if (ImGui::Button(Label.data())) {
+				const glm::vec2 Tail = State.Points.empty()
+					? glm::vec2(0.0f, 0.0f)
+					: (State.Points.back() + glm::vec2(0.50f, 0.0f));
+				State.Points.push_back(Tail);
+				PointsModified = true;
+			}
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Reset")) {
-			State.ResetPoints();
-			PointsModified = true;
+		{
+			std::array<char, 32> Label = {0};
+			std::snprintf(Label.data(), Label.size(), "%s  Reset", LK_ICON_REFRESH);
+			if (ImGui::Button(Label.data())) {
+				State.ResetPoints();
+				PointsModified = true;
+			}
 		}
 
 		return PointsModified;
@@ -143,7 +187,10 @@ namespace platformer2d::UI {
 
 	void RenderTerrainCreator(std::shared_ptr<CScene> Scene)
 	{
-		const bool Opened = UI::Begin(PanelID::TerrainCreator, nullptr);
+		if (!TerrainCreator.bOpen) {
+			return;
+		}
+		const bool Opened = UI::Begin(PanelID::TerrainCreator, &TerrainCreator.bOpen);
 		if (!Opened) {
 			return;
 		}
@@ -195,45 +242,111 @@ namespace platformer2d::UI {
 		}
 
 		const bool NewChain = (EditActor == nullptr);
-		BeginPropertyGrid();
-		{
-			Table::NextRow();
-			UI::Checkbox("Preview", State.bPreviewVisible);
 
-			/* Row: Chain to edit */
-			Table::NextRow();
-			Table::Label("Editing");
-			Table::NextColumn();
-			if (NewChain) {
-				UI::FScopedFont Font(EFontModifier::Bold);
-				ImGui::Text("<New chain>");
-			} else {
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted("Editing");
+		ImGui::SameLine();
+		if (NewChain) {
+			UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::NiceGreen);
+			UI::FScopedFont Font(EFontModifier::Bold);
+			ImGui::TextUnformatted("<New chain>"); /* @fixme: Don't really like this format */
+		} else {
+			{
+				UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::NiceBlue);
 				ImGui::Text("%s", std::string(EditActor->GetName()).c_str());
 			}
-
-			if (EditActor) {
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Clear##ChainEdit")) {
-					State.bHasEditTarget = false;
-				}
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Clear##ChainEdit")) {
+				State.bHasEditTarget = false;
 			}
+		}
 
+		ImGui::Dummy(ImVec2(0, 6));
+
+		/* Section: Chain */
+		if (TerrainSection("Chain")) {
+			BeginPropertyGrid();
 			Table::NextRow();
 			Table::Label("Name");
 			Table::NextColumn();
-			ImGui::InputText("##NameBuf", State.NameBuf.data(), State.NameBuf.size());
+			{
+				UI::FScopedStyle InputRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+				ImGui::SetNextItemWidth(-1.0f);
+				ImGui::InputText("##NameBuf", State.NameBuf.data(), State.NameBuf.size());
+			}
 
 			Table::NextRow();
-			UI::Checkbox("Loop", State.bLoop);
+			UI::Checkbox("Preview", State.bPreviewVisible);
+			EndPropertyGrid();
 
-			Table::NextRow();
-			if (UI::Checkbox("Block both sides", State.bBlockBothSides) && EditActor) {
-				ApplyChainToActor(EditActor, State);
+			ImGui::Dummy(ImVec2(0, 2));
+			UI::ShiftCursorX(4.0f);
+			FChipRow Row;
+			if (UI::FlagChip("Loop", State.bLoop, RGBA32::NiceBlue)) {
+				State.bLoop = !State.bLoop;
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
+				}
+			}
+			Row.Next("Block Both Sides", true);
+			if (UI::FlagChip("Block Both Sides", State.bBlockBothSides, RGBA32::Orange)) {
+				State.bBlockBothSides = !State.bBlockBothSides;
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
+				}
+			}
+			UI::SetTooltip("Off: one-way platform (stand on top, jump up through). On: solid wall");
+
+			ImGui::TreePop();
+		}
+
+		/* Section: Points */
+		bool PointsModified = false;
+		if (TerrainSection("Points")) {
+			if (NewChain) {
+				ImGui::AlignTextToFramePadding();
+				ImGui::TextUnformatted("Spawn at");
+				ImGui::SameLine();
+				ImGui::SetNextItemWidth(150.0f);
+				ImGui::DragFloat2("##Origin", &State.PreviewOrigin.x, 0.05f, 0.0f, 0.0f, "%.2f");
+				ImGui::SameLine();
+
+				std::array<char, 32> Label = {0};
+				std::snprintf(Label.data(), Label.size(), "%s  To Player", LK_ICON_LOCATION_ARROW);
+				if (ImGui::Button(Label.data())) {
+					if (auto Player = CGameInstance::Get().GetPlayer(0); Player != nullptr) {
+						const glm::vec3 PlayerPos = Player->GetPosition();
+						State.PreviewOrigin = {PlayerPos.x, PlayerPos.y};
+					}
+				}
+			}
+
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%zu points", State.Points.size());
+			ImGui::SameLine();
+			{
+				std::array<char, 32> Label = {0};
+				std::snprintf(Label.data(), Label.size(), "%s  Reverse", LK_ICON_EXCHANGE);
+				if (ImGui::Button(Label.data())) {
+					std::reverse(State.Points.begin(), State.Points.end());
+					if (EditActor) {
+						ApplyChainToActor(EditActor, State);
+					}
+				}
 			}
 			if (ImGui::IsItemHovered()) {
-				UI::SetTooltip("Off: one-way platform (stand on top, jump up through). On: solid wall");
+				UI::SetTooltip("Flip the side that collides for one-way chains");
 			}
 
+			ImGui::Dummy(ImVec2(0, 4));
+			PointsModified = UI_ChainPoints();
+
+			ImGui::TreePop();
+		}
+
+		/* Section: Texture */
+		if (TerrainSection("Texture")) {
+			BeginPropertyGrid();
 			Table::NextRow();
 			if (ColorDropdown(State.Color)) {
 				if (SelectedActor) {
@@ -258,6 +371,7 @@ namespace platformer2d::UI {
 			Table::NextRow();
 			Table::Label("Texture Side");
 			Table::NextColumn();
+			ImGui::SetNextItemWidth(-1.0f);
 			if (UI::Combo("##TextureSide", Enum::View<EDirection>(), State.TextureSide)) {
 				if (EditActor) {
 					ApplyChainToActor(EditActor, State);
@@ -275,72 +389,53 @@ namespace platformer2d::UI {
 			}
 
 			Table::NextRow();
-			if (UI::Checkbox("Tile Texture", State.bTextureTile)) {
-				if (EditActor) {
-					ApplyChainToActor(EditActor, State);
-				}
-			}
-
-			Table::NextRow();
 			if (UI::DragFloat("Tile Width", State.TextureTileWidth, 0.01f, 0.0f, 10.0f, "%.3f")) {
 				if (EditActor) {
 					ApplyChainToActor(EditActor, State);
 				}
 			}
-		}
-		EndPropertyGrid();
+			EndPropertyGrid();
 
-		UI_DebugInfo();
-		ImGui::Dummy(ImVec2(0, 10));
-
-		if (NewChain) {
-			ImGui::Text("Spawn at");
-			ImGui::SameLine();
-			ImGui::SetNextItemWidth(160.0f);
-			ImGui::DragFloat2("##Origin", &State.PreviewOrigin.x, 0.05f, 0.0f, 0.0f, "%.2f");
-			ImGui::SameLine();
-
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
-			if (ImGui::Button("To Player")) {
-				if (auto Player = CGameInstance::Get().GetPlayer(0); Player != nullptr) {
-					const glm::vec3 PlayerPos = Player->GetPosition();
-					State.PreviewOrigin = {PlayerPos.x, PlayerPos.y};
+			ImGui::Dummy(ImVec2(0, 2));
+			UI::ShiftCursorX(4.0f);
+			if (UI::FlagChip("Tile Texture", State.bTextureTile, RGBA32::Orange)) {
+				State.bTextureTile = !State.bTextureTile;
+				if (EditActor) {
+					ApplyChainToActor(EditActor, State);
 				}
 			}
-			ImGui::PopStyleVar();
+
+			ImGui::TreePop();
 		}
 
-		ImGui::Text("Points (%zu)", State.Points.size());
-		ImGui::SameLine();
-		if (ImGui::Button("Reverse")) {
-			std::reverse(State.Points.begin(), State.Points.end());
-			if (EditActor) {
-				ApplyChainToActor(EditActor, State);
-			}
-		}
-		if (ImGui::IsItemHovered()) {
-			UI::SetTooltip("Flip the side that collides for one-way chains");
-		}
-
-		const bool PointsModified = UI_ChainPoints();
-		ImGui::Dummy(ImVec2(0, 10));
+		UI_DebugInfo();
+		ImGui::Dummy(ImVec2(0, 12));
 
 		const bool ValidPoints = (State.Points.size() >= 4);
 		if (!ValidPoints) {
 			ImGui::TextColored(FColor::Convert<ImVec4>(RGBA32::Red), "Need at least 4 points");
 			ImGui::BeginDisabled();
 		}
-		if (EditActor) {
-			if (ImGui::Button("Apply") || (PointsModified && ValidPoints)) {
-				ApplyChainToActor(EditActor, State);
-			}
-		} else {
-			if (ImGui::Button("Create Chain")) {
-				std::shared_ptr<CActor> Actor = CSpawner::CreateChain(State.NameBuf.data(), State.Points, State.bLoop, State.bBlockBothSides, FColor::Get(State.Color));
-				if (Actor) {
-					Actor->SetPosition(State.PreviewOrigin);
-					State.EditTarget = Actor->GetHandle();
-					State.bHasEditTarget = true;
+		{
+			UI::FScopedStyle ButtonPad(ImGuiStyleVar_FramePadding, ImVec2(6, 8));
+			UI::FScopedColorStack ButtonColors(
+				ImGuiCol_Button, RGBA32::DarkGreen,
+				ImGuiCol_ButtonHovered, RGBA32::NiceGreen,
+				ImGuiCol_ButtonActive, RGBA32::LightGreen);
+			if (EditActor) {
+				if (ImGui::Button("Apply", ImVec2(-1.0f, 0.0f)) || (PointsModified && ValidPoints)) {
+					ApplyChainToActor(EditActor, State);
+				}
+			} else {
+				std::array<char, 32> Label = {0};
+				std::snprintf(Label.data(), Label.size(), "%s  Create Chain", LK_ICON_PLUS_CIRCLE);
+				if (ImGui::Button(Label.data(), ImVec2(-1.0f, 0.0f))) {
+					std::shared_ptr<CActor> Actor = CSpawner::CreateChain(State.NameBuf.data(), State.Points, State.bLoop, State.bBlockBothSides, FColor::Get(State.Color));
+					if (Actor) {
+						Actor->SetPosition(State.PreviewOrigin);
+						State.EditTarget = Actor->GetHandle();
+						State.bHasEditTarget = true;
+					}
 				}
 			}
 		}

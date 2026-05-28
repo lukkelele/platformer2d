@@ -1,8 +1,5 @@
 #include "widgets.h"
 
-#include <array>
-#include <cstring>
-
 #include "core/window.h"
 #include "core/input/keyboard.h"
 #include "game/instance.h"
@@ -12,12 +9,70 @@
 #include "editor_resources.h"
 #include "enemytools.h"
 #include "imgui.h"
+#include "renderer/fontawesome.h"
 #include "ui.h"
 #include "scene/scene.h"
 
 namespace platformer2d::UI {
 
-	// std::unordered_map<LUUID, Internal::FActorDataEntry> ActorDataMap;
+	namespace {
+		struct FBodyEditState
+		{
+			FBodySpecification Spec;
+			bool bSeeded = false;
+			bool bDirty = false;
+		};
+	}
+
+	static std::unordered_map<LUUID, FBodyEditState> BodyEditCache;
+
+	bool FlagChip(const char* Label, const bool Active, const std::uint32_t Accent)
+	{
+		const ImColor Base = Active ? ImColor(Accent) : ImColor(RGBA32::BackgroundDark);
+		UI::FScopedStyle Rounding(ImGuiStyleVar_FrameRounding, 9.0f);
+		UI::FScopedStyle Padding(ImGuiStyleVar_FramePadding, ImVec2(9, 3));
+		UI::FScopedColorStack Colors(
+			ImGuiCol_Button, Base.Value,
+			ImGuiCol_ButtonHovered, UI::ColorWithMultipliedValue(Base, 1.25f).Value,
+			ImGuiCol_ButtonActive, UI::ColorWithMultipliedValue(Base, 0.85f).Value);
+		UI::FScopedColor TextColor(ImGuiCol_Text, Active ? FColor::Black.As<std::uint32_t>() : RGBA32::Text::Brighter);
+		return ImGui::Button(Label);
+	}
+
+	static const char* ActorTypeIcon(const EActorType Type)
+	{
+		switch (Type) {
+			case EActorType::Player:     return LK_ICON_MALE;
+			case EActorType::Enemy:      return LK_ICON_CROSSHAIRS;
+			case EActorType::Spawnpoint: return LK_ICON_BULLSEYE;
+			case EActorType::Projectile: return LK_ICON_DOT_CIRCLE_O;
+			case EActorType::Object:
+			default:                     return LK_ICON_CUBE;
+		}
+	}
+
+	static bool ContainsCI(std::string_view Haystack, std::string_view Needle)
+	{
+		if (Needle.empty()) {
+			return true;
+		}
+		if (Needle.size() > Haystack.size()) {
+			return false;
+		}
+
+		const auto ToLower = [](const char C)
+		{
+			return static_cast<char>(std::tolower(static_cast<unsigned char>(C)));
+		};
+		const auto Iter = std::search(
+			Haystack.begin(), Haystack.end(),
+			Needle.begin(), Needle.end(),
+			[&](const char A, const char B)
+		{
+			return ToLower(A) == ToLower(B);
+		});
+		return (Iter != Haystack.end());
+	}
 
 	void Actor::Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
 	{
@@ -128,55 +183,24 @@ namespace platformer2d::UI {
 		}
 	}
 
-	static bool Node_BodyFlags(CBody& Body)
+	static void Node_BodyLiveInfo(CActor& Actor, CBody& Body)
 	{
-		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-		if (!ImGui::TreeNodeEx("Body Flags", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			return false;
-		}
-
-		ImGuiStyle& Style = ImGui::GetStyle();
-		BeginPropertyGrid();
-		const std::uint32_t BodyFlags = Body.GetSpecification().Flags;
-		const float DisabledAlpha = Style.DisabledAlpha;
-		Style.DisabledAlpha = 1.0f;
-
-		Table::NextRow();
-		bool PreSolveFlag = (BodyFlags & EBodyFlag::EBodyFlag_PreSolveEvents);
-		DisabledCheckbox("PreSolve", PreSolveFlag);
-
-		Table::NextRow();
-		bool ContactFlag = (BodyFlags & EBodyFlag::EBodyFlag_ContactEvents);
-		DisabledCheckbox("Contact", ContactFlag);
-
-		Table::NextRow();
-		bool SensorFlag = (BodyFlags & EBodyFlag::EBodyFlag_SensorEvents);
-		DisabledCheckbox("Sensor", SensorFlag);
-
-		Table::NextRow();
-		bool BulletFlag = (BodyFlags & EBodyFlag::EBodyFlag_Bullet);
-		DisabledCheckbox("Bullet", BulletFlag);
-
-		Style.DisabledAlpha = DisabledAlpha;
-
-		EndPropertyGrid();
-		ImGui::TreePop();
-		return true;
-	}
-
-	static bool Node_Physics(CBody& Body)
-	{
-		if (!ImGui::TreeNodeEx("Physics", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			return false;
+		if (!ImGui::TreeNodeEx("Live", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return;
 		}
 
 		BeginPropertyGrid();
-		ImGui::Unindent();
 
 		Table::NextRow();
 		bool Enabled = Body.IsEnabled();
-		if (UI::Checkbox("Body Enabled", Enabled)) {
+		if (UI::Checkbox("Enabled", Enabled)) {
 			Body.SetEnabled(Enabled);
+		}
+
+		Table::NextRow();
+		bool TickEnabled = Actor.IsTickEnabled();
+		if (UI::Checkbox("Tick", TickEnabled)) {
+			Actor.SetTickEnabled(TickEnabled);
 		}
 
 		Table::NextRow();
@@ -185,7 +209,7 @@ namespace platformer2d::UI {
 		ImGui::Text("%s", Body.IsAwake() ? "Yes" : "No");
 
 		Table::NextRow();
-		Table::Label("Body Size");
+		Table::Label("Current Size");
 		Table::NextColumn();
 		const glm::vec2 BodySize = Body.GetSize();
 		ImGui::Text("(%.2f, %.2f)", BodySize.x, BodySize.y);
@@ -199,8 +223,7 @@ namespace platformer2d::UI {
 		Table::NextRow();
 		Table::Label("Angular Velocity");
 		Table::NextColumn();
-		const float AngularV = Body.GetAngularVelocity();
-		ImGui::Text("%.2f", AngularV);
+		ImGui::Text("%.2f", Body.GetAngularVelocity());
 
 		Table::NextRow();
 		Table::Label("AABB");
@@ -210,10 +233,118 @@ namespace platformer2d::UI {
 		ImGui::SameLine(0.0f, 16.0f);
 		ImGui::Text("Max (%.2f, %.2f)", AABB.Max.x, AABB.Max.y);
 
-		ImGui::Indent();
 		EndPropertyGrid();
 		ImGui::TreePop();
-		return true;
+	}
+
+	static void Node_BodyEditor(CActor& Actor, CBody& Body, FBodyEditState& Edit)
+	{
+		BeginPropertyGrid();
+
+		Table::NextRow();
+		Table::Label("Type");
+		Table::NextColumn();
+		ImGui::SetNextItemWidth(-1.0f);
+		EBodyType Type = Edit.Spec.Type;
+		if (UI::Combo("##BodyType", Enum::View<EBodyType>(), Type)) {
+			Edit.Spec.Type = Type;
+			Edit.bDirty = true;
+		}
+
+		Table::NextRow();
+		glm::vec2 Size = Body.GetSize();
+		if (UI::DragFloat2("Size", Size, 1.0f, 0.01f, 0.010f, 50.0f)) {
+			Size.x = std::max(Size.x, 0.010f);
+			Size.y = std::max(Size.y, 0.010f);
+			Actor.SetSize(Size);
+			if (FPolygon* Polygon = std::get_if<FPolygon>(&Edit.Spec.Shape)) {
+				Polygon->Size = Size;
+			}
+		}
+
+		Table::NextRow();
+		if (UI::DragFloat("Gravity Scale", Edit.Spec.GravityScale, 0.01f, 0.0f, 5.0f, "%.2f")) {
+			Edit.bDirty = true;
+		}
+
+		Table::NextRow();
+		if (UI::DragFloat("Friction", Edit.Spec.Friction, 0.01f, 0.0f, 2.0f, "%.2f")) {
+			Edit.bDirty = true;
+		}
+
+		Table::NextRow();
+		if (UI::DragFloat("Density", Edit.Spec.Density, 0.01f, 0.0f, 10.0f, "%.2f")) {
+			Edit.bDirty = true;
+		}
+
+		Table::NextRow();
+		if (UI::DragFloat("Linear Damping", Edit.Spec.LinearDamping, 0.01f, 0.0f, 10.0f, "%.2f")) {
+			Edit.bDirty = true;
+		}
+
+		Table::NextRow();
+		if (UI::DragFloat("Angular Damping", Edit.Spec.AngularDamping, 0.01f, 0.0f, 10.0f, "%.2f")) {
+			Edit.bDirty = true;
+		}
+
+		Table::NextRow();
+		bool Sensor = Edit.Spec.bSensor;
+		if (UI::Checkbox("Sensor", Sensor)) {
+			Edit.Spec.bSensor = Sensor;
+			Edit.bDirty = true;
+		}
+
+		EndPropertyGrid();
+
+		/* Body flags as toggleable chips. */
+		ImGui::Dummy(ImVec2(0, 2));
+		ImGui::AlignTextToFramePadding();
+		UI::ShiftCursorX(4.0f);
+		ImGui::TextUnformatted("Flags");
+		ImGui::SameLine(0.0f, 10.0f);
+
+		FChipRow Row;
+		const auto BodyChip = [&](const char* Label, const EBodyFlag Flag)
+		{
+			Row.Next(Label);
+			const auto Bit = static_cast<std::underlying_type_t<EBodyFlag>>(Flag);
+			const bool On = (Edit.Spec.Flags & Bit) != 0;
+			if (FlagChip(Label, On, RGBA32::Orange)) {
+				if (On) {
+					Edit.Spec.Flags &= ~Bit;
+				} else {
+					Edit.Spec.Flags |= Bit;
+				}
+				Edit.bDirty = true;
+			}
+		};
+		BodyChip("PreSolve", EBodyFlag_PreSolveEvents);
+		BodyChip("Contact", EBodyFlag_ContactEvents);
+		BodyChip("Sensor", EBodyFlag_SensorEvents);
+		BodyChip("Bullet", EBodyFlag_Bullet);
+
+		/* Rebuild button. */
+		ImGui::Dummy(ImVec2(0, 6));
+		{
+			const ImColor ButtonColor = Edit.bDirty ? ImColor(RGBA32::NiceGreen) : ImColor(RGBA32::Background);
+			UI::FScopedStyle Rounding(ImGuiStyleVar_FrameRounding, 6.0f);
+			UI::FScopedStyle Padding(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
+			UI::FScopedColorStack Colors(
+				ImGuiCol_Button, ButtonColor.Value,
+				ImGuiCol_ButtonHovered, UI::ColorWithMultipliedValue(ButtonColor, 1.20f).Value,
+				ImGuiCol_ButtonActive, UI::ColorWithMultipliedValue(ButtonColor, 0.90f).Value);
+
+			std::array<char, 64> Label = {0};
+			std::snprintf(Label.data(), Label.size(), "%s  Rebuild Body", LK_ICON_REFRESH);
+			if (ImGui::Button(Label.data(), ImVec2(-1.0f, 0.0f))) {
+				Actor.ReplaceBody(Edit.Spec);
+				Edit.Spec = Body.GetSpecification();
+				Edit.bDirty = false;
+			}
+		}
+
+		ImGui::Dummy(ImVec2(0, 4));
+		Node_BodyLiveInfo(Actor, Body);
 	}
 
 	static bool Node_Outline(CActor& Actor)
@@ -249,7 +380,6 @@ namespace platformer2d::UI {
 		return true;
 	}
 
-	/* @fixme: Refactor these awful functions :) */
 	void Actor::Data(std::shared_ptr<CActor> Actor)
 	{
 		const LUUID Handle = Actor->GetHandle();
@@ -260,10 +390,7 @@ namespace platformer2d::UI {
 			ActorCache.Cache(*Actor);
 		}
 
-		FTransformComponent& TC = Actor->GetTransformComponent();
 		CBody* Body = Actor->GetBody();
-
-		auto& Style = ImGui::GetStyle();
 
 		BeginPropertyGrid();
 		Input::ActorName(*Actor);
@@ -283,7 +410,7 @@ namespace platformer2d::UI {
 			LK_WARN_TAG("UI", "Failed to deduce: {}", ColorRef);
 			ImGui::BeginDisabled();
 		}
-		const bool ColorUpdated = ColorDropdown(Color);
+		const bool ColorUpdated = ColorDropdown(Color, -78.0f);
 		if (ColorUpdated) {
 			LK_INFO_TAG("UI", "Update {} color: {}", Actor->GetName(), Enum::ToString(Color));
 			Actor->SetColor(FColor::Get(Color));
@@ -298,69 +425,129 @@ namespace platformer2d::UI {
 			ImGui::EndDisabled();
 		}
 
-		Table::NextRow();
-		std::underlying_type_t<EActorFlag> Flags = Actor->GetFlags();
-		Table::Label("Flags");
-		Table::NextColumn();
-		ImGui::Text("0x%X", Flags);
-
 		EndPropertyGrid();
 
+		ImGui::Dummy(ImVec2(0, 2));
+		ImGui::AlignTextToFramePadding();
+		UI::ShiftCursorX(4.0f);
+		ImGui::TextUnformatted("Flags");
+		ImGui::SameLine(0.0f, 10.0f);
+		{
+			FChipRow Row;
+			const auto ActorChip = [&](const char* Label, const EActorFlag Flag)
+			{
+				Row.Next(Label);
+				const bool On = Actor->HasFlag(Flag);
+				if (FlagChip(Label, On, RGBA32::Highlight)) {
+					Actor->SetFlag(Flag, !On);
+				}
+			};
+			ActorChip("Transparent", EActorFlag_Transparent);
+			ActorChip("Terrain", EActorFlag_Terrain);
+			ActorChip("Spawnpoint", EActorFlag_Spawnpoint);
+		}
+
+		ImGui::Dummy(ImVec2(0, 4));
+		DrawComponents(Actor);
+
 		if (Body) {
-			BeginPropertyGrid();
-			Table::NextRow();
-			Table::Label("Tick");
-			Table::NextColumn();
-			ImGui::Text("%s", Actor->IsTickEnabled() ? "Enabled" : "Disabled");
+			FBodyEditState& Edit = BodyEditCache[Handle];
+			if (!Edit.bSeeded) {
+				Edit.Spec = Body->GetSpecification();
+				Edit.bSeeded = true;
+			}
 
-			Table::NextRow();
-			Table::Label("Body Type");
-			Table::NextColumn();
-			ImGui::Text("%s", Enum::ToString<const char*>(Body->GetType()));
-
-			Table::NextRow();
-			Table::Label("Sensor");
-			Table::NextColumn();
-			ImGui::Text("%s", Body->IsSensor() ? "Yes" : "No");
-			EndPropertyGrid();
-
-			ImGui::Spacing();
-			Node_BodyFlags(*Body);
-			Node_Physics(*Body);
+			ImGui::Dummy(ImVec2(0, 4));
+			ImGui::PushFont(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large, EFontModifier::Bold));
+			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+			const bool BodyOpen = ImGui::TreeNodeEx("Body", ImGuiTreeNodeFlags_SpanAvailWidth);
+			ImGui::PopFont();
+			if (BodyOpen) {
+				Node_BodyEditor(*Actor, *Body, Edit);
+				ImGui::TreePop();
+			}
 		}
 
 		Node_Outline(*Actor);
 	}
 
-	void Actor::Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene)
+	void Actor::Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene, const std::size_t RowIndex)
 	{
 		LK_ASSERT(Actor && Scene);
 		const LUUID Handle = Actor->GetHandle();
+		ImGui::PushID(Handle);
 
 		const bool IsSelected = CSelectionContext::IsSelected(Handle);
-		ImGuiTreeNodeFlags TreeNodeFlags = (IsSelected ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None);
-		TreeNodeFlags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+		ImGuiTreeNodeFlags TreeNodeFlags = ImGuiTreeNodeFlags_SpanAvailWidth
+			| ImGuiTreeNodeFlags_AllowOverlap
+			| ImGuiTreeNodeFlags_FramePadding
+			| ImGuiTreeNodeFlags_OpenOnArrow;
+		if (IsSelected) {
+			TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+		}
 
 		const ImGuiID ActorImGuiID = ImGui::GetID((void*)(std::uint64_t)(std::uint32_t)Handle);
-		std::string_view Name = Actor->GetName();
-		std::array<char, 84> NodeName = {0};
-		std::snprintf(NodeName.data(), NodeName.size(), "%s", Name.data());
 
-		const bool WasOpen = ImGui::TreeNodeBehaviorIsOpen(ActorImGuiID);
-		ImGui::SetNextItemStorageID(ActorImGuiID);
-		const bool NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, NodeName.data());
-		ImGui::PushID(Handle);
-		if (NodeOpened) {
-			/* @fixme: Restructure */
-			Actor::Data(Actor);
-			DrawComponents(Actor);
-			UI::Actor::DeleteButton(Actor, Scene);
-			ImGui::TreePop();
+		const ImVec2 RowMin = ImGui::GetCursorScreenPos();
+		const ImVec2 RowAvail = ImGui::GetContentRegionAvail();
+		const float RowHeight = ImGui::GetFrameHeight();
+		if (!IsSelected && ((RowIndex & 1) != 0)) {
+			ImGui::GetWindowDrawList()->AddRectFilled(
+				RowMin, ImVec2(RowMin.x + RowAvail.x, RowMin.y + RowHeight), RGBA32::BackgroundDark);
+		}
 
-			if (!WasOpen && !CSelectionContext::IsAnySelected()) {
-				LK_DEBUG_TAG("UI", "Selecting: {} ({})", NodeName.data(), Handle);
-				CSelectionContext::Select(Handle);
+		bool NodeOpened = false;
+		{
+			UI::FScopedColorStack HeaderColors(
+				ImGuiCol_Header, ImVec4(0.15f, 0.42f, 0.62f, 0.55f),
+				ImGuiCol_HeaderHovered, ImVec4(0.20f, 0.50f, 0.72f, 0.55f),
+				ImGuiCol_HeaderActive, ImVec4(0.20f, 0.50f, 0.72f, 0.75f));
+			ImGui::SetNextItemStorageID(ActorImGuiID);
+			NodeOpened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(ActorImGuiID)), TreeNodeFlags, "%s", "");
+		}
+		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+			CSelectionContext::Select(Handle);
+		}
+
+		{
+			constexpr float IconSlot = 30.0f;
+			ImGui::SameLine(0.0f, 2.0f);
+			const float IconStartX = ImGui::GetCursorPosX();
+			ImGui::AlignTextToFramePadding();
+			ImGui::PushStyleColor(ImGuiCol_Text, IsSelected ? RGBA32::Text::Brighter : RGBA32::Text::Darker);
+			ImGui::TextUnformatted(ActorTypeIcon(Actor->GetActorType()));
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(IconStartX + IconSlot);
+			ImGui::AlignTextToFramePadding();
+			ImGui::TextUnformatted(Actor->GetName().data());
+		}
+
+		/* Delete button. */
+		{
+			const bool IsDeletable = Actor->IsDeletable();
+			ImGui::SameLine(RowAvail.x - RowHeight);
+			UI::FScopedColorStack TrashColors(
+				ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f),
+				ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.12f, 0.12f, 0.85f),
+				ImGuiCol_ButtonActive, ImVec4(0.70f, 0.15f, 0.15f, 1.0f));
+			UI::FScopedColor TrashText(ImGuiCol_Text, IsDeletable ? RGBA32::Text::Darker : RGBA32::Text::Disabled);
+			if (!IsDeletable) {
+				ImGui::BeginDisabled();
 			}
+			if (ImGui::Button(LK_ICON_TRASH_O, ImVec2(RowHeight, RowHeight))) {
+				LK_INFO_TAG("UI", "Delete: {} ({})", Handle, Actor->GetName());
+				Scene->DeleteActor(Handle);
+			}
+			if (!IsDeletable) {
+				ImGui::EndDisabled();
+			}
+			UI::SetTooltip(IsDeletable ? "Delete actor" : "Actor is not deletable");
+		}
+
+		if (NodeOpened) {
+			Actor::Data(Actor);
+			ImGui::TreePop();
 		}
 
 		ImGui::PopID();
@@ -370,6 +557,175 @@ namespace platformer2d::UI {
 	{
 		LK_DEBUG_TAG("UI", "Removing handle {} from actor cache", ActorHandle);
 		ActorCache.Erase(ActorHandle);
+		BodyEditCache.erase(ActorHandle);
+	}
+
+	static void AddComponentRow_Present(const char* Label)
+	{
+		ImGui::BeginDisabled();
+		ImGui::TreeNodeEx(Label, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanAvailWidth);
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::TextDisabled("(added)");
+	}
+
+	static void AddComponentForm_Transform(std::shared_ptr<CActor> Actor)
+	{
+		if (Actor->HasComponent<FTransformComponent>()) {
+			AddComponentRow_Present("Transform");
+			return;
+		}
+
+		if (ImGui::Selectable("Transform")) {
+			Actor->AddComponent<FTransformComponent>();
+			ImGui::CloseCurrentPopup();
+		}
+	}
+
+	static void AddComponentForm_Health(std::shared_ptr<CActor> Actor)
+	{
+		if (Actor->HasComponent<FHealthComponent>()) {
+			AddComponentRow_Present("Health");
+			return;
+		}
+
+		if (!ImGui::TreeNodeEx("Health", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return;
+		}
+
+		static FHealthComponent Draft;
+		BeginPropertyGrid(120.0f);
+		Table::NextRow();
+		UI::DragFloat("Max Health", Draft.MaxHealth, 1.0f, 1.0f, 10000.0f, "%.0f");
+		Table::NextRow();
+		UI::DragFloat("Health", Draft.Health, 1.0f, 0.0f, Draft.MaxHealth, "%.0f");
+		Table::NextRow();
+		bool Damageable = Draft.bDamageable;
+		if (UI::Checkbox("Damageable", Damageable)) {
+			Draft.bDamageable = Damageable;
+		}
+		EndPropertyGrid();
+
+		if (ImGui::Button("Add Health", ImVec2(-1.0f, 0.0f))) {
+			if (Draft.Health > Draft.MaxHealth) {
+				Draft.Health = Draft.MaxHealth;
+			}
+			Actor->AddComponent<FHealthComponent>(Draft);
+			Draft = FHealthComponent{};
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::TreePop();
+	}
+
+	static void AddComponentForm_Interaction(std::shared_ptr<CActor> Actor)
+	{
+		if (Actor->HasComponent<FInteractionComponent>()) {
+			AddComponentRow_Present("Interaction");
+			return;
+		}
+
+		if (!ImGui::TreeNodeEx("Interaction", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return;
+		}
+
+		static FInteractionComponent Draft;
+		static std::array<char, 64> CheckpointBuf = {0};
+
+		BeginPropertyGrid(120.0f);
+		Table::NextRow();
+		Table::Label("Type");
+		Table::NextColumn();
+		ImGui::SetNextItemWidth(-1.0f);
+		EInteraction Type = Draft.Type;
+		if (UI::Combo("##InteractionType", Enum::View<EInteraction>(), Type)) {
+			Draft.Type = Type;
+			switch (Type) {
+				case EInteraction::None:       Draft.Data = std::monostate{}; break;
+				case EInteraction::Damage:     Draft.Data = FDamageInteraction{}; break;
+				case EInteraction::Pickup:     Draft.Data = FPickupInteraction{}; break;
+				case EInteraction::Heal:       Draft.Data = FHealInteraction{}; break;
+				case EInteraction::Killzone:   Draft.Data = FKillzoneInteraction{}; break;
+				case EInteraction::Jumppad:    Draft.Data = FJumppadInteraction{}; break;
+				case EInteraction::Climbable:  Draft.Data = FClimbableInteraction{}; break;
+				case EInteraction::Checkpoint: Draft.Data = FCheckpointInteraction{}; break;
+				default:                       break;
+			}
+		}
+
+		if (FDamageInteraction* D = std::get_if<FDamageInteraction>(&Draft.Data)) {
+			Table::NextRow();
+			UI::DragFloat("Damage", D->Damage, 1.0f, 0.0f, 1000.0f, "%.1f");
+		} else if (FHealInteraction* H = std::get_if<FHealInteraction>(&Draft.Data)) {
+			Table::NextRow();
+			UI::DragFloat("Amount", H->Amount, 1.0f, 0.0f, 1000.0f, "%.1f");
+			Table::NextRow();
+			bool Consume = H->bConsumeOnUse;
+			if (UI::Checkbox("Consume On Use", Consume)) {
+				H->bConsumeOnUse = Consume;
+			}
+		} else if (FJumppadInteraction* J = std::get_if<FJumppadInteraction>(&Draft.Data)) {
+			Table::NextRow();
+			UI::DragFloat2("Impulse", J->Impulse, 0.0f, 0.10f, -50.0f, 50.0f);
+			Table::NextRow();
+			bool Preserve = J->bPreserveHorizontalVelocity;
+			if (UI::Checkbox("Keep Horizontal", Preserve)) {
+				J->bPreserveHorizontalVelocity = Preserve;
+			}
+		} else if (FClimbableInteraction* Climb = std::get_if<FClimbableInteraction>(&Draft.Data)) {
+			Table::NextRow();
+			UI::DragFloat("Climb Speed", Climb->ClimbSpeed, 0.10f, 0.0f, 50.0f, "%.2f");
+		} else if (FCheckpointInteraction* Checkpoint = std::get_if<FCheckpointInteraction>(&Draft.Data)) {
+			Table::NextRow();
+			Table::Label("Checkpoint ID");
+			Table::NextColumn();
+			ImGui::SetNextItemWidth(-1.0f);
+			if (ImGui::InputText("##CheckpointID", CheckpointBuf.data(), CheckpointBuf.size())) {
+				Checkpoint->CheckpointID = CheckpointBuf.data();
+			}
+		}
+		EndPropertyGrid();
+
+		if (ImGui::Button("Add Interaction", ImVec2(-1.0f, 0.0f))) {
+			Actor->AddComponent<FInteractionComponent>(Draft);
+			Draft = FInteractionComponent{};
+			CheckpointBuf.fill('\0');
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::TreePop();
+	}
+
+	static void AddComponentForm_Effect(std::shared_ptr<CActor> Actor)
+	{
+		if (Actor->HasComponent<FEffectComponent>()) {
+			AddComponentRow_Present("Effect");
+			return;
+		}
+
+		if (!ImGui::TreeNodeEx("Effect", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+			return;
+		}
+
+		static float AngularSpeed = 90.0f;
+		BeginPropertyGrid(120.0f);
+		Table::NextRow();
+		UI::DragFloat("Angular Speed", AngularSpeed, 1.0f, -720.0f, 720.0f, "%.0f");
+		EndPropertyGrid();
+
+		if (ImGui::Button("Add Effect", ImVec2(-1.0f, 0.0f))) {
+			FEffectComponent EffectComp;
+			FEffectInstance Instance;
+			Instance.Type = EEffectType::Rotate;
+			FRotateEffect Rotate;
+			Rotate.AngularSpeedDegPerSecond = AngularSpeed;
+			Instance.Data = Rotate;
+			EffectComp.Effects.push_back(Instance);
+			Actor->AddComponent<FEffectComponent>(EffectComp);
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::TreePop();
 	}
 
 	void DrawComponents(std::shared_ptr<CActor> Actor)
@@ -400,18 +756,12 @@ namespace platformer2d::UI {
 				Actor->SetRotation(glm::radians(Rotation));
 			}
 
-#if 0 /* SCALING NEEDS TO BE SUPPORTED */
 			/* Scale */
 			ImGui::TableNextRow();
-			glm::vec3& Scale = TC.Scale;
-			UI::DragFloat3("Scale", Scale, 1.0f, 0.010f, 0.010f);
-
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			if (ImGui::Button("Rebuild")) {
-				Actor->GetBody()->Rebuild();
+			glm::vec3 Scale = TC.GetScale();
+			if (UI::DragFloat3("Scale", Scale, 1.0f, 0.010f, 0.010f)) {
+				Actor->SetScale({Scale.x, Scale.y});
 			}
-#endif
 
 			UI::EndPropertyGrid();
 			ImGui::Dummy(ImVec2(0, 4));
@@ -754,7 +1104,7 @@ namespace platformer2d::UI {
 			ImGui::Dummy(ImVec2(0, 4));
 		});
 
-		ImGui::Dummy(ImVec2(0, 30));
+		ImGui::Dummy(ImVec2(0, 16));
 
 		/******************************
 		 * Button: Add Component
@@ -762,15 +1112,15 @@ namespace platformer2d::UI {
 		{
 			UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Large));
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+			UI::FScopedStyle ButtonPadding(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
+			UI::FScopedColorStack ButtonColors(
+				ImGuiCol_Button, RGBA32::DarkGreen,
+				ImGuiCol_ButtonHovered, RGBA32::NiceGreen,
+				ImGuiCol_ButtonActive, RGBA32::LightGreen);
 
-			const float LineHeight = GImGui->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-			static const char* AddButtonLabel = "Add Component";
-			ImVec2 AddTextSize = ImGui::CalcTextSize(AddButtonLabel);
-			ImVec2 ButtonSize = ImVec2(AddTextSize.x * 1.30f, LineHeight + 2.0f);
-
-			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			UI::ShiftCursorX(Avail.x - (ButtonSize.x + 10));
-			if (ImGui::Button(AddButtonLabel, ButtonSize)) {
+			std::array<char, 48> AddButtonLabel = {0};
+			std::snprintf(AddButtonLabel.data(), AddButtonLabel.size(), "%s  Add Component", LK_ICON_PLUS);
+			if (ImGui::Button(AddButtonLabel.data(), ImVec2(-1.0f, 0.0f))) {
 				ImGui::OpenPopup("AddComponent");
 			}
 		}
@@ -778,19 +1128,14 @@ namespace platformer2d::UI {
 		/******************************
 		 * Popup: Add Component
 		 ******************************/
+		ImGui::SetNextWindowSize(ImVec2(300.0f, 0.0f), ImGuiCond_Appearing);
 		if (ImGui::BeginPopup("AddComponent", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking)) {
-			static constexpr float AddCompPanelWidth = 250.0f;
-			if (ImGui::BeginTable("##CompTable", 2, ImGuiTableFlags_SizingStretchSame)) {
-				ImGui::TableSetupColumn("Icon", ImGuiTableColumnFlags_WidthFixed, AddCompPanelWidth * 0.12f);
-				ImGui::TableSetupColumn("Components", ImGuiTableColumnFlags_WidthFixed, AddCompPanelWidth * 0.88f);
+			UI::FScopedStyle Rounding(ImGuiStyleVar_FrameRounding, 5.0f);
 
-				UI::DrawAddComponentButton<FTransformComponent>("Transform", EditorResources.PlusIcon, Actor);
-				UI::DrawAddComponentButton<FEffectComponent>("Effect", EditorResources.PlusIcon, Actor);
-				UI::DrawAddComponentButton<FInteractionComponent>("Interaction", EditorResources.PlusIcon, Actor);
-				UI::DrawAddComponentButton<FHealthComponent>("Health", EditorResources.PlusIcon, Actor);
-
-				ImGui::EndTable();
-			}
+			AddComponentForm_Transform(Actor);
+			AddComponentForm_Health(Actor);
+			AddComponentForm_Interaction(Actor);
+			AddComponentForm_Effect(Actor);
 
 			ImGui::EndPopup();
 		}
@@ -938,24 +1283,39 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		const auto Actors = InScene->GetActors();
+		const auto& Actors = InScene->GetActors();
+		std::shared_ptr<CPlayer> Player = CGameInstance::Get().GetPlayer(0);
+		const std::size_t ActorCount = Actors.size() + (Player ? 1 : 0);
+
 		UI::Font::Push(EFont::SourceSansPro, EFontSize::Large);
-		if (UI::BeginPropertyGrid(80)) {
-			Table::NextRow();
-			Table::Label("Actors");
-			Table::NextColumn();
-			ImGui::Text("%d", Actors.size() + 1); /* +1 for player */
-			UI::EndPropertyGrid();
-		}
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s   %s", LK_ICON_DESKTOP, InScene->GetName().data());
+		UI::SetTooltip("%s actors", ActorCount);
 		UI::Font::Pop();
+
+		/* Search / filter. */
+		static std::array<char, 96> SearchBuf = {0};
+		{
+			UI::FScopedStyle Rounding(ImGuiStyleVar_FrameRounding, 6.0f);
+			std::array<char, 80> Hint = {0};
+			std::snprintf(Hint.data(), Hint.size(), "%s  Search", LK_ICON_SEARCH);
+			ImGui::SetNextItemWidth(-1.0f);
+			ImGui::InputTextWithHint("##ActorSearch", Hint.data(), SearchBuf.data(), SearchBuf.size());
+		}
 
 		ImGui::Dummy(ImVec2(0, 4));
 
-		if (std::shared_ptr<CPlayer> Player = CGameInstance::Get().GetPlayer(0)) {
-			UI::Actor::Entry(Player, InScene);
+		const std::string_view Filter(SearchBuf.data());
+
+		std::size_t RowIndex = 0;
+		if (Player && ContainsCI(Player->GetName(), Filter)) {
+			UI::Actor::Entry(Player, InScene, RowIndex++);
 		}
 		for (auto& Actor : Actors) {
-			UI::Actor::Entry(Actor, InScene);
+			if (!ContainsCI(Actor->GetName(), Filter)) {
+				continue;
+			}
+			UI::Actor::Entry(Actor, InScene, RowIndex++);
 		}
 
 		UI::End();

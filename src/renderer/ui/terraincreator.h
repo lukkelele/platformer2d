@@ -16,6 +16,7 @@ namespace platformer2d {
 namespace platformer2d::UI {
 	struct FTerrainCreator
 	{
+		bool bOpen = true;
 		std::vector<glm::vec2> Points = {
 			{ -1.0f, 0.0f},
 			{-0.50f, 0.0f},
@@ -69,7 +70,9 @@ namespace platformer2d::UI {
 	};
 
 	extern FTerrainCreator TerrainCreator;
+
 	void RenderTerrainCreator(std::shared_ptr<CScene> Scene);
 	void RenderChainPreview(const std::shared_ptr<CScene>& Scene);
 
 }
+

@@ -26,11 +26,38 @@ namespace platformer2d::UI {
 		InPlace, /* Do not adjust based on current widget environment (e.g if in a table) */
 	};
 
+	/**
+	 * @brief Toggleable pill used to display and edit a flag.
+	 */
+	bool FlagChip(const char* Label, bool Active, std::uint32_t Accent);
+
+	struct FChipRow
+	{
+		bool bFirst = true;
+
+		void Next(const char* Label, const bool SameLine = false)
+		{
+			if (bFirst) {
+				bFirst = false;
+				if (SameLine) {
+					ImGui::SameLine();
+				}
+				return;
+			}
+
+			const ImGuiStyle& Style = ImGui::GetStyle();
+			const float Width = ImGui::CalcTextSize(Label).x + (Style.FramePadding.x * 2.0f) + Style.ItemSpacing.x;
+			if (SameLine || (ImGui::GetContentRegionAvail().x > Width)) {
+				ImGui::SameLine();
+			}
+		}
+	};
+
 	namespace Actor {
 		void DeleteButton(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 		void Buttons(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
 		void Data(std::shared_ptr<CActor> Actor); /* @fixme: RENAME */
-		void Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene);
+		void Entry(std::shared_ptr<CActor> Actor, std::shared_ptr<CScene> Scene, std::size_t RowIndex);
 
 		/**
 		 * @brief Update the actor cache.
@@ -126,9 +153,13 @@ namespace platformer2d::UI {
 			ImGui::SameLine();
 		}
 
-		UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
 		{
 			static constexpr float SpacingX = 8.0f;
+			constexpr float FramePadding = 4.0f;
+			constexpr float OutlineSpacing = 1.0f;
+			const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
+			const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
+
 			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
 			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 			{
@@ -136,16 +167,12 @@ namespace platformer2d::UI {
 				UI::FScopedColor FrameBg(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
 				ImGui::BeginChild(
 					ImGui::GetID((Label + "Subwindow").c_str()),
-					ImVec2(ImGui::GetContentRegionAvail().x - SpacingX, ImGui::GetFrameHeightWithSpacing()),
+					ImVec2(ImGui::GetContentRegionAvail().x - SpacingX, LineHeight),
 					ImGuiChildFlags_None,
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse /* Window Flags. */
 				);
 			}
 
-			constexpr float FramePadding = 4.0f;
-			constexpr float OutlineSpacing = 1.0f;
-			const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
-			const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 2.0f) - ButtonSize.x;
 
 			auto DrawControl = [&](const std::string& InLabel,
@@ -236,27 +263,26 @@ namespace platformer2d::UI {
 			ImGui::SameLine();
 		}
 
-		UI::FScopedStyle FramePad(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
 		{
 			static constexpr float SpacingX = 8.0f;
+			constexpr float FramePadding = 4.0f;
+			constexpr float OutlineSpacing = 1.0f;
+			const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
+			const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
+
 			UI::FScopedStyle ItemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(SpacingX, 0.0f));
 			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 			{
 				UI::FScopedColor BorderPadColor(ImGuiCol_Border, IM_COL32(0, 0, 0, 0));
 				UI::FScopedColor FrameBg(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
-
 				ImGui::BeginChild(
 					ImGui::GetID((Label + "Subwindow").c_str()),
-					ImVec2((ImGui::GetContentRegionAvail().x - SpacingX), ImGui::GetFrameHeightWithSpacing()),
+					ImVec2((ImGui::GetContentRegionAvail().x - SpacingX), LineHeight),
 					ImGuiChildFlags_None,
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse /* Window Flags. */
 				);
 			}
 
-			constexpr float FramePadding = 4.0f;
-			constexpr float OutlineSpacing = 1.0f;
-			const float LineHeight = GImGui->Font->LegacySize + (FramePadding * 2.0f);
-			const ImVec2 ButtonSize = {LineHeight + 2.0f, LineHeight - 2.0f};
 			const float InputItemWidth = ((ImGui::GetContentRegionAvail().x - SpacingX) / 3.0f) - ButtonSize.x;
 
 			auto DrawControl = [&](const std::string& InLabel,
@@ -348,9 +374,16 @@ namespace platformer2d::UI {
 
 		const ImVec2 ContentRegionAvailable = ImGui::GetContentRegionAvail();
 		const bool Open = ImGui::TreeNodeEx((void*)typeid(TComponent).hash_code(), TreeNodeFlags, ComponentName.c_str());
-		ImGui::SameLine(ContentRegionAvailable.x - LineHeight * 0.50f);
-		if (ImGui::Button("+", ImVec2(LineHeight, LineHeight))) {
-			ImGui::OpenPopup("ComponentSettings");
+
+		ImGui::SameLine(ContentRegionAvailable.x - LineHeight - 2.0f);
+		{
+			UI::FScopedColorStack SettingsColors(
+				ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f),
+				ImGuiCol_ButtonHovered, Style.Colors[ImGuiCol_HeaderHovered],
+				ImGuiCol_ButtonActive, Style.Colors[ImGuiCol_HeaderActive]);
+			if (ImGui::Button(LK_ICON_COG, ImVec2(LineHeight, LineHeight))) {
+				ImGui::OpenPopup("ComponentSettings");
+			}
 		}
 
 		bool RemoveComponent = false;
@@ -375,7 +408,7 @@ namespace platformer2d::UI {
 	}
 
 	template<typename TComponent, typename... TIncompatible>
-	void DrawAddComponentButton(std::string_view Name, std::shared_ptr<CTexture> Icon, std::shared_ptr<CActor> Actor)
+	[[deprecated]] void DrawAddComponentButton(std::string_view Name, std::shared_ptr<CTexture> Icon, std::shared_ptr<CActor> Actor)
 	{
 		static constexpr float RowHeight = 25.0f;
 		auto* Window = ImGui::GetCurrentWindow();

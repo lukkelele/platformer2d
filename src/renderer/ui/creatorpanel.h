@@ -39,5 +39,6 @@ namespace platformer2d::UI {
 	void Creator(std::shared_ptr<CScene>& Scene);
 	void ActorCreateButtons(std::shared_ptr<CScene>& Scene);
 	void RenderActorPreview(const std::shared_ptr<CScene>& Scene);
+	void RenderSelectedColliderPreview(const std::shared_ptr<CScene>& Scene);
 }
 

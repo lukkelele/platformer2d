@@ -64,12 +64,42 @@ namespace platformer2d::UI {
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoWindowMenuButton;
 
+	void PushID();
+	void PopID();
+	const char* GenerateID();
+
+	bool Begin(const char* WindowTitle, bool* Open = nullptr, ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None);
+	void End();
+
+	enum class EDockLayout : std::uint8_t
+	{
+		Default,
+		WideCanvas,
+		COUNT
+	};
+	LK_ENUM(EDockLayout);
+
+	void BeginCoreViewport();
+	bool BeginViewport();
+	void EndViewport();
+
+	void SetDockLayout(EDockLayout Layout);
+	void ResetDockLayout();
+	EDockLayout GetDockLayout();
+
+	void PrepareViewport();
+	ImGuiDockNode* FindCentralNode(ImGuiID DockspaceID);
+	void RouteToCentralNode();
+
+	bool IsViewportTabActive();
+
 	namespace Internal {
 		struct FActorDataEntry
 		{
 			std::array<char, 64> NameBuf;
 		};
 	}
+
 	struct FActorCache
 	{
 		std::unordered_map<LUUID, Internal::FActorDataEntry> Map;
@@ -83,117 +113,21 @@ namespace platformer2d::UI {
 	};
 	inline FActorCache ActorCache;
 
-	void PushID();
-	void PopID();
-	const char* GenerateID();
+	void ShiftCursorX(float Distance);
+	void ShiftCursorY(float Distance);
+	void ShiftCursor(float X, float Y);
+	bool IsItemHovered(float DelayInSeconds = 0.10f, ImGuiHoveredFlags Flags = ImGuiHoveredFlags_None);
 
-	bool Begin(const char* WindowTitle, bool* Open = nullptr, ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_None);
-	void End();
+	ImRect RectOffset(const ImRect& Rect, float X, float Y);
+	ImRect GetItemRect();
 
-	void BeginCoreViewport();
-	bool BeginViewport();
-	void EndViewport();
+	ImColor ColorWithMultipliedValue(const ImColor& Color, float Multiplier);
+	ImColor ColorWithMultipliedSaturation(const ImColor& Color, float Multiplier);
+	ImColor ColorWithMultipliedHue(const ImColor& Color, float Multiplier);
 
-	void PrepareViewport();
-	ImGuiDockNode* FindCentralNode(ImGuiID DockspaceID);
-	void RouteToCentralNode();
-
-	bool IsViewportTabActive();
-
-	inline void ShiftCursorX(const float Distance)
-	{
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + Distance);
-	}
-
-	inline void ShiftCursorY(const float Distance)
-	{
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + Distance);
-	}
-
-	inline void ShiftCursor(const float InX, const float InY)
-	{
-		const ImVec2 Cursor = ImGui::GetCursorPos();
-		ImGui::SetCursorPos(ImVec2(Cursor.x + InX, Cursor.y + InY));
-	}
-
-	inline bool IsItemHovered(const float DelayInSeconds = 0.10f, ImGuiHoveredFlags Flags = ImGuiHoveredFlags_None)
-	{
-		return ImGui::IsItemHovered() && (GImGui->HoveredIdTimer > DelayInSeconds); /* HoveredIdNotActiveTimer. */
-	}
-
-	inline ImRect RectOffset(const ImRect& Rect, const float X, const float Y)
-	{
-		ImRect Result = Rect;
-		Result.Min.x += X;
-		Result.Min.y += Y;
-		Result.Max.x += X;
-		Result.Max.y += Y;
-		return Result;
-	}
-
-	inline ImRect GetItemRect()
-	{
-		return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-	}
-
-	inline ImColor ColorWithMultipliedValue(const ImColor& Color, const float Multiplier)
-	{
-		const ImVec4& ColorRaw = Color.Value;
-		float Hue, Saturation, Value;
-		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
-		return ImColor::HSV(Hue, Saturation, std::min(Value * Multiplier, 1.0f));
-	}
-
-	inline ImColor ColorWithMultipliedSaturation(const ImColor& Color, const float Multiplier)
-	{
-		const ImVec4& ColorRaw = Color.Value;
-		float Hue, Saturation, Value;
-		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
-		return ImColor::HSV(Hue, std::min(Saturation * Multiplier, 1.0f), Value);
-	}
-
-	inline ImColor ColorWithMultipliedHue(const ImColor& Color, const float Multiplier)
-	{
-		const ImVec4& ColorRaw = Color.Value;
-		float Hue, Saturation, Value;
-		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
-		return ImColor::HSV(std::min(Hue * Multiplier, 1.0f), Saturation, Value);
-	}
-
-	inline void HelpMarker(const char* HelpDesc, const char* HelpSymbol = "(?)")
-	{
-		static constexpr float WrapPosOffset = 35.0f;
-		ImGui::TextDisabled(HelpSymbol);
-		if (ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
-			ImGui::TextUnformatted(HelpDesc);
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-	}
-
-	inline void HoverText(const char* Text)
-	{
-		static constexpr float WrapPosOffset = 35.0f;
-		if (ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
-			ImGui::TextUnformatted(Text);
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
-		}
-	}
-
-	inline void SetTooltip(std::string_view Text, const float DelayInSeconds = 0.10f,
-		const bool AllowWhenDisabled = true, const ImVec2 Padding = ImVec2(5, 5))
-	{
-		if (IsItemHovered(DelayInSeconds, AllowWhenDisabled ? ImGuiHoveredFlags_AllowWhenDisabled : ImGuiHoveredFlags_None)) {
-			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, Padding);
-			UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::Text::Brighter);
-			ImGui::SetTooltip(Text.data());
-		}
-	}
+	void HelpMarker(const char* HelpDesc, const char* HelpSymbol = "(?)");
+	void HoverText(const char* Text);
+	void SetTooltip(std::string_view Text, float DelayInSeconds = 0.10f, bool AllowWhenDisabled = true, ImVec2 Padding = ImVec2(5, 5));
 
 	inline void LargeText(std::string_view Text, const EFont Font = EFont::SourceSansPro, const EFontModifier Modifier = EFontModifier::Normal)
 	{

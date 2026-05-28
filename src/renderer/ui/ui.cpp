@@ -115,22 +115,32 @@ namespace platformer2d::UI {
 		UI::PopID();
 	}
 
-	bool ColorDropdown(EColor& Selected)
+	bool ColorDropdown(EColor& Selected, const float ComboWidth)
 	{
 		/* @todo: Use UI::Table */
 		static const std::string Label = "Color";
 		if (ImGui::GetCurrentTable() != nullptr) {
 			ImGui::TableSetColumnIndex(0);
 			UI::ShiftCursor(17.0f, 0.0f);
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text(Label.c_str());
 
 			ImGui::TableSetColumnIndex(1);
 			UI::ShiftCursor(7.0f, 0.0f);
 		} else {
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text(Label.c_str());
 			ImGui::SameLine();
 		}
 
+		const float SwatchSize = ImGui::GetFrameHeight();
+		const glm::vec4& Swatch = FColor::Lookup(Selected);
+		constexpr ImGuiColorEditFlags SwatchFlags = ImGuiColorEditFlags_NoTooltip
+			| ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoDragDrop;
+		ImGui::ColorButton("##ColorSwatch", ImVec4(Swatch.r, Swatch.g, Swatch.b, 1.0f), SwatchFlags, ImVec2(SwatchSize, SwatchSize));
+		ImGui::SameLine(0.0f, 6.0f);
+
+		ImGui::SetNextItemWidth(ComboWidth);
 		return UI::Combo("##Color", Enum::View<EColor>(), Selected);
 	}
 
@@ -175,18 +185,9 @@ namespace platformer2d::UI {
 				Actor.SetRotation(RotRad);
 			}
 
-#if 0 /* SCALING NEEDS TO BE SUPPORTED */
 			if (TC.GetScale() != Scale) {
-				if (CBody* Body = Actor.GetBody()) {
-					glm::vec2 BodySize = Body->GetSize();
-					FPolygon& Shape = Body->GetShape<EShape::Polygon>();
-					BodySize.x *= Scale.x;
-					BodySize.y *= Scale.y;
-					Shape.Size = BodySize;
-					TC.Scale = Scale;
-				}
+				Actor.SetScale({Scale.x, Scale.y});
 			}
-#endif
 		}
 
 		return Manipulated;
@@ -685,15 +686,20 @@ namespace platformer2d::UI {
 		}
 
 		Internal::FActorDataEntry& Data = Iter->second;
-		ImGui::SetNextItemWidth(200.0f);
-		ImGui::InputText("##ActorName", Data.NameBuf.data(), Data.NameBuf.size());
-		ImGui::SameLine();
+		const float ButtonWidth = ImGui::GetFrameHeight() + 8.0f;
+
+		UI::FScopedStyle InputRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ButtonWidth - 6.0f);
+		const bool Committed = ImGui::InputText("##ActorName", Data.NameBuf.data(), Data.NameBuf.size(),
+			ImGuiInputTextFlags_EnterReturnsTrue);
+		ImGui::SameLine(0.0f, 6.0f);
 
 		UI::FScopedFont Font(UI::Font::Get(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Bold));
-		UI::FScopedStyleStack StyleStack(
-			ImGuiStyleVar_FramePadding, ImVec2(5, 5),
-			ImGuiStyleVar_FrameRounding, 3.0f);
-		if (ImGui::Button(LK_ICON_CHECK_CIRCLE)) {
+		UI::FScopedColorStack ButtonColors(
+			ImGuiCol_Button, RGBA32::LightGreen,
+			ImGuiCol_ButtonHovered, RGBA32::DarkGreen,
+			ImGuiCol_ButtonActive, RGBA32::NiceGreen);
+		if (ImGui::Button(LK_ICON_CHECK_CIRCLE, ImVec2(ButtonWidth, 0.0f)) || Committed) {
 			LK_DEBUG_TAG("UI", "Rename {} to: {}", Actor.GetHandle(), Data.NameBuf.data());
 			Actor.SetName(Data.NameBuf.data());
 			return true;

@@ -7,6 +7,7 @@
 
 #include "core/core.h"
 #include "renderer/texture.h"
+#include "scoped.h"
 
 namespace platformer2d::UI {
 
@@ -16,9 +17,12 @@ namespace platformer2d::UI {
 		static const auto EnumNames = Enum::View<TEnum, const char*>();
 		const auto SelectedIdx = std::to_underlying(Selected);
 
-		char NameBuf[64] = {0};
-		std::snprintf(NameBuf, sizeof(NameBuf), "%s", Label.data());
-		if (!ImGui::BeginCombo(NameBuf, EnumNames[SelectedIdx])) {
+		std::array<char, 64> NameBuf = {0};
+		std::snprintf(NameBuf.data(), NameBuf.size(), "%s", Label.data());
+
+		UI::FScopedStyle FrameRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+		UI::FScopedStyle PopupRounding(ImGuiStyleVar_PopupRounding, 6.0f);
+		if (!ImGui::BeginCombo(NameBuf.data(), EnumNames[SelectedIdx])) {
 			return false;
 		}
 

@@ -32,7 +32,6 @@ namespace platformer2d::UI {
 		const LUUID SelectedID = CSelectionContext::GetSelected();
 		if (std::shared_ptr<CActor> Actor = Scene->GetActor(SelectedID); Actor != nullptr) {
 			UI::Actor::Data(Actor);
-			UI::DrawComponents(Actor);
 			UI::Actor::DeleteButton(Actor, Scene);
 		} else {
 			ImGui::Dummy(ImVec2(0, 4));

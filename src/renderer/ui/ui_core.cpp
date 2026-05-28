@@ -14,42 +14,25 @@ namespace platformer2d {
 
 namespace platformer2d::UI {
 
-	namespace {
-		uint32_t Counter = 0;
-		int UIContextID = 0;
-		std::array<char, 16 + 2 + 1> IDBuffer = {"##"};
-		std::array<char, 1024 + 1> LabelIDBuffer;
+	static EDockLayout CurrentDockLayout = EDockLayout::Default;
+	static bool bRebuildDockLayout = false;
+	static bool bDockspaceInitialized = false;
 
-		bool bDockspaceInitialized = false;
+	static std::uint32_t Counter = 0;
+	static int UIContextID = 0;
+	static std::array<char, 16 + 2 + 1> IDBuffer = {"##"};
+	static std::array<char, 1024 + 1> LabelIDBuffer;
 
-		/* The host window flags are entirely internal. */
-		ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_NoCollapse
-			| ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove
-			| ImGuiWindowFlags_NoNavFocus
-			| ImGuiWindowFlags_NoInputs
-			| ImGuiWindowFlags_NoBringToFrontOnFocus
-			| ImGuiWindowFlags_NoBackground
-			| ImGuiWindowFlags_NoSavedSettings;
-	}
-
-	bool FActorCache::Cache(const CActor& Actor)
-	{
-		LK_TRACE_TAG("UI", "Caching handle {}", Actor.GetHandle());
-		auto [Iter, Inserted] = Map.emplace(Actor.GetHandle(), Internal::FActorDataEntry{});
-		if (Inserted) {
-			/* Populate the buffer with the actor name. */
-			Internal::FActorDataEntry& Data = Iter->second;
-			std::snprintf(Data.NameBuf.data(), Data.NameBuf.size(), "%s", Actor.GetName().data());
-		}
-		return Inserted;
-	}
-
-	bool FActorCache::Contains(const CActor& Actor) const
-	{
-		return Map.contains(Actor.GetHandle());
-	}
+	/* The host window flags are entirely internal. */
+	static ImGuiWindowFlags HostWindowFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_NoInputs
+		| ImGuiWindowFlags_NoBringToFrontOnFocus
+		| ImGuiWindowFlags_NoBackground
+		| ImGuiWindowFlags_NoSavedSettings;
 
 	void PushID()
 	{
@@ -90,6 +73,142 @@ namespace platformer2d::UI {
 		UI::PopID();
 	}
 
+	static void BuildDockLayout_Default(const ImGuiID DockspaceID)
+	{
+		const std::uint32_t WindowWidth = CWindow::Get().GetWidth();
+		const std::uint32_t WindowHeight = CWindow::Get().GetHeight();
+
+		/**
+		 * The sidebar nodes do not get the same sizes even though the size ratios
+		 * for the dock splitting is the same. A 0.04 increment in the right sidebar
+		 * is needed to make the sizes the same.
+		 */
+		float LeftSidebarFraction = 0.25f;
+		float RightSidebarFraction = 0.25f;
+		float TopbarFraction = 0.05f;
+		float MenubarFraction = 0.03f;
+
+		/* Wide monitor. */
+		if ((WindowWidth > 1920) && (WindowHeight > 1080)) {
+			LeftSidebarFraction = 0.20f;
+			RightSidebarFraction = 0.24f;
+			TopbarFraction = 0.07f;
+			MenubarFraction = 0.03f;
+			/* Normal 16:9 monitor. */
+		} else if (((WindowWidth <= 1920) && (WindowWidth > 1280)) && (WindowHeight <= 1080)) {
+			LeftSidebarFraction = 0.30f;
+			RightSidebarFraction = 0.40f;
+			TopbarFraction = 0.05f;
+			MenubarFraction = 0.03f;
+		} else if ((WindowWidth <= 1280) && (WindowHeight <= 1080)) {
+			LeftSidebarFraction = 0.24f;
+			RightSidebarFraction = 0.28f;
+			TopbarFraction = 0.05f;
+			MenubarFraction = 0.03f;
+		}
+
+		ImGuiID DockID_Main = DockspaceID;
+		ImGuiID DockID_Menubar = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, MenubarFraction, nullptr, &DockID_Main);
+		ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, LeftSidebarFraction, nullptr, &DockID_Main);
+		ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.75f, nullptr, nullptr);
+		ImGuiID DockID_Left_Bottom = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Down, 0.25f, nullptr, nullptr);
+
+		ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, RightSidebarFraction, nullptr, &DockID_Main);
+		ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.65f, nullptr, nullptr);
+		ImGuiID DockID_Right_Bottom = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Down, 0.35f, nullptr, nullptr);
+
+		ImGuiID DockID_Bottom = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Down, 0.32f, nullptr, &DockID_Main);
+		ImGuiID DockID_Bottom_Right = ImGui::DockBuilderSplitNode(DockID_Bottom, ImGuiDir_Right, 0.42f, nullptr, &DockID_Bottom);
+
+		ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopbarFraction, nullptr, &DockID_Main);
+
+		ImGui::DockBuilderDockWindow(PanelID::Viewport, DockID_Main);
+		ImGui::DockBuilderDockWindow(PanelID::TextureInspector, DockID_Main);
+		ImGui::DockBuilderDockWindow(PanelID::SpriteInspector, DockID_Main);
+		ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
+		ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
+		ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
+		ImGui::DockBuilderDockWindow(PanelID::Menubar, DockID_Menubar);
+
+		ImGui::DockBuilderDockWindow(PanelID::BottomBar, DockID_Bottom);
+		ImGui::DockBuilderDockWindow(PanelID::Creator, DockID_Left_Top);
+		ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left_Bottom);
+		ImGui::DockBuilderDockWindow(PanelID::SceneManager, DockID_Right_Top);
+		ImGui::DockBuilderDockWindow(PanelID::TerrainCreator, DockID_Right_Bottom);
+
+		LK_UNUSED(DockID_Bottom_Right);
+	}
+
+	static void BuildDockLayout_WideCanvas(const ImGuiID DockspaceID)
+	{
+		constexpr float MenubarFraction = 0.03f;
+		constexpr float TopbarFraction = 0.05f;
+		constexpr float LeftSidebarFraction = 0.15f;
+		constexpr float RightSidebarFraction = 0.17f;
+		constexpr float BottomFraction = 0.16f;
+
+		ImGuiID DockID_Main = DockspaceID;
+		ImGuiID DockID_Menubar = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, MenubarFraction, nullptr, &DockID_Main);
+		ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, LeftSidebarFraction, nullptr, &DockID_Main);
+		ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.75f, nullptr, nullptr);
+		ImGuiID DockID_Left_Bottom = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Down, 0.25f, nullptr, nullptr);
+
+		ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, RightSidebarFraction, nullptr, &DockID_Main);
+		ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.65f, nullptr, nullptr);
+		ImGuiID DockID_Right_Bottom = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Down, 0.35f, nullptr, nullptr);
+
+		ImGuiID DockID_Bottom = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Down, BottomFraction, nullptr, &DockID_Main);
+
+		ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopbarFraction, nullptr, &DockID_Main);
+
+		ImGui::DockBuilderDockWindow(PanelID::Viewport, DockID_Main);
+		ImGui::DockBuilderDockWindow(PanelID::TextureInspector, DockID_Main);
+		ImGui::DockBuilderDockWindow(PanelID::SpriteInspector, DockID_Main);
+		ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
+		ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
+		ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
+		ImGui::DockBuilderDockWindow(PanelID::Menubar, DockID_Menubar);
+
+		ImGui::DockBuilderDockWindow(PanelID::BottomBar, DockID_Bottom);
+		ImGui::DockBuilderDockWindow(PanelID::Creator, DockID_Left_Top);
+		ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left_Bottom);
+		ImGui::DockBuilderDockWindow(PanelID::SceneManager, DockID_Right_Top);
+		ImGui::DockBuilderDockWindow(PanelID::TerrainCreator, DockID_Right_Bottom);
+	}
+
+	static void BuildDockLayout(const ImGuiID DockspaceID, const ImVec2& Size, const EDockLayout Layout)
+	{
+		LK_INFO_TAG("UI", "Building dockspace layout: {}", Enum::ToString(Layout));
+
+		/* Remove existing layout. */
+		ImGui::DockBuilderRemoveNode(DockspaceID);
+
+		ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace
+			| ImGuiDockNodeFlags_NoWindowMenuButton;
+		ImGui::DockBuilderAddNode(DockspaceID, DockFlags);
+		ImGui::DockBuilderSetNodeSize(DockspaceID, Size);
+
+		switch (Layout) {
+			case EDockLayout::Default:
+				BuildDockLayout_Default(DockspaceID);
+				break;
+			case EDockLayout::WideCanvas:
+				BuildDockLayout_WideCanvas(DockspaceID);
+				break;
+			case EDockLayout::COUNT:
+				break;
+		}
+
+		/* Finish the dockspace. */
+		ImGui::DockBuilderFinish(DockspaceID);
+
+		/* Disable splitting over entire viewport. */
+		if (ImGuiDockNode* DockNode = ImGui::DockBuilderGetNode(DockspaceID)) {
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe;
+			DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDockingSplit;
+		}
+	}
+
 	void BeginCoreViewport()
 	{
 		LK_PROFILE_FUNC();
@@ -104,93 +223,12 @@ namespace platformer2d::UI {
 		ImGui::Begin(PanelID::CoreViewport, nullptr, UI::HostWindowFlags);
 		ImGuiID DockspaceID = ImGui::GetID(PanelID::Dockspace);
 
-		/**
-		 * The sidebar nodes do not get the same sizes even though the size ratios
-		 * for the dock splitting is the same. A 0.04 increment in the right sidebar
-		 * is needed to make the sizes the same.
-		 */
-		if (ImGui::DockBuilderGetNode(DockspaceID) == nullptr) {
-			LK_INFO_TAG("UI", "Creating dockspace layout");
-
-			/* Remove existing layout. */
-			LK_DEBUG("Removing existing docking layout (ID: {})", DockspaceID);
-			ImGui::DockBuilderRemoveNode(DockspaceID);
-
-			const std::uint32_t WindowWidth = CWindow::Get().GetWidth();
-			const std::uint32_t WindowHeight = CWindow::Get().GetHeight();
-
-			float LeftSidebarFraction = 0.25f;
-			float RightSidebarFraction = 0.25f;
-			float TopbarFraction = 0.05f;
-			float MenubarFraction = 0.03f;
-
-			/* Wide monitor. */
-			if ((WindowWidth > 1920) && (WindowHeight > 1080)) {
-				LeftSidebarFraction = 0.20f;
-				RightSidebarFraction = 0.24f;
-				TopbarFraction = 0.07f;
-				MenubarFraction = 0.03f;
-				/* Normal 16:9 monitor. */
-			} else if (((WindowWidth <= 1920) && (WindowWidth > 1280)) && (WindowHeight <= 1080)) {
-				LeftSidebarFraction = 0.30f;
-				RightSidebarFraction = 0.40f;
-				TopbarFraction = 0.05f;
-				MenubarFraction = 0.03f;
-			} else if ((WindowWidth <= 1280) && (WindowHeight <= 1080)) {
-				LeftSidebarFraction = 0.24f;
-				RightSidebarFraction = 0.28f;
-				TopbarFraction = 0.05f;
-				MenubarFraction = 0.03f;
-			}
-
-			/* Add empty node. */
-			ImGuiDockNodeFlags DockFlags = ImGuiDockNodeFlags_DockSpace
-				| ImGuiDockNodeFlags_NoWindowMenuButton;
-			ImGui::DockBuilderAddNode(DockspaceID, DockFlags);
-			ImGui::DockBuilderSetNodeSize(DockspaceID, Viewport->Size);
-
-			ImGuiID DockID_Main = DockspaceID;
-			ImGuiID DockID_Menubar = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, MenubarFraction, nullptr, &DockID_Main);
-			ImGuiID DockID_Left = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Left, LeftSidebarFraction, nullptr, &DockID_Main);
-			ImGuiID DockID_Left_Top = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Up, 0.75f, nullptr, nullptr);
-			ImGuiID DockID_Left_Bottom = ImGui::DockBuilderSplitNode(DockID_Left, ImGuiDir_Down, 0.25f, nullptr, nullptr);
-
-			ImGuiID DockID_Right = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Right, RightSidebarFraction, nullptr, &DockID_Main);
-			ImGuiID DockID_Right_Top = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Up, 0.65f, nullptr, nullptr);
-			ImGuiID DockID_Right_Bottom = ImGui::DockBuilderSplitNode(DockID_Right, ImGuiDir_Down, 0.35f, nullptr, nullptr);
-
-			ImGuiID DockID_Bottom = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Down, 0.32f, nullptr, &DockID_Main);
-			ImGuiID DockID_Bottom_Right = ImGui::DockBuilderSplitNode(DockID_Bottom, ImGuiDir_Right, 0.42f, nullptr, &DockID_Bottom);
-
-			ImGuiID DockID_Top = ImGui::DockBuilderSplitNode(DockID_Main, ImGuiDir_Up, TopbarFraction, nullptr, &DockID_Main);
-
-			ImGui::DockBuilderDockWindow(PanelID::Viewport, DockID_Main);
-			ImGui::DockBuilderDockWindow(PanelID::TextureInspector, DockID_Main);
-			ImGui::DockBuilderDockWindow(PanelID::SpriteInspector, DockID_Main);
-			ImGui::DockBuilderDockWindow(PanelID::Sidebar1, DockID_Left);
-			ImGui::DockBuilderDockWindow(PanelID::Sidebar2, DockID_Right);
-			ImGui::DockBuilderDockWindow(PanelID::Topbar, DockID_Top);
-			ImGui::DockBuilderDockWindow(PanelID::Menubar, DockID_Menubar);
-
-			ImGui::DockBuilderDockWindow(PanelID::BottomBar, DockID_Bottom);
-			ImGui::DockBuilderDockWindow(PanelID::Creator, DockID_Left_Top);
-			ImGui::DockBuilderDockWindow(PanelID::Selection, DockID_Left_Bottom);
-			ImGui::DockBuilderDockWindow(PanelID::SceneManager, DockID_Right_Top);
-			ImGui::DockBuilderDockWindow(PanelID::TerrainCreator, DockID_Right_Bottom);
-
-			/* Finish the dockspace. */
-			ImGui::DockBuilderFinish(DockspaceID);
-
-			/* Disable splitting over entire viewport. */
-			if (ImGuiDockNode* DockNode = ImGui::DockBuilderGetNode(ImGui::GetID(PanelID::Dockspace))) {
-				DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe;
-				DockNode->LocalFlags |= ImGuiDockNodeFlags_NoDockingSplit;
-			}
-
+		const bool NoExistingLayout = (ImGui::DockBuilderGetNode(DockspaceID) == nullptr);
+		if (NoExistingLayout || bRebuildDockLayout) {
+			BuildDockLayout(DockspaceID, Viewport->Size, CurrentDockLayout);
+			bRebuildDockLayout = false;
 			bDockspaceInitialized = true;
-		}
-
-		if (!bDockspaceInitialized) {
+		} else if (!bDockspaceInitialized) {
 			LK_DEBUG("Initializing dockspace layout");
 			ImGuiDockNode* DockspaceNode = ImGui::DockBuilderGetNode(DockspaceID);
 			LK_VERIFY(DockspaceNode, "Dockspace node is nullptr");
@@ -213,6 +251,22 @@ namespace platformer2d::UI {
 		ImGui::SetNextWindowSize(Viewport->Size);
 		ImGui::SetNextWindowViewport(Viewport->ID);
 		ImGui::Begin(PanelID::CoreViewport, nullptr, UI::CoreViewportFlags);
+	}
+
+	void SetDockLayout(const EDockLayout Layout)
+	{
+		CurrentDockLayout = Layout;
+		bRebuildDockLayout = true;
+	}
+
+	void ResetDockLayout()
+	{
+		bRebuildDockLayout = true;
+	}
+
+	EDockLayout GetDockLayout()
+	{
+		return CurrentDockLayout;
 	}
 
 	bool BeginViewport()
@@ -269,18 +323,6 @@ namespace platformer2d::UI {
 		}
 	}
 
-	bool IsViewportTabActive()
-	{
-		ImGuiWindow* Window = ImGui::FindWindowByName(PanelID::Viewport);
-		if (!Window) {
-			return true;
-		}
-		if (!Window->DockIsActive) {
-			return true;
-		}
-		return Window->DockTabIsVisible;
-	}
-
 	ImGuiDockNode* FindCentralNode(const ImGuiID DockspaceID)
 	{
 		ImGuiDockNode* RootNode = ImGui::DockBuilderGetNode(DockspaceID);
@@ -319,4 +361,128 @@ namespace platformer2d::UI {
 		}
 	}
 
+	bool IsViewportTabActive()
+	{
+		ImGuiWindow* Window = ImGui::FindWindowByName(PanelID::Viewport);
+		if (!Window) {
+			return true;
+		}
+		if (!Window->DockIsActive) {
+			return true;
+		}
+		return Window->DockTabIsVisible;
+	}
+
+	bool FActorCache::Cache(const CActor& Actor)
+	{
+		LK_TRACE_TAG("UI", "Caching handle {}", Actor.GetHandle());
+		auto [Iter, Inserted] = Map.emplace(Actor.GetHandle(), Internal::FActorDataEntry{});
+		if (Inserted) {
+			/* Populate the buffer with the actor name. */
+			Internal::FActorDataEntry& Data = Iter->second;
+			std::snprintf(Data.NameBuf.data(), Data.NameBuf.size(), "%s", Actor.GetName().data());
+		}
+		return Inserted;
+	}
+
+	bool FActorCache::Contains(const CActor& Actor) const
+	{
+		return Map.contains(Actor.GetHandle());
+	}
+
+	void ShiftCursorX(const float Distance)
+	{
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + Distance);
+	}
+
+	void ShiftCursorY(const float Distance)
+	{
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + Distance);
+	}
+
+	void ShiftCursor(const float X, const float Y)
+	{
+		const ImVec2 Cursor = ImGui::GetCursorPos();
+		ImGui::SetCursorPos(ImVec2(Cursor.x + X, Cursor.y + Y));
+	}
+
+	bool IsItemHovered(const float DelayInSeconds, const ImGuiHoveredFlags Flags)
+	{
+		return ImGui::IsItemHovered() && (GImGui->HoveredIdTimer > DelayInSeconds); /* HoveredIdNotActiveTimer. */
+	}
+
+	ImRect RectOffset(const ImRect& Rect, const float X, const float Y)
+	{
+		ImRect Result = Rect;
+		Result.Min.x += X;
+		Result.Min.y += Y;
+		Result.Max.x += X;
+		Result.Max.y += Y;
+		return Result;
+	}
+
+	ImRect GetItemRect()
+	{
+		return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+	}
+
+	ImColor ColorWithMultipliedValue(const ImColor& Color, const float Multiplier)
+	{
+		const ImVec4& ColorRaw = Color.Value;
+		float Hue, Saturation, Value;
+		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
+		return ImColor::HSV(Hue, Saturation, std::min(Value * Multiplier, 1.0f));
+	}
+
+	ImColor ColorWithMultipliedSaturation(const ImColor& Color, const float Multiplier)
+	{
+		const ImVec4& ColorRaw = Color.Value;
+		float Hue, Saturation, Value;
+		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
+		return ImColor::HSV(Hue, std::min(Saturation * Multiplier, 1.0f), Value);
+	}
+
+	ImColor ColorWithMultipliedHue(const ImColor& Color, const float Multiplier)
+	{
+		const ImVec4& ColorRaw = Color.Value;
+		float Hue, Saturation, Value;
+		ImGui::ColorConvertRGBtoHSV(ColorRaw.x, ColorRaw.y, ColorRaw.z, Hue, Saturation, Value);
+		return ImColor::HSV(std::min(Hue * Multiplier, 1.0f), Saturation, Value);
+	}
+
+	void HelpMarker(const char* HelpDesc, const char* HelpSymbol)
+	{
+		constexpr float WrapPosOffset = 35.0f;
+		ImGui::TextDisabled(HelpSymbol);
+		if (ImGui::IsItemHovered()) {
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
+			ImGui::TextUnformatted(HelpDesc);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+	}
+
+	void HoverText(const char* Text)
+	{
+		constexpr float WrapPosOffset = 35.0f;
+		if (ImGui::IsItemHovered()) {
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * WrapPosOffset);
+			ImGui::TextUnformatted(Text);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+	}
+
+	void SetTooltip(std::string_view Text, const float DelayInSeconds, const bool AllowWhenDisabled, const ImVec2 Padding)
+	{
+		if (IsItemHovered(DelayInSeconds, AllowWhenDisabled ? ImGuiHoveredFlags_AllowWhenDisabled : ImGuiHoveredFlags_None)) {
+			UI::FScopedStyle WindowPadding(ImGuiStyleVar_WindowPadding, Padding);
+			UI::FScopedColor TextColor(ImGuiCol_Text, RGBA32::Text::Brighter);
+			ImGui::SetTooltip(Text.data());
+		}
+	}
+
 }
+
