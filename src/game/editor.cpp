@@ -230,6 +230,7 @@ namespace platformer2d {
 		}
 		UI::RenderChainPreview(Scene);
 		UI::RenderActorPreview(Scene);
+		UI::RenderSelectedColliderPreview(Scene);
 		UI::RenderEnemySpawnPoints(Scene);
 	}
 
@@ -557,7 +558,6 @@ namespace platformer2d {
 					}
 				}
 				break;
-#if 0
 			case EKey::R:
 				if (Data.State == EKeyState::Pressed) {
 					if (bEditorViewportFocused) {
@@ -565,7 +565,6 @@ namespace platformer2d {
 					}
 				}
 				break;
-#endif
 			case EKey::S:
 				if (Data.State == EKeyState::Pressed) {
 					if (bEditorViewportFocused) {
@@ -1034,6 +1033,13 @@ namespace platformer2d {
 
 	void CEditor::UI_MainMenubar()
 	{
+		auto Option = [](const char* Label, bool& Value)
+		{
+			if (ImGui::MenuItem(Label, nullptr, Value)) {
+				Value = !Value;
+			}
+		};
+
 		ImGui::BeginMenuBar();
 		ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 		if (ImGui::MenuItem("Settings")) {
@@ -1056,6 +1062,25 @@ namespace platformer2d {
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Window")) {
+			Option("Terrain Creator", UI::TerrainCreator.bOpen);
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Layout")) {
+			const UI::EDockLayout ActiveLayout = UI::GetDockLayout();
+			for (const UI::EDockLayout Layout : Enum::View<UI::EDockLayout>()) {
+				if (ImGui::MenuItem(Enum::ToString<const char*>(Layout), nullptr, Layout == ActiveLayout)) {
+					UI::SetDockLayout(Layout);
+				}
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Reset Layout")) {
+				UI::ResetDockLayout();
+			}
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Tools")) {
 			if (ImGui::MenuItem("Sprite Inspector", nullptr, UI::IsSpriteInspectorOpen())) {
 				UI::ToggleSpriteInspector();
@@ -1067,13 +1092,6 @@ namespace platformer2d {
 		}
 
 		if (ImGui::BeginMenu("Debug")) {
-			auto Option = [](const char* Label, bool& Value)
-			{
-				if (ImGui::MenuItem(Label, nullptr, Value)) {
-					Value = !Value;
-				}
-			};
-
 			const bool DebugRendererValid = (CDebugRenderer::DebugDraw != nullptr);
 			if (!DebugRendererValid) {
 				ImGui::BeginDisabled();
@@ -1437,7 +1455,6 @@ namespace platformer2d {
 		ImGui::BeginChild("##PlayerMod", ImVec2(std::max(Avail.x * 0.33f, 580.0f), Avail.y), ImGuiChildFlags_None);
 		ImGui::Indent();
 		{
-			UI::FScopedFont ScopedFont(EFontSize::Large);
 			UI::FScopedStyleStack StyleStack(
 				ImGuiStyleVar_FramePadding, ImVec2(8, 3),
 				ImGuiStyleVar_FrameRounding, 4.0f);
