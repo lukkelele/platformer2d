@@ -95,6 +95,8 @@ namespace platformer2d {
 		float GetRotation() const;
 		void SetRotation(float AngleRad);
 
+		void SetScale(const glm::vec2& NewScale);
+
 		[[nodiscard]] FTransformComponent& GetTransformComponent() { return TransformComp; }
 		[[nodiscard]] const FTransformComponent& GetTransformComponent() const { return TransformComp; }
 		[[nodiscard]] CBody* GetBody() { return Body ? Body.get() : nullptr; }

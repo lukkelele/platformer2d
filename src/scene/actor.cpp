@@ -131,6 +131,24 @@ namespace platformer2d {
 		TransformComp.SetRotation2D(AngleRad);
 	}
 
+	void CActor::SetScale(const glm::vec2& NewScale)
+	{
+		if (Body) {
+			const TShape& Shape = Body->GetShape();
+			const bool Supported = std::holds_alternative<FPolygon>(Shape) || std::holds_alternative<FCapsule>(Shape);
+			if (!Supported) {
+				return;
+			}
+
+			const glm::vec3 Current = TransformComp.GetScale();
+			const glm::vec2 Factor = {
+				(Current.x != 0.0f) ? (NewScale.x / Current.x) : 1.0f,
+				(Current.y != 0.0f) ? (NewScale.y / Current.y) : 1.0f};
+			Body->SetScale(Factor);
+		}
+		TransformComp.SetScale(NewScale);
+	}
+
 	bool CActor::IsMoving() const
 	{
 		return (Body ? Body->GetLinearVelocity().x > CBody::LINEAR_VELOCITY_X_EPSILON : false);
