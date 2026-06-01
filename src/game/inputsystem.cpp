@@ -99,6 +99,7 @@ namespace platformer2d {
 
 	void CInputSystem::ClearAllBindings()
 	{
+		LK_TRACE_TAG("InputSystem", "Clearing all bindings");
 		for (FActionBindings& Binding : ActionBindings) {
 			Binding = {};
 		}
@@ -187,6 +188,7 @@ namespace platformer2d {
 
 	void CInputSystem::RegisterDefaultBindings()
 	{
+		LK_DEBUG_TAG("InputSystem", "Register default bindings");
 		/* Digital actions. */
 		BindAction(EAction::Jump, EKey::Space);
 		BindAction(EAction::Jump, EPadButton::A);
