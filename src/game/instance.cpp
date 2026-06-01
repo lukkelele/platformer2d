@@ -12,6 +12,7 @@
 #include "enemy.h"
 #include "gameplaysystem.h"
 #include "healthsystem.h"
+#include "inputsystem.h"
 #include "interactionsystem.h"
 #include "projectilesystem.h"
 #include "controller/patrolcontroller.h"
@@ -33,6 +34,7 @@ namespace platformer2d {
 
 		UpdateViewportBounds();
 
+		RegisterSystem<CInputSystem>();
 		RegisterSystem<CHealthSystem>();
 		RegisterSystem<CGameplaySystem>();
 		RegisterSystem<CCheckpointSystem>();

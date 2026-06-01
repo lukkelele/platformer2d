@@ -1,5 +1,6 @@
 project_library(game)
 project_library_sources(
+	actioncodes.h
 	controller.h
 	editor.h
 	editor.cpp
@@ -22,6 +23,8 @@ project_library_sources(
 	checkpointsystem.cpp
 	interactionsystem.h
 	interactionsystem.cpp
+	inputsystem.h
+	inputsystem.cpp
 	projectilesystem.h
 	projectilesystem.cpp
 	runtimelayer.h

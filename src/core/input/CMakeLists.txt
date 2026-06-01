@@ -5,4 +5,5 @@ project_library_sources(
 	mouse.h
 	mouse.cpp
 	mousecodes.h
+	gamepadcodes.h
 )
