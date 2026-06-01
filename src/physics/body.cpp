@@ -365,6 +365,16 @@ namespace platformer2d {
 		b2Shape_SetFriction(ShapeID, Friction);
 	}
 
+	void CBody::SetCollisionCategory(const std::uint64_t Category)
+	{
+		CollisionCategory = Category;
+		if (b2Shape_IsValid(ShapeID)) {
+			b2Filter Filter = b2Shape_GetFilter(ShapeID);
+			Filter.categoryBits = Category;
+			b2Shape_SetFilter(ShapeID, Filter);
+		}
+	}
+
 	glm::vec2 CBody::GetSize() const
 	{
 		if (ShapeType == EShape::Polygon) {
@@ -638,6 +648,7 @@ namespace platformer2d {
 
 		ShapeDef = b2DefaultShapeDef();
 		ShapeDef.userData = Owner;
+		ShapeDef.filter.categoryBits = CollisionCategory;
 
 		if (Spec.Flags & EBodyFlag_PreSolveEvents) {
 			ShapeDef.enablePreSolveEvents = true;

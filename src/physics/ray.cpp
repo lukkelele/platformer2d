@@ -2,6 +2,7 @@
 
 #include <box2d/box2d.h>
 
+#include "collisionfilter.h"
 #include "physicsworld.h"
 
 namespace platformer2d::Physics {
@@ -32,7 +33,6 @@ namespace platformer2d::Physics {
 
 		const float TMin = glm::max(glm::min(T1.x, T2.x), glm::min(T1.y, T2.y));
 		const float TMax = glm::min(glm::max(T1.x, T2.x), glm::max(T1.y, T2.y));
-
 		if (TMax < 0.0f) {
 			return false;
 		}
@@ -56,7 +56,7 @@ namespace platformer2d::Physics {
 			return true;
 		}
 
-		const b2QueryFilter Filter = b2DefaultQueryFilter();
+		const b2QueryFilter Filter = {.categoryBits = ~0ULL, .maskBits = COLLISION_QUERY_SIGHT};
 		const b2RayResult Result = b2World_CastRayClosest(CPhysicsWorld::GetID(), Origin, Translation, Filter);
 		if (!Result.hit) {
 			return true;
@@ -64,6 +64,19 @@ namespace platformer2d::Physics {
 
 		const CActor* HitActor = static_cast<const CActor*>(b2Shape_GetUserData(Result.shapeId));
 		return (HitActor == Target);
+	}
+
+	bool ProbeGround(const glm::vec2& From, const float Depth)
+	{
+		if (!CPhysicsWorld::IsValid()) {
+			return false;
+		}
+
+		const b2Vec2 Origin = {From.x, From.y};
+		const b2Vec2 Translation = {0.0f, -Depth};
+		const b2QueryFilter Filter = {.categoryBits = ~0ULL, .maskBits = COLLISION_QUERY_GROUND};
+		const b2RayResult Result = b2World_CastRayClosest(CPhysicsWorld::GetID(), Origin, Translation, Filter);
+		return Result.hit;
 	}
 }
 

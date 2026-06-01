@@ -3,6 +3,7 @@ project_library_sources(
 	body.h
 	body.cpp
 	bodytype.h
+	collisionfilter.h
 	events.h
 	ray.h
 	ray.cpp

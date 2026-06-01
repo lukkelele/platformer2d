@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "bodytype.h"
+#include "collisionfilter.h"
 #include "core/core.h"
 #include "core/math/aabb.h"
 #include "core/math/shapes.h"
@@ -113,14 +114,12 @@ namespace platformer2d {
 		void SetSize(const glm::vec2& InSize);
 
 		/**
-		 * @brief Replace the body's underlying spec, destroying and recreating
-		 * the box2d body and shape with the new parameters.
+		 * @brief Replace the body's underlying spec, destroying and recreating the body.
 		 */
 		void Replace(const FBodySpecification& NewSpec, CActor* Owner);
 
 		/**
 		 * @brief Update the chain's points in place.
-		 * Destroys the current chain and rebuilds it from the new points.
 		 * Requires at least 4 points.
 		 */
 		void SetChainPoints(std::span<const glm::vec2> NewPoints, bool bLoop, bool bBlockBothSides);
@@ -131,6 +130,9 @@ namespace platformer2d {
 		void SetRestitution(float Restitution) const;
 		float GetFriction() const;
 		void SetFriction(float Friction) const;
+
+		void SetCollisionCategory(std::uint64_t Category);
+		[[nodiscard]] std::uint64_t GetCollisionCategory() const { return CollisionCategory; }
 
 		[[nodiscard]] const TShape& GetShape() const { return Shape; }
 
@@ -204,6 +206,7 @@ namespace platformer2d {
 		bool bDirty = false;
 
 		float GravityScale = 1.0f;
+		std::uint64_t CollisionCategory = ECollisionCategory_World;
 
 		friend class CPhysicsWorld;
 	};
