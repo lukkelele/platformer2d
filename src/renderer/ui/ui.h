@@ -70,6 +70,7 @@ namespace platformer2d::UI {
 	void PlayerData(std::shared_ptr<CPlayer>& Player);
 	void RifleData(std::shared_ptr<CRifle> Rifle);
 	void Statistics(EWidgetPlacement Placement = EWidgetPlacement::TopLeft);
+	void InputDebug();
 	void EnemiesInfo(std::shared_ptr<CScene>& Scene);
 	void SpriteSheetModification(std::shared_ptr<CPlayer>& Player);
 

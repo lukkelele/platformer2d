@@ -736,8 +736,8 @@ namespace platformer2d::UI {
 
 		/***********************************
 		 * Transform Component
-		 **********************************/
-		UI::DrawComponent<FTransformComponent>("Transform", Actor, [Actor](FTransformComponent& TC)
+		 ***********************************/
+		DrawComponent<FTransformComponent>("Transform", Actor, [Actor](FTransformComponent& TC)
 		{
 			UI::BeginPropertyGrid();
 			bool Changed = false;
@@ -770,7 +770,7 @@ namespace platformer2d::UI {
 		/***********************************
 		 * Health Component
 		 **********************************/
-		UI::DrawComponent<FHealthComponent>("Health", Actor, [Actor](FHealthComponent& HC)
+		DrawComponent<FHealthComponent>("Health", Actor, [Actor](FHealthComponent& HC)
 		{
 			UI::BeginPropertyGrid();
 
@@ -803,7 +803,7 @@ namespace platformer2d::UI {
 		/***********************************
 		 * Interaction Component
 		 **********************************/
-		UI::DrawComponent<FInteractionComponent>("Interaction", Actor, [Actor](FInteractionComponent& IC)
+		DrawComponent<FInteractionComponent>("Interaction", Actor, [Actor](FInteractionComponent& IC)
 		{
 			EInteraction InteractionType = IC.GetType();
 			EInteraction Selected = InteractionType;
@@ -898,7 +898,7 @@ namespace platformer2d::UI {
 			 **********************************/
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 2));
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
-			UI::BeginPropertyGrid();
+			BeginPropertyGrid();
 			switch (IC.GetType()) {
 				case EInteraction::Damage:
 				{
@@ -979,7 +979,7 @@ namespace platformer2d::UI {
 					break;
 			}
 
-			UI::EndPropertyGrid();
+			EndPropertyGrid();
 			ImGui::PopStyleVar(2);
 			ImGui::Dummy(ImVec2(0, 4));
 		});
@@ -987,9 +987,9 @@ namespace platformer2d::UI {
 		/**********************************
 		 * Effect Component
 		 **********************************/
-		UI::DrawComponent<FEffectComponent>("Effect", Actor, [Actor](FEffectComponent& EC)
+		DrawComponent<FEffectComponent>("Effect", Actor, [Actor](FEffectComponent& EC)
 		{
-			UI::BeginPropertyGrid();
+			BeginPropertyGrid();
 			for (auto& Effect : EC.Effects) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
@@ -1016,7 +1016,7 @@ namespace platformer2d::UI {
 						break;
 				}
 			}
-			UI::EndPropertyGrid();
+			EndPropertyGrid();
 
 			if (EC.HasAny()) {
 				ImGui::Dummy(ImVec2(0, 10));
@@ -1027,11 +1027,11 @@ namespace platformer2d::UI {
 			/*********************************
 			 * Panel for adding effects.
 			 *********************************/
-			UI::LargeTextCentralized("Add effects");
+			LargeTextCentralized("Add effects");
 			static EEffectType EffectType = EEffectType::Rotate;
 			static float AngularSpeed = 10.0f;
 
-			UI::BeginPropertyGrid();
+			BeginPropertyGrid();
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(1);
@@ -1077,15 +1077,15 @@ namespace platformer2d::UI {
 					}
 				}
 			}
-			UI::EndPropertyGrid();
+			EndPropertyGrid();
 
 			/***************************
 			 * Button: Add
 			 ***************************/
 			static constexpr ImVec2 ButtonSize(92, 36);
 			const ImVec2 Avail = ImGui::GetContentRegionAvail();
-			UI::ShiftCursorX(Avail.x - (ButtonSize.x + 10));
-			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
+			ShiftCursorX(Avail.x - (ButtonSize.x + 10));
+			FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
 			if (ImGui::Button("Add", ButtonSize)) {
 				FEffectInstance Effect;
 				Effect.Type = EffectType;
@@ -1114,7 +1114,6 @@ namespace platformer2d::UI {
 			UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
 			UI::FScopedStyle ButtonPadding(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
 			UI::FScopedColorStack ButtonColors(
-				ImGuiCol_Button, RGBA32::DarkGreen,
 				ImGuiCol_ButtonHovered, RGBA32::NiceGreen,
 				ImGuiCol_ButtonActive, RGBA32::LightGreen);
 

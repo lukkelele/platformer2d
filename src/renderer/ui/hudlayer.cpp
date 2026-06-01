@@ -2,6 +2,7 @@
 
 #include "core/profiler.h"
 #include "core/settings.h"
+#include "core/input/keyboard.h"
 #include "game/instance.h"
 #include "game/player.h"
 #include "game/rifle.h"
@@ -30,6 +31,10 @@ namespace platformer2d {
 	void CHudLayer::RenderUI()
 	{
 		LK_PROFILE_FUNC();
+		if (bInputDebug) {
+			UI::InputDebug();
+		}
+
 		if (!CGameInstance::IsValid()) {
 			return;
 		}
@@ -55,11 +60,27 @@ namespace platformer2d {
 	void CHudLayer::OnAttach()
 	{
 		LK_DEBUG_TAG("HudLayer", "OnAttach");
+		OnKeyHandle = CKeyboard::OnKeyEvent.Add(this, &CHudLayer::OnKey);
 	}
 
 	void CHudLayer::OnDetach()
 	{
 		LK_DEBUG_TAG("HudLayer", "OnDetach");
+		CKeyboard::OnKeyEvent.Remove(OnKeyHandle);
+	}
+
+	void CHudLayer::OnKey(const FKeyData& Data)
+	{
+		switch (Data.Key) {
+			case EKey::F1:
+				if (Data.State == EKeyState::Pressed) {
+					SetInputDebug(!IsInputDebugEnabled());
+					LK_DEBUG_TAG("HudLayer", "Input debug: {}", bInputDebug ? "ON" : "OFF");
+				}
+				break;
+
+			default: break;
+		}
 	}
 
 	static void GetPlayerHealth(const std::shared_ptr<CPlayer>& Player, float& OutHealth, float& OutMax)

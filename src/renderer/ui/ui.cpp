@@ -5,8 +5,10 @@
 #include "core/settings.h"
 #include "core/window.h"
 #include "core/input/keyboard.h"
+#include "core/input/mouse.h"
 #include "core/selectioncontext.h"
 #include "game/instance.h"
+#include "game/inputsystem.h"
 #include "renderer/color.h"
 #include "renderer/debugrenderer.h"
 #include "renderer/font.h"
@@ -517,6 +519,145 @@ namespace platformer2d::UI {
 			}
 		} else {
 			CachedFPS.Cached = false;
+		}
+
+		UI::End();
+	}
+
+	void InputDebug()
+	{
+		const ImGuiStyle& Style = ImGui::GetStyle();
+
+		ImVec2 ContentMin{};
+		ImVec2 ContentMax{};
+		if (ImGuiWindow* ViewportPanel = ImGui::FindWindowByName(PanelID::Viewport)) {
+			ContentMin = ViewportPanel->InnerRect.Min;
+			ContentMax = ViewportPanel->InnerRect.Max;
+		} else {
+			ImGuiViewport* MainViewport = ImGui::GetMainViewport();
+			ContentMin = MainViewport->Pos;
+			ContentMax = ImVec2(MainViewport->Pos.x + MainViewport->Size.x,
+				MainViewport->Pos.y + MainViewport->Size.y);
+		}
+
+		constexpr float OverlayWidth = 280.0f;
+		const float Padding = Style.FramePadding.x + Style.DockingSeparatorSize + Style.ItemSpacing.y;
+		const ImVec2 OverlayPos = ImVec2(ContentMax.x - OverlayWidth - Padding, ContentMin.y + Padding);
+
+		ImGui::SetNextWindowPos(OverlayPos, ImGuiCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(OverlayWidth, 0.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowBgAlpha(0.25f);
+
+		constexpr ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoSavedSettings
+			| ImGuiWindowFlags_NoDecoration
+			| ImGuiWindowFlags_NoDocking
+			| ImGuiWindowFlags_NoFocusOnAppearing
+			| ImGuiWindowFlags_NoNav
+			| ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_AlwaysAutoResize;
+		if (!UI::Begin("##InputDebugOverlay", nullptr, WindowFlags)) {
+			UI::End();
+			return;
+		}
+
+		/* Keyboard. */
+		ImGui::SeparatorText("Keyboard");
+		{
+			static std::vector<EKey> Pressed;
+			CKeyboard::GetPressedKeys(Pressed);
+			if (Pressed.empty()) {
+				ImGui::TextDisabled("(none)");
+			} else {
+				std::string Joined;
+				for (std::size_t Idx = 0; Idx < Pressed.size(); Idx++) {
+					if (Idx > 0) {
+						Joined += ", ";
+					}
+					Joined += Enum::ToString(Pressed[Idx]);
+				}
+				ImGui::TextWrapped("%s", Joined.c_str());
+			}
+		}
+
+		/* Mouse. */
+		ImGui::SeparatorText("Mouse");
+		{
+			const glm::vec2 MousePos = CMouse::GetPos();
+			ImGui::Text("Pos:     (%.0f, %.0f)", MousePos.x, MousePos.y);
+
+			std::string Buttons;
+			for (const EMouseButton Button : Enum::View<EMouseButton>()) {
+				if (Button == EMouseButton::None) {
+					continue;
+				}
+				if (CMouse::IsDown(Button)) {
+					if (!Buttons.empty()) {
+						Buttons += ", ";
+					}
+					Buttons += Enum::ToString(Button);
+				}
+			}
+			ImGui::Text("Buttons: %s", Buttons.empty() ? "(none)" : Buttons.c_str());
+		}
+
+		const CInputSystem* InputSys = CGameInstance::IsValid() ? CGameInstance::Get().GetSystemPtr<CInputSystem>() : nullptr;
+
+		/* Gamepads. */
+		if (InputSys) {
+			for (std::int32_t PadId = 0; PadId < CInputSystem::MAX_PADS; PadId++) {
+				if (!InputSys->IsPadConnected(PadId)) {
+					continue;
+				}
+
+				std::array<char, 32> Header{};
+				std::snprintf(Header.data(), Header.size(), "Gamepad %d", PadId);
+				ImGui::SeparatorText(Header.data());
+
+				std::string Buttons;
+				for (const EPadButton Button : Enum::View<EPadButton>()) {
+					if (Button == EPadButton::None) {
+						continue;
+					}
+					if (InputSys->IsPadButtonDown(PadId, Button)) {
+						if (!Buttons.empty()) {
+							Buttons += ", ";
+						}
+						Buttons += Enum::ToString(Button);
+					}
+				}
+				ImGui::Text("Buttons: %s", Buttons.empty() ? "(none)" : Buttons.c_str());
+				ImGui::Text("LStick:  (%+0.2f, %+0.2f)", InputSys->GetPadAxisRaw(PadId, EPadAxis::LeftStickX), InputSys->GetPadAxisRaw(PadId, EPadAxis::LeftStickY));
+				ImGui::Text("RStick:  (%+0.2f, %+0.2f)", InputSys->GetPadAxisRaw(PadId, EPadAxis::RightStickX), InputSys->GetPadAxisRaw(PadId, EPadAxis::RightStickY));
+				ImGui::Text("LT/RT:   %+0.2f / %+0.2f", InputSys->GetPadAxisRaw(PadId, EPadAxis::LeftTrigger), InputSys->GetPadAxisRaw(PadId, EPadAxis::RightTrigger));
+			}
+
+			/* Actions and logical axes. */
+			ImGui::SeparatorText("Actions");
+			{
+				std::string Down;
+				for (const EAction Action : Enum::View<EAction>()) {
+					if (Action == EAction::None) {
+						continue;
+					}
+					if (InputSys->IsActionDown(Action)) {
+						if (!Down.empty()) {
+							Down += ", ";
+						}
+						Down += Enum::ToString(Action);
+					}
+				}
+				ImGui::Text("Down: %s", Down.empty() ? "(none)" : Down.c_str());
+
+				for (const EAxis Axis : Enum::View<EAxis>()) {
+					if (Axis == EAxis::None) {
+						continue;
+					}
+					ImGui::Text("%-6s %+0.2f", Enum::ToString<const char*>(Axis), InputSys->GetAxis(Axis));
+				}
+			}
+		} else {
+			ImGui::Spacing();
+			ImGui::TextDisabled("(InputSystem unavailable)");
 		}
 
 		UI::End();
