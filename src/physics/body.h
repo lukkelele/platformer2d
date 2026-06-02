@@ -99,7 +99,7 @@ namespace platformer2d {
 		void ApplyForce(const glm::vec2& InForce, bool bWakeUp = true) const;
 		void ApplyImpulse(const glm::vec2& InImpulse, bool bWakeUp = true) const;
 
-		float GetMass() const;
+		[[nodiscard]] float GetMass() const;
 		void SetMass(float InMass) const;
 
 		void SetShape(const b2Polygon& Polygon);
@@ -126,9 +126,9 @@ namespace platformer2d {
 
 		void SetScale(float Factor);
 		void SetScale(const glm::vec2& Factor);
-		float GetRestitution() const;
+		[[nodiscard]] float GetRestitution() const;
 		void SetRestitution(float Restitution) const;
-		float GetFriction() const;
+		[[nodiscard]] float GetFriction() const;
 		void SetFriction(float Friction) const;
 
 		void SetCollisionCategory(std::uint64_t Category);
@@ -140,27 +140,27 @@ namespace platformer2d {
 		 * @brief Safe shape accessor.
 		 */
 		template<EShape T>
-		const TShapeType<T>* TryGetShape() const noexcept
+		[[nodiscard]] const TShapeType<T>* TryGetShape() const noexcept
 		{
 			return std::get_if<TShapeType<T>>(&Shape);
 		}
 
 		template<EShape T>
-		TShapeType<T>& GetShape()
+		[[nodiscard]] TShapeType<T>& GetShape()
 		{
 			using ShapeClass = TShapeType<T>;
 			return std::get<ShapeClass>(Shape);
 		}
 
 		template<EShape T>
-		const TShapeType<T>& GetShape() const
+		[[nodiscard]] const TShapeType<T>& GetShape() const
 		{
 			using ShapeClass = TShapeType<T>;
 			return std::get<ShapeClass>(Shape);
 		}
 
-		glm::vec2 GetSize() const;
-		FAABB GetAABB() const;
+		[[nodiscard]] glm::vec2 GetSize() const;
+		[[nodiscard]] FAABB GetAABB() const;
 
 		bool Serialize(YAML::Emitter& Out, EExtendableSerializer Extendable = EExtendableSerializer::No) const override;
 
