@@ -4,16 +4,17 @@ Actors:
     Type: 0
     Name: BasePlatform
     Flags: 0
-    Texture: 3
-    TexturePath: assets/textures/bricks.png
+    Texture: 4
+    TexturePath: assets/textures/wood.png
     Color: [1, 1, 1, 1]
     Deletable: true
+    SpriteScale: [1, 1]
     Outline:
       Enabled: false
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [0.075, -1.35, 0]
+      Position: [0.025, -1.35, 0]
       Rotation: 0
       Scale: [1, 1, 1]
     Body:
@@ -24,17 +25,17 @@ Actors:
         Loop: false
         BlockBothSides: false
         Friction: 0.6
-        TextureHeight: 0.38
+        TextureHeight: 0.42
         TextureSide: 1
         TextureOffset: 0
         TextureTile: true
-        TextureTileWidth: 0.67
+        TextureTileWidth: 1.68
         Points:
           - [-3.1, 0]
           - [-0.5, 0]
           - [0.5, 0]
           - [3.6, 0]
-      Position: [0.075, -1.35]
+      Position: [0.025, -1.35]
       Flags: 2
       Mass: 1
       MotionLock: 0
@@ -47,6 +48,7 @@ Actors:
     TexturePath: assets/textures/white.png
     Color: [1, 1, 1, 1]
     Deletable: true
+    SpriteScale: [1, 1]
     Outline:
       Enabled: false
       Thickness: 0
@@ -86,6 +88,7 @@ Actors:
     TexturePath: assets/textures/white.png
     Color: [0, 0, 0, 0]
     Deletable: true
+    SpriteScale: [1, 1]
     Outline:
       Enabled: true
       Thickness: 2
@@ -99,32 +102,34 @@ Actors:
   - ID: 11995159168228772841
     Type: 2
     Name: Enemy-Grunt-1
-    Flags: 0
+    Flags: 2
     Texture: 9
     TexturePath: assets/textures/goblin.png
     Color: [1, 1, 1, 1]
     Deletable: true
+    SpriteScale: [1.89, 1.66]
     Outline:
       Enabled: true
       Thickness: 0
       Color: [0, 0, 0, 0]
     TransformComponent:
-      Position: [3.1, -1.125, 0.925]
+      Position: [1.5, -1.2, 0.825]
       Rotation: 0
-      Scale: [0.38, 0.46, 1]
+      Scale: [0.20749506, 0.3158306, 1]
     HealthComponent:
       MaxHealth: 80
       Damageable: true
+      Immortal: false
     Body:
       Type: 1
       GravityScale: 1
       Shape:
         ShapeType: 2
-        Size: [0.38, 0.46]
+        Size: [0.20749569, 0.31583062]
         Rotation: 0
-        Radius: 0.5
-      Position: [3.1, -1.125]
-      Flags: 2
+        Radius: 0.2730165
+      Position: [1.5, -1.2]
+      Flags: 6
       Mass: 1
       MotionLock: 0
       Sensor: false
@@ -142,8 +147,9 @@ Actors:
     TexturePath: assets/textures/ar15.png
     Color: [1, 1, 1, 1]
     Deletable: true
+    SpriteScale: [1, 1]
     Outline:
-      Enabled: false
+      Enabled: true
       Thickness: 2
       Color: [0.96, 0.105, 0.83, 1]
     TransformComponent:
@@ -171,3 +177,184 @@ Actors:
       Mass: 1
       MotionLock: 0
       Sensor: true
+  - ID: 4564926721708490127
+    Type: 0
+    Name: Melee-1
+    Flags: 0
+    Texture: 0
+    TexturePath: assets/textures/white.png
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    SpriteScale: [1, 1]
+    Outline:
+      Enabled: false
+      Thickness: 2
+      Color: [0.96, 0.105, 0.83, 1]
+    TransformComponent:
+      Position: [-3.55, -0.175, 0]
+      Rotation: 0
+      Scale: [0.2, 0.2, 1]
+    InteractionComponent:
+      InteractionType: 2
+      PickupKind: 1
+      Object:
+        {}
+      ObjectType: 1
+      ExpireWhenPickedUp: false
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.2, 0.2]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-3.55, -0.175]
+      Flags: 10
+      Mass: 1
+      MotionLock: 0
+      Sensor: true
+  - ID: 4328681192625468070
+    Type: 5
+    Name: EnemySpawner-Grunt-1
+    Flags: 0
+    Texture: 0
+    TexturePath: assets/textures/white.png
+    Color: [0, 0, 0, 0.71]
+    Deletable: true
+    SpriteScale: [1, 1]
+    Outline:
+      Enabled: true
+      Thickness: 3.4
+      Color: [1, 0, 0, 1]
+    TransformComponent:
+      Position: [3.4, -1, 0]
+      Rotation: 0
+      Scale: [0.3, 0.3, 1]
+    Body:
+      {}
+    Spawner:
+      MaxAlive: 8
+      Loop: false
+      Scatter: 0.25
+      AutoActivate: false
+      Waves:
+        - Archetype: 1
+          Count: 3
+          SpawnInterval: 0.5
+          StartDelay: 0
+          WaitForClear: true
+  - ID: 10275694707316320476
+    Type: 2
+    Name: TargetDummy-1
+    Flags: 0
+    Texture: 9
+    TexturePath: assets/textures/goblin.png
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    SpriteScale: [3.4, 2.42]
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [2.3, 0.75, 0]
+      Rotation: 0
+      Scale: [0.1638, 0.24, 1]
+    HealthComponent:
+      MaxHealth: 1000
+      Damageable: true
+      Immortal: true
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.1638, 0.24]
+        Rotation: 0
+        Radius: 0.45499998
+      Position: [2.3, 0.75]
+      Flags: 6
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+    Controller:
+      ControllerType: 0
+    SpawnPoint: [0, 0]
+    Archetype: 4
+  - ID: 6669157521282223726
+    Type: 2
+    Name: TargetDummy-2
+    Flags: 0
+    Texture: 9
+    TexturePath: assets/textures/goblin.png
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    SpriteScale: [3.4, 2.42]
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [2.325, -0.3, 0]
+      Rotation: 0
+      Scale: [0.18, 0.24, 1]
+    HealthComponent:
+      MaxHealth: 1000
+      Damageable: true
+      Immortal: true
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.18, 0.24]
+        Rotation: 0
+        Radius: 0.5
+      Position: [2.325, -0.3]
+      Flags: 6
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+    Controller:
+      ControllerType: 0
+    SpawnPoint: [0, 0]
+    Archetype: 4
+  - ID: 265058722690976146
+    Type: 2
+    Name: TargetDummy-3
+    Flags: 0
+    Texture: 9
+    TexturePath: assets/textures/goblin.png
+    Color: [1, 1, 1, 1]
+    Deletable: true
+    SpriteScale: [3.4, 2.42]
+    Outline:
+      Enabled: true
+      Thickness: 0
+      Color: [0, 0, 0, 0]
+    TransformComponent:
+      Position: [-1.65, 1, 0]
+      Rotation: 0
+      Scale: [0.18, 0.24, 1]
+    HealthComponent:
+      MaxHealth: 1000
+      Damageable: true
+      Immortal: true
+    Body:
+      Type: 0
+      GravityScale: 1
+      Shape:
+        ShapeType: 2
+        Size: [0.18, 0.24]
+        Rotation: 0
+        Radius: 0.5
+      Position: [-1.65, 1]
+      Flags: 6
+      Mass: 1
+      MotionLock: 0
+      Sensor: false
+    Controller:
+      ControllerType: 0
+    SpawnPoint: [0, 0]
+    Archetype: 4
