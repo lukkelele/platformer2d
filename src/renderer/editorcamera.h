@@ -17,8 +17,6 @@ namespace platformer2d {
 
 		[[nodiscard]] bool IsLerpEnabled() const { return bLerpEnabled; }
 		void SetLerpEnabled(bool Enabled);
-		[[nodiscard]] float GetLerpSnapDistance() const { return LerpSnapDistance; }
-		void SetLerpSnapDistance(float Distance);
 
 		void OnMouseScroll(EMouseScrollDirection Direction);
 
@@ -27,13 +25,11 @@ namespace platformer2d {
 		void HandleEdgePan(float DeltaTime, const glm::vec2& Mouse, float EdgePanSpeed);
 
 	public:
-		static constexpr float DEFAULT_LERP_SNAP_DISTANCE = 4.0f;
 		static constexpr float ZOOM_SCROLL_STEP = CCamera::ZOOM_DIFF * 5.0f;
 		static constexpr float EDGE_PAN_MARGIN_PX = 64.0f;
 
 	private:
 		bool bLerpEnabled = true;
-		float LerpSnapDistance = DEFAULT_LERP_SNAP_DISTANCE;
 
 		bool bPanning = false;
 		bool bWasMiddleDown = false;

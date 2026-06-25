@@ -139,11 +139,6 @@ namespace platformer2d {
 		bLerpEnabled = Enabled;
 	}
 
-	void CEditorCamera::SetLerpSnapDistance(const float Distance)
-	{
-		LerpSnapDistance = Distance;
-	}
-
 	void CEditorCamera::OnMouseScroll(const EMouseScrollDirection Direction)
 	{
 		if (!bActive) {

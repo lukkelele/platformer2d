@@ -429,6 +429,7 @@ namespace platformer2d {
 		const float PointSize = PointConf.Size;
 		CRenderer::Submit([=]()
 		{
+#if 0 /* @fixme: Assumes valid scene, kept for testing */
 			if (Ctx) {
 				auto& Scene = *static_cast<CScene*>(Ctx);
 
@@ -440,6 +441,7 @@ namespace platformer2d {
 					Idx++;
 				}
 			}
+#endif
 			CRenderer::DrawCircleFilled(P0, PointSize, Color);
 		});
 	}
