@@ -26,7 +26,7 @@ namespace platformer2d {
 	template<>
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add effect component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add effect component", Name);
 		if (!EffectComp.has_value()) {
 			EffectComp.emplace();
 		}
@@ -37,7 +37,7 @@ namespace platformer2d {
 	template<>
 	inline FEffectComponent& CActor::AddComponent<FEffectComponent>(const FEffectComponent& Other)
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add effect component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add effect component", Name);
 		if (!EffectComp.has_value()) {
 			EffectComp = Other;
 		} else {
@@ -50,7 +50,7 @@ namespace platformer2d {
 	template<>
 	inline FInteractionComponent& CActor::AddComponent<FInteractionComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add interaction component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add interaction component", Name);
 		if (!InteractionComp.has_value()) {
 			InteractionComp.emplace();
 		}
@@ -61,7 +61,7 @@ namespace platformer2d {
 	template<>
 	inline FInteractionComponent& CActor::AddComponent<FInteractionComponent>(const FInteractionComponent& Other)
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add interaction component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add interaction component", Name);
 		if (!InteractionComp.has_value()) {
 			InteractionComp = Other;
 		} else {
@@ -74,7 +74,7 @@ namespace platformer2d {
 	template<>
 	inline FHealthComponent& CActor::AddComponent<FHealthComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add health component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add health component", Name);
 		if (!HealthComp.has_value()) {
 			HealthComp.emplace();
 		}
@@ -85,7 +85,7 @@ namespace platformer2d {
 	template<>
 	inline FHealthComponent& CActor::AddComponent<FHealthComponent>(const FHealthComponent& Other)
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add health component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add health component", Name);
 		if (!HealthComp.has_value()) {
 			HealthComp = Other;
 		} else {
@@ -98,7 +98,7 @@ namespace platformer2d {
 	template<>
 	inline FCameraComponent& CActor::AddComponent<FCameraComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add camera component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add camera component", Name);
 		if (!CameraComp.has_value()) {
 			CameraComp.emplace();
 		}
@@ -109,7 +109,7 @@ namespace platformer2d {
 	template<>
 	inline FCameraComponent& CActor::AddComponent<FCameraComponent>(const FCameraComponent& Other)
 	{
-		LK_DEBUG_TAG("Actor", "{}: Add camera component", Name);
+		LK_TRACE_TAG("Actor", "{}: Add camera component", Name);
 		if (!CameraComp.has_value()) {
 			CameraComp = Other;
 		} else {
@@ -117,6 +117,30 @@ namespace platformer2d {
 		}
 
 		return CameraComp.value();
+	}
+
+	template<>
+	inline FCombatComponent& CActor::AddComponent<FCombatComponent>()
+	{
+		LK_TRACE_TAG("Actor", "{}: Add combat component", Name);
+		if (!CombatComp.has_value()) {
+			CombatComp.emplace();
+		}
+
+		return CombatComp.value();
+	}
+
+	template<>
+	inline FCombatComponent& CActor::AddComponent<FCombatComponent>(const FCombatComponent& Other)
+	{
+		LK_TRACE_TAG("Actor", "{}: Add combat component", Name);
+		if (!CombatComp.has_value()) {
+			CombatComp = Other;
+		} else {
+			CombatComp.value() = Other;
+		}
+
+		return CombatComp.value();
 	}
 
 	template<>
@@ -128,7 +152,7 @@ namespace platformer2d {
 	template<>
 	inline bool CActor::RemoveComponent<FEffectComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Remove effect component", Name);
+		LK_TRACE_TAG("Actor", "{}: Remove effect component", Name);
 		if (!EffectComp.has_value()) {
 			return false;
 		}
@@ -140,7 +164,7 @@ namespace platformer2d {
 	template<>
 	inline bool CActor::RemoveComponent<FInteractionComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Remove interaction component", Name);
+		LK_TRACE_TAG("Actor", "{}: Remove interaction component", Name);
 		if (!InteractionComp.has_value()) {
 			return false;
 		}
@@ -152,7 +176,7 @@ namespace platformer2d {
 	template<>
 	inline bool CActor::RemoveComponent<FHealthComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Remove health component", Name);
+		LK_TRACE_TAG("Actor", "{}: Remove health component", Name);
 		if (!HealthComp.has_value()) {
 			return false;
 		}
@@ -164,12 +188,24 @@ namespace platformer2d {
 	template<>
 	inline bool CActor::RemoveComponent<FCameraComponent>()
 	{
-		LK_DEBUG_TAG("Actor", "{}: Remove camera component", Name);
+		LK_TRACE_TAG("Actor", "{}: Remove camera component", Name);
 		if (!CameraComp.has_value()) {
 			return false;
 		}
 
 		CameraComp.reset();
+		return true;
+	}
+
+	template<>
+	inline bool CActor::RemoveComponent<FCombatComponent>()
+	{
+		LK_TRACE_TAG("Actor", "{}: Remove combat component", Name);
+		if (!CombatComp.has_value()) {
+			return false;
+		}
+
+		CombatComp.reset();
 		return true;
 	}
 
@@ -242,6 +278,20 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FCombatComponent& CActor::GetComponent<FCombatComponent>()
+	{
+		LK_ASSERT_GET_COMP(CombatComp.has_value());
+		return CombatComp.value();
+	}
+
+	template<>
+	inline const FCombatComponent& CActor::GetComponent<FCombatComponent>() const
+	{
+		LK_ASSERT_GET_COMP(CombatComp.has_value());
+		return CombatComp.value();
+	}
+
+	template<>
 	inline FTransformComponent* CActor::TryGetComponent<FTransformComponent>()
 	{
 		return &TransformComp;
@@ -302,6 +352,18 @@ namespace platformer2d {
 	}
 
 	template<>
+	inline FCombatComponent* CActor::TryGetComponent<FCombatComponent>()
+	{
+		return (CombatComp.has_value() ? std::addressof(CombatComp.value()) : nullptr);
+	}
+
+	template<>
+	inline const FCombatComponent* CActor::TryGetComponent<FCombatComponent>() const
+	{
+		return (CombatComp.has_value() ? std::addressof(CombatComp.value()) : nullptr);
+	}
+
+	template<>
 	inline bool CActor::HasComponent<FTransformComponent>() const
 	{
 		return true;
@@ -329,6 +391,12 @@ namespace platformer2d {
 	inline bool CActor::HasComponent<FCameraComponent>() const
 	{
 		return CameraComp.has_value();
+	}
+
+	template<>
+	inline bool CActor::HasComponent<FCombatComponent>() const
+	{
+		return CombatComp.has_value();
 	}
 }
 

@@ -14,6 +14,7 @@ namespace platformer2d {
 		, Color(InSpec.Color)
 		, ActorFlags(InSpec.Flags)
 		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
+		, SpriteScale(InSpec.SpriteScale)
 	{
 	}
 
@@ -24,6 +25,7 @@ namespace platformer2d {
 		, Color(InSpec.Color)
 		, ActorFlags(InSpec.Flags)
 		, Outline(InSpec.OutlineEnabled, InSpec.OutlineThickness, InSpec.OutlineColor)
+		, SpriteScale(InSpec.SpriteScale)
 	{
 		LK_TRACE_TAG("Actor", "Create: {} ({})", (!Name.empty() ? Name : "NULL"), Handle);
 		Body = std::make_unique<CBody>(BodySpec, this);
@@ -56,6 +58,10 @@ namespace platformer2d {
 			TransformComp.Translation.x = BodyPos.x;
 			TransformComp.Translation.y = BodyPos.y;
 			TransformComp.SetRotation2D(Body->GetRotation());
+		}
+
+		if (HealthComp.has_value()) {
+			HealthComp->TickHitCooldown(DeltaTime);
 		}
 
 		if (FEffectComponent* EC = TryGetComponent<FEffectComponent>(); EC != nullptr) {
@@ -144,6 +150,7 @@ namespace platformer2d {
 			const glm::vec2 Factor = {
 				(Current.x != 0.0f) ? (NewScale.x / Current.x) : 1.0f,
 				(Current.y != 0.0f) ? (NewScale.y / Current.y) : 1.0f};
+			LK_TRACE_TAG("Actor", R"([{}] NewScale={} Current={})", GetName(), NewScale, Current);
 			Body->SetScale(Factor);
 		}
 		TransformComp.SetScale(NewScale);
@@ -224,6 +231,7 @@ namespace platformer2d {
 		Out << YAML::Key << "TexturePath" << YAML::Value << StringUtils::GetPathRelativeToAssetsDir(CRenderer::GetTexture(Texture)->GetFilePath());
 		Out << YAML::Key << "Color" << YAML::Value << Color;
 		Out << YAML::Key << "Deletable" << YAML::Value << bDeletable;
+		Out << YAML::Key << "SpriteScale" << YAML::Value << SpriteScale;
 
 		Out << YAML::Value << "Outline";
 		Out << YAML::BeginMap;

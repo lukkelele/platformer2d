@@ -1,9 +1,6 @@
 #pragma once
 
-#include <cstdio>
-#include <memory>
 #include <utility>
-#include <string>
 #include <variant>
 
 #include <glm/glm.hpp>
@@ -25,6 +22,13 @@
 namespace platformer2d {
 
 	class CCamera;
+
+	enum class EEffect : std::uint16_t
+	{
+		Swoosh,
+		COUNT
+	};
+	LK_ENUM(EEffect);
 
 	struct FCameraComponent
 	{
@@ -282,6 +286,8 @@ namespace platformer2d {
 		float MaxHealth = 100.0f;
 		float Health = MaxHealth;
 		bool bDamageable = true;
+		bool bImmortal = false;
+		float HitCooldownTimer = 0.0f;
 
 		[[nodiscard]] float GetHealth() const { return Health; }
 		void SetHealth(const float InHealth)
@@ -299,7 +305,39 @@ namespace platformer2d {
 
 		[[nodiscard]] bool IsDamageable() const { return bDamageable; }
 		void SetDamageable(const bool Enabled) { bDamageable = Enabled; }
+
+		[[nodiscard]] bool IsImmortal() const { return bImmortal; }
+		void SetImmortal(const bool Enabled) { bImmortal = Enabled; }
 		[[nodiscard]] bool IsDead() const { return (Health <= 0.0f); }
+
+		[[nodiscard]] bool IsHittable() const { return bDamageable && (HitCooldownTimer <= 0.0f); }
+		void TickHitCooldown(const float DeltaTime)
+		{
+			if (HitCooldownTimer > 0.0f) {
+				HitCooldownTimer -= DeltaTime;
+				if (HitCooldownTimer < 0.0f) {
+					HitCooldownTimer = 0.0f;
+				}
+			}
+		}
+	};
+
+	/**************************************
+	 * CombatComponent
+	 **************************************/
+	struct FHitSpec
+	{
+		float Damage = 0.0f;
+		float Knockback = 3.0f;
+		float KnockbackUp = 2.5f;
+		float HitCooldownSeconds = 0.6f;
+		std::vector<EEffect> Effects;
+	};
+
+	struct FCombatComponent
+	{
+		FHitSpec ContactHit;
+		bool bEnabled = true;
 	};
 
 }

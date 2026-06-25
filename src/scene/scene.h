@@ -32,7 +32,7 @@ namespace platformer2d {
 		static void RenderActor(const CActor& Actor);
 
 		template<typename T, typename... TArgs>
-		[[nodiscard]] std::shared_ptr<T> Create(TArgs&&... Args)
+		std::shared_ptr<T> Create(TArgs&&... Args)
 		{
 			static_assert(std::is_base_of_v<CActor, T>);
 			std::shared_ptr<T> Actor = std::shared_ptr<T>(new T(std::forward<TArgs>(Args)...));
@@ -123,6 +123,9 @@ namespace platformer2d {
 
 	private:
 		void DeserializeActors(const YAML::Node& ActorsNode);
+		std::shared_ptr<CActor> DeserializeActor(const YAML::Node& Node);
+		std::shared_ptr<CActor> DeserializeEnemy(const YAML::Node& Node, const FActorSpecification& ActorSpec, FBodySpecification& BodySpec);
+		std::shared_ptr<CActor> DeserializeSpawner(const YAML::Node& Node, const FActorSpecification& ActorSpec);
 
 	public:
 		static constexpr const char* FILE_EXTENSION = "lscene";

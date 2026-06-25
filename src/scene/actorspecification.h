@@ -13,6 +13,7 @@ namespace platformer2d {
 		Enemy,
 		Spawnpoint,
 		Projectile,
+		Spawner,
 		COUNT
 	};
 	LK_ENUM(EActorType);
@@ -34,6 +35,7 @@ namespace platformer2d {
 		glm::vec3 Pos = {0.0f, 0.0f, 0.0f};
 		std::string Name;
 		EActorFlag Flags = EActorFlag::EActorFlag_None;
+		glm::vec2 SpriteScale = { 1.0f, 1.0f };
 
 		bool OutlineEnabled = true;
 		float OutlineThickness = 0.0f;

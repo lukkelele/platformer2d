@@ -9,17 +9,11 @@
 #include "core/core.h"
 #include "renderer/sprite.h"
 #include "renderer/texture.h"
+#include "scene/components.h"
 
 using namespace std::chrono_literals;
 
 namespace platformer2d {
-
-	enum class EEffect : std::uint16_t
-	{
-		Swoosh,
-		COUNT
-	};
-	LK_ENUM(EEffect);
 
 	/* @todo: Implement as IGameSystem */
 	class CEffectManager

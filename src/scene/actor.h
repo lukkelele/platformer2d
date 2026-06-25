@@ -115,6 +115,9 @@ namespace platformer2d {
 		[[nodiscard]] const glm::vec4& GetColor() const { return Color; }
 		void SetColor(const glm::vec4& InColor);
 
+		[[nodiscard]] const glm::vec2& GetSpriteScale() const { return SpriteScale; }
+		void SetSpriteScale(const glm::vec2& InScale) { SpriteScale = InScale; }
+
 		[[nodiscard]] virtual const CSprite* GetSprite() const { return nullptr; }
 
 		[[nodiscard]] std::string_view GetName() const { return Name; }
@@ -214,11 +217,13 @@ namespace platformer2d {
 		std::optional<FInteractionComponent> InteractionComp;
 		std::optional<FHealthComponent> HealthComp;
 		std::optional<FCameraComponent> CameraComp;
+		std::optional<FCombatComponent> CombatComp;
 
 		std::string Name;
 		std::underlying_type_t<EActorFlag> ActorFlags = EActorFlag_None;
 		ETexture Texture = ETexture::White;
 		glm::vec4 Color = FColor::White;
+		glm::vec2 SpriteScale = {1.0f, 1.0f};
 
 		struct FOutline
 		{

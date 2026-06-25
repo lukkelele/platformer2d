@@ -7,6 +7,7 @@
 #include "core/profiler.h"
 #include "core/string.h"
 #include "game/enemy.h"
+#include "game/enemyspawner.h"
 #include "game/instance.h"
 #include "game/controller/patrolcontroller.h"
 #include "renderer/renderer.h"
@@ -151,10 +152,17 @@ namespace platformer2d {
 		const float RotationDeg = glm::degrees(TC.GetRotation2D());
 		const float OutlineThickness = Actor.IsOutlineEnabled() ? Actor.GetOutlineThickness() : 0.0f;
 
+		const glm::vec2 BaseSize = glm::vec2(TC.Scale.x, TC.Scale.y);
+		const glm::vec2 RenderSize = BaseSize * Actor.GetSpriteScale();
+
+		/* Anchor the sprite at its bottom edge ('feet') so vertical scaling grows upward only. */
+		glm::vec3 RenderPos = Actor.GetPosition();
+		RenderPos.y += (RenderSize.y - BaseSize.y) * 0.50f;
+
 		if (const CSprite* SpritePtr = Actor.GetSprite()) {
 			CRenderer::DrawQuad(
-				Actor.GetPosition(),
-				TC.Scale,
+				RenderPos,
+				RenderSize,
 				*CRenderer::GetTexture(Actor.GetTexture()),
 				SpritePtr->GetUV(),
 				Actor.GetColor(),
@@ -163,8 +171,8 @@ namespace platformer2d {
 				Actor.GetOutlineColor());
 		} else {
 			CRenderer::DrawQuad(
-				Actor.GetPosition(),
-				TC.Scale,
+				RenderPos,
+				RenderSize,
 				Actor.GetTexture(),
 				Actor.GetColor(),
 				RotationDeg,
@@ -316,136 +324,191 @@ namespace platformer2d {
 		return true;
 	}
 
+	static FActorSpecification ParseActorSpecification(const YAML::Node& Node)
+	{
+		using namespace Serialization;
+		FActorSpecification ActorSpec;
+		ActorSpec.Handle = Node["ID"].as<LUUID>();
+		ActorSpec.Name = Node["Name"].as<std::string>();
+		ActorSpec.Flags = static_cast<EActorFlag>(Node["Flags"].as<std::underlying_type_t<EActorFlag>>());
+		ActorSpec.Type = static_cast<EActorType>(Node["Type"].as<std::size_t>());
+		DeserializeProperty<Serialization::Optional>("SpriteScale", ActorSpec.SpriteScale, ActorSpec.SpriteScale, Node);
+
+		const std::string TexturePath = Node["TexturePath"].as<std::string>();
+		ActorSpec.Texture = CRenderer::GetTexture(TexturePath);
+		ActorSpec.Color = Node["Color"].as<glm::vec4>();
+
+		const YAML::Node& OutlineNode = Node["Outline"];
+		DeserializeProperty("Enabled", ActorSpec.OutlineEnabled, true, OutlineNode);
+		DeserializeProperty("Thickness", ActorSpec.OutlineThickness, 1.0f, OutlineNode);
+		DeserializeProperty("Color", ActorSpec.OutlineColor, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), OutlineNode);
+
+		return ActorSpec;
+	}
+
+	static std::optional<FBodySpecification> ParseBodySpecification(const YAML::Node& Node)
+	{
+		const YAML::Node BodyNode = Node["Body"];
+		if (!BodyNode.IsDefined()) {
+			LK_ERROR_TAG("Scene", "Body missing in YAML");
+			return std::nullopt;
+		}
+		if (!BodyNode["Type"].IsDefined()) {
+			return std::nullopt;
+		}
+
+		FBodySpecification BodySpec;
+		Serialization::Deserialize(BodySpec, BodyNode);
+		return BodySpec;
+	}
+
+	static std::vector<FSpawnWave> ParseSpawnWaves(const YAML::Node& SpawnerNode)
+	{
+		std::vector<FSpawnWave> Waves;
+		const YAML::Node WavesNode = SpawnerNode["Waves"];
+		if (!WavesNode.IsDefined() || !WavesNode.IsSequence()) {
+			return Waves;
+		}
+
+		for (const YAML::Node& WaveNode : WavesNode) {
+			FSpawnWave Wave;
+			int ArchetypeValue = std::to_underlying(EEnemyArchetype::Grunt);
+			Serialization::DeserializeProperty("Archetype", ArchetypeValue, ArchetypeValue, WaveNode);
+			Wave.Archetype = static_cast<EEnemyArchetype>(ArchetypeValue);
+			Serialization::DeserializeProperty("Count", Wave.Count, 3, WaveNode);
+			Serialization::DeserializeProperty("SpawnInterval", Wave.SpawnInterval, 0.50f, WaveNode);
+			Serialization::DeserializeProperty("StartDelay", Wave.StartDelay, 0.0f, WaveNode);
+			Serialization::DeserializeProperty("WaitForClear", Wave.bWaitForClear, true, WaveNode);
+			Waves.push_back(Wave);
+		}
+		return Waves;
+	}
+
+	static void AttachSerializedComponents(CActor& Actor, const YAML::Node& Node)
+	{
+		if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined()) {
+			FTransformComponent TC;
+			Serialization::Deserialize(TC, TCNode);
+			Actor.AddComponent<FTransformComponent>(TC);
+		} else {
+			LK_ERROR_TAG("Scene", "TransformComponent missing in YAML");
+		}
+
+		if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined()) {
+			FEffectComponent EC;
+			Serialization::Deserialize(EC, EffectCompNode);
+			LK_ASSERT(!EC.Effects.empty(), "At least one effect is required");
+			Actor.AddComponent<FEffectComponent>(EC);
+		}
+
+		if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined()) {
+			FInteractionComponent IC;
+			Serialization::Deserialize(IC, InteractionCompNode);
+			Actor.AddComponent<FInteractionComponent>(IC);
+		}
+
+		if (const YAML::Node HealthCompNode = Node["HealthComponent"]; HealthCompNode.IsDefined()) {
+			FHealthComponent HC;
+			Serialization::Deserialize(HC, HealthCompNode);
+			Actor.AddComponent<FHealthComponent>(HC);
+		}
+	}
+
+	std::shared_ptr<CActor> CScene::DeserializeEnemy(const YAML::Node& Node, const FActorSpecification& ActorSpec, FBodySpecification& BodySpec)
+	{
+		const YAML::Node& ControllerNode = Node["Controller"];
+		LK_ASSERT(ControllerNode.IsDefined(), "Controller node missing");
+
+		FEnemySpecification EnemySpec;
+		Serialization::DeserializeProperty("ControllerType", EnemySpec.ControllerType, EControllerType::None, ControllerNode);
+		Serialization::DeserializeProperty("SpawnPoint", EnemySpec.SpawnPoint, glm::vec2(0.0f, 0.0f), Node);
+		Serialization::DeserializeProperty("Archetype", EnemySpec.Archetype, EEnemyArchetype::Grunt, Node);
+
+		BodySpec.Flags |= EBodyFlag_ContactEvents;
+		std::shared_ptr<CEnemy> Enemy = Create<CEnemy>(EnemySpec, ActorSpec, BodySpec);
+		Enemy->SetPosition(BodySpec.Position);
+
+		if (EnemySpec.ControllerType == EControllerType::Patrol) {
+			float HalfDistance = 0.0f;
+			float StartDelayInSeconds = 0.0f;
+			Serialization::DeserializeProperty("HalfDistance", HalfDistance, 0.0f, ControllerNode);
+			Serialization::DeserializeProperty("StartDelayInSeconds", StartDelayInSeconds, 0.0f, ControllerNode);
+			Enemy->SetController(std::make_unique<CPatrolController>(1.0f, 1.0f));
+		}
+
+		return Enemy;
+	}
+
+	std::shared_ptr<CActor> CScene::DeserializeSpawner(const YAML::Node& Node, const FActorSpecification& ActorSpec)
+	{
+		std::shared_ptr<CEnemySpawner> SpawnerActor = Create<CEnemySpawner>(ActorSpec);
+
+		const YAML::Node SpawnerNode = Node["Spawner"];
+		if (!SpawnerNode.IsDefined()) {
+			return SpawnerActor;
+		}
+
+		int MaxAlive = 8;
+		bool Loop = false;
+		float Scatter = 0.25f;
+		bool AutoActivate = false;
+		Serialization::DeserializeProperty("MaxAlive", MaxAlive, 8, SpawnerNode);
+		Serialization::DeserializeProperty("Loop", Loop, false, SpawnerNode);
+		Serialization::DeserializeProperty("Scatter", Scatter, 0.25f, SpawnerNode);
+		Serialization::DeserializeProperty("AutoActivate", AutoActivate, false, SpawnerNode);
+		SpawnerActor->SetMaxAlive(MaxAlive);
+		SpawnerActor->SetLoop(Loop);
+		SpawnerActor->SetScatter(Scatter);
+		SpawnerActor->SetAutoActivate(AutoActivate);
+		SpawnerActor->SetWaves(ParseSpawnWaves(SpawnerNode));
+
+		return SpawnerActor;
+	}
+
+	std::shared_ptr<CActor> CScene::DeserializeActor(const YAML::Node& Node)
+	{
+		LK_ASSERT(Node["ID"] && Node["Name"] && Node["Flags"] && Node["TexturePath"] && Node["Color"] && Node["TransformComponent"]);
+
+		const FActorSpecification ActorSpec = ParseActorSpecification(Node);
+		LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorSpec.Name, ActorSpec.Handle);
+		LK_VERIFY(!DoesActorExist(ActorSpec.Handle), "Duplicate actors found with handle {}", ActorSpec.Handle);
+
+		std::optional<FBodySpecification> BodySpec = ParseBodySpecification(Node);
+		const bool HasBody = BodySpec.has_value();
+
+		std::shared_ptr<CActor> Actor = nullptr;
+		switch (ActorSpec.Type) {
+			case EActorType::Object:
+				[[fallthrough]];
+			case EActorType::Spawnpoint:
+				Actor = HasBody ? Create<CActor>(ActorSpec, *BodySpec) : Create<CActor>(ActorSpec);
+				break;
+			case EActorType::Player:
+				LK_VERIFY(HasBody, "Body is expected for {}: {} ({})", Enum::ToString(ActorSpec.Type), ActorSpec.Handle, ActorSpec.Name);
+				Actor = Create<CActor>(ActorSpec, *BodySpec);
+				break;
+			case EActorType::Enemy:
+				LK_VERIFY(HasBody, "Body is expected for {}: {} ({})", Enum::ToString(ActorSpec.Type), ActorSpec.Handle, ActorSpec.Name);
+				Actor = DeserializeEnemy(Node, ActorSpec, *BodySpec);
+				break;
+			case EActorType::Spawner:
+				Actor = DeserializeSpawner(Node, ActorSpec);
+				break;
+			default:
+				break;
+		}
+
+		LK_VERIFY(Actor, "Actor is NULL, {} not supported: {} ({})", Enum::ToString(ActorSpec.Type), ActorSpec.Handle, ActorSpec.Name);
+		AttachSerializedComponents(*Actor, Node);
+
+		return Actor;
+	}
+
 	void CScene::DeserializeActors(const YAML::Node& ActorsNode)
 	{
 		LK_DEBUG_TAG("Scene", "Deserializing actors");
 		for (const YAML::Node& Node : ActorsNode) {
-			LK_ASSERT(Node["ID"] && Node["Name"] && Node["Flags"] && Node["TexturePath"] && Node["Color"] && Node["TransformComponent"]);
-			FActorSpecification ActorSpec;
-			ActorSpec.Handle = Node["ID"].as<LUUID>();
-			ActorSpec.Name = Node["Name"].as<std::string>();
-			ActorSpec.Flags = static_cast<EActorFlag>(Node["Flags"].as<std::underlying_type_t<EActorFlag>>());
-			const EActorType ActorType = static_cast<EActorType>(Node["Type"].as<std::size_t>());
-			ActorSpec.Type = ActorType;
-			LK_TRACE_TAG("Scene", "Deserialize: {} ({})", ActorSpec.Name, ActorSpec.Handle);
-
-			const std::string TexturePath = Node["TexturePath"].as<std::string>();
-			ActorSpec.Texture = CRenderer::GetTexture(TexturePath);
-			LK_TRACE_TAG("Scene", "Deserialize: {} -> {}", TexturePath, Enum::ToString(ActorSpec.Texture));
-
-			ActorSpec.Color = Node["Color"].as<glm::vec4>();
-
-			const YAML::Node& OutlineNode = Node["Outline"];
-			Serialization::DeserializeProperty("Enabled", ActorSpec.OutlineEnabled, true, OutlineNode);
-			Serialization::DeserializeProperty("Thickness", ActorSpec.OutlineThickness, 1.0f, OutlineNode);
-			Serialization::DeserializeProperty("Color", ActorSpec.OutlineColor, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), OutlineNode);
-
-			std::optional<FTransformComponent> TC;
-			if (const YAML::Node TCNode = Node["TransformComponent"]; TCNode.IsDefined()) {
-				TC.emplace();
-				Serialization::Deserialize(*TC, TCNode);
-			} else {
-				LK_ERROR_TAG("Scene", "TransformComponent missing in YAML");
-			}
-
-			std::optional<FBodySpecification> BodySpec;
-			if (const YAML::Node BodyNode = Node["Body"]; BodyNode.IsDefined()) {
-				if (BodyNode["Type"].IsDefined()) {
-					BodySpec.emplace();
-					Serialization::Deserialize(*BodySpec, BodyNode);
-				} else {
-					LK_DEBUG_TAG("Scene", "Actor {} has no body", ActorSpec.Name);
-				}
-			} else {
-				LK_ERROR_TAG("Scene", "Body missing in YAML");
-			}
-
-			std::optional<FEffectComponent> EC;
-			if (const YAML::Node EffectCompNode = Node["EffectComponent"]; EffectCompNode.IsDefined()) {
-				EC.emplace();
-				Serialization::Deserialize(*EC, EffectCompNode);
-				LK_ASSERT(!(*EC).Effects.empty(), "At least one effect is required");
-			}
-
-			std::optional<FInteractionComponent> IC;
-			if (const YAML::Node InteractionCompNode = Node["InteractionComponent"]; InteractionCompNode.IsDefined()) {
-				IC.emplace();
-				Serialization::Deserialize(*IC, InteractionCompNode);
-			}
-
-			std::optional<FHealthComponent> HC;
-			if (const YAML::Node HealthCompNode = Node["HealthComponent"]; HealthCompNode.IsDefined()) {
-				HC.emplace();
-				Serialization::Deserialize(*HC, HealthCompNode);
-			}
-
-			std::optional<FEnemySpecification> EnemySpec;
-			if (ActorType == EActorType::Enemy) {
-				const YAML::Node& ControllerNode = Node["Controller"];
-				LK_ASSERT(ControllerNode.IsDefined(), "Controller node missing");
-				auto& Spec = EnemySpec.emplace();
-				Serialization::DeserializeProperty("ControllerType", Spec.ControllerType, EControllerType::None, ControllerNode);
-				Serialization::DeserializeProperty("SpawnPoint", Spec.SpawnPoint, glm::vec2(0.0f, 0.0f), Node);
-				Serialization::DeserializeProperty("Archetype", Spec.Archetype, EEnemyArchetype::Grunt, Node);
-			}
-
-			LK_VERIFY(!DoesActorExist(ActorSpec.Handle), "Duplicate actors found with handle {}", ActorSpec.Handle);
-
-			std::shared_ptr<CActor> Actor = nullptr;
-			const bool HasBody = BodySpec.has_value();
-			switch (ActorType) {
-				case EActorType::Object:
-					[[fallthrough]];
-				case EActorType::Spawnpoint:
-				{
-					if (HasBody) {
-						Actor = Create<CActor>(ActorSpec, *BodySpec);
-					} else {
-						Actor = Create<CActor>(ActorSpec);
-					}
-					break;
-				}
-				case EActorType::Player:
-				{
-					LK_VERIFY(HasBody, "Body is expected for {}: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
-					Actor = Create<CActor>(ActorSpec, *BodySpec);
-					break;
-				}
-				case EActorType::Enemy:
-				{
-					LK_VERIFY(HasBody, "Body is expected for {}: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
-					LK_VERIFY(EnemySpec.has_value(), "Enemy specification missing for {} ({})", ActorSpec.Handle, ActorSpec.Name);
-					Actor = Create<CEnemy>(*EnemySpec, ActorSpec, *BodySpec);
-
-					/* Create controller for the enemy. */
-					const FEnemySpecification& Spec = *EnemySpec;
-					if (Spec.ControllerType == EControllerType::Patrol) {
-						const YAML::Node& ControllerNode = Node["Controller"];
-						float HalfDistance = 0.0f;
-						float StartDelayInSeconds = 0.0f;
-						Serialization::DeserializeProperty("HalfDistance", HalfDistance, 0.0f, ControllerNode);
-						Serialization::DeserializeProperty("StartDelayInSeconds", StartDelayInSeconds, 0.0f, ControllerNode);
-						Actor->As<CEnemy>().SetController(std::make_unique<CPatrolController>(1.0f, 1.0f));
-					}
-					break;
-				}
-				default:
-					break;
-			}
-
-			LK_VERIFY(Actor, "Actor is NULL, {} not supported: {} ({})", Enum::ToString(ActorType), ActorSpec.Handle, ActorSpec.Name);
-			if (TC.has_value()) {
-				Actor->AddComponent<FTransformComponent>(*TC);
-			}
-			if (EC.has_value()) {
-				Actor->AddComponent<FEffectComponent>(*EC);
-			}
-			if (IC.has_value()) {
-				Actor->AddComponent<FInteractionComponent>(*IC);
-			}
-			if (HC.has_value()) {
-				Actor->AddComponent<FHealthComponent>(*HC);
-			}
+			DeserializeActor(Node);
 		}
 	}
 
