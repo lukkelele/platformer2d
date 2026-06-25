@@ -260,8 +260,7 @@ namespace platformer2d {
 		}
 
 		CCamera& PlayerCam = Player->GetCamera();
-		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
-		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
+		if (EC->IsLerpEnabled()) {
 			EC->BeginSwitchLerp(PlayerCam.GetPosition(), PlayerCam.GetZoom());
 		} else {
 			EC->CancelSwitchLerp();
@@ -280,8 +279,7 @@ namespace platformer2d {
 		}
 
 		CCamera& PlayerCam = Player->GetCamera();
-		const float Distance = glm::length(EC->GetPosition() - PlayerCam.GetPosition());
-		if (EC->IsLerpEnabled() && (Distance <= EC->GetLerpSnapDistance())) {
+		if (EC->IsLerpEnabled()) {
 			PlayerCam.BeginSwitchLerp(EC->GetPosition(), EC->GetZoom());
 		} else {
 			PlayerCam.CancelSwitchLerp();
@@ -756,8 +754,6 @@ namespace platformer2d {
 		UI::Creator(Scene);
 		UI::RenderTerrainCreator(Scene);
 
-		UI::Font::Push(EFont::SourceSansPro, EFontSize::Regular, EFontModifier::Normal);
-
 		if (UI::Begin(UI::PanelID::SceneManager)) {
 			UI::Separator(2);
 			UI::EnemyTools(Scene);
@@ -772,97 +768,6 @@ namespace platformer2d {
 
 			UI::End();
 		}
-
-#if 0
-		ImGui::Spacing();
-		/* @todo: Move this elsewhere */
-		if (ImGui::TreeNodeEx("Debug Info", ImGuiTreeNodeFlags_SpanAvailWidth)) {
-			ImGui::Text("Viewport: (%d, %d)", ViewportWidth, ViewportHeight);
-			ImGui::Text("Editor Viewport: (%d, %d)", EditorViewportWidth, EditorViewportHeight);
-			{
-				ImGuiViewport* Viewport = ImGui::GetMainViewport();
-				ImGui::Text("Main Viewport: (%.1f, %.1f)", Viewport->Size.x, Viewport->Size.y);
-			}
-
-			int Gcd = std::gcd(ViewportWidth, ViewportHeight);
-			if (Gcd > 0) {
-				ImGui::Text("Aspect Ratio: %d/%d", (ViewportWidth / Gcd), (ViewportHeight / Gcd));
-			} else {
-				ImGui::Text("Aspect Ratio: Unknown");
-			}
-
-			Gcd = std::gcd(EditorViewportWidth, EditorViewportHeight);
-			if (Gcd > 0) {
-				ImGui::Text("EditorViewport Aspect Ratio: %d/%d", (EditorViewportWidth / Gcd), (EditorViewportHeight / Gcd));
-			} else {
-				ImGui::Text("Aspect Ratio: Unknown");
-			}
-
-			if (CCamera* Camera = GetActiveCamera()) {
-				const glm::vec2 HalfSize = Camera->GetHalfSize();
-				ImGui::Text("Camera Half Size: (%2.f, %.2f)", HalfSize.x, HalfSize.y);
-			}
-
-			if (CPhysicsWorld::IsValid()) {
-				const b2Vec2 G = b2World_GetGravity(CPhysicsWorld::GetID());
-				ImGui::Text("Gravity: (%.1f, %.1f)", G.x, G.y);
-			} else {
-				ImGui::Text("Gravity: No world");
-			}
-
-			ImGui::Dummy(ImVec2(0, 8));
-
-			glm::vec4 ClearColor = CRenderer::GetClearColor();
-			if (ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f")) {
-				CRenderer::SetClearColor(ClearColor);
-			}
-
-			ImGui::Dummy(ImVec2(0, 8));
-			{
-				ImGui::SeparatorText("Mouse");
-				const glm::vec2 MouseViewportPos = GetMouseInViewportSpace();
-				ImGui::Text("Viewport Space: (%.2f, %.2f)", MouseViewportPos.x, MouseViewportPos.y);
-				if (CCamera* Camera = GetActiveCamera(); Camera != nullptr) {
-					const glm::vec2 MouseWorldPos = GetMouseInWorldSpace(*Camera);
-					ImGui::Text("World Space: (%.2f, %.2f)", MouseWorldPos.x, MouseWorldPos.y);
-				} else {
-					ImGui::Text("World Space: UNKNOWN");
-				}
-			}
-
-			ImGui::Dummy(ImVec2(0, 8));
-			{
-				ImGui::Checkbox("Raycast Scene", &bRaycastScene);
-				if (!bRaycastScene) {
-					ImGui::BeginDisabled();
-				}
-				ImGui::Checkbox("Draw Debug Ray", &Config.Debug.bDrawRayHits);
-				if (!bRaycastScene) {
-					ImGui::EndDisabled();
-				}
-			}
-
-			ImGui::Dummy(ImVec2(0, 12));
-			ImGui::SeparatorText("Serialization");
-			{
-				UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 8.0f);
-				if (ImGui::Button("Serialize")) {
-					Serialize(GetSpecification().LevelFilepath);
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Deserialize")) {
-					Deserialize(GetSpecification().LevelFilepath);
-				}
-			}
-
-			ImGui::Spacing();
-			UI::EditorViewportInfo(bEditorViewportFocused, bEditorViewportHovered);
-
-			ImGui::TreePop();
-		}
-#endif
-
-		UI::Font::Pop();
 
 		UI_BottomBar();
 	}
@@ -1062,6 +967,50 @@ namespace platformer2d {
 			ImGui::EndMenu();
 		}
 
+		const bool HasValidScene = (Scene != nullptr);
+		bool OpenNewScenePopup = false;
+		if (ImGui::BeginMenu("Scene")) {
+			if (ImGui::MenuItem("New")) {
+				OpenNewScenePopup = true;
+			}
+
+			if (HasValidScene) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Open")) {
+				if (!Scene) {
+					bOpenSceneNextTick = true;
+				}
+			}
+			if (HasValidScene) {
+				ImGui::EndDisabled();
+			}
+
+			if (ImGui::MenuItem("Switch")) {
+				std::filesystem::path Picked;
+				if (PickSceneFile(Picked)) {
+					SwitchToScene(Picked);
+				}
+			}
+
+			if (!HasValidScene) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Close")) {
+				if (Scene) {
+					bCloseSceneNextTick = true;
+				}
+			}
+			if (ImGui::MenuItem("Save")) {
+				SaveScene();
+			}
+			if (!HasValidScene) {
+				ImGui::EndDisabled();
+			}
+
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Window")) {
 			Option("Terrain Creator", UI::TerrainCreator.bOpen);
 			ImGui::EndMenu();
@@ -1126,51 +1075,6 @@ namespace platformer2d {
 			ImGui::EndMenu();
 		}
 		ImGui::PopItemFlag();
-
-		const bool HasValidScene = (Scene != nullptr);
-		bool OpenNewScenePopup = false;
-		if (ImGui::BeginMenu("Scene")) {
-			if (ImGui::MenuItem("New")) {
-				OpenNewScenePopup = true;
-			}
-
-			if (HasValidScene) {
-				ImGui::BeginDisabled();
-			}
-			if (ImGui::MenuItem("Open")) {
-				if (!Scene) {
-					bOpenSceneNextTick = true;
-				}
-			}
-			if (HasValidScene) {
-				ImGui::EndDisabled();
-			}
-
-			if (ImGui::MenuItem("Switch")) {
-				std::filesystem::path Picked;
-				if (PickSceneFile(Picked)) {
-					SwitchToScene(Picked);
-				}
-			}
-
-			if (!HasValidScene) {
-				ImGui::BeginDisabled();
-			}
-			if (ImGui::MenuItem("Close")) {
-				if (Scene) {
-					bCloseSceneNextTick = true;
-				}
-			}
-			if (ImGui::MenuItem("Save")) {
-				SaveScene();
-			}
-			if (!HasValidScene) {
-				ImGui::EndDisabled();
-			}
-
-			ImGui::EndMenu();
-		}
-
 		ImGui::EndMenuBar();
 
 		if (OpenNewScenePopup) {
@@ -1427,12 +1331,6 @@ namespace platformer2d {
 				if (UI::Checkbox("Camera Lerp", LerpEnabled)) {
 					EC->SetLerpEnabled(LerpEnabled);
 					PendingEditorCameraLerp = LerpEnabled;
-				}
-
-				UI::Table::NextRow();
-				float LerpSnap = EC->GetLerpSnapDistance();
-				if (UI::DragFloat("Lerp Snap Distance", LerpSnap, 0.05f, 0.0f, 100.0f)) {
-					EC->SetLerpSnapDistance(LerpSnap);
 				}
 			}
 

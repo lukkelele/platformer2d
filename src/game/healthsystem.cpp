@@ -30,6 +30,11 @@ namespace platformer2d {
 		HC->SetHealth(HC->GetHealth() - Amount);
 		LK_DEBUG_TAG("Health", "[{}] -{} HP -> {}/{}", Target.GetName(), Amount, HC->GetHealth(), HC->GetMaxHealth());
 
+		if (HC->IsImmortal()) {
+			HC->SetMaxHealth();
+			return true;
+		}
+
 		if (HC->IsDead()) {
 			LK_INFO_TAG("Health", "[{}] Killed", Target.GetName());
 			Target.OnDeath(EDeathReason::Damage);

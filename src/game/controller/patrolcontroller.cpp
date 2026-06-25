@@ -10,6 +10,7 @@ namespace platformer2d {
 	static constexpr float STUCK_THRESHOLD_SECONDS = 0.45f;
 	static constexpr float STUCK_VEL_X_EPS = 0.05f;
 	static constexpr float LAST_KNOWN_REACHED = 0.30f;
+	static constexpr float CONTACT_PRESS = 0.05f;
 
 	CPatrolController::CPatrolController(const float InPatrolHalfDistance, const float InStartDelaySeconds)
 		: PatrolHalfDistance(InPatrolHalfDistance)
@@ -41,7 +42,13 @@ namespace platformer2d {
 		}
 
 		if (std::shared_ptr<CActor> Target = TargetRef.lock(); Target != nullptr) {
-			const ETargetResponse Response = HandleTarget(Enemy, Target);
+			ETargetResponse Response = HandleTarget(Enemy, Target);
+
+			if (((Response == ETargetResponse::MoveLeft) && !HasGroundAhead(Enemy, EDirection::Left))
+				|| ((Response == ETargetResponse::MoveRight) && !HasGroundAhead(Enemy, EDirection::Right))) {
+				Response = ETargetResponse::StopMovement;
+			}
+
 			switch (Response) {
 				case ETargetResponse::None:
 					break;
@@ -120,8 +127,16 @@ namespace platformer2d {
 
 		const FEnemyArchetype& Archetype = Enemy.GetArchetypeData();
 		const float DetectRadiusSq = Archetype.DetectRadius * Archetype.DetectRadius;
-		const float StopRadiusSq = Archetype.StopRadius * Archetype.StopRadius;
 		const float GiveUpRadiusSq = Archetype.GiveUpRadius * Archetype.GiveUpRadius;
+
+		/* Melee enemies deal damage through physical contact, so they must reach the player. */
+		float StopRadius = Archetype.StopRadius;
+		if (!Archetype.bRanged) {
+			const float OwnHalfWidth = (Enemy.GetBody() != nullptr) ? (Enemy.GetBody()->GetSize().x * 0.50f) : 0.0f;
+			const float TargetHalfWidth = (Target->GetBody() != nullptr) ? (Target->GetBody()->GetSize().x * 0.50f) : 0.0f;
+			StopRadius = glm::max(0.0f, (OwnHalfWidth + TargetHalfWidth) - CONTACT_PRESS);
+		}
+		const float StopRadiusSq = StopRadius * StopRadius;
 
 		bPlayerLOS = Physics::HasLineOfSight(Pos, TargetPos, Target.get());
 		// LK_DEBUG_TAG("PatrolController", "PatrolDirection={}  LOS={}", Enum::ToString(PatrolDirection), bPlayerLOS);
@@ -184,11 +199,40 @@ namespace platformer2d {
 			PatrolDirection = EDirection::Right;
 		}
 
+		if (!HasGroundAhead(Enemy, PatrolDirection)) {
+			const EDirection Opposite = (PatrolDirection == EDirection::Right) ? EDirection::Left : EDirection::Right;
+			if (HasGroundAhead(Enemy, Opposite)) {
+				PatrolDirection = Opposite;
+			} else {
+				Enemy.StopMovement();
+				return;
+			}
+		}
+
 		if (PatrolDirection == EDirection::Left) {
 			Enemy.MoveLeft();
 		} else if (PatrolDirection == EDirection::Right) {
 			Enemy.MoveRight();
 		}
+	}
+
+	bool CPatrolController::HasGroundAhead(CEnemy& Enemy, const EDirection Dir) const
+	{
+		const CBody* B = Enemy.GetBody();
+		LK_ASSERT(B, "Enemy {} has no body", Enemy.GetName());
+		const FEnemyArchetype& Archetype = Enemy.GetArchetypeData();
+		const glm::vec2 Center = B->GetPosition();
+		const glm::vec2 Size = B->GetSize();
+		const float HalfWidth = Size.x * 0.50f;
+		const float HalfHeight = Size.y * 0.50f;
+
+		const float DirSign = (Dir == EDirection::Left) ? -1.0f : 1.0f;
+		const float ProbeX = Center.x + (DirSign * (HalfWidth + Archetype.LedgeProbeForward));
+		const float FeetY = Center.y - HalfHeight;
+
+		constexpr float ORIGIN_LIFT = 0.02f;
+		const glm::vec2 Origin = {ProbeX, FeetY + ORIGIN_LIFT};
+		return Physics::ProbeGround(Origin, Archetype.LedgeProbeDepth + ORIGIN_LIFT);
 	}
 
 }

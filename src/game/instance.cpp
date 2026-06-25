@@ -9,6 +9,7 @@
 #include "core/input/keyboard.h"
 #include "core/input/mouse.h"
 #include "checkpointsystem.h"
+#include "combatsystem.h"
 #include "enemy.h"
 #include "gameplaysystem.h"
 #include "healthsystem.h"
@@ -40,6 +41,7 @@ namespace platformer2d {
 		RegisterSystem<CCheckpointSystem>();
 		RegisterSystem<CInteractionSystem>();
 		RegisterSystem<CProjectileSystem>();
+		RegisterSystem<CCombatSystem>();
 	}
 
 	CGameInstance::~CGameInstance()
@@ -307,6 +309,7 @@ namespace platformer2d {
 
 	void CGameInstance::CreatePlayer()
 	{
+		LK_DEBUG_TAG("GameInstance", "Create player: JumpImpulse={} DirForce={}", Spec.Player.BodySpec.JumpImpulse, Spec.Player.BodySpec.DirForce);
 		Player = std::make_shared<CPlayer>(Spec.Player.ActorSpec, Spec.Player.BodySpec);
 
 		Player->OnJumped.Add([](const FPlayerData& PlayerData)
@@ -319,10 +322,10 @@ namespace platformer2d {
 			LK_TRACE("Player {} landed", PlayerData.ID);
 		});
 
-		Player->OnDied.Add([this](const FPlayerData&)
+		Player->OnDied.Add([this](const FPlayerData& PlayerData)
 		{
 			auto& Checkpoint = GetSystem<CCheckpointSystem>();
-			LK_INFO_TAG("GameInstance", "Player died, respawning at {}", Checkpoint.HasCheckpoint() ? "checkpoint" : "at default spawn");
+			LK_INFO_TAG("GameInstance", "Player {} died, respawning at {}", PlayerData.ID, Checkpoint.HasCheckpoint() ? "checkpoint" : "at default spawn");
 			if (Checkpoint.HasCheckpoint()) {
 				Checkpoint.RestoreToPlayer(*Player);
 			} else {

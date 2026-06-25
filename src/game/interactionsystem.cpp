@@ -11,6 +11,7 @@
 #include "scene/scene.h"
 #include "renderer/renderer.h"
 #include "rifle.h"
+#include "melee.h"
 
 namespace platformer2d {
 
@@ -177,14 +178,31 @@ namespace platformer2d {
 	void CInteractionSystem::HandlePickup_Weapon(const FPickupInteraction& Interaction, CPlayer& Player)
 	{
 		const auto& Object = std::get<FPickupWeapon>(Interaction.Object);
-		const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
-		LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Interaction.bExpireWhenPickedUp);
 		CInventory& Inventory = Player.GetInventory();
-		if (Inventory.IsEmpty()) {
-			std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &Player);
-			Inventory.AddItem(Rifle);
-		} else {
+		if (!Inventory.IsEmpty()) {
 			LK_WARN_TAG("Interaction", "Inventory not empty");
+			return;
+		}
+
+		switch (Object.Type) {
+			case EWeaponType::Rifle:
+			{
+				const auto& Spec = std::get<FRifleSpecification>(Object.Spec);
+				LK_TRACE("Pickup Weapon={} MagazineSize={} ExpireOnPickup={}", Enum::ToString(Object.Type), Spec.MagazineSize, Interaction.bExpireWhenPickedUp);
+				std::shared_ptr<CRifle> Rifle = std::make_shared<CRifle>(Spec, &Player);
+				Inventory.AddItem(Rifle);
+				break;
+			}
+			case EWeaponType::Melee:
+			{
+				LK_TRACE("Pickup Weapon={} ExpireOnPickup={}", Enum::ToString(Object.Type), Interaction.bExpireWhenPickedUp);
+				std::shared_ptr<CMelee> Melee = std::make_shared<CMelee>(FMeleeSpecification{}, &Player);
+				Inventory.AddItem(Melee);
+				break;
+			}
+			default:
+				LK_ERROR_TAG("Interaction", "Unhandled weapon type: {}", Enum::ToString(Object.Type));
+				break;
 		}
 	}
 

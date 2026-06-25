@@ -8,6 +8,8 @@ project_library_sources(
 	enemy.cpp
 	enemyarchetype.h
 	enemyarchetype.cpp
+	enemyspawner.h
+	enemyspawner.cpp
 	instance.h
 	instance.cpp
 	inventory.h
@@ -21,6 +23,8 @@ project_library_sources(
 	healthsystem.cpp
 	checkpointsystem.h
 	checkpointsystem.cpp
+	combatsystem.h
+	combatsystem.cpp
 	interactionsystem.h
 	interactionsystem.cpp
 	inputsystem.h

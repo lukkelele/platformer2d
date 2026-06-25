@@ -34,7 +34,7 @@ namespace platformer2d {
 
 		void Tick(float DeltaTime) override;
 		void OnDeath(EDeathReason Reason) override;
-		EActorType GetActorType() const override { return EActorType::Player; }
+		[[nodiscard]] EActorType GetActorType() const override { return EActorType::Player; }
 		void Jump();
 
 		[[nodiscard]] const FPlayerData& GetData() const { return Data; }
@@ -61,8 +61,6 @@ namespace platformer2d {
 		[[nodiscard]] const FSpriteSheet* GetSpriteSheet() const { return SpriteSheet; }
 		void SetSpriteSheet(ETexture InTexture);
 
-		[[nodiscard]] float GetSpriteScale() const { return SpriteScale; }
-		void SetSpriteScale(const float InScale) { SpriteScale = InScale; }
 		[[nodiscard]] const glm::vec2& GetSpriteOffset() const { return SpriteOffset; }
 		void SetSpriteOffset(const glm::vec2& InOffset) { SpriteOffset = InOffset; }
 
@@ -114,8 +112,8 @@ namespace platformer2d {
 		CInventory Inventory;
 
 		EDirection LookDir = EDirection::Right;
-		float JumpImpulse = 3.440f;
-		float DirForce = 5.630f;
+		float JumpImpulse = 0.500f; /* @todo: Should be stored in CBody or? */
+		float DirForce = 4.50f; /* @todo: Should be stored in CBody or? */
 		float LastDirForce = 0.0f;
 
 		bool bJustLanded = false;
@@ -130,8 +128,6 @@ namespace platformer2d {
 		std::unique_ptr<CSprite> Sprite = nullptr;
 		const FSpriteSheet* SpriteSheet = nullptr;
 		FSpriteFrame SpriteFrame;
-
-		float SpriteScale = 1.0f;
 		glm::vec2 SpriteOffset{0.0f, 0.0f};
 
 		std::chrono::steady_clock::time_point NextProjectileTime{};

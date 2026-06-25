@@ -16,11 +16,25 @@ namespace platformer2d {
 		Data.State = EEnemyState::Idle;
 		Data.LookDirection = EDirection::Right;
 
+		LK_ASSERT(Body);
+		Body->SetCollisionCategory(ECollisionCategory_Enemy);
+
 		const FEnemyArchetype& Archetype = GetEnemyArchetype(ArchetypeKind);
 		MoveSpeed = Archetype.MoveSpeed;
 		FHealthComponent& HC = AddComponent<FHealthComponent>();
 		HC.SetMaxHealth(Archetype.MaxHealth);
 		HC.SetHealth(Archetype.MaxHealth);
+		HC.SetImmortal(Archetype.bImmortal);
+
+		/* @fixme: Dead enemies need to be 'killed' when deserializing and creating instances */
+		SetFlag(EActorFlag_Transparent, 0);
+
+		FCombatComponent& CC = AddComponent<FCombatComponent>();
+		CC.ContactHit.Damage = Archetype.AttackDamage;
+		CC.ContactHit.Knockback = Archetype.ContactKnockback;
+		CC.ContactHit.KnockbackUp = Archetype.ContactKnockbackUp;
+		CC.ContactHit.HitCooldownSeconds = Archetype.HitCooldown;
+		CC.ContactHit.Effects = {EEffect::Swoosh};
 
 		SpriteSheet = CRenderer::GetSpriteSheet(Texture);
 		LK_ASSERT(SpriteSheet, "Sprite sheet not loaded: {}", Enum::ToString(Texture));
@@ -30,7 +44,7 @@ namespace platformer2d {
 
 		const glm::vec2 TilePos{InitialFrame.X, InitialFrame.Y};
 		Sprite = std::make_unique<CSprite>(CRenderer::GetTexture(Texture), TilePos, SpriteSheet->TileSize);
-		LK_DEBUG_TAG("Enemy", R"([{}] {} Texture="{}" TilePos={})", Name, Enum::ToString(ArchetypeKind), Enum::ToString(Texture), TilePos);
+		LK_DEBUG_TAG("Enemy", R"([{}] Archetype="{}" Texture="{}" TilePos={} SpriteScale={})", Name, Enum::ToString(ArchetypeKind), Enum::ToString(Texture), TilePos, SpriteScale);
 
 		SetSpawnPoint(InSpec.SpawnPoint);
 		CGameInstance::Get().GetSystem<CGameplaySystem>().Teleport(this, InSpec.SpawnPoint);
@@ -106,7 +120,7 @@ namespace platformer2d {
 	void CEnemy::Jump()
 	{
 		const FEnemyArchetype& Archetype = GetEnemyArchetype(ArchetypeKind);
-		if (!Archetype.bCanJump || !Body || bJumping) {
+		if (!Archetype.bCanJump || bJumping) {
 			return;
 		}
 
@@ -125,9 +139,7 @@ namespace platformer2d {
 		LK_DEBUG_TAG("Enemy", "[{}] OnDeath: {}", GetName(), Enum::ToString(Reason));
 		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
 		SetFlag(EActorFlag_Transparent, 1);
-		if (Body) {
-			Body->SetEnabled(false);
-		}
+		Body->SetEnabled(false);
 	}
 
 	void CEnemy::Revive(const EReviveVariant Variant)
@@ -142,9 +154,7 @@ namespace platformer2d {
 
 		CEffectManager::Get().Play(EEffect::Swoosh, GetPosition(), 300ms);
 		SetFlag(EActorFlag_Transparent, 0);
-		if (Body) {
-			Body->SetEnabled(true);
-		}
+		Body->SetEnabled(true);
 	}
 
 	bool CEnemy::IsDead() const
@@ -266,10 +276,7 @@ namespace platformer2d {
 
 	void CEnemy::CheckCollisions()
 	{
-		if (!Body) {
-			return;
-		}
-
+		LK_ASSERT(Body);
 		constexpr int MAX_CONTACTS = 4;
 		const b2BodyId BodyID = Body->GetID();
 		const int Capacity = std::min(b2Body_GetContactCapacity(BodyID), MAX_CONTACTS);
@@ -311,17 +318,13 @@ namespace platformer2d {
 
 	void CEnemy::ApplyMoveVelocity(const glm::vec2& InVelocity)
 	{
-		if (!Body) {
-			return;
-		}
+		LK_ASSERT(Body);
 		Body->SetLinearVelocity(InVelocity);
 	}
 
 	void CEnemy::ApplyMoveVelocityX(const float InVelocity)
 	{
-		if (!Body) {
-			return;
-		}
+		LK_ASSERT(Body);
 		const glm::vec2 CurrentVel = Body->GetLinearVelocity();
 		Body->SetLinearVelocity(glm::vec2(InVelocity, CurrentVel.y));
 	}

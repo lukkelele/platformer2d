@@ -130,7 +130,7 @@ namespace platformer2d {
 			if (Systems.size() <= ID) {
 				Systems.resize(ID + 1);
 			}
-			LK_ASSERT(!Systems[ID], "System already registered");
+			LK_VERIFY(!Systems[ID], "System already registered");
 			auto Owned = std::make_unique<T>(std::forward<TArgs>(Args)...);
 			T* Raw = Owned.get();
 			Systems[ID] = std::move(Owned);

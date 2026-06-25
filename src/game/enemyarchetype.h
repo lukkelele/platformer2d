@@ -15,6 +15,7 @@ namespace platformer2d {
 		Grunt,
 		Jumper,
 		RangedShooter,
+		TargetDummy,
 		COUNT
 	};
 	LK_ENUM(EEnemyArchetype);
@@ -29,9 +30,16 @@ namespace platformer2d {
 		float GiveUpRadius = 6.0f;
 		float AttackDamage = 10.0f;
 		float AttackRange = 0.50f;
+		float ContactKnockback = 3.0f;
+		float ContactKnockbackUp = 2.5f;
+		float HitCooldown = 0.60f;
+		float LedgeProbeForward = 0.12f;
+		float LedgeProbeDepth = 0.50f;
 		glm::vec2 Size = {0.30f, 0.45f};
+		glm::vec2 SpriteScale = {1.0f, 1.0f};
 		bool bCanJump = false;
 		bool bRanged = false;
+		bool bImmortal = false;
 	};
 
 	[[nodiscard]] const FEnemyArchetype& GetEnemyArchetype(EEnemyArchetype Archetype);

@@ -45,6 +45,8 @@ namespace platformer2d {
 		[[nodiscard]] ETargetResponse HandleTarget(CEnemy& Enemy, const std::shared_ptr<CActor>& Target);
 		void Patrol(CEnemy& Enemy);
 
+		[[nodiscard]] bool HasGroundAhead(CEnemy& Enemy, EDirection Dir) const;
+
 	private:
 		float StartX = 0.0f;
 		float PatrolHalfDistance = 2.0f;

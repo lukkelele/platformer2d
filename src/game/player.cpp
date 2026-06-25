@@ -8,6 +8,7 @@
 #include "core/input/keyboard.h"
 #include "renderer/renderer.h"
 #include "scene/effectmanager.h"
+#include "inputsystem.h"
 #include "instance.h"
 #include "projectilesystem.h"
 #include "physics/physicsworld.h"
@@ -17,20 +18,26 @@ namespace platformer2d {
 	constexpr float VELOCITY_THRESHOLD_X = CBody::LINEAR_VELOCITY_X_EPSILON;
 	constexpr float VELOCITY_THRESHOLD_Y = CBody::LINEAR_VELOCITY_Y_EPSILON;
 
-	static constexpr std::array<EKey, 5> MovementKeys = {
-		EKey::W,
-		EKey::A,
-		EKey::S,
-		EKey::D,
-		EKey::Space};
+	static constexpr std::array<EAction, 5> MovementActions = {
+		EAction::MoveUp,
+		EAction::MoveLeft,
+		EAction::MoveRight,
+		EAction::MoveDown,
+		EAction::Jump};
 
 	CPlayer::CPlayer(const FActorSpecification& InSpec, const FBodySpecification& BodySpec)
 		: CActor(InSpec, BodySpec)
 		, Inventory("PlayerInventory")
+		, DirForce(BodySpec.DirForce)
+		, JumpImpulse(BodySpec.JumpImpulse)
 	{
 		LK_VERIFY(InSpec.Texture == ETexture::Player, "Player texture mismatch: {}", Enum::ToString(InSpec.Texture));
 		if (Name.empty()) {
 			Name = "Player";
+		}
+
+		if (Body) {
+			Body->SetCollisionCategory(ECollisionCategory_Player);
 		}
 
 		FCameraComponent& CamComp = AddComponent<FCameraComponent>();
@@ -238,31 +245,37 @@ namespace platformer2d {
 
 	void CPlayer::HandleInput()
 	{
-		if (CKeyboard::IsKeyDown(EKey::W)) {
+		const CInputSystem& Input = CGameInstance::Get().GetSystem<CInputSystem>();
+
+		if (Input.IsActionDown(EAction::MoveUp)) {
 			bWantToClimb = true;
 			LastDirForce = 0.0f;
 			OnInputReceived();
 		}
-		if (CKeyboard::IsKeyDown(EKey::A)) {
+		if (Input.IsActionDown(EAction::MoveLeft)) {
 			Body->ApplyForce({-DirForce, 0.0f});
 			LookDir = EDirection::Left;
 			LastDirForce = -DirForce;
 			OnInputReceived();
 		}
-		if (CKeyboard::IsKeyDown(EKey::D)) {
+		if (Input.IsActionDown(EAction::MoveRight)) {
 			Body->ApplyForce({DirForce, 0.0f});
 			LastDirForce = DirForce;
 			LookDir = EDirection::Right;
 			OnInputReceived();
 		}
-		if (CKeyboard::IsKeyDown(EKey::Space)) {
+		if (Input.IsActionDown(EAction::Jump)) {
 			Jump();
 			LastDirForce = 0.0f;
 			OnInputReceived();
 		}
 
 		/* Clear movement input flag if needed. */
-		if (bMovementInputLastTick && !CKeyboard::IsAnyKeysDown(MovementKeys)) {
+		const bool AnyMovementInput = std::ranges::any_of(MovementActions, [&Input](const EAction Action)
+		{
+			return Input.IsActionDown(Action);
+		});
+		if (bMovementInputLastTick && !AnyMovementInput) {
 			LK_TRACE_TAG("Player", "Clear movement input tick flag");
 			LastDirForce = 0.0f;
 			bMovementInputLastTick = false;
@@ -389,8 +402,8 @@ namespace platformer2d {
 	void CPlayer::SyncTransformComponent()
 	{
 		const glm::vec2 BodySize = Body->GetSize();
-		TransformComp.Scale.x = BodySize.x * SpriteScale;
-		TransformComp.Scale.y = BodySize.y * SpriteScale;
+		TransformComp.Scale.x = BodySize.x * SpriteScale.x;
+		TransformComp.Scale.y = BodySize.y * SpriteScale.y;
 		TransformComp.Translation.x += SpriteOffset.x;
 		TransformComp.Translation.y += SpriteOffset.y;
 	}
