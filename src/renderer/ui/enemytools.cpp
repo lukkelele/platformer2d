@@ -7,6 +7,7 @@
 #include "core/string.h"
 #include "game/controller/patrolcontroller.h"
 #include "game/enemy.h"
+#include "game/enemyspawner.h"
 #include "renderer/color.h"
 #include "renderer/fontawesome.h"
 #include "renderer/font.h"
@@ -86,7 +87,7 @@ namespace platformer2d::UI {
 		FBodySpecification BodySpec;
 		BodySpec.Type = EBodyType::Dynamic;
 		BodySpec.Position = Pos;
-		BodySpec.Flags = EBodyFlag_PreSolveEvents;
+		BodySpec.Flags = EBodyFlag_PreSolveEvents | EBodyFlag_ContactEvents;
 		BodySpec.Shape.emplace<FPolygon>(FPolygon{.Size = glm::vec2(0.20f, 0.20f)});
 
 		LK_INFO_TAG("EnemyTools", "Spawn {} at ({:.2f}, {:.2f})", Enum::ToString(Archetype), Pos.x, Pos.y);
@@ -194,7 +195,7 @@ namespace platformer2d::UI {
 		Table::NextRow();
 		Table::Label("Archetype");
 		Table::NextColumn();
-		ImGui::Text("%s", Enum::ToString(Enemy->GetArchetype()));
+		ImGui::Text("%s", Enum::ToString<const char*>(Enemy->GetArchetype()));
 
 		Table::NextRow();
 		Table::Label("State");
@@ -243,6 +244,170 @@ namespace platformer2d::UI {
 		}
 		if (!Dead) {
 			ImGui::EndDisabled();
+		}
+	}
+
+	static std::shared_ptr<CEnemySpawner> GetSelectedSpawner(const std::shared_ptr<CScene>& Scene)
+	{
+		if (!Scene || !CSelectionContext::IsAnySelected()) {
+			return nullptr;
+		}
+		std::shared_ptr<CActor> Selected = Scene->GetActor(CSelectionContext::GetSelected());
+		if (!Selected) {
+			return nullptr;
+		}
+		return std::dynamic_pointer_cast<CEnemySpawner>(Selected);
+	}
+
+	static void DrawWaveEditor(const std::shared_ptr<CEnemySpawner>& Spawner)
+	{
+		ImGui::Dummy(ImVec2(0.0f, 4.0f));
+		{
+			UI::FScopedColor SubHeader(ImGuiCol_Text, RGBA32::Text::Darker);
+			UI::FScopedFont SubFont(EFont::Roboto, EFontSize::Regular, EFontModifier::Bold);
+			ImGui::TextUnformatted("Waves");
+		}
+
+		std::vector<FSpawnWave>& Waves = Spawner->GetWaves();
+		int RemoveIdx = -1;
+		for (std::size_t Idx = 0; Idx < Waves.size(); Idx++) {
+			FSpawnWave& Wave = Waves.at(Idx);
+			UI::FScopedID WaveID(static_cast<int>(Idx));
+
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("Wave %zu", Idx + 1);
+			ImGui::SameLine();
+			{
+				UI::FScopedColor ButtonBg(ImGuiCol_Button, FColor::DarkRed.As<std::uint32_t>());
+				UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::WarmRed.As<std::uint32_t>());
+				if (ImGui::SmallButton(LK_ICON_TIMES)) {
+					RemoveIdx = static_cast<int>(Idx);
+				}
+			}
+
+			BeginPropertyGrid(120.0f);
+
+			Table::NextRow();
+			Table::Label("Archetype");
+			Table::NextColumn();
+			UI::Combo("##WaveArchetype", Enum::View<EEnemyArchetype>(), Wave.Archetype);
+
+			Table::NextRow();
+			Table::Label("Count");
+			Table::NextColumn();
+			ImGui::SetNextItemWidth(-1.0f);
+			ImGui::DragInt("##WaveCount", &Wave.Count, 1.0f, 1, 100);
+
+			Table::NextRow();
+			Table::Label("Interval");
+			Table::NextColumn();
+			ImGui::SetNextItemWidth(-1.0f);
+			ImGui::DragFloat("##WaveInterval", &Wave.SpawnInterval, 0.01f, 0.0f, 10.0f);
+
+			Table::NextRow();
+			Table::Label("Start Delay");
+			Table::NextColumn();
+			ImGui::SetNextItemWidth(-1.0f);
+			ImGui::DragFloat("##WaveDelay", &Wave.StartDelay, 0.01f, 0.0f, 10.0f);
+
+			Table::NextRow();
+			Table::Label("Wait For Clear");
+			Table::NextColumn();
+			ImGui::Checkbox("##WaveWait", &Wave.bWaitForClear);
+
+			EndPropertyGrid();
+			ImGui::Dummy(ImVec2(0.0f, 2.0f));
+		}
+
+		if (RemoveIdx >= 0) {
+			Waves.erase(Waves.begin() + RemoveIdx);
+		}
+
+		if (ImGui::Button(LK_ICON_PLUS "  Add Wave")) {
+			Waves.push_back(FSpawnWave{});
+		}
+	}
+
+	static void DrawSelectedSpawnerSection(const std::shared_ptr<CEnemySpawner>& Spawner)
+	{
+		if (!Spawner) {
+			return;
+		}
+
+		ImGui::Dummy(ImVec2(0.0f, 6.0f));
+		{
+			UI::FScopedColor SubHeader(ImGuiCol_Text, RGBA32::Text::Darker);
+			UI::FScopedFont SubFont(EFont::Roboto, EFontSize::Regular, EFontModifier::Bold);
+			ImGui::TextUnformatted("Spawner");
+		}
+
+		BeginPropertyGrid(120.0f);
+
+		Table::NextRow();
+		Table::Label("Name");
+		Table::NextColumn();
+		ImGui::Text("%s", Spawner->GetName().data());
+
+		Table::NextRow();
+		Table::Label("Status");
+		Table::NextColumn();
+		ImGui::Text("%s", Spawner->IsActive() ? "Active" : (Spawner->IsFinished() ? "Finished" : "Idle"));
+
+		Table::NextRow();
+		Table::Label("Max Alive");
+		Table::NextColumn();
+		int MaxAlive = Spawner->GetMaxAlive();
+		ImGui::SetNextItemWidth(-1.0f);
+		if (ImGui::DragInt("##MaxAlive", &MaxAlive, 1.0f, 1, 64)) {
+			Spawner->SetMaxAlive(MaxAlive);
+		}
+
+		Table::NextRow();
+		Table::Label("Scatter");
+		Table::NextColumn();
+		float Scatter = Spawner->GetScatter();
+		ImGui::SetNextItemWidth(-1.0f);
+		if (ImGui::DragFloat("##Scatter", &Scatter, 0.01f, 0.0f, 4.0f)) {
+			Spawner->SetScatter(Scatter);
+		}
+
+		Table::NextRow();
+		Table::Label("Loop");
+		Table::NextColumn();
+		bool Loop = Spawner->IsLooping();
+		if (ImGui::Checkbox("##Loop", &Loop)) {
+			Spawner->SetLoop(Loop);
+		}
+
+		Table::NextRow();
+		Table::Label("Auto Activate");
+		Table::NextColumn();
+		bool Auto = Spawner->IsAutoActivate();
+		if (ImGui::Checkbox("##AutoActivate", &Auto)) {
+			Spawner->SetAutoActivate(Auto);
+		}
+
+		EndPropertyGrid();
+
+		DrawWaveEditor(Spawner);
+
+		ImGui::Dummy(ImVec2(0.0f, 6.0f));
+		constexpr ImVec2 ButtonSize = ImVec2(100.0f, 30.0f);
+		UI::FScopedStyle ButtonRounding(ImGuiStyleVar_FrameRounding, 6.0f);
+		{
+			UI::FScopedColor ButtonBg(ImGuiCol_Button, RGBA32::SmoothGreen);
+			UI::FScopedColor ButtonHover(ImGuiCol_ButtonHovered, FColor::VividGreen.As<std::uint32_t>());
+			if (ImGui::Button(LK_ICON_PLAY "  Activate", ButtonSize)) {
+				Spawner->Activate();
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button(LK_ICON_PAUSE "  Deactivate", ButtonSize)) {
+			Spawner->Deactivate();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button(LK_ICON_UNDO "  Reset", ButtonSize)) {
+			Spawner->Reset();
 		}
 	}
 
@@ -317,6 +482,9 @@ namespace platformer2d::UI {
 
 		std::shared_ptr<CEnemy> Selected = GetSelectedEnemy(Scene);
 		DrawSelectedSection(Selected);
+
+		std::shared_ptr<CEnemySpawner> SelectedSpawner = GetSelectedSpawner(Scene);
+		DrawSelectedSpawnerSection(SelectedSpawner);
 
 		ImGui::TreePop();
 	}
