@@ -204,6 +204,7 @@ namespace platformer2d::Serialization {
 		Out << YAML::BeginMap;
 		Out << YAML::Key << "MaxHealth" << YAML::Value << HC.MaxHealth;
 		Out << YAML::Key << "Damageable" << YAML::Value << HC.bDamageable;
+		Out << YAML::Key << "Immortal" << YAML::Value << HC.bImmortal;
 		Out << YAML::EndMap;
 	}
 
@@ -320,6 +321,10 @@ namespace platformer2d::Serialization {
 							FRifleSpecification Spec;
 							DeserializeProperty("MagazineSize", Spec.MagazineSize, 30, SpecNode);
 							Object.Spec = Spec;
+						} else if (Object.Type == EWeaponType::Melee) {
+							/* @todo: Need to look into melee specifications. */
+							LK_WARN_TAG("Serializer", "Missing melee weapon specification");
+							Object.Spec = std::monostate{};
 						} else {
 							LK_ERROR_TAG("Serializer", "Unhandled deserialization of {}", Enum::ToString(Object.Type));
 						}
@@ -380,6 +385,7 @@ namespace platformer2d::Serialization {
 		HC.MaxHealth = Node["MaxHealth"].as<decltype(HC.MaxHealth)>();
 		HC.Health = HC.MaxHealth;
 		HC.bDamageable = Node["Damageable"].as<bool>();
+		HC.bImmortal = Node["Immortal"] ? Node["Immortal"].as<bool>() : false;
 	}
 
 	template<>
