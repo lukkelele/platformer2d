@@ -40,6 +40,12 @@ namespace platformer2d {
 
 	using LRendererID = std::uint32_t;
 
+	template<typename... Ts>
+	struct TOverload : Ts...
+	{
+		using Ts::operator()...;
+	};
+
 	namespace Core {
 		static const std::filesystem::path ProjectDir = std::filesystem::weakly_canonical(PROJECT_DIR);
 

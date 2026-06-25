@@ -372,37 +372,34 @@ namespace platformer2d::UI {
 	void RifleData(std::shared_ptr<CRifle> Rifle)
 	{
 		LK_ASSERT(Rifle);
-		static constexpr float LabelColumnWidth = 180.0f;
 
-		ImGui::BeginTable("##RifleData", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoClip);
-		ImGui::TableSetupColumn("Label", 0, LabelColumnWidth);
-		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_NoClip, ImGui::GetContentRegionAvail().x - LabelColumnWidth);
+		BeginPropertyGrid();
 
-		ImGui::TableNextRow();
+		Table::NextRow();
 		bool ShootEnabled = Rifle->IsEnabled();
 		if (UI::Checkbox("Enabled", ShootEnabled)) {
 			Rifle->SetEnabled(ShootEnabled);
 		}
 
-		ImGui::TableNextRow();
+		Table::NextRow();
 		float ProjectileRadius = Rifle->GetProjectileRadius();
 		if (UI::DragFloat("Projectile Radius", ProjectileRadius, 0.0010f, 0.0010f, 1.0f)) {
 			Rifle->SetProjectileRadius(ProjectileRadius);
 		}
 
-		ImGui::TableNextRow();
+		Table::NextRow();
 		float ProjectileVelocity = Rifle->GetProjectileVelocity();
 		if (UI::DragFloat("Projectile Velocity", ProjectileVelocity, 0.10f, 0.0f, 20.0f)) {
 			Rifle->SetProjectileVelocity(ProjectileVelocity);
 		}
 
-		ImGui::TableNextRow();
+		Table::NextRow();
 		bool ExplodeOnImpact = Rifle->GetProjectileExplodeOnImpact();
 		if (UI::Checkbox("Explode On Impact", ExplodeOnImpact)) {
 			Rifle->SetProjectileExplodeOnImpact(ExplodeOnImpact);
 		}
 
-		ImGui::TableNextRow();
+		Table::NextRow();
 		EColor ProjectileColor = EColor::Red;
 		const bool ColorDeduced = FColor::DeduceEnum(ProjectileColor, Rifle->GetProjectileColor());
 		if (!ColorDeduced) {
@@ -415,7 +412,7 @@ namespace platformer2d::UI {
 			ImGui::EndDisabled();
 		}
 
-		ImGui::EndTable();
+		EndPropertyGrid();
 	}
 
 	void Statistics(const EWidgetPlacement Placement)
@@ -682,9 +679,7 @@ namespace platformer2d::UI {
 
 			ImGui::SetNextItemOpen(DefaultOpen, ImGuiCond_Once);
 			std::string_view Name = Enemy->GetName();
-			const bool TreeOpen = ImGui::TreeNodeEx(
-				Name.empty() ? "Enemy" : Name.data(),
-				ImGuiTreeNodeFlags_SpanAvailWidth);
+			const bool TreeOpen = ImGui::TreeNodeEx(Name.empty() ? "Enemy" : Name.data(), ImGuiTreeNodeFlags_SpanAvailWidth);
 			if (TreeOpen) {
 				ImGui::Dummy(ImVec2(0, 4));
 				UI::DrawEnemy(Enemy);
@@ -797,9 +792,10 @@ namespace platformer2d::UI {
 		ImGui::Dummy(ImVec2(0, 6));
 		ImGui::TextUnformatted("Sprite Scale");
 		ImGui::SameLine(0, 6);
-		float Scale = Player->GetSpriteScale();
+		glm::vec2 Scale = Player->GetSpriteScale();
 		ImGui::SetNextItemWidth(ITEM_WIDTH);
-		if (ImGui::SliderFloat("##PlayerSpriteScale", &Scale, 0.25f, 6.0f, "%.2f")) {
+		//if (ImGui::SliderFloat("##PlayerSpriteScale", &Scale, 0.25f, 6.0f, "%.2f")) {
+		if (UI::DragFloat2("##PlayerSpriteScale", Scale, 1.0f, 0.010f, 0.010f, 6.0f)) {
 			Player->SetSpriteScale(Scale);
 		}
 

@@ -759,7 +759,7 @@ namespace platformer2d::UI {
 			/* Scale */
 			ImGui::TableNextRow();
 			glm::vec3 Scale = TC.GetScale();
-			if (UI::DragFloat3("Scale", Scale, 1.0f, 0.010f, 0.010f)) {
+			if (UI::DragFloat2("Scale", Scale, 1.0f, 0.010f, 0.010f, 10.0f)) {
 				Actor->SetScale({Scale.x, Scale.y});
 			}
 
@@ -1204,11 +1204,17 @@ namespace platformer2d::UI {
 		}
 
 		ImGui::Dummy(ImVec2(0, 4));
-		ImGui::TableNextRow();
+		Table::NextRow();
 		FEnemyData& Data = Enemy->GetData();
 		UI::DragFloat2("Spawn Point", Data.SpawnPoint, 0.0f, 0.010f);
 
-		ImGui::TableNextRow();
+		Table::NextRow();
+		glm::vec2 SpriteScale = Enemy->GetSpriteScale();
+		if (UI::DragFloat2("Sprite Scale", SpriteScale, 0.0f, 0.010f)) {
+			Enemy->SetSpriteScale(SpriteScale);
+		}
+
+		Table::NextRow();
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursorX(7);
 		const LUUID EnemyHandle = Enemy->GetHandle();
@@ -1220,7 +1226,7 @@ namespace platformer2d::UI {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
 
 		static constexpr ImVec2 ButtonSize(86, 32);
-		ImGui::TableNextRow();
+		Table::NextRow();
 		ImGui::TableSetColumnIndex(1);
 		UI::ShiftCursorX(20.0f);
 		bool EnemyDead = Enemy->IsDead();
@@ -1252,7 +1258,7 @@ namespace platformer2d::UI {
 		UI::EndPropertyGrid();
 		ImGui::PopStyleVar(1);
 
-		UI::ShiftCursorY(-12);
+		UI::ShiftCursorY(-12); /* @fixme */
 		IEnemyController* Controller = Enemy ? Enemy->GetController() : nullptr;
 		UI::DrawController(Controller);
 	}
@@ -1263,7 +1269,6 @@ namespace platformer2d::UI {
 			return;
 		}
 
-		FScopedFont Font(EFont::SourceSansPro, EFontSize::Large);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		if (ImGui::TreeNodeEx("Rifle", ImGuiTreeNodeFlags_SpanAvailWidth)) {
 			UI::RifleData(InRifle);
