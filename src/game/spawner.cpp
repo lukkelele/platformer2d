@@ -1,6 +1,8 @@
 #include "spawner.h"
 
+#include "game/enemy.h"
 #include "game/instance.h"
+#include "game/controller/patrolcontroller.h"
 #include "scene/actor.h"
 #include "scene/scene.h"
 
@@ -144,6 +146,70 @@ namespace platformer2d {
 		Spawnpoint->SetSize({0.25f, 0.25f});
 
 		return Spawnpoint;
+	}
+
+	std::shared_ptr<CEnemy> CSpawner::CreateEnemy(const EEnemyArchetype Archetype, const glm::vec2& Pos,
+		std::string_view Name, const ETexture Texture)
+	{
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
+		LK_VERIFY(Scene);
+
+		const FEnemyArchetype& Data = GetEnemyArchetype(Archetype);
+
+		FEnemySpecification EnemySpec;
+		EnemySpec.Archetype = Archetype;
+		EnemySpec.ControllerType = EControllerType::Patrol;
+		EnemySpec.SpawnPoint = Pos;
+
+		FActorSpecification ActorSpec;
+		ActorSpec.Type = EActorType::Enemy;
+		ActorSpec.Texture = Texture;
+		ActorSpec.Name = Name.empty()
+			? Format("Enemy-{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())))
+			: std::string(Name);
+		ActorSpec.SpriteScale = Data.SpriteScale;
+
+		FBodySpecification BodySpec;
+		BodySpec.Type = EBodyType::Dynamic;
+		BodySpec.Position = Pos;
+		BodySpec.Flags = EBodyFlag_PreSolveEvents | EBodyFlag_ContactEvents;
+		BodySpec.Shape.emplace<FPolygon>(FPolygon{.Size = Data.Size});
+
+		LK_INFO_TAG("Spawner", "Create enemy: {} ({}) at ({:.2f}, {:.2f})", ActorSpec.Name, Enum::ToString(Archetype), Pos.x, Pos.y);
+		std::shared_ptr<CEnemy> Enemy = Scene->Create<CEnemy>(EnemySpec, ActorSpec, BodySpec);
+		Enemy->SetController(std::make_unique<CPatrolController>(1.0f, 1.0f));
+		return Enemy;
+	}
+
+	std::shared_ptr<CEnemySpawner> CSpawner::CreateEnemySpawner(std::string_view Name, const glm::vec2& Pos,
+		std::vector<FSpawnWave> Waves)
+	{
+		LK_VERIFY(CGameInstance::IsValid());
+		std::shared_ptr<CScene> Scene = CGameInstance::Get().GetScene();
+		LK_VERIFY(Scene);
+
+		FActorSpecification ActorSpec;
+		ActorSpec.Type = EActorType::Spawner;
+		ActorSpec.Name = Name.empty()
+			? Format("EnemySpawner-{}", static_cast<std::uint16_t>(Math::Randomize(0, std::numeric_limits<std::uint16_t>::max())))
+			: std::string(Name);
+		ActorSpec.Texture = ETexture::White;
+		ActorSpec.Color = FColor::Transparent;
+		ActorSpec.Pos = glm::vec3(Pos, 0.0f);
+		ActorSpec.OutlineEnabled = true;
+		ActorSpec.OutlineColor = FColor::Red;
+		ActorSpec.OutlineThickness = 6.0f;
+
+		std::shared_ptr<CEnemySpawner> EnemySpawner = Scene->Create<CEnemySpawner>(ActorSpec);
+		EnemySpawner->SetPosition(Pos);
+		EnemySpawner->SetSize({0.30f, 0.30f});
+		if (!Waves.empty()) {
+			EnemySpawner->SetWaves(std::move(Waves));
+		}
+
+		LK_INFO_TAG("Spawner", "Create enemy spawner: {}", ActorSpec.Name);
+		return EnemySpawner;
 	}
 
 }
