@@ -1,6 +1,7 @@
 #include "spriteinspector.h"
 
 #include "core/log.h"
+#include "core/profiler.h"
 #include "core/window.h"
 #include "renderer/renderer.h"
 #include "renderer/ui/combo.h"
@@ -205,6 +206,7 @@ namespace platformer2d::UI {
 
 	static void RenderAnimationList()
 	{
+		LK_PROFILE_FUNC();
 		auto& Inspector = SpriteInspector;
 
 		if (ImGui::Button("+ Add Animation")) {
@@ -334,7 +336,9 @@ namespace platformer2d::UI {
 
 	static void RenderAnimationPreview(const std::shared_ptr<CTexture>& Texture)
 	{
+		LK_PROFILE_FUNC();
 		auto& Inspector = SpriteInspector;
+
 		const bool HasAnim = (Inspector.PreviewAnimIdx < Inspector.Animations.size());
 		if (!HasAnim) {
 			ImGui::Indent();
@@ -389,6 +393,7 @@ namespace platformer2d::UI {
 
 	static void RenderSpritePane()
 	{
+		LK_PROFILE_FUNC();
 		auto& Sprite = SpriteInspector;
 
 		if (UI::BeginPropertyGrid(160.0f)) {
@@ -502,9 +507,11 @@ namespace platformer2d::UI {
 
 	void RenderSpriteInspector()
 	{
+		LK_PROFILE_FUNC();
 		if (!SpriteInspector.bWindowOpen) {
 			return;
 		}
+
 		RouteToCentralNode();
 		if (bPendingFocusSprite) {
 			LK_DEBUG_TAG("SpriteInspector", "Pending focus");

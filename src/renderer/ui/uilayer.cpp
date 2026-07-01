@@ -195,6 +195,7 @@ namespace platformer2d {
 
 	void CUILayer::UI_MainMenu()
 	{
+		LK_PROFILE_FUNC();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
 			return;
@@ -308,6 +309,7 @@ namespace platformer2d {
 
 	void CUILayer::UI_Settings()
 	{
+		LK_PROFILE_FUNC();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
 			return;
@@ -372,6 +374,7 @@ namespace platformer2d {
 
 	void CUILayer::UI_Credits()
 	{
+		LK_PROFILE_FUNC();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
 			return;

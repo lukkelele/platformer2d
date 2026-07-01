@@ -7,6 +7,7 @@
 #include <string>
 
 #include "core/core.h"
+#include "core/profiler.h"
 #include "game/checkpointsystem.h"
 #include "game/instance.h"
 #include "renderer/color.h"
@@ -137,6 +138,7 @@ namespace platformer2d::UI {
 
 	void LevelLauncher()
 	{
+		LK_PROFILE_FUNC();
 		const bool GameInstanceValid = CGameInstance::IsValid();
 		if (!GameInstanceValid) {
 			UI::BeginViewport();

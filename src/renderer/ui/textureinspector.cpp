@@ -1,6 +1,7 @@
 #include "textureinspector.h"
 
 #include "core/log.h"
+#include "core/profiler.h"
 #include "core/window.h"
 #include "renderer/renderer.h"
 #include "renderer/ui/combo.h"
@@ -170,9 +171,11 @@ namespace platformer2d::UI {
 
 	void RenderTextureInspector()
 	{
+		LK_PROFILE_FUNC();
 		if (!TextureInspector.bWindowOpen) {
 			return;
 		}
+
 		RouteToCentralNode();
 		if (bPendingFocusTexture) {
 			ImGui::SetNextWindowFocus();

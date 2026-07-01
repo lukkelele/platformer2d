@@ -204,6 +204,7 @@ namespace platformer2d {
 
 	void CEditor::OnPreTick(const float InDeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		if (bPendingViewportResize) {
 			CRenderer::GetViewportFramebuffer()->Resize(EditorViewportWidth, EditorViewportHeight);
 			bPendingViewportResize = false;
@@ -225,6 +226,7 @@ namespace platformer2d {
 
 	void CEditor::OnPostTick(const float InDeltaTime)
 	{
+		LK_PROFILE_FUNC();
 		if (Scene) {
 			CRenderer::DrawText(EFont::SourceSansPro, Scene->GetName(), {-1.3f, 1.1f}, 0.40f, FColor::White, FColor::Black, 1.0f);
 		}
@@ -324,6 +326,7 @@ namespace platformer2d {
 
 	std::uint16_t CEditor::PickSceneAtMouse(std::shared_ptr<CScene> TargetScene, std::vector<FHitResult>& HitResults)
 	{
+		LK_PROFILE_FUNC();
 		HitResults.clear();
 		const CCamera& Camera = *GetActiveCamera();
 		const glm::vec2 MouseWorld = GetMouseInWorldSpace(Camera);
@@ -464,6 +467,7 @@ namespace platformer2d {
 
 	void CEditor::UpdateEditorViewportState()
 	{
+		LK_PROFILE_FUNC();
 		UpdateEditorViewportBounds();
 		bEditorViewportFocused = ImGui::IsWindowFocused();
 		bEditorViewportHovered = ImGui::IsWindowHovered();
@@ -475,6 +479,7 @@ namespace platformer2d {
 
 	void CEditor::UpdateEditorViewportBounds()
 	{
+		LK_PROFILE_FUNC();
 		const ImVec2 WindowPos = ImGui::GetCurrentWindow()->Pos;
 		const ImVec2 RegionMin = ImGui::GetWindowContentRegionMin();
 		const ImVec2 RegionMax = ImGui::GetWindowContentRegionMax();
@@ -744,6 +749,7 @@ namespace platformer2d {
 
 	void CEditor::UI_Level()
 	{
+		LK_PROFILE_FUNC();
 		if (UI::Begin(UI::PanelID::SceneManager)) {
 			UI_SceneBrowser();
 			UI::Separator(2);
@@ -774,11 +780,13 @@ namespace platformer2d {
 
 	void CEditor::UI_Player()
 	{
+		LK_PROFILE_FUNC();
 		UI::PlayerData(Player);
 	}
 
 	void CEditor::UI_ViewportTexture()
 	{
+		LK_PROFILE_FUNC();
 		const ImVec2 WindowSize = {static_cast<float>(EditorViewportWidth), static_cast<float>(EditorViewportHeight)};
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		std::shared_ptr<CTexture> ViewportTexture = Framebuffer->GetImage(0);
@@ -787,6 +795,7 @@ namespace platformer2d {
 
 	void CEditor::UI_DrawGizmo()
 	{
+		LK_PROFILE_FUNC();
 		std::shared_ptr<CActor> SelectedRef = SelectedActor.lock();
 		const bool HasSelection = (SelectedRef != nullptr);
 		const bool PreviewActive = UI::ActorAttr.bPreview && UI::ActorAttr.bPreviewSelected;
@@ -812,6 +821,7 @@ namespace platformer2d {
 
 	void CEditor::UI_Topbar()
 	{
+		LK_PROFILE_FUNC();
 		constexpr float WindowHeight = 32.0f;
 		constexpr float EdgeOffset = 4.0f;
 		static constexpr float ButtonSize = 42.0f + 5.0f;
