@@ -49,6 +49,7 @@ namespace platformer2d {
 		[[nodiscard]] float GetSwingProgress() const;
 		[[nodiscard]] static bool OnOverlapStatic(b2ShapeId ShapeId, void* Context);
 		[[nodiscard]] bool OnOverlap(b2ShapeId ShapeId);
+		[[nodiscard]] float GetDuration(EMeleeState State) const;
 
 	private:
 		CActor* Owner = nullptr;

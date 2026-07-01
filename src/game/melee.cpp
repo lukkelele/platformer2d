@@ -13,7 +13,6 @@ namespace platformer2d {
 		: Spec(InSpec)
 		, Owner(InOwner)
 	{
-		AlreadyHit.reserve(4);
 	}
 
 	void CMelee::Tick(const float DeltaTime)
@@ -26,7 +25,7 @@ namespace platformer2d {
 			LookDir = Owner->As<CPlayer>().GetLookDirection();
 		}
 
-		if (State != EMeleeState::Idle && DeltaTime > 0.0f) {
+		if ((State != EMeleeState::Idle) && (DeltaTime > 0.0f)) {
 			TickSwing(DeltaTime);
 		}
 
@@ -53,14 +52,11 @@ namespace platformer2d {
 			-0.090f,
 		};
 
-		const std::array<glm::vec2, 4>* TexCoords =
-			(LookDir == EDirection::Left) ? &CRenderer::MirroredTextureCoords : &CRenderer::TextureCoords;
-
 		CRenderer::DrawQuad(
 			RenderPos,
 			Size,
 			*CRenderer::GetTexture(ETexture::Axe),
-			std::span<const glm::vec2, 4>(*TexCoords),
+			CRenderer::GetTextureCoords(LookDir),
 			FColor::White,
 			Angle);
 	}
@@ -134,8 +130,8 @@ namespace platformer2d {
 		const float MinX = (DirSign > 0.0f) ? Pos.x : (Pos.x - Spec.Reach);
 		const float MaxX = (DirSign > 0.0f) ? (Pos.x + Spec.Reach) : Pos.x;
 		const b2AABB AABB = {
-			.lowerBound = {MinX, Pos.y - (Spec.HitboxHeight * 0.5f)},
-			.upperBound = {MaxX, Pos.y + (Spec.HitboxHeight * 0.5f)},
+			.lowerBound = {MinX, Pos.y - (Spec.HitboxHeight * 0.50f)},
+			.upperBound = {MaxX, Pos.y + (Spec.HitboxHeight * 0.50f)},
 		};
 
 		const b2QueryFilter Filter = b2DefaultQueryFilter();
@@ -144,25 +140,25 @@ namespace platformer2d {
 
 	bool CMelee::OnOverlapStatic(const b2ShapeId ShapeId, void* Context)
 	{
-		CMelee* Self = static_cast<CMelee*>(Context);
-		return Self->OnOverlap(ShapeId);
+		CMelee* Ref = static_cast<CMelee*>(Context);
+		return Ref->OnOverlap(ShapeId);
 	}
 
 	bool CMelee::OnOverlap(const b2ShapeId ShapeId)
 	{
-		LK_DEBUG_TAG("Melee", "OnOverlap");
 		CActor* HitActor = static_cast<CActor*>(b2Shape_GetUserData(ShapeId));
 		if (!HitActor || (HitActor == Owner)) {
 			return true;
 		}
 
-		for (const CActor* Already : AlreadyHit) {
-			if (Already == HitActor) {
-				return true;
-			}
+		auto Iter = std::find_if(AlreadyHit.cbegin(), AlreadyHit.cend(), ActorPred::IsEqual(HitActor));
+		if (Iter != AlreadyHit.end()) {
+			LK_TRACE_TAG("Melee", "Already hit: {}", (*Iter)->GetName());
+			return true;
 		}
 
-		CHealthSystem& Health = CGameInstance::Get().GetSystem<CHealthSystem>();
+		LK_DEBUG_TAG("Melee", "OnOverlap: {}", HitActor->GetName());
+		auto& Health = CGameInstance::Get().GetSystem<CHealthSystem>();
 		if (Health.IsDamageable(*HitActor)) {
 			Health.ApplyDamage(*HitActor, Spec.Damage);
 			AlreadyHit.push_back(HitActor);
@@ -181,30 +177,49 @@ namespace platformer2d {
 
 		const auto Now = steady_clock::now();
 		const float Elapsed = duration_cast<duration<float>>(Now - StateEntered).count();
+		const float Total = GetDuration(State);
 
 		switch (State) {
 			case EMeleeState::Windup:
 			{
-				const float Total = duration_cast<duration<float>>(Spec.WindupDuration).count();
 				return (Total > 0.0f) ? (Elapsed / Total) * 0.30f : 0.30f;
 			}
+
 			case EMeleeState::Active:
 			{
-				const float Total = duration_cast<duration<float>>(Spec.ActiveDuration).count();
 				const float P = (Total > 0.0f) ? (Elapsed / Total) : 1.0f;
 				return 0.30f + (P * 0.60f);
 			}
+
 			case EMeleeState::Recovery:
 			{
-				const float Total = duration_cast<duration<float>>(Spec.RecoveryDuration).count();
 				const float P = (Total > 0.0f) ? (Elapsed / Total) : 1.0f;
 				return 0.90f + (P * 0.10f);
 			}
-			default:
+
+			case EMeleeState::Idle:
+				LK_ASSERT(false);
 				break;
 		}
 
 		return 0.0f;
 	}
 
+	float CMelee::GetDuration(const EMeleeState State) const
+	{
+		using namespace std::chrono;
+		switch (State) {
+			case EMeleeState::Windup:
+				return duration_cast<duration<float>>(Spec.WindupDuration).count();
+			case EMeleeState::Active:
+				return duration_cast<duration<float>>(Spec.ActiveDuration).count();
+			case EMeleeState::Recovery:
+				return duration_cast<duration<float>>(Spec.RecoveryDuration).count();
+			case EMeleeState::Idle:
+				LK_ASSERT(false);
+				break;
+		}
+		return 0.0f;
+	}
 }
+
