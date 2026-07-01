@@ -241,6 +241,15 @@ namespace platformer2d {
 		LK_CLASS();
 	};
 
+	namespace ActorPred {
+		auto IsEqual(const CActor* Other)
+		{
+			return [&Other](const CActor* A)
+			{
+				return A == Other;
+			};
+		}
+	}
 }
 
 #include "actor_impl.h"
