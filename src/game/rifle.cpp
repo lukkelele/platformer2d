@@ -31,20 +31,12 @@ namespace platformer2d {
 
 	void CRifle::Render()
 	{
-		const std::array<glm::vec2, 4>* TexCoords = &CRenderer::TextureCoords;
-		if (LookDir == EDirection::Left) {
-			TexCoords = &CRenderer::MirroredTextureCoords;
-		} else {
-			TexCoords = &CRenderer::TextureCoords;
-		}
-
-		/* Render rifle. */
 		const float OffsetX = ((LookDir == EDirection::Left) ? -MuzzleOffset.x : MuzzleOffset.x);
 		CRenderer::DrawQuad(
 			glm::vec3(Origin.x + OffsetX + 0.0020f, Origin.y - MuzzleOffset.y - 0.0090f, -0.10f),
 			glm::vec2(0.15f, 0.10f),
 			*CRenderer::GetTexture(ETexture::Rifle),
-			std::span<const glm::vec2, 4>(*TexCoords));
+			CRenderer::GetTextureCoords(LookDir));
 	}
 
 	void CRifle::PrimaryAction(const glm::vec2& TargetWorldPos)
