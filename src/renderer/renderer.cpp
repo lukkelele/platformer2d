@@ -1169,6 +1169,11 @@ namespace platformer2d {
 		return nullptr;
 	}
 
+	const std::span<const glm::vec2, 4> CRenderer::GetTextureCoords(const EDirection Dir)
+	{
+		return (Dir == EDirection::Left) ? MirroredTextureCoords : TextureCoords;
+	}
+
 	void CRenderer::SetBlending(const bool Enabled)
 	{
 		Data.GL.bBlending = Enabled;

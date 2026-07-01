@@ -163,6 +163,7 @@ namespace platformer2d {
 		[[nodiscard]] static const FSpriteSheet* GetSpriteSheet(ETexture Texture);
 		[[nodiscard]] static FSpriteSheet* GetSpriteSheetMutable(ETexture Texture);
 		[[nodiscard]] static std::shared_ptr<CShader> GetShader(CShader::EType ShaderType);
+		[[nodiscard]] static const std::span<const glm::vec2, 4> GetTextureCoords(EDirection Dir);
 
 		static void SetBlending(bool Enabled);
 		static void SetBlendFunction(std::uint32_t Source, std::uint32_t Destination);
@@ -189,16 +190,16 @@ namespace platformer2d {
 	public:
 		static constexpr int MaxTextures = 16;
 		static constexpr std::array<glm::vec2, 4> TextureCoords = {
-			glm::vec2(0, 0), /* Bottom left */
-			glm::vec2(0, 1), /* Top left */
-			glm::vec2(1, 1), /* Top right */
-			glm::vec2(1, 0), /* Bottom right */
+			glm::vec2(0, 0), /* BL */
+			glm::vec2(0, 1), /* TL */
+			glm::vec2(1, 1), /* TR */
+			glm::vec2(1, 0), /* BR */
 		};
 		static constexpr std::array<glm::vec2, 4> MirroredTextureCoords = {
-			glm::vec2(1, 0), /* Bottom left */
-			glm::vec2(1, 1), /* Top left */
-			glm::vec2(0, 1), /* Top right */
-			glm::vec2(0, 0), /* Bottom right */
+			glm::vec2(1, 0), /* BL */
+			glm::vec2(1, 1), /* TL */
+			glm::vec2(0, 1), /* TR */
+			glm::vec2(0, 0), /* BR */
 		};
 
 	private:
