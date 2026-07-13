@@ -103,15 +103,20 @@ namespace platformer2d::Enum::Internal {
 		}
 		std::string_view Inner = Sig.substr(Start + 1, End - Start - 1);
 #else
-		const std::size_t End = Sig.rfind(']');
-		if (End == std::string_view::npos) {
-			return {};
-		}
-		const std::size_t Eq = Sig.rfind(" = ", End);
+		const std::size_t Eq = Sig.find(" = ");
 		if (Eq == std::string_view::npos) {
 			return {};
 		}
-		std::string_view Inner = Sig.substr(Eq + 3, End - Eq - 3);
+		const std::size_t Start = Eq + 3;
+		std::size_t End = Sig.find(';', Start);
+		const std::size_t Bracket = Sig.find(']', Start);
+		if ((Bracket != std::string_view::npos) && ((End == std::string_view::npos) || (Bracket < End))) {
+			End = Bracket;
+		}
+		if (End == std::string_view::npos) {
+			return {};
+		}
+		std::string_view Inner = Sig.substr(Start, End - Start);
 #endif
 
 		while (!Inner.empty() && (Inner.back() == ' ')) {
@@ -452,4 +457,3 @@ namespace platformer2d::Enum {
 	[[maybe_unused]] consteval auto LkEnumTrait(EnumType*) noexcept                              \
 		-> ::platformer2d::Enum::Internal::FlagsTag { return {}; }
 /* clang-format on */
-
