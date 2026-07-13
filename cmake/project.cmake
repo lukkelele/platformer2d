@@ -53,7 +53,7 @@ endfunction()
 # Macro because add_library() has to be executed within the scope of the caller.
 macro(project_library name)
 	set(PROJECT_CURRENT_LIBRARY ${name})
-	if (${ARGC} GREATER 1) 
+	if (${ARGC} GREATER 1)
 		set(_args ${ARGN})
 		list(GET _args 0 _lib_type)
 	else()
@@ -70,7 +70,7 @@ function(project_library_sources source)
 endfunction()
 
 function(project_library_include_directories)
-	target_include_directories(${PROJECT_CURRENT_LIBRARY} PRIVATE ${ARGN})
+  target_include_directories(${PROJECT_CURRENT_LIBRARY} PRIVATE ${ARGN})
 endfunction()
 
 function(project_library_link_libraries item)
