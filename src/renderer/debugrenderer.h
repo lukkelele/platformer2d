@@ -70,54 +70,54 @@ namespace platformer2d {
 		{
 			bool bDraw = true;
 			float Size = 0.070f;
-		} static inline StringConf;
+		} static StringConf;
 
 		struct FCircleConf
 		{
 			bool bDraw = true;
-		} static inline CircleConf;
+		} static CircleConf;
 
 		struct FCircleSolidConf
 		{
 			bool bDraw = true;
-		} static inline CircleSolidConf;
+		} static CircleSolidConf;
 
 		struct FPointConf
 		{
 			bool bDraw = true;
 			float Size = 0.010f;
-		} static inline PointConf;
+		} static PointConf;
 
 		struct FPolygonConf
 		{
 			bool bDraw = true;
 			float Alpha = 1.0f;
-		} static inline PolygonConf;
+		} static PolygonConf;
 
 		struct FPolygonSolidConf
 		{
 			bool bDraw = true;
 			float Alpha = 1.0f;
-		} static inline PolygonSolidConf;
+		} static PolygonSolidConf;
 
 		struct FCapsuleSolidConf
 		{
 			bool bDraw = true;
 			float Alpha = 1.0f;
-		} static inline CapsuleSolidConf;
+		} static CapsuleSolidConf;
 
 		struct FTransformConf
 		{
 			bool bDraw = true;
 			float Scale = 1.0f;
 			glm::vec4 Color = FColor::Magenta;
-		} static inline TransformConf;
+		} static TransformConf;
 
 		struct FSegmentConf
 		{
 			bool bDraw = true;
 			std::uint16_t LineWidth = 2;
-		} static inline SegmentConf;
+		} static SegmentConf;
 
 	private:
 		static inline GLuint QuadVAO = 0;

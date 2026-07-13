@@ -61,8 +61,11 @@ namespace platformer2d::UI {
 		| ImGuiWindowFlags_NoNavFocus
 		| ImGuiWindowFlags_NoMove;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 	inline constexpr ImGuiDockNodeFlags DockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode
 		| ImGuiDockNodeFlags_NoWindowMenuButton;
+#pragma GCC diagnostic pop
 
 	void PushID();
 	void PopID();
@@ -293,4 +296,3 @@ namespace platformer2d::UI {
 		}
 	}
 }
-

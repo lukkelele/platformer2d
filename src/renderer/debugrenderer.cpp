@@ -16,7 +16,15 @@
 #include "scene/scene.h"
 
 namespace platformer2d {
-
+	CDebugRenderer::FStringConf CDebugRenderer::StringConf;
+	CDebugRenderer::FCircleConf CDebugRenderer::CircleConf;
+	CDebugRenderer::FCircleSolidConf CDebugRenderer::CircleSolidConf;
+	CDebugRenderer::FPointConf CDebugRenderer::PointConf;
+	CDebugRenderer::FPolygonConf CDebugRenderer::PolygonConf;
+	CDebugRenderer::FPolygonSolidConf CDebugRenderer::PolygonSolidConf;
+	CDebugRenderer::FCapsuleSolidConf CDebugRenderer::CapsuleSolidConf;
+	CDebugRenderer::FTransformConf CDebugRenderer::TransformConf;
+	CDebugRenderer::FSegmentConf CDebugRenderer::SegmentConf;
 	CDebugRenderer::FLineConfig CDebugRenderer::LineConfig;
 
 	static constexpr glm::vec4 QuadVertexPositions[4] = {
