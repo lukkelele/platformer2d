@@ -37,6 +37,19 @@ add_library(${PROJECT_INTERFACE} INTERFACE)
 
 project_add_compile_definitions(LKLOG_ENABLED)
 
+if (MSVC)
+  project_add_compile_options(
+    $<$<CONFIG:Debug>:/Od>
+    $<$<CONFIG:Debug>:/Zi>
+  )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$")
+  project_add_compile_options(
+    $<$<CONFIG:Debug>:-g3>
+    $<$<CONFIG:Debug>:-Og>
+    $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+  )
+endif()
+
 # Compiler.
 message(STATUS "Compiler:   ${CMAKE_CXX_COMPILER_ID}
 Version:    ${CMAKE_CXX_COMPILER_VERSION}
@@ -99,11 +112,12 @@ project_add_compile_definitions(
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if (LK_PROFILING_USE_SCOPED_TIMERS)
-        set(LK_PROFILING_USE_SCOPED_TIMERS 1)
-    else()
-        set(LK_PROFILING_USE_SCOPED_TIMERS 0)
-    endif()
+  if (LK_PROFILING_USE_SCOPED_TIMERS)
+      set(LK_PROFILING_USE_SCOPED_TIMERS 1)
+  else()
+      set(LK_PROFILING_USE_SCOPED_TIMERS 0)
+  endif()
+
 	project_add_compile_definitions(
 		LK_BUILD_DEBUG
 		LK_PROFILING
@@ -185,4 +199,3 @@ foreach(library ${PROJECT_LIBS_PROPERTY})
 	message(STATUS "Link: ${PROJECT_EXECUTABLE} -> ${library}")
 	target_link_libraries(${PROJECT_EXECUTABLE} PRIVATE ${library})
 endforeach()
-
