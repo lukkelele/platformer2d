@@ -430,10 +430,7 @@ namespace platformer2d {
 	void CRenderer::LoadFonts()
 	{
 		const std::filesystem::path FontsRoot = FONTS_DIR;
-		if (!std::filesystem::exists(FontsRoot)) {
-			LK_WARN_TAG("Renderer", "Fonts directory missing: {}", FontsRoot);
-			return;
-		}
+		LK_VERIFY(std::filesystem::exists(FontsRoot), "Fonts directory missing: {}", FontsRoot);
 
 		for (const auto& Entry : std::filesystem::recursive_directory_iterator(FontsRoot)) {
 			if (!Entry.is_regular_file()) {
@@ -467,23 +464,19 @@ namespace platformer2d {
 				? EFontModifier::Normal
 				: Enum::FromString<EFontModifier>(Variant);
 			if ((Font == EFont::None) || (Modifier == EFontModifier::COUNT)) {
-				LK_WARN_TAG("Renderer", "Skipping font with unknown family/modifier: {} ({}, {})", BaseName, Family, Variant);
+				LK_WARN_TAG("Renderer", R"(Skipping font with unknown family/modifier: {} ({}, "{}"), Modifier={})", BaseName, Family, Variant, std::to_underlying(Modifier));
 				continue;
 			}
 
 			const std::size_t FontIdx = static_cast<std::size_t>(Font);
 			const std::size_t ModIdx = static_cast<std::size_t>(Modifier);
-			LK_ASSERT(FontIdx < Fonts.size(), "Font index out of range (FontIdx={})", FontIdx);
-			LK_ASSERT(ModIdx < Fonts[FontIdx].size(), "Font modifier index out of range (ModIdx={})", ModIdx);
 			Fonts[FontIdx][ModIdx] = std::make_shared<CFontAtlas>(JsonPath, PngPath);
 		}
 
 		const std::size_t RobotoIdx = static_cast<std::size_t>(EFont::Roboto);
 		const std::size_t NormalIdx = static_cast<std::size_t>(EFontModifier::Normal);
 		DefaultFont = Fonts[RobotoIdx][NormalIdx];
-		if (!DefaultFont) {
-			LK_WARN_TAG("Renderer", "Default font not found (needs bake)");
-		}
+		LK_VERIFY(DefaultFont, "Default font not found, make sure fonts are baked and exist (scripts/fonts/bake_all.sh)");
 	}
 
 	const CFontAtlas& CRenderer::GetFont(const EFont Font, const EFontModifier Modifier)
