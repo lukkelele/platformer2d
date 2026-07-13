@@ -242,9 +242,9 @@ namespace platformer2d {
 	};
 
 	namespace ActorPred {
-		auto IsEqual(const CActor* Other)
+		inline auto IsEqual(const CActor* A)
 		{
-			return [&Other](const CActor* A)
+			return [A](const CActor* Other)
 			{
 				return A == Other;
 			};
@@ -253,4 +253,3 @@ namespace platformer2d {
 }
 
 #include "actor_impl.h"
-
