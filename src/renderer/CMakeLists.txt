@@ -41,8 +41,12 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	)
 endif()
 
-target_link_libraries(renderer PUBLIC 
-	core
-	asset
-	physics
+target_link_libraries(renderer PRIVATE
+  game
+)
+
+target_link_libraries(renderer PUBLIC
+  core
+  asset
+  physics
 )
