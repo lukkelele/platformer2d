@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+set -e
 cd "$(dirname "${BASH_SOURCE[0]}")"/.. || exit 1
 
-python -m pip install glad --break-system-packages
+python3 -m pip install glad --break-system-packages
 
 set -- \
   GL_ARB_bindless_texture \
@@ -23,9 +24,10 @@ set -- \
 extensions=$(printf '%s,' "$@")
 extensions=${extensions%,} # Drop trailing comma.
 
-python -m glad \
+python3 -m glad \
   --profile=core \
   --api=gl=4.6 \
   --generator=c \
   --out-path=modules/glad \
   --extensions="${extensions}"
+
