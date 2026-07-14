@@ -19,7 +19,6 @@ namespace Test::Enum {
 	};
 	LK_ENUM(EColor);
 
-	/* @fixme: LK_ENUM_RANGE is a bit wonky for different values */
 	enum class EShape : std::uint16_t
 	{
 		Triangle = 4,
@@ -59,9 +58,6 @@ TEST_CASE("FuncSig prints the compiler signature", "[enum][funcsig]")
 	LK_INFO_TAG("Enum", "--- Compiler signature for an unnamed cast value ---");
 	LK_INFO_TAG("Enum", "FuncSig<(EColor)99>()         = {}", FuncSig<static_cast<EColor>(99)>());
 	LK_INFO_TAG("Enum", "FuncSig<(EShape)7>()          = {}", FuncSig<static_cast<EShape>(7)>());
-
-	LK_FATAL_TAG("Triangle", "{}", Enum::ToString(EShape::Triangle)); // @fixme
-	LK_FATAL_TAG("Enum", "{}", Enum::ToString(EColor::Red)); // @fixme
 
 	REQUIRE(!FuncSig<EColor::Red>().empty());
 	REQUIRE(!FuncSig<static_cast<EColor>(99)>().empty());
