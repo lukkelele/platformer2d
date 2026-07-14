@@ -29,7 +29,7 @@ namespace platformer2d {
 		Pressed,
 		Held,
 		Released,
-		COUNT
+		COUNT = 4
 	};
 	LK_ENUM_RANGE(EMouseButtonState, EMouseButtonState::None, EMouseButtonState::COUNT);
 
@@ -51,4 +51,3 @@ namespace platformer2d {
 	LK_ENUM(EMouseScrollDirection);
 
 }
-
