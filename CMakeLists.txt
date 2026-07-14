@@ -39,21 +39,19 @@ project_add_compile_definitions(LKLOG_ENABLED)
 
 if (MSVC)
   project_add_compile_options(
-    $<$<CONFIG:Debug>:/Od>
-    $<$<CONFIG:Debug>:/Zi>
+    $<$<OR:$<CONFIG:Debug>,$<BOOL:${LK_BUILD_TESTS}>>:/Od>
+    $<$<OR:$<CONFIG:Debug>,$<BOOL:${LK_BUILD_TESTS}>>:/Zi>
   )
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$")
   project_add_compile_options(
-    $<$<CONFIG:Debug>:-g3>
-    $<$<CONFIG:Debug>:-Og>
-    $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+    $<$<OR:$<CONFIG:Debug>,$<BOOL:${LK_BUILD_TESTS}>>:-g3>
+    $<$<OR:$<CONFIG:Debug>,$<BOOL:${LK_BUILD_TESTS}>>:-Og>
+    $<$<OR:$<CONFIG:Debug>,$<BOOL:${LK_BUILD_TESTS}>>:-fno-omit-frame-pointer>
   )
 endif()
 
 # Compiler.
-message(STATUS "Compiler:   ${CMAKE_CXX_COMPILER_ID}
-Version:    ${CMAKE_CXX_COMPILER_VERSION}
-Executable: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} [${CMAKE_CXX_COMPILER_VERSION}] (${CMAKE_CXX_COMPILER})")
 if (MSVC)
 	set(LK_COMPILER_MSVC ON)
 	project_add_compile_definitions(
