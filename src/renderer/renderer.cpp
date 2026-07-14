@@ -597,7 +597,7 @@ namespace platformer2d {
 		const float Brightness = std::clamp(FSettings::Get().Graphics.Brightness, 0.0f, 4.0f);
 
 		if (QuadIndexCount > 0) {
-			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)QuadVertexBufferPtr - (std::uint8_t*)QuadVertexBufferBase);
+			const auto DataSize = static_cast<std::uint32_t>((std::uint8_t*)QuadVertexBufferPtr - (std::uint8_t*)QuadVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, QuadVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, QuadVertexBufferBase));
 
@@ -611,7 +611,7 @@ namespace platformer2d {
 		}
 
 		if (LineIndexCount > 0) {
-			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)LineVertexBufferPtr - (std::uint8_t*)LineVertexBufferBase);
+			const auto DataSize = static_cast<std::uint32_t>((std::uint8_t*)LineVertexBufferPtr - (std::uint8_t*)LineVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, LineVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, LineVertexBufferBase));
 
@@ -625,7 +625,7 @@ namespace platformer2d {
 		}
 
 		if (CircleIndexCount > 0) {
-			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)CircleVertexBufferPtr - (std::uint8_t*)CircleVertexBufferBase);
+			const auto DataSize = static_cast<std::uint32_t>((std::uint8_t*)CircleVertexBufferPtr - (std::uint8_t*)CircleVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, CircleVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, CircleVertexBufferBase));
 
@@ -639,7 +639,7 @@ namespace platformer2d {
 		}
 
 		if ((TextWorldIndexCount > 0) && TextWorldFont && TextShader) {
-			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)TextWorldVertexBufferPtr - (std::uint8_t*)TextWorldVertexBufferBase);
+			const auto DataSize = static_cast<std::uint32_t>((std::uint8_t*)TextWorldVertexBufferPtr - (std::uint8_t*)TextWorldVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, TextWorldVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, TextWorldVertexBufferBase));
 
@@ -658,7 +658,7 @@ namespace platformer2d {
 		}
 
 		if ((TextScreenIndexCount > 0) && TextScreenFont && TextShader) {
-			const std::uint32_t DataSize = static_cast<std::uint32_t>((std::uint8_t*)TextScreenVertexBufferPtr - (std::uint8_t*)TextScreenVertexBufferBase);
+			const auto DataSize = static_cast<std::uint32_t>((std::uint8_t*)TextScreenVertexBufferPtr - (std::uint8_t*)TextScreenVertexBufferBase);
 			LK_OpenGL_Verify(glBindBuffer(GL_ARRAY_BUFFER, TextScreenVBO));
 			LK_OpenGL_Verify(glBufferSubData(GL_ARRAY_BUFFER, 0, DataSize, TextScreenVertexBufferBase));
 

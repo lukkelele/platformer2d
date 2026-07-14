@@ -9,7 +9,6 @@
 #include "core/core.h"
 
 namespace platformer2d {
-
 	enum class EColor
 	{
 		White,
@@ -40,7 +39,6 @@ namespace std {
 }
 
 namespace platformer2d {
-
 	enum class EColorRange
 	{
 		Normalized, /* 0.0f <-> 1.0f */
@@ -433,4 +431,3 @@ namespace platformer2d {
 	}
 
 }
-

@@ -115,8 +115,8 @@ namespace platformer2d {
 		static void DrawQuad(const glm::vec3& Pos, const glm::vec2& Size, const CTexture& Texture, const FSpriteUV& UV, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
 		static void DrawQuad(const glm::vec2& Pos, const glm::vec2& Size, ETexture Texture, const glm::vec4& Color = FColor::White, float RotationDeg = 0.0f, float OutlineThickness = 0.0f, const glm::vec4& OutlineColor = FColor::Transparent);
 
-		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
-		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, uint16_t LineWidth = 8);
+		static void DrawLine(const glm::vec2& P0, const glm::vec2& P1, const glm::vec4& Color, std::uint16_t LineWidth = 8);
+		static void DrawLine(const glm::vec3& P0, const glm::vec3& P1, const glm::vec4& Color, std::uint16_t LineWidth = 8);
 
 		static void DrawCircle(const glm::vec2& P0, const glm::vec3& Rotation, float Radius, const glm::vec4& Color);
 		static void DrawCircle(const glm::vec3& P0, const glm::vec3& Rotation, float Radius, const glm::vec4& Color);
