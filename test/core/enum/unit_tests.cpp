@@ -7,6 +7,8 @@
 #include "core/enum.h"
 #include "core/log.h"
 
+#define STATIC_ASSERTS 1
+
 namespace Test::Enum {
 	enum class EColor : std::uint8_t
 	{
@@ -17,6 +19,7 @@ namespace Test::Enum {
 	};
 	LK_ENUM(EColor);
 
+	/* @fixme: LK_ENUM_RANGE is a bit wonky for different values */
 	enum class EShape : std::uint16_t
 	{
 		Triangle = 4,
@@ -56,6 +59,9 @@ TEST_CASE("FuncSig prints the compiler signature", "[enum][funcsig]")
 	LK_INFO_TAG("Enum", "--- Compiler signature for an unnamed cast value ---");
 	LK_INFO_TAG("Enum", "FuncSig<(EColor)99>()         = {}", FuncSig<static_cast<EColor>(99)>());
 	LK_INFO_TAG("Enum", "FuncSig<(EShape)7>()          = {}", FuncSig<static_cast<EShape>(7)>());
+
+	LK_FATAL_TAG("Triangle", "{}", Enum::ToString(EShape::Triangle)); // @fixme
+	LK_FATAL_TAG("Enum", "{}", Enum::ToString(EColor::Red)); // @fixme
 
 	REQUIRE(!FuncSig<EColor::Red>().empty());
 	REQUIRE(!FuncSig<static_cast<EColor>(99)>().empty());
@@ -108,12 +114,14 @@ TEST_CASE("ValueName composes FuncSig + ParseValueName", "[enum][value-name]")
 	LK_INFO_TAG("Enum", "ValueName<EColor::Blue>()  = '{}'", ValueName<EColor::Blue>());
 	LK_INFO_TAG("Enum", "ValueName<(EColor)99>()    = '{}' (empty)", ValueName<static_cast<EColor>(99)>());
 
+#if STATIC_ASSERTS
 	STATIC_REQUIRE(ValueName<EColor::Red>()   == "Red");
 	STATIC_REQUIRE(ValueName<EColor::Green>() == "Green");
 	STATIC_REQUIRE(ValueName<EColor::Blue>()  == "Blue");
 	STATIC_REQUIRE(ValueName<static_cast<EColor>(99)>().empty());
 	STATIC_REQUIRE(IsNamed<EColor::Red>());
 	STATIC_REQUIRE(!IsNamed<static_cast<EColor>(99)>());
+#endif
 	/* clang-format on */
 }
 
@@ -138,11 +146,14 @@ TEST_CASE("LK_ENUM builds a contiguous table from 0..COUNT-1", "[enum][contiguou
 		LK_INFO_TAG("Enum", "  {:<6} = {}", N, std::to_underlying(V));
 	}
 
+#if STATIC_ASSERTS
 	STATIC_REQUIRE(Enum::Count<EColor>() == 3);
 	STATIC_REQUIRE(Enum::ToString(EColor::Green) == "Green");
 	STATIC_REQUIRE(Enum::FromString<EColor>("Blue") == EColor::Blue);
+#endif
 }
 
+#if STATIC_ASSERTS
 TEST_CASE("LK_ENUM_RANGE only finds values within [Min, Max)", "[enum][range]")
 {
 	LKLOG_PRINTLN("");
@@ -170,6 +181,7 @@ TEST_CASE("LK_ENUM_RANGE only finds values within [Min, Max)", "[enum][range]")
 		REQUIRE(Entry != "COUNT");
 	}
 }
+#endif
 
 TEST_CASE("LK_ENUM_FLAGS finds named power-of-two values", "[enum][flags]")
 {
@@ -194,6 +206,7 @@ TEST_CASE("LK_ENUM_FLAGS finds named power-of-two values", "[enum][flags]")
 	}
 }
 
+#if STATIC_ASSERTS
 TEST_CASE("ToString and FromString round-trip", "[enum][roundtrip]")
 {
 	LKLOG_PRINTLN("");
@@ -220,7 +233,9 @@ TEST_CASE("ToString and FromString round-trip", "[enum][roundtrip]")
 		REQUIRE(Back == V);
 	}
 }
+#endif
 
+#if STATIC_ASSERTS
 TEST_CASE("Tables live in static storage and are evaluated at compile time", "[enum][constexpr]")
 {
 	/* clang-format off */
@@ -241,3 +256,4 @@ TEST_CASE("Tables live in static storage and are evaluated at compile time", "[e
 	STATIC_REQUIRE(Enum::FromString<EPermission>("Bogus") == EPermission::COUNT);
 	/* clang-format on */
 }
+#endif
