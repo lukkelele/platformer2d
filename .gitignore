@@ -30,6 +30,7 @@ logs
 *CMakeSettings.json
 *.md
 !README.md
+!DEVELOPMENT.md
 
 modules/glad/include
 modules/glad/src
