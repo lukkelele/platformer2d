@@ -18,7 +18,7 @@
 #include "shader.h"
 
 #ifndef LK_TEST_SUITE
-#error "LK_TEST_SUITE missing"
+#	error "LK_TEST_SUITE missing"
 #endif
 
 using namespace platformer2d;
@@ -26,6 +26,7 @@ using namespace platformer2d::test;
 
 /* 24 entries */
 static float VertexData[] = {
+	/* clang-format off */
 	/* Vertices */
      0.0f,    0.50f,  0.0f,  1.0f,
      0.55f, -0.566f,  0.0f,  1.0f,
@@ -35,13 +36,14 @@ static float VertexData[] = {
      1.0f,     0.0f,  0.0f,  1.0f,
      0.0f,     1.0f,  0.0f,  1.0f,
      0.0f,     0.0f,  1.0f,  1.0f,
+	/* clang-format on */
 };
 
 #define USE_RAW_SHADER_IMPL 0
 
 TEST_CASE("Suite name", "[defines]")
 {
-	REQUIRE(LK_TEST_STRINGIFY(LK_TEST_SUITE) != "LK_TEST_SUITE");
+	REQUIRE(strcmp(LK_TEST_STRINGIFY(LK_TEST_SUITE), "LK_TEST_SUITE") == 0);
 }
 
 int main(int Argc, char* Argv[])
@@ -51,7 +53,7 @@ int main(int Argc, char* Argv[])
 
 	CTest Test(Argc, Argv);
 	const std::filesystem::path& BinaryDir = Test.GetBinaryDirectory();
-	const CWindow& Window = Test.GetWindow();
+	const CWindow& Window = CWindow::Get();
 	const FWindowData& WindowData = Window.GetData();
 
 	CTest::InitRenderContext(Window.GetGlfwWindow());
@@ -79,17 +81,15 @@ int main(int Argc, char* Argv[])
 	static_assert(sizeof(VertexData) > 0);
 	constexpr int ColorStartIdx = ((sizeof(VertexData) / sizeof(decltype(VertexData[0]))) / 2) - 1;
 
-	glm::vec4 ClearColor{ 0.0f };
-	glm::vec3 FragColor = { 
+	glm::vec4 ClearColor{0.0f};
+	glm::vec3 FragColor = {
 		VertexData[ColorStartIdx],
-		VertexData[ColorStartIdx + (4 * 1)], 
-		VertexData[ColorStartIdx + (4 * 2)]
-	};
+		VertexData[ColorStartIdx + (4 * 1)],
+		VertexData[ColorStartIdx + (4 * 2)]};
 
 	const int FragShaderBytes = (3 * 4 * sizeof(float));
 
-	while (true)
-	{
+	while (true) {
 		glfwPollEvents();
 		LK_OpenGL_Verify(glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a));
 		LK_OpenGL_Verify(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -107,8 +107,7 @@ int main(int Argc, char* Argv[])
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)FragShaderBytes);
 
-		if (UpdateFragShader)
-		{
+		if (UpdateFragShader) {
 			VertexData[12] = FragColor.r;
 			VertexData[13] = FragColor.g;
 			VertexData[14] = FragColor.b;
@@ -132,7 +131,7 @@ int main(int Argc, char* Argv[])
 #else
 		Shader.Bind();
 #endif
-		
+
 		/* Draw triangle. */
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 

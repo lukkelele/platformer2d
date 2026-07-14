@@ -17,6 +17,7 @@ namespace platformer2d::test {
 
 	/* 24 entries */
 	static constexpr float VertexData[] = {
+		/* clang-format off */
 		/* Vertices */
 		 0.0f,    0.50f,  0.0f,  1.0f,
 		 0.55f, -0.566f,  0.0f,  1.0f,
@@ -26,13 +27,13 @@ namespace platformer2d::test {
 		 1.0f,     0.0f,  0.0f,  1.0f,
 		 0.0f,     1.0f,  0.0f,  1.0f,
 		 0.0f,     0.0f,  1.0f,  1.0f,
+		/* clang-format on */
 	};
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		LK_ASSERT(Window && Window->GetGlfwWindow());
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
@@ -43,7 +44,7 @@ namespace platformer2d::test {
 		bRunning = true;
 		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
+		const CWindow& Window = CWindow::Get();
 		const FWindowData& WindowData = Window.GetData();
 
 		/* 1) Create vertex array. */
@@ -60,7 +61,9 @@ namespace platformer2d::test {
 
 		/* 3) Buffer layout, based from the layouts in the vertex shader. */
 		const FVertexBufferLayout BufferLayout = {
+			/* clang-format off */
 			{ "pos", EShaderDataType::Float4, },
+			/* clang-format on */
 		};
 
 		/* 4) Configure the vertex array based on the buffer layout. */
@@ -73,14 +76,13 @@ namespace platformer2d::test {
 		const std::filesystem::path FragmentShaderPath = BinaryDir / "frag.shader";
 		CShader Shader(VertexShaderPath, FragmentShaderPath);
 
-		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
-		glm::vec4 FragColor{ 0.410f, 0.181f, 0.813f, 1.0f };
+		glm::vec4 ClearColor{0.10f, 0.10f, 0.10f, 1.0f};
+		glm::vec4 FragColor{0.410f, 0.181f, 0.813f, 1.0f};
 
 		const GLuint ProgramID = Shader.GetRendererID();
 		LK_DEBUG("Shader program: {}", ProgramID);
 
-		while (bRunning)
-		{
+		while (bRunning) {
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -97,7 +99,7 @@ namespace platformer2d::test {
 			const GLint UniformLoc = glGetUniformLocation(ProgramID, "u_color");
 			glUseProgram(ProgramID);
 			glUniform4f(UniformLoc, FragColor.r, FragColor.g, FragColor.b, FragColor.a);
-			
+
 			/* Draw triangle. */
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -117,11 +119,9 @@ namespace platformer2d::test {
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		int VertexBufferIndex = 0;
-		for (const FVertexBufferElement& Element : Layout)
-		{
+		for (const FVertexBufferElement& Element : Layout) {
 			LK_INFO("VertexBufferIndex={} Size={} ComponentCount={}", VertexBufferIndex, Element.Size, Element.GetComponentCount());
-			switch (Element.Type)
-			{
+			switch (Element.Type) {
 				case EShaderDataType::Float:
 				case EShaderDataType::Float2:
 				case EShaderDataType::Float3:
@@ -129,11 +129,11 @@ namespace platformer2d::test {
 				{
 					glEnableVertexAttribArray(VertexBufferIndex);
 					glVertexAttribPointer(VertexBufferIndex,
-										  Element.GetComponentCount(),
-										  OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
-										  (Element.Normalized ? GL_TRUE : GL_FALSE),
-										  Layout.GetStride(),
-										  (const void*)Element.Offset);
+						Element.GetComponentCount(),
+						OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
+						(Element.Normalized ? GL_TRUE : GL_FALSE),
+						Layout.GetStride(),
+						(const void*)Element.Offset);
 					VertexBufferIndex++;
 					break;
 				}
@@ -145,10 +145,10 @@ namespace platformer2d::test {
 				{
 					glEnableVertexAttribArray(VertexBufferIndex);
 					glVertexAttribIPointer(VertexBufferIndex,
-										   Element.GetComponentCount(),
-										   OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
-										   Layout.GetStride(),
-										   (const void*)Element.Offset);
+						Element.GetComponentCount(),
+						OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
+						Layout.GetStride(),
+						(const void*)Element.Offset);
 					VertexBufferIndex++;
 					break;
 				}
@@ -156,22 +156,21 @@ namespace platformer2d::test {
 				case EShaderDataType::Mat4:
 				{
 					uint8_t Count = Element.GetComponentCount();
-					for (uint8_t Idx = 0; Idx < Count; Idx++)
-					{
+					for (uint8_t Idx = 0; Idx < Count; Idx++) {
 						glEnableVertexAttribArray(VertexBufferIndex);
 						glVertexAttribPointer(VertexBufferIndex,
-											  Count, 
-											  OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type), 
-											  (Element.Normalized ? GL_TRUE : GL_FALSE),
-											  Layout.GetStride(),
-											  (const void*)(Element.Offset + sizeof(float) * Count * Idx));
+							Count,
+							OpenGL::ShaderDataTypeToOpenGLBaseType(Element.Type),
+							(Element.Normalized ? GL_TRUE : GL_FALSE),
+							Layout.GetStride(),
+							(const void*)(Element.Offset + sizeof(float) * Count * Idx));
 						glVertexAttribDivisor(VertexBufferIndex, 1);
 						VertexBufferIndex++;
 					}
 					break;
 				}
 
-				default: 
+				default:
 					LK_ERROR("Unhandled shader type: {}", Enum::ToString(Element.Type));
 			}
 		}

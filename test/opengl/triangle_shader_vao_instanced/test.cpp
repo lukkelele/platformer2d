@@ -14,22 +14,29 @@
 namespace platformer2d::test {
 
 	static constexpr float VertexPositions[] = {
-		 0.0f,    0.25f,  0.0f,
-		 0.25f,  -0.25f,  0.0f,
-		-0.25f,  -0.25f,  0.0f,
+		0.0f,
+		0.25f,
+		0.0f,
+		0.25f,
+		-0.25f,
+		0.0f,
+		-0.25f,
+		-0.25f,
+		0.0f,
 	};
 
 	static constexpr float VertexOffsets[] = {
-		 -0.70, 0.0f, /* Left */
-		  0.0f, 0.0f, /* Center */
-		  0.70, 0.0f, /* Right */
+		/* clang-format off */
+	    -0.70, 0.0f, /* Left */
+		 0.0f, 0.0f, /* Center */
+		 0.70, 0.0f, /* Right */
+		/* clang-format on */
 	};
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		LK_ASSERT(Window && Window->GetGlfwWindow());
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
@@ -40,7 +47,7 @@ namespace platformer2d::test {
 		bRunning = true;
 		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
+		const CWindow& Window = CWindow::Get();
 		const FWindowData& WindowData = Window.GetData();
 
 		/* 1) Create vertex array. */
@@ -76,14 +83,13 @@ namespace platformer2d::test {
 		const std::filesystem::path FragmentShaderPath = BinaryDir / "frag.shader";
 		CShader Shader(VertexShaderPath, FragmentShaderPath);
 
-		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
-		glm::vec4 FragColor{ 0.410f, 0.181f, 0.813f, 1.0f };
+		glm::vec4 ClearColor{0.10f, 0.10f, 0.10f, 1.0f};
+		glm::vec4 FragColor{0.410f, 0.181f, 0.813f, 1.0f};
 
 		const GLuint ProgramID = Shader.GetRendererID();
 		LK_DEBUG("Shader program: {}", ProgramID);
 
-		while (bRunning)
-		{
+		while (bRunning) {
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -100,8 +106,8 @@ namespace platformer2d::test {
 			const GLint UniformLoc = glGetUniformLocation(ProgramID, "u_color");
 			glUseProgram(ProgramID);
 			glUniform4f(UniformLoc, FragColor.r, FragColor.g, FragColor.b, FragColor.a);
-			
-			glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 3/*=Instances*/);
+
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 3 /*=Instances*/);
 
 			glUseProgram(0);
 

@@ -18,17 +18,18 @@
 #include "shader.h"
 
 #ifndef LK_TEST_SUITE
-#error "LK_TEST_SUITE missing"
+#	error "LK_TEST_SUITE missing"
 #endif
 
 using namespace platformer2d;
 using namespace platformer2d::test;
 
-static const GLfloat Vertices_Triangle[] = 
-{
+static constexpr GLfloat Vertices_Triangle[] = {
+	/* clang-format off */
    -1.0f, -1.0f, 0.0f,
     1.0f, -1.0f, 0.0f,
     0.0f,  1.0f, 0.0f,
+	/* clang-format on */
 };
 
 #define USE_RAW_SHADER_IMPL 0
@@ -37,7 +38,7 @@ int main(int Argc, char* Argv[])
 {
 	CTest Test(Argc, Argv);
 	const std::filesystem::path& BinaryDir = Test.GetBinaryDirectory();
-	const CWindow& Window = Test.GetWindow();
+	const CWindow& Window = CWindow::Get();
 	const FWindowData& WindowData = Window.GetData();
 
 	CTest::InitRenderContext(Window.GetGlfwWindow());
@@ -62,8 +63,7 @@ int main(int Argc, char* Argv[])
 	CShader Shader(VertexShaderPath, FragmentShaderPath);
 #endif
 
-	while (true)
-	{
+	while (true) {
 		glfwPollEvents();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -75,12 +75,12 @@ int main(int Argc, char* Argv[])
 		glEnableVertexAttribArray(0); /* Position attribute 0 in the vertex shader. */
 		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
 		glVertexAttribPointer(
-			0,        /* Match layout in shader */
-		    3,        /* Size */
-		    GL_FLOAT, /* Type */
-		    GL_FALSE, /* Normalized */
-		    0,        /* Stride */
-		    (void*)0  /* Array buffer offset */
+			0, /* Match layout in shader */
+			3, /* Size */
+			GL_FLOAT, /* Type */
+			GL_FALSE, /* Normalized */
+			0, /* Stride */
+			(void*)0 /* Array buffer offset */
 		);
 
 		/* Use the shader. */

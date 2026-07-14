@@ -15,21 +15,38 @@ namespace platformer2d::test {
 	/* 24 entries */
 	static float VertexData[] = {
 		/* Vertices */
-		 0.0f,    0.50f,  0.0f,  1.0f,
-		 0.55f, -0.566f,  0.0f,  1.0f,
-		-0.55f, -0.566f,  0.0f,  1.0f,
+		0.0f,
+		0.50f,
+		0.0f,
+		1.0f,
+		0.55f,
+		-0.566f,
+		0.0f,
+		1.0f,
+		-0.55f,
+		-0.566f,
+		0.0f,
+		1.0f,
 
 		/* Color */
-		 1.0f,     0.0f,  0.0f,  1.0f,
-		 0.0f,     1.0f,  0.0f,  1.0f,
-		 0.0f,     0.0f,  1.0f,  1.0f,
+		1.0f,
+		0.0f,
+		0.0f,
+		1.0f,
+		0.0f,
+		1.0f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.0f,
+		1.0f,
+		1.0f,
 	};
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		LK_ASSERT(Window && Window->GetGlfwWindow());
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
@@ -39,7 +56,7 @@ namespace platformer2d::test {
 	{
 		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
+		const CWindow& Window = CWindow::Get();
 		const FWindowData& WindowData = Window.GetData();
 
 		/* 1) Create vertex array. */
@@ -69,14 +86,13 @@ namespace platformer2d::test {
 		const std::filesystem::path FragmentShaderPath = BinaryDir / "frag.shader";
 		CShader Shader(VertexShaderPath, FragmentShaderPath);
 
-		glm::vec4 ClearColor{ 0.0f };
-		glm::vec4 FragColor{ 1.0f, 0.481f, 0.508f, 1.0f };
+		glm::vec4 ClearColor{0.0f};
+		glm::vec4 FragColor{1.0f, 0.481f, 0.508f, 1.0f};
 
 		const GLuint ProgramID = Shader.GetRendererID();
 		LK_INFO("Shader program: {}", ProgramID);
 
-		while (true)
-		{
+		while (true) {
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -93,7 +109,7 @@ namespace platformer2d::test {
 			const GLint UniformLoc = glGetUniformLocation(ProgramID, "u_color");
 			glUseProgram(ProgramID);
 			glUniform4f(UniformLoc, FragColor.r, FragColor.g, FragColor.b, FragColor.a);
-			
+
 			/* Draw triangle. */
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 

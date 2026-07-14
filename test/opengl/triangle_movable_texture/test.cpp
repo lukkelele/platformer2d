@@ -12,41 +12,40 @@
 #include "renderer/vertexbufferlayout.h"
 
 namespace platformer2d::test {
-
 	namespace {
 		constexpr float TriangleVertices[] = {
-			 0.0f,   0.25f,  0.0f,
-			 0.25f, -0.25f,  0.0f,
-			-0.25f, -0.25f,  0.0f,
+			/* clang-format off */
+			 0.0f, 0.25f, 0.0f,
+			 0.25f, -0.25f, 0.0f,
+			-0.25f, -0.25f, 0.0f,
+			/* clang-format on */
 		};
 
 		constexpr float RectangleVertices[] = {
 #ifdef RECTANGLE_UNSCALED
-		  /* Position    Texture Coordinates */
-			-1.0f, -1.0f,    0.0f, 0.0f,
-			 1.0f, -1.0f,    1.0f, 0.0f,
-			 1.0f,  1.0f,    1.0f, 1.0f,
-			-1.0f,  1.0f,    0.0f, 1.0f
+			/* Position    Texture Coordinates */
+			-1.0f, -1.0f, 0.0f, 0.0f,
+			1.0f, -1.0f, 1.0f, 0.0f,
+			1.0f, 1.0f, 1.0f, 1.0f,
+			-1.0f, 1.0f, 0.0f, 1.0f
 #else
-		  /* Position    Texture Coordinates */
-			-0.30f, -0.30f,   0.0f, 0.0f,
-			 0.30f, -0.30f,   1.0f, 0.0f,
-			 0.30f,  0.30f,   1.0f, 1.0f,
-			-0.30f,  0.30f,   0.0f, 1.0f
+			/* Position    Texture Coordinates */
+			-0.30f, -0.30f, 0.0f, 0.0f,
+			0.30f, -0.30f, 1.0f, 0.0f,
+			0.30f, 0.30f, 1.0f, 1.0f,
+			-0.30f, 0.30f, 0.0f, 1.0f
 #endif
 		};
 
-		constexpr uint32_t RectangleIndices[] = { 
-			0, 1, 2,  
-			2, 3, 0 
-		};
+		constexpr std::uint32_t RectangleIndices[] = {
+			0, 1, 2,
+			2, 3, 0};
 	}
 
 	CTest::CTest(const int Argc, char* Argv[])
 		: CTestBase(Argc, Argv)
 	{
-		LK_ASSERT(Window && Window->GetGlfwWindow());
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
 		OpenGL::LoadInfo(BackendInfo);
 		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
 		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
@@ -57,9 +56,8 @@ namespace platformer2d::test {
 		bRunning = true;
 		const int Result = Catch::Session().run(Args.Argc, Args.Argv);
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		const CWindow& Window = GetWindow();
+		const CWindow& Window = CWindow::Get();
 		const FWindowData& WindowData = Window.GetData();
-
 
 		/*********************************
 		 * Triangle
@@ -82,7 +80,6 @@ namespace platformer2d::test {
 		const std::filesystem::path VertexShaderPath = BinaryDir / "vertex.shader";
 		const std::filesystem::path FragmentShaderPath = BinaryDir / "frag.shader";
 		CShader TriangleShader(VertexShaderPath, FragmentShaderPath);
-
 
 		/*********************************
 		 * Rectangle
@@ -114,7 +111,6 @@ namespace platformer2d::test {
 		const std::filesystem::path RectFragmentShaderPath = BinaryDir / "rect_frag.shader";
 		CShader RectangleShader(RectVertexShaderPath, RectFragmentShaderPath);
 
-
 		/*********************************
 		 * Texture
 		 *********************************/
@@ -138,12 +134,10 @@ namespace platformer2d::test {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+		glm::vec4 ClearColor{0.10f, 0.10f, 0.10f, 1.0f};
+		glm::vec4 FragColor{0.410f, 0.181f, 0.813f, 1.0f};
 
-		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
-		glm::vec4 FragColor{ 0.410f, 0.181f, 0.813f, 1.0f };
-
-		while (bRunning)
-		{
+		while (bRunning) {
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -163,7 +157,7 @@ namespace platformer2d::test {
 			ImGui::SeparatorText("Triangle");
 			ImGui::PushID(ImGui::GetID("Triangle"));
 			const bool UpdateFragShader = ImGui::SliderFloat4("Fragment Shader", &FragColor.x, 0.0f, 1.0f, "%.3f");
-			static glm::vec2 Offset{ 0.0f, 0.0f };
+			static glm::vec2 Offset{0.0f, 0.0f};
 			ImGui::SliderFloat2("Position Offset", &Offset.x, -0.50f, 0.50f, "%.2f");
 			ImGui::PopID();
 			/* -- ~Triangle -- */
@@ -172,7 +166,7 @@ namespace platformer2d::test {
 			ImGui::Dummy(ImVec2(0, 20));
 			ImGui::SeparatorText("Rectangle");
 			ImGui::PushID(ImGui::GetID("Rectangle"));
-			static glm::vec2 RectOffset = { -0.12f, -0.24f };
+			static glm::vec2 RectOffset = {-0.12f, -0.24f};
 			ImGui::SliderFloat2("Position Offset", &RectOffset.x, -0.50f, 0.50f, "%.2f");
 			ImGui::PopID();
 			/* -- ~Rectangle -- */

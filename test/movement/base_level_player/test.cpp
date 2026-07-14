@@ -21,20 +21,17 @@
 
 namespace platformer2d::test {
 
-	namespace 
-	{
+	namespace {
 		constexpr float RectangleVertices[] = {
-		  /*  Position    Texture Coordinates */
-			-1.0f, -1.0f,    0.0f, 0.0f,
-			 1.0f, -1.0f,    1.0f, 0.0f,
-			 1.0f,  1.0f,    1.0f, 1.0f,
-			-1.0f,  1.0f,    0.0f, 1.0f
-		};
+			/*  Position    Texture Coordinates */
+			-1.0f, -1.0f, 0.0f, 0.0f,
+			1.0f, -1.0f, 1.0f, 0.0f,
+			1.0f, 1.0f, 1.0f, 1.0f,
+			-1.0f, 1.0f, 0.0f, 1.0f};
 
-		constexpr uint32_t RectangleIndices[] = { 
-			0, 1, 2,  
-			2, 3, 0 
-		};
+		constexpr uint32_t RectangleIndices[] = {
+			0, 1, 2,
+			2, 3, 0};
 	}
 
 	void UI_BlendFunction();
@@ -53,16 +50,18 @@ namespace platformer2d::test {
 		LK_DEBUG("Catch result: {}", CatchResult);
 
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
-		CWindow& Window = GetWindow();
+		CWindow& Window = CWindow::Get();
 		const FWindowData& WindowData = Window.GetData();
 
 		/*********************************
 		 * Rectangle
 		 *********************************/
+		/* clang-format off */
 		const FVertexBufferLayout RectangleLayout = {
 			{ "pos",      EShaderDataType::Float2, },
 			{ "texcoord", EShaderDataType::Float2, },
 		};
+		/* clang-format on */
 
 		GLuint RectangleVAO = OpenGL::VertexArray::Create();
 		GLuint RectangleVBO = OpenGL::VertexBuffer::Create(RectangleVertices, RectangleLayout);
@@ -110,8 +109,8 @@ namespace platformer2d::test {
 		CPlayer Player(PlayerSpec, BodySpec);
 		Player.SetPosition(-0.280f, -0.410f);
 		FTransformComponent& TransformComp = Player.GetTransformComponent();
-		TransformComp.SetTranslation({ -0.28f, -0.41f });
-		TransformComp.SetScale({ 0.10f, 0.10f });
+		TransformComp.SetTranslation({-0.28f, -0.41f});
+		TransformComp.SetScale({0.10f, 0.10f});
 		glm::vec3& PlayerPos = TransformComp.Translation;
 		glm::vec3& PlayerScale = TransformComp.Scale;
 
@@ -120,12 +119,11 @@ namespace platformer2d::test {
 			LK_INFO("Player {} jumped", PlayerData.ID);
 		});
 
-		glm::vec4 ClearColor{ 0.28f, 0.34f, 0.36f, 1.0f };
+		glm::vec4 ClearColor{0.28f, 0.34f, 0.36f, 1.0f};
 		CRenderer::SetClearColor(ClearColor);
-		glm::vec4 FragColor{ 1.0f, 0.560f, 1.0f, 1.0f };
+		glm::vec4 FragColor{1.0f, 0.560f, 1.0f, 1.0f};
 
-		while (bRunning)
-		{
+		while (bRunning) {
 			constexpr float DeltaTime = 0.0f;
 			Window.BeginFrame();
 			CRenderer::BeginFrame();
@@ -137,13 +135,11 @@ namespace platformer2d::test {
 
 			ImGui::SetNextItemWidth(320.0f);
 			ImGui::SliderFloat3("Background", &ClearColor.x, 0.0f, 1.0f, "%.2f");
-			if (ImGui::IsItemActive())
-			{
+			if (ImGui::IsItemActive()) {
 				CRenderer::SetClearColor(ClearColor);
 			}
 
-			if (ImGui::Button("Player Jump"))
-			{
+			if (ImGui::Button("Player Jump")) {
 				LK_TRACE("Button: Player Jump");
 				Player.Jump();
 			}
@@ -165,8 +161,7 @@ namespace platformer2d::test {
 			ImGui::SliderFloat2("Scale", &PlayerScale.x, 0.01f, 0.30f, "%.2f");
 			float PlayerRot = glm::degrees(TransformComp.GetRotation2D());
 			ImGui::SliderFloat("Rotation", &PlayerRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
-			if (ImGui::IsItemActive())
-			{
+			if (ImGui::IsItemActive()) {
 				TransformComp.SetRotation2D(glm::radians(PlayerRot));
 			}
 			ImGui::PopID();
@@ -183,13 +178,13 @@ namespace platformer2d::test {
 			ImGui::TableSetColumnIndex(1);
 
 			/* -- Platform -- */
-			static glm::vec2 PlatformPos { -0.07f, -0.82f };
-			static glm::vec4 PlatformFragColor{ 0.284f, 0.349f, 0.630f, 1.0f };
+			static glm::vec2 PlatformPos{-0.07f, -0.82f};
+			static glm::vec4 PlatformFragColor{0.284f, 0.349f, 0.630f, 1.0f};
 			ImGui::SeparatorText("Platform");
 			ImGui::PushID(ImGui::GetID("Platform"));
 			ImGui::SliderFloat4("Color", &PlatformFragColor.x, 0.0f, 1.0f, "%.3f");
 			ImGui::SliderFloat2("Position", &PlatformPos.x, -2.0, 2.0f, "%.2f");
-			static glm::vec2 PlatformScale{ 0.65f, 0.31f };
+			static glm::vec2 PlatformScale{0.65f, 0.31f};
 			ImGui::SliderFloat2("Scale", &PlatformScale.x, 0.01f, 2.0f, "%.2f");
 			static float PlatformRot = 0.0f;
 			ImGui::SliderFloat("Rotation", &PlatformRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
@@ -216,19 +211,15 @@ namespace platformer2d::test {
 			 * Draw player
 			 ****************************/
 			glm::mat4 PlayerTransform = TransformComp.GetTransform();
-			if (bUseCameraProj)
-			{
+			if (bUseCameraProj) {
 				const glm::mat4 CameraProj = glm::ortho(0.0f, static_cast<float>(WindowData.Width), 0.0f, static_cast<float>(WindowData.Height), -1.0f, 1.0f);
 				PlayerTransform = CameraProj * PlayerTransform;
 			}
 
 			PlayerTexture.Bind();
-			if (bRendererDrawQuad)
-			{
+			if (bRendererDrawQuad) {
 				CRenderer::DrawQuad(Player.GetPosition(), {0.20f, 0.15f}, {0.50f, 0.50f, 0.50f, 1.0f});
-			}
-			else
-			{
+			} else {
 				Shader.Set("u_transform", PlayerTransform);
 				Shader.Set("u_texture", 0);
 				Shader.Set("u_color", FragColor);
@@ -256,20 +247,17 @@ namespace platformer2d::test {
 		bool bSetBlendFunc = false;
 
 		static int SelectedSourceBlendFunc = 0;
-		static std::pair<const char*, GLenum> SourceBlendFuncs[] = { 
-			{ "GL_SRC_ALPHA", GL_SRC_ALPHA },
-			{ "GL_DST_ALPHA", GL_DST_ALPHA },
-			{ "GL_ONE_MINUS_SRC_ALPHA", GL_ONE_MINUS_SRC_ALPHA },
-			{ "GL_ONE_MINUS_CONSTANT_ALPHA", GL_ONE_MINUS_CONSTANT_ALPHA },
+		static std::pair<const char*, GLenum> SourceBlendFuncs[] = {
+			{			   "GL_SRC_ALPHA",                GL_SRC_ALPHA},
+			{			   "GL_DST_ALPHA",                GL_DST_ALPHA},
+			{     "GL_ONE_MINUS_SRC_ALPHA",      GL_ONE_MINUS_SRC_ALPHA},
+			{"GL_ONE_MINUS_CONSTANT_ALPHA", GL_ONE_MINUS_CONSTANT_ALPHA},
 		};
 		ImGui::SetNextItemWidth(ItemWidth);
-		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].first))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++)
-			{
+		if (ImGui::BeginCombo("Source", SourceBlendFuncs[SelectedSourceBlendFunc].first)) {
+			for (int N = 0; N < LK_ARRAYSIZE(SourceBlendFuncs); N++) {
 				const bool bSelected = (SelectedSourceBlendFunc == N);
-				if (ImGui::Selectable(SourceBlendFuncs[N].first, bSelected))
-				{
+				if (ImGui::Selectable(SourceBlendFuncs[N].first, bSelected)) {
 					SelectedSourceBlendFunc = N;
 					LK_INFO("Source: {}", SourceBlendFuncs[N].first);
 					bSetBlendFunc = true;
@@ -279,21 +267,18 @@ namespace platformer2d::test {
 		}
 
 		static int SelectedDestBlendFunc = 0;
-		static std::pair<const char*, GLenum> DestBlendFuncs[] = { 
-			{ "GL_ONE_MINUS_SRC_ALPHA", GL_ONE_MINUS_SRC_ALPHA },
-			{ "GL_SRC_ALPHA", GL_SRC_ALPHA },
-			{ "GL_DST_ALPHA", GL_DST_ALPHA },
-			{ "GL_ONE_MINUS_DST_ALPHA", GL_ONE_MINUS_DST_ALPHA },
-			{ "GL_ONE_MINUS_CONSTANT_ALPHA", GL_ONE_MINUS_CONSTANT_ALPHA },
+		static std::pair<const char*, GLenum> DestBlendFuncs[] = {
+			{     "GL_ONE_MINUS_SRC_ALPHA",      GL_ONE_MINUS_SRC_ALPHA},
+			{			   "GL_SRC_ALPHA",                GL_SRC_ALPHA},
+			{			   "GL_DST_ALPHA",                GL_DST_ALPHA},
+			{     "GL_ONE_MINUS_DST_ALPHA",      GL_ONE_MINUS_DST_ALPHA},
+			{"GL_ONE_MINUS_CONSTANT_ALPHA", GL_ONE_MINUS_CONSTANT_ALPHA},
 		};
 		ImGui::SetNextItemWidth(ItemWidth);
-		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].first))
-		{
-			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++)
-			{
+		if (ImGui::BeginCombo("Destination", DestBlendFuncs[SelectedDestBlendFunc].first)) {
+			for (int N = 0; N < LK_ARRAYSIZE(DestBlendFuncs); N++) {
 				const bool bSelected = (SelectedDestBlendFunc == N);
-				if (ImGui::Selectable(DestBlendFuncs[N].first, bSelected))
-				{
+				if (ImGui::Selectable(DestBlendFuncs[N].first, bSelected)) {
 					SelectedDestBlendFunc = N;
 					LK_INFO("Destination: {}", DestBlendFuncs[N].first);
 					bSetBlendFunc = true;
@@ -302,12 +287,10 @@ namespace platformer2d::test {
 			ImGui::EndCombo();
 		}
 
-		if (bSetBlendFunc)
-		{
+		if (bSetBlendFunc) {
 			glBlendFunc(
-				SourceBlendFuncs[SelectedSourceBlendFunc].second, 
-				DestBlendFuncs[SelectedDestBlendFunc].second
-			);
+				SourceBlendFuncs[SelectedSourceBlendFunc].second,
+				DestBlendFuncs[SelectedDestBlendFunc].second);
 		}
 	}
 

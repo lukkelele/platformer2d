@@ -14,20 +14,17 @@
 
 namespace platformer2d::test {
 
-	namespace 
-	{
+	namespace {
 		constexpr float RectangleVertices[] = {
-		  /*  Position    Texture Coordinates */
-			-1.0f, -1.0f,    0.0f, 0.0f,
-			 1.0f, -1.0f,    1.0f, 0.0f,
-			 1.0f,  1.0f,    1.0f, 1.0f,
-			-1.0f,  1.0f,    0.0f, 1.0f
-		};
+			/*  Position    Texture Coordinates */
+			-1.0f, -1.0f, 0.0f, 0.0f,
+			1.0f, -1.0f, 1.0f, 0.0f,
+			1.0f, 1.0f, 1.0f, 1.0f,
+			-1.0f, 1.0f, 0.0f, 1.0f};
 
-		constexpr uint32_t RectangleIndices[] = { 
-			0, 1, 2,  
-			2, 3, 0 
-		};
+		constexpr uint32_t RectangleIndices[] = {
+			0, 1, 2,
+			2, 3, 0};
 	}
 
 	CTest::CTest(const int Argc, char* Argv[])
@@ -48,14 +45,15 @@ namespace platformer2d::test {
 		const std::filesystem::path& BinaryDir = GetBinaryDirectory();
 		const FWindowData& WindowData = CWindow::Get().GetData();
 
-
 		/*********************************
 		 * Rectangle
 		 *********************************/
+		/* clang-format off */
 		const FVertexBufferLayout RectangleLayout = {
 			{ "pos",      EShaderDataType::Float2, },
 			{ "texcoord", EShaderDataType::Float2, },
 		};
+		/* clang-format on */
 
 		GLuint RectangleVAO = OpenGL::VertexArray::Create();
 		GLuint RectangleVBO = OpenGL::VertexBuffer::Create(RectangleVertices, RectangleLayout);
@@ -91,23 +89,20 @@ namespace platformer2d::test {
 		Spec.Height = 512;
 		CTexture PlatformTexture(Spec);
 
-		glm::vec4 ClearColor{ 0.10f, 0.10f, 0.10f, 1.0f };
-		glm::vec4 FragColor{ 1.0f, 0.560f, 1.0f, 1.0f };
+		glm::vec4 ClearColor{0.10f, 0.10f, 0.10f, 1.0f};
+		glm::vec4 FragColor{1.0f, 0.560f, 1.0f, 1.0f};
 
 		auto HandleInput = [](glm::vec2& Position, const float MovementDiff) -> void
 		{
-			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_A))
-			{
+			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_A)) {
 				Position.x -= MovementDiff;
 			}
-			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_D))
-			{
+			if (ImGui::IsKeyDown(ImGuiKey::ImGuiKey_D)) {
 				Position.x += MovementDiff;
 			}
 		};
 
-		while (bRunning)
-		{
+		while (bRunning) {
 			glfwPollEvents();
 			glClearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -131,9 +126,9 @@ namespace platformer2d::test {
 			ImGui::SeparatorText("Player");
 			ImGui::PushID(ImGui::GetID("Player"));
 			ImGui::SliderFloat4("Color", &FragColor.x, 0.0f, 1.0f, "%.3f");
-			static glm::vec2 PlayerPos{ -0.28f, -0.41f };
+			static glm::vec2 PlayerPos{-0.28f, -0.41f};
 			ImGui::SliderFloat2("Position", &PlayerPos.x, -0.50f, 0.50f, "%.2f");
-			static glm::vec2 PlayerScale{ 0.10f, 0.10f };
+			static glm::vec2 PlayerScale{0.10f, 0.10f};
 			ImGui::SliderFloat2("Scale", &PlayerScale.x, 0.01f, 0.30f, "%.2f");
 			static float PlayerRot = 0.0f;
 			ImGui::SliderFloat("Rotation", &PlayerRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
@@ -147,13 +142,13 @@ namespace platformer2d::test {
 			ImGui::TableSetColumnIndex(1);
 
 			/* Draw platform. */
-			static glm::vec2 PlatformPos { -0.07f, -0.82f };
-			static glm::vec4 PlatformFragColor{ 0.284f, 0.349f, 0.630f, 1.0f };
+			static glm::vec2 PlatformPos{-0.07f, -0.82f};
+			static glm::vec4 PlatformFragColor{0.284f, 0.349f, 0.630f, 1.0f};
 			ImGui::SeparatorText("Platform");
 			ImGui::PushID(ImGui::GetID("Platform"));
 			ImGui::SliderFloat4("Color", &PlatformFragColor.x, 0.0f, 1.0f, "%.3f");
 			ImGui::SliderFloat2("Position", &PlatformPos.x, -2.0, 2.0f, "%.2f");
-			static glm::vec2 PlatformScale{ 0.65f, 0.31f };
+			static glm::vec2 PlatformScale{0.65f, 0.31f};
 			ImGui::SliderFloat2("Scale", &PlatformScale.x, 0.01f, 2.0f, "%.2f");
 			static float PlatformRot = 0.0f;
 			ImGui::SliderFloat("Rotation", &PlatformRot, -180.0f, 180.0f, "%1.f", ImGuiSliderFlags_ClampOnInput);
@@ -189,7 +184,7 @@ namespace platformer2d::test {
 			ImGui::EndTable();
 
 			CTest::ImGui_EndFrame();
-			glfwSwapBuffers(Window.GetGlfwWindow());
+			glfwSwapBuffers(CWindow::Get().GetGlfwWindow());
 		}
 	}
 

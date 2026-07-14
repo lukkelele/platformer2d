@@ -39,16 +39,10 @@ namespace platformer2d::test {
 		: CTestBase(Argc, Argv, NO_TEST_INIT)
 	{
 		lklog::init(lklog::level::debug);
-
-		const FWindowSpecification WindowSpec = {
-			.Width = SCREEN_WIDTH,
-			.Height = SCREEN_HEIGHT,
-			.Title = LK_TEST_NAME,
-			.bStartMaximized = true,
-			.bVSync = true};
-		Window = std::make_unique<CWindow>(WindowSpec);
-		Window->Initialize();
-		InitRenderContext(Window->GetGlfwWindow());
+		InitRenderContext(CWindow::Get().GetGlfwWindow());
+		OpenGL::LoadInfo(BackendInfo);
+		LK_INFO("OpenGL {}.{}", BackendInfo.Version.Major, BackendInfo.Version.Minor);
+		LK_INFO("ImGui Version: {}", ImGui::GetVersion());
 
 		CPhysicsWorld::Initialize();
 		CRenderer::Initialize();
@@ -63,7 +57,7 @@ namespace platformer2d::test {
 		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
 #endif
 
-		CWindow* Window = CWindow::Get();
+		CWindow& Window = CWindow::Get();
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		Framebuffer->Bind();
 
@@ -94,10 +88,10 @@ namespace platformer2d::test {
 
 		LK_INFO("Actors: {}", Actors.size());
 
-		GLFWwindow* GlfwWindow = Window->GetGlfwWindow();
+		GLFWwindow* GlfwWindow = Window.GetGlfwWindow();
 		while (!glfwWindowShouldClose(GlfwWindow)) {
 			Framebuffer->Clear();
-			Window->BeginFrame();
+			Window.BeginFrame();
 
 			CKeyboard::Update();
 			CRenderer::BeginFrame();
@@ -141,7 +135,7 @@ namespace platformer2d::test {
 				AlignCenter(0.30f);
 				ImGui::BeginChild("##Background", ImVec2(ImGui::GetWindowSize().x * 0.30f, 40.0f));
 				glm::vec4 ClearColor = CRenderer::GetClearColor();
-				if (UI::Widget::DragFloat3("Background", ClearColor, 0.0f, 0.0010f, 0.0f, 1.0f)) {
+				if (UI::DragFloat3("Background", ClearColor, 0.0f, 0.0010f, 0.0f, 1.0f)) {
 					CRenderer::SetClearColor(ClearColor);
 				}
 				ImGui::EndChild();
@@ -160,11 +154,11 @@ namespace platformer2d::test {
 				ImGui::Checkbox("Outlined", &bDrawBodyOutlined);
 
 				ImGui::BeginChild("##P0", ImVec2(ImGui::GetWindowSize().x * 0.30f, 40.0f));
-				UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
+				UI::DragFloat3("P0", P1, 0.0f, 0.010f);
 				ImGui::EndChild();
 
 				ImGui::BeginChild("##Radius", ImVec2(ImGui::GetWindowSize().x * 0.30f, 40.0f));
-				UI::Widget::DragFloat("Radius", RADIUS, 0.010f, 0.0f, 10.0f);
+				UI::DragFloat("Radius", RADIUS, 0.010f, 0.0f, 10.0f);
 				ImGui::EndChild();
 
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -172,8 +166,8 @@ namespace platformer2d::test {
 				ImGui::BeginChild("##Actors", ImVec2(ImGui::GetWindowSize().x * 0.30f, 800.0f));
 				UI::HeaderTextCentralized("Actors", EFont::Roboto, EFontModifier::Bold);
 				for (const auto& Actor : Actors) {
-					UI::Widget::ActorNode::Data(Actor);
-					UI::Widget::DrawComponents(Actor);
+					UI::Actor::Data(Actor);
+					UI::DrawComponents(Actor);
 				}
 				ImGui::PopStyleVar(2);
 				ImGui::EndChild();
@@ -182,7 +176,7 @@ namespace platformer2d::test {
 
 			ImGui_EndFrame();
 
-			Window->EndFrame();
+			Window.EndFrame();
 			CKeyboard::TransitionPressedKeys();
 		}
 	}
@@ -191,9 +185,7 @@ namespace platformer2d::test {
 	{
 		LK_DEBUG_TAG("Test", "Destroy: {}", LK_TEST_NAME);
 		CRenderer::Destroy();
-
-		Window->Destroy();
-		Window.reset();
+		CWindow::Get().Destroy();
 	}
 
 	static void RenderViewportTexture()
@@ -212,10 +204,10 @@ namespace platformer2d::test {
 		ImGui::Image(
 			(ImTextureID)ViewportTexture->GetID(),
 			WindowSize,
-			ImVec2(0, 1),       /* UV0 */
-			ImVec2(1, 0),       /* UV1 */
+			ImVec2(0, 1), /* UV0 */
+			ImVec2(1, 0), /* UV1 */
 			ImVec4(1, 1, 1, 1), /* Tint Color   */
-			ImVec4(1, 1, 1, 0)  /* Border Color */
+			ImVec4(1, 1, 1, 0) /* Border Color */
 		);
 
 		ImGui::End();

@@ -32,11 +32,10 @@ namespace platformer2d::test {
 			.Height = SCREEN_HEIGHT,
 			.Title = LK_TEST_NAME,
 			.bStartMaximized = true,
-			.bVSync = true
-		};
-		Window = std::make_unique<CWindow>(WindowSpec);
-		Window->Initialize();
-		InitRenderContext(Window->GetGlfwWindow());
+			.bVSync = true};
+		CWindow& Window = CWindow::Get();
+		Window.Initialize(WindowSpec);
+		CTestBase::InitRenderContext(Window.GetGlfwWindow());
 
 		CPhysicsWorld::Initialize();
 		CRenderer::Initialize();
@@ -51,8 +50,8 @@ namespace platformer2d::test {
 		const int CatchResult = Catch::Session().run(Args.Argc, Args.Argv);
 #endif
 
-		CWindow* Window = CWindow::Get();
-		const FWindowData& WindowData = Window->GetData();
+		CWindow& Window = CWindow::Get();
+		const FWindowData& WindowData = Window.GetData();
 
 		std::shared_ptr<CFramebuffer> Framebuffer = CRenderer::GetViewportFramebuffer();
 		Framebuffer->Bind();
@@ -77,10 +76,10 @@ namespace platformer2d::test {
 			ImGui::Image(
 				(ImTextureID)ViewportTexture->GetID(),
 				WindowSize,
-				ImVec2(0, 1),       /* UV0 */
-				ImVec2(1, 0),       /* UV1 */
+				ImVec2(0, 1), /* UV0 */
+				ImVec2(1, 0), /* UV1 */
 				ImVec4(1, 1, 1, 1), /* Tint Color   */
-				ImVec4(1, 1, 1, 0)  /* Border Color */
+				ImVec4(1, 1, 1, 0) /* Border Color */
 			);
 
 			ImGui::End();
@@ -88,32 +87,28 @@ namespace platformer2d::test {
 
 		std::string TestName = LK_TEST_NAME;
 
-		while (bRunning)
-		{
+		while (bRunning) {
 			Framebuffer->Clear();
-			Window->BeginFrame();
+			Window.BeginFrame();
 
 			CKeyboard::Update();
 			CRenderer::BeginFrame();
 			CRenderer::StartBatch();
 
-			static glm::vec3 P1 = { 0.30f, -0.40, 0.50f };
-			static glm::vec3 ROT = { 0.0f, 0.0f, 0.0f };
+			static glm::vec3 P1 = {0.30f, -0.40, 0.50f};
+			static glm::vec3 ROT = {0.0f, 0.0f, 0.0f};
 			static float RADIUS = 0.05f;
-			if (bDrawCircle)
-			{
+			if (bDrawCircle) {
 				CRenderer::DrawCircle(P1, ROT, RADIUS, FColor::Red);
 			}
-			if (bDrawCircleFilled)
-			{
+			if (bDrawCircleFilled) {
 				CRenderer::DrawCircleFilled(P1, RADIUS, FColor::Red, 5.0f);
 			}
-			if (bDrawLine)
-			{
+			if (bDrawLine) {
 				CRenderer::DrawLine(glm::vec3(0.0f, 0.0f, 1.0f), P1, FColor::Black, 6);
 			}
 
-			CRenderer::DrawQuad({ -0.25f, 0.10f }, { 0.10f, 0.10f }, FColor::Green);
+			CRenderer::DrawQuad({-0.25f, 0.10f}, {0.10f, 0.10f}, FColor::Green);
 
 			CRenderer::EndFrame();
 
@@ -129,13 +124,13 @@ namespace platformer2d::test {
 			ImGui::SameLine();
 			ImGui::Checkbox("Draw Line", &bDrawLine);
 
-			UI::Widget::DragFloat3("P0", P1, 0.0f, 0.010f);
-			UI::Widget::DragFloat("Radius", RADIUS, 0.010f, 0.0f, 10.0f);
+			UI::DragFloat3("P0", P1, 0.0f, 0.010f);
+			UI::DragFloat("Radius", RADIUS, 0.010f, 0.0f, 10.0f);
 
 			ImGui::End();
 			ImGui_EndFrame();
 
-			Window->EndFrame();
+			Window.EndFrame();
 			CKeyboard::TransitionPressedKeys();
 		}
 	}

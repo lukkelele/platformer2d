@@ -15,17 +15,19 @@
 #include "test_base.h"
 
 #ifndef LK_TEST_SUITE
-#error "LK_TEST_SUITE missing"
+#	error "LK_TEST_SUITE missing"
 #endif
 
 using namespace platformer2d;
 using namespace platformer2d::test;
 
 namespace {
-	const GLfloat Vertices_Triangle[] = {
-	   -1.0f, -1.0f, 0.0f,
+	constexpr GLfloat Vertices_Triangle[] = {
+		/* clang-format off */
+		-1.0f, -1.0f, 0.0f,
 		1.0f, -1.0f, 0.0f,
-		0.0f,  1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		/* clang-format on */
 	};
 
 	constexpr ImGuiWindowFlags CoreViewportFlags = ImGuiWindowFlags_NoTitleBar
@@ -45,10 +47,9 @@ int main(int argc, char* argv[])
 		.Height = 600,
 		.Title = LK_TEST_NAME,
 		.bStartMaximized = false,
-		.bVSync = true
-	};
-	platformer2d::CWindow Window(WindowSpec);
-	Window.Initialize();
+		.bVSync = true};
+	CWindow& Window = CWindow::Get();
+	Window.Initialize(WindowSpec);
 	CTestBase::InitRenderContext(Window.GetGlfwWindow());
 	const FWindowData& WindowData = Window.GetData();
 
@@ -64,12 +65,12 @@ int main(int argc, char* argv[])
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(Viewport->Pos);
-        ImGui::SetNextWindowSize(Viewport->Size);
-        ImGui::SetNextWindowViewport(Viewport->ID);
+		ImGui::SetNextWindowSize(Viewport->Size);
+		ImGui::SetNextWindowViewport(Viewport->ID);
 		ImGui::Begin(LK_TEST_STRINGIFY(LK_TEST_SUITE), NULL, CoreViewportFlags);
 
 		ImGui::Text("%s", LK_TEST_NAME);
@@ -78,12 +79,12 @@ int main(int argc, char* argv[])
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
 		glVertexAttribPointer(
-			0,        /* Match layout in shader */
-		    3,        /* Size */
-		    GL_FLOAT, /* Type */
-		    GL_FALSE, /* Normalized */
-		    0,        /* Stride */
-		    (void*)0  /* Array buffer offset */
+			0, /* Match layout in shader */
+			3, /* Size */
+			GL_FLOAT, /* Type */
+			GL_FALSE, /* Normalized */
+			0, /* Stride */
+			(void*)0 /* Array buffer offset */
 		);
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
 
 		ImGui::End(); /* LK_TEST_SUITE */
 		ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(Window.GetGlfwWindow());
 	}

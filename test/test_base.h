@@ -67,4 +67,3 @@ namespace platformer2d::test {
 		static inline std::filesystem::path AssetsDir = ASSETS_DIR;
 	};
 }
-

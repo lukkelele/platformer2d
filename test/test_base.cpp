@@ -3,7 +3,7 @@
 #include <string>
 #include <stdexcept>
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #	include <Windows.h>
 #elif defined(__linux__)
 #	include <unistd.h>
@@ -57,7 +57,7 @@ namespace platformer2d::test {
 
 	static std::filesystem::path GetBinaryDir()
 	{
-#if defined(_WIN32)
+#ifdef _WIN32
 		wchar_t Buffer[MAX_PATH];
 		const DWORD Length = GetModuleFileNameW(nullptr, Buffer, MAX_PATH);
 		if ((Length == 0) || (Length == MAX_PATH)) {
