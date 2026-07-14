@@ -9,7 +9,7 @@
 ####################################################################################################
 set -euo pipefail
 
-SKIP_FONTAWESOME=0
+SKIP_FONTAWESOME=1
 SIZE=""
 PXRANGE=""
 TOOL=""
