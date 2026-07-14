@@ -7,8 +7,8 @@
 #define LK_STRINGIFY(x)     #x
 #define LK_BIT(x)           (1 << x)
 
-#define LK_CONCAT(a, b)        a##b
-#define LK_CONCAT_EXPAND(a, b) LK_CONCAT(a, b)
+#define LK_CONCAT_INNER(a, b) a##b
+#define LK_CONCAT(a, b)       LK_CONCAT_INNER(a, b)
 
 #if defined(LK_COMPILER_MSVC)
 #	define FORCEINLINE __forceinline
@@ -23,4 +23,3 @@
 #	define LK_CDECL    __cdecl
 #	define LK_STDCALL  __stdcall
 #endif
-

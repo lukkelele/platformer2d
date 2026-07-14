@@ -29,7 +29,7 @@ endif()
 set(LK_SCREEN_WIDTH "1920" CACHE STRING "Screen width")
 set(LK_SCREEN_HEIGHT "1080" CACHE STRING "Screen height")
 option(LK_LOG_FORCE_INLINE "Force inline log templates" OFF)
-option(LK_PROFILING_USE_SCOPED_TIMERS "Use timers for scoped profiling" OFF)
+option(LK_PROFILING_SCOPED_TIMERS "Timers for scoped profiling" OFF)
 
 set(PROJECT_EXECUTABLE ${PROJECT_NAME})
 # Project interface.
@@ -95,8 +95,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	set(LK_COMPILER_CLANG ON)
 	project_add_compile_definitions(
-	    LK_COMPILER_CLANG
-	    __LK_VA_OPT
+	  LK_COMPILER_CLANG
+	  __LK_VA_OPT
 	)
 else()
 	message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -110,16 +110,16 @@ project_add_compile_definitions(
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (LK_PROFILING_USE_SCOPED_TIMERS)
-      set(LK_PROFILING_USE_SCOPED_TIMERS 1)
+  if (LK_PROFILING_SCOPED_TIMERS)
+    set(LK_PROFILING_SCOPED_TIMERS 1)
   else()
-      set(LK_PROFILING_USE_SCOPED_TIMERS 0)
+    set(LK_PROFILING_SCOPED_TIMERS 0)
   endif()
 
 	project_add_compile_definitions(
 		LK_BUILD_DEBUG
 		LK_PROFILING
-		LK_PROFILING_USE_SCOPED_TIMERS=${LK_PROFILING_USE_SCOPED_TIMERS}
+		LK_PROFILING_SCOPED_TIMERS=${LK_PROFILING_SCOPED_TIMERS}
 		TRACY_ENABLE
 		TRACY_STATIC
 		TRACY_ON_DEMAND

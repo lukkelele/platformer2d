@@ -1,5 +1,6 @@
 project_library(core)
 project_library_sources(
+  ansi.h
 	application.h
 	application.cpp
 	assert.h
@@ -18,6 +19,7 @@ project_library_sources(
 	object.h
 	platform.h
 	profiler.h
+	profiler.cpp
 	selectioncontext.h
 	selectioncontext.cpp
 	settings.h
@@ -36,4 +38,3 @@ project_library_sources(
 add_subdirectory(event)
 add_subdirectory(input)
 add_subdirectory(math)
-
