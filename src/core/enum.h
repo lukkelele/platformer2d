@@ -219,20 +219,20 @@ namespace platformer2d::Enum::Internal {
 	{
 		using U = std::underlying_type_t<E>;
 
-		static consteval auto SetCount()
+		static consteval std::uint64_t SetCount()
 		{
-			constexpr std::size_t Count = static_cast<std::size_t>(E::COUNT);
 			if constexpr (Range<E>::Kind == ERangeKind::Contiguous) {
-				return Count;
+				return static_cast<std::uint64_t>(E::COUNT);
 			} else if constexpr (Range<E>::Kind == ERangeKind::Range) {
-				/* Calculate absolute span. */
-				constexpr std::int64_t Min = Range<E>::Min;
-				return static_cast<std::size_t>(static_cast<std::int64_t>(Count) - Min);
+				constexpr auto Min = Range<E>::Min;
+				constexpr auto Max = Range<E>::Max;
+				static_assert(Max >= Min, "LK_ENUM_RANGE: Max must be greater than or equal to Min");
+				return static_cast<std::uint64_t>(Max - Min + 1);
 			} else {
-				return Count;
+				return static_cast<std::uint64_t>(E::COUNT);
 			}
 		}
-		static constexpr std::size_t Count = SetCount();
+		static constexpr auto Count = SetCount();
 
 		static consteval auto Make()
 		{
@@ -240,12 +240,8 @@ namespace platformer2d::Enum::Internal {
 			if constexpr (Range<E>::Kind == ERangeKind::Contiguous) {
 				return BuildContiguous<E>(std::make_index_sequence<Count>{});
 			} else if constexpr (Range<E>::Kind == ERangeKind::Range) {
-				constexpr std::int64_t Min = Range<E>::Min;
-				constexpr std::int64_t Max = Range<E>::Max;
-				static_assert(Max > Min, "LK_ENUM_RANGE: Max must be greater than Min");
-				constexpr std::size_t Span = static_cast<std::size_t>(Max - Min);
-				static_assert(Span == Count, "LK_ENUM_RANGE: Span must equal count");
-				return BuildRange<E, Min, Count>(std::make_index_sequence<Span>{});
+				constexpr auto Min = Range<E>::Min;
+				return BuildRange<E, Min, Count>(std::make_index_sequence<Count>{});
 			} else {
 				constexpr std::size_t Bits = sizeof(U) * 8;
 				return BuildFlags<E, Count>(std::make_index_sequence<Bits>{});
