@@ -12,7 +12,7 @@ project_add_compile_definitions(LK_ENABLE_ASSERT LK_ENABLE_VERIFY)
 # Declare a test option and append it to TEST_OPTIONS.
 # Options are assigned OFF by default.
 #
-# A test option has the prefix LK_TEST and the rest of the name 
+# A test option has the prefix LK_TEST and the rest of the name
 # is the directory where the test source is in.
 #
 # Usage:
@@ -25,7 +25,7 @@ project_add_compile_definitions(LK_ENABLE_ASSERT LK_ENABLE_VERIFY)
 #
 macro(test_option name)
 	# Set default value to OFF.
-	if (${ARGC} GREATER 1) 
+	if (${ARGC} GREATER 1)
 		set(_args ${ARGN})
 		list(GET _args 0 _default_value)
 	else()
@@ -93,7 +93,7 @@ function(add_tests_recursive dir)
 				set(TESTS_ENABLED ON)
 
 				add_executable(${TEST_NAME})
-				target_sources(${TEST_NAME} PRIVATE 
+				target_sources(${TEST_NAME} PRIVATE
 					test_base.cpp
 					${subdir}/main.cpp
 				)
@@ -121,7 +121,7 @@ function(add_tests_recursive dir)
 				target_compile_options(${TEST_NAME} PRIVATE ${PROJECT_COMPILE_OPTIONS_PROPERTY})
 
 				# Place test binary in its own directory.
-				set_target_properties(${TEST_NAME} PROPERTIES 
+				set_target_properties(${TEST_NAME} PROPERTIES
 					RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${TEST_NAME}"
 				)
 
