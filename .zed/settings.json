@@ -1,9 +1,0 @@
-{
-  "preferred_line_length": 102,
-  "project_name": "platformer2d",
-  "languages": {
-    "C++": {
-      "language_servers": ["clangd"]
-    }
-  }
-}
