@@ -22,6 +22,10 @@
 *.app
 *.dwo
 
+.*/
+!/.zed/
+!/.vscode/
+
 build
 config
 logs
