@@ -81,7 +81,7 @@ IndentExternBlock: AfterExternBlock
 IndentRequiresClause: true
 NamespaceIndentation: All
 FixNamespaceComments: false
-IndentPPDirectives: AfterHash
+IndentPPDirectives: None
 PPIndentWidth: 4
 PointerAlignment: Left
 SortIncludes: false
@@ -110,4 +110,3 @@ PenaltyBreakBeforeFirstCallParameter: 200
 PenaltyBreakOpenParenthesis: 180
 PenaltyBreakTemplateDeclaration: 100
 WrapNamespaceBodyWithEmptyLines: Leave
-
