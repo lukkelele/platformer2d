@@ -514,7 +514,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		Data.FrameIndex = (Data.FrameIndex + 1) % Data.RefreshRate;
 		SwapQueues();
 
@@ -527,14 +527,14 @@ namespace platformer2d {
 
 	void CRenderer::EndFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		CommandQueue[GetRenderQueueIndex()]->Execute();
 		Flush();
 	}
 
 	void CRenderer::BeginScene(const CCamera& Camera)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		CameraData.ViewProjection = Camera.GetViewProjection();
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 
@@ -547,7 +547,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginScene(const CCamera& Camera, const glm::mat4& Transform)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		CameraData.ViewProjection = Camera.GetViewProjection() * glm::inverse(Transform);
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 		StartBatch();
@@ -555,7 +555,7 @@ namespace platformer2d {
 
 	void CRenderer::BeginScene(const glm::mat4& ViewProj, const glm::mat4& Transform)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		CameraData.ViewProjection = ViewProj * glm::inverse(Transform);
 		CameraUniformBuffer->SetData(&CameraData, sizeof(FCameraData));
 		StartBatch();
@@ -563,7 +563,7 @@ namespace platformer2d {
 
 	void CRenderer::StartBatch()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		QuadIndexCount = 0;
 		QuadVertexBufferPtr = QuadVertexBufferBase;
 
@@ -584,14 +584,14 @@ namespace platformer2d {
 
 	void CRenderer::NextBatch()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		Flush();
 		StartBatch();
 	}
 
 	void CRenderer::Flush()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		Data.ViewportFramebuffer->Bind();
 
 		const float Brightness = std::clamp(FSettings::Get().Graphics.Brightness, 0.0f, 4.0f);

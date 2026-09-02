@@ -34,7 +34,7 @@ namespace platformer2d {
 
 	void CPhysicsWorld::Update(const float DeltaTime)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		if (!b2World_IsValid(WorldID) || bPaused) {
 			return;
 		}

@@ -169,7 +169,7 @@ namespace platformer2d {
 
 	void CFramebuffer::Resize(const uint32_t InWidth, const uint32_t InHeight)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		LK_TRACE_TAG("Framebuffer", "Resize: ({}, {})", InWidth, InHeight);
 		if ((InWidth <= 0) || (InHeight <= 0)) {
 			return;

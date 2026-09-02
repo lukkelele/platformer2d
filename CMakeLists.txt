@@ -110,21 +110,18 @@ project_add_compile_definitions(
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (LK_PROFILING_SCOPED_TIMERS)
-    set(LK_PROFILING_SCOPED_TIMERS 1)
-  else()
-    set(LK_PROFILING_SCOPED_TIMERS 0)
-  endif()
-
 	project_add_compile_definitions(
 		LK_BUILD_DEBUG
 		LK_PROFILING
-		LK_PROFILING_SCOPED_TIMERS=${LK_PROFILING_SCOPED_TIMERS}
 		TRACY_ENABLE
 		TRACY_STATIC
 		TRACY_ON_DEMAND
 		TRACY_CALLSTACK=15
 	)
+
+	if (LK_PROFILING_SCOPED_TIMERS)
+	    project_add_compile_definitions(LK_PROFILING_SCOPED_TIMERS)
+	endif()
 endif()
 
 set(LK_PROJECT_DIR "${CMAKE_SOURCE_DIR}")

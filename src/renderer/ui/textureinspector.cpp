@@ -171,7 +171,7 @@ namespace platformer2d::UI {
 
 	void RenderTextureInspector()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		if (!TextureInspector.bWindowOpen) {
 			return;
 		}
@@ -188,4 +188,3 @@ namespace platformer2d::UI {
 	}
 
 }
-

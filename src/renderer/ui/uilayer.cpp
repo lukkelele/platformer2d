@@ -59,13 +59,13 @@ namespace platformer2d {
 
 	void CUILayer::Tick(const float DeltaTime)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		UI::TickLevelLauncher();
 	}
 
 	void CUILayer::RenderUI()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		const bool MenuHasChanged = (ActiveMenu != NextMenu);
 		if (MenuHasChanged) {
 			LK_DEBUG_TAG("UILayer", "Menu changed to: {}", Enum::ToString(NextMenu));
@@ -107,13 +107,13 @@ namespace platformer2d {
 
 	void CUILayer::BeginFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGuiLayer->BeginFrame();
 	}
 
 	void CUILayer::EndFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGuiLayer->EndFrame();
 	}
 
@@ -195,7 +195,7 @@ namespace platformer2d {
 
 	void CUILayer::UI_MainMenu()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
 			return;
@@ -309,7 +309,7 @@ namespace platformer2d {
 
 	void CUILayer::UI_Settings()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
 			return;
@@ -374,7 +374,7 @@ namespace platformer2d {
 
 	void CUILayer::UI_Credits()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		if (!Viewport) {
 			return;

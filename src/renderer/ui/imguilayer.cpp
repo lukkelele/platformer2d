@@ -58,7 +58,7 @@ namespace platformer2d {
 
 	void CImGuiLayer::BeginFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -72,7 +72,7 @@ namespace platformer2d {
 
 	void CImGuiLayer::EndFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGui::End(); /* Viewport */
 
 		ImGui::Render();

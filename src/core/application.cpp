@@ -86,12 +86,12 @@ namespace platformer2d {
 
 		CEffectManager& EffectManager = CEffectManager::Get(); /* @todo Integrate in layerstack somehow (?) */
 
-		LK_PROFILE_THREAD("Main");
+		LK_PROFILER_THREAD("Main");
 
 		bRunning = true;
 		Timer.Reset();
 		while (!glfwWindowShouldClose(GlfwWindow)) {
-			LK_PROFILE_FUNC("MainLoop");
+			LK_PROFILER_SCOPED("MainLoop");
 			if (Core::Global.bShouldShutdown) {
 				break;
 			}
@@ -106,7 +106,7 @@ namespace platformer2d {
 
 			CPhysicsWorld::Update(DeltaTime);
 			{
-				LK_PROFILE_FUNC("LayerStack::Tick");
+				LK_PROFILER_SCOPED("LayerStack::Tick");
 				for (auto& Layer : LayerStack) {
 					Layer->Tick(DeltaTime);
 				}
@@ -119,7 +119,7 @@ namespace platformer2d {
 			CKeyboard::TransitionPressedKeys();
 			Window.EndFrame();
 
-			LK_PROFILE_MARK_FRAME();
+			LK_PROFILER_MARK_FRAME();
 		}
 	}
 
@@ -131,7 +131,7 @@ namespace platformer2d {
 
 	void CApplication::RenderUI()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		UILayer->BeginFrame();
 		for (auto& Layer : LayerStack) {
 			Layer->RenderUI();

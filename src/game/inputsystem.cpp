@@ -48,7 +48,7 @@ namespace platformer2d {
 
 	void CInputSystem::Tick()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 
 		PollGamepads();
 		RefreshActionStates();

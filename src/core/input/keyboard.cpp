@@ -14,7 +14,7 @@ namespace platformer2d {
 
 	void CKeyboard::Update()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		/* Held keys. */
 		for (auto& [Key, HeldData] : KeyHeldMap) {
 			KeyDataMap[Key].RepeatCount++;

@@ -211,7 +211,7 @@ namespace platformer2d::UI {
 
 	void BeginCoreViewport()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		ImGuiViewport* Viewport = ImGui::GetMainViewport();
 		FScopedStyle WindowRounding(ImGuiStyleVar_WindowRounding, 0.0f);
 		FScopedStyle WindowBorderSize(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -485,4 +485,3 @@ namespace platformer2d::UI {
 	}
 
 }
-

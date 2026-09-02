@@ -30,7 +30,7 @@ namespace platformer2d {
 
 	void CHudLayer::RenderUI()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		if (bInputDebug) {
 			UI::InputDebug();
 		}

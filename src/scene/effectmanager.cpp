@@ -49,7 +49,7 @@ namespace platformer2d {
 
 	void CEffectManager::Tick(const float DeltaTime)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		using namespace std::chrono;
 		const auto CurrentTime = steady_clock::now();
 

@@ -138,13 +138,13 @@ namespace platformer2d {
 
 	void CWindow::BeginFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		glfwPollEvents();
 	}
 
 	void CWindow::EndFrame()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		glfwSwapBuffers(GlfwWindow);
 	}
 

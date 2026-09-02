@@ -41,7 +41,7 @@ namespace platformer2d {
 
 	void CScene::Tick(const float DeltaTime)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		for (const auto& Actor : Actors) {
 			Actor->Tick(DeltaTime);
 		}
@@ -123,7 +123,7 @@ namespace platformer2d {
 
 	void CScene::Render()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		for (const auto& Actor : Actors) {
 			if (Actor->HasFlag(EActorFlag_Transparent)) {
 				continue;

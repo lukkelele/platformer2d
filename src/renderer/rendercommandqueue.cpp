@@ -21,7 +21,7 @@ namespace platformer2d {
 
 	void CRenderCommandQueue::Execute()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		/*
 		  +----------------+-----------------+--------------+
 		  | Render Command | Size (uint32_t) | Command data |

@@ -206,7 +206,7 @@ namespace platformer2d::UI {
 
 	static void RenderAnimationList()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		auto& Inspector = SpriteInspector;
 
 		if (ImGui::Button("+ Add Animation")) {
@@ -336,7 +336,7 @@ namespace platformer2d::UI {
 
 	static void RenderAnimationPreview(const std::shared_ptr<CTexture>& Texture)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		auto& Inspector = SpriteInspector;
 
 		const bool HasAnim = (Inspector.PreviewAnimIdx < Inspector.Animations.size());
@@ -393,7 +393,7 @@ namespace platformer2d::UI {
 
 	static void RenderSpritePane()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		auto& Sprite = SpriteInspector;
 
 		if (UI::BeginPropertyGrid(160.0f)) {
@@ -507,7 +507,7 @@ namespace platformer2d::UI {
 
 	void RenderSpriteInspector()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		if (!SpriteInspector.bWindowOpen) {
 			return;
 		}

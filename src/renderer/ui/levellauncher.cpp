@@ -138,7 +138,7 @@ namespace platformer2d::UI {
 
 	void LevelLauncher()
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		const bool GameInstanceValid = CGameInstance::IsValid();
 		if (!GameInstanceValid) {
 			UI::BeginViewport();

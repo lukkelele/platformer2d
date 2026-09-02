@@ -82,7 +82,7 @@ namespace platformer2d {
 
 	void CPlayer::Tick(const float DeltaTime)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		CActor::Tick(DeltaTime);
 
 		if (DeltaTime > 0.0f) {

@@ -123,7 +123,7 @@ namespace platformer2d {
 
 	void CGameInstance::Tick(const float InDeltaTime)
 	{
-		LK_PROFILE_FUNC();
+		LK_PROFILER_SCOPED();
 		OnPreTick(InDeltaTime);
 
 		const ESceneState SceneState = Scene ? Scene->GetState() : ESceneState::None;
@@ -568,4 +568,3 @@ namespace platformer2d {
 	}
 
 }
-
