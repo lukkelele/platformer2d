@@ -37,7 +37,7 @@
     "show_command": true,
   },
   {
-    "label": "cmake: configure: profiler",
+    "label": "cmake: configure: profiler: timer",
     "command": "cmake",
     "args": [
       "-S", ".",
