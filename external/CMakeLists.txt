@@ -92,6 +92,11 @@ add_subdirectory(box2d)
 ##############################
 # Library: Tracy
 ##############################
+set(TRACY_STATIC ON)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TRACY_ENABLE ON)
+    set(TRACY_ON_DEMAND ON)
+endif()
 add_subdirectory(tracy)
 
 ##############################
@@ -171,4 +176,3 @@ set(MSDFGEN_DISABLE_PNG OFF CACHE BOOL "" FORCE)
 set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
 set(MSDFGEN_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(msdf-atlas-gen)
-
